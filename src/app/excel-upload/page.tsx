@@ -434,197 +434,73 @@ interface UploadedData {
 
 const TABLE_SCHEMAS: TableSchema[] = [
   {
-    tableName: 'NEWS_CLASSIFIER',
-    displayName: 'News Classifier',
-    description: 'News articles classification and content management system',
+    tableName: 'Supply_Chain.PSCCT_Al::SCIC_CURRENT_REPORTS',
+    displayName: 'Chatbot Training Data',
+    description: 'Chatbot Training Data',
     fields: [
-      { fieldName: 'ID', displayName: 'News ID', dataType: 'INTEGER', required: true },
-      {
-        fieldName: 'TITLE',
-        displayName: 'Article Title',
-        dataType: 'STRING',
-        maxLength: 5000,
-        required: true,
-      },
-      {
-        fieldName: 'CONTENT',
-        displayName: 'Article Content',
-        dataType: 'STRING',
-        maxLength: 50000,
-        required: true,
-      },
-      { fieldName: 'DATE', displayName: 'Publication Date', dataType: 'DATE', required: true },
-      {
-        fieldName: 'CAT',
-        displayName: 'Category',
-        dataType: 'STRING',
-        maxLength: 5000,
-        required: true,
-      },
-      {
-        fieldName: 'BRIEF',
-        displayName: 'Brief Summary',
-        dataType: 'STRING',
-        maxLength: 5000,
-        required: false,
-      },
-      {
-        fieldName: 'CREATED_AT',
-        displayName: 'Created Timestamp',
-        dataType: 'DATE',
-        required: true,
-      },
-      {
-        fieldName: 'CREATED_BY',
-        displayName: 'Created By User',
-        dataType: 'STRING',
-        maxLength: 100,
-        required: true,
-      },
-    ],
-  },
-  {
-    tableName: 'EMPLOYEE_MASTER',
-    displayName: 'Employee Master Data',
-    description: 'Employee information management system for HR operations',
-    fields: [
-      {
-        fieldName: 'EMPLOYEE_ID',
-        displayName: 'Employee ID',
-        dataType: 'STRING',
-        maxLength: 10,
-        required: true,
-      },
-      {
-        fieldName: 'FIRST_NAME',
-        displayName: 'First Name',
-        dataType: 'STRING',
-        maxLength: 40,
-        required: true,
-      },
-      {
-        fieldName: 'LAST_NAME',
-        displayName: 'Last Name',
-        dataType: 'STRING',
-        maxLength: 40,
-        required: true,
-      },
-      {
-        fieldName: 'EMAIL',
-        displayName: 'Email Address',
-        dataType: 'STRING',
-        maxLength: 100,
-        required: true,
-      },
-      {
-        fieldName: 'DEPARTMENT',
-        displayName: 'Department',
-        dataType: 'STRING',
-        maxLength: 50,
-        required: true,
-      },
-      { fieldName: 'SALARY', displayName: 'Salary', dataType: 'DECIMAL', required: false },
-      { fieldName: 'HIRE_DATE', displayName: 'Hire Date', dataType: 'DATE', required: true },
-      { fieldName: 'IS_ACTIVE', displayName: 'Active Status', dataType: 'BOOLEAN', required: true },
-    ],
-  },
-  {
-    tableName: 'PRODUCT_CATALOG',
-    displayName: 'Product Catalog',
-    description: 'Product inventory and catalog management system',
-    fields: [
-      {
-        fieldName: 'PRODUCT_ID',
-        displayName: 'Product ID',
-        dataType: 'STRING',
-        maxLength: 20,
-        required: true,
-      },
-      {
-        fieldName: 'PRODUCT_NAME',
-        displayName: 'Product Name',
-        dataType: 'STRING',
-        maxLength: 100,
-        required: true,
-      },
       {
         fieldName: 'CATEGORY',
-        displayName: 'Category',
+        displayName: 'CATEGORY',
         dataType: 'STRING',
-        maxLength: 50,
-        required: true,
-      },
-      { fieldName: 'PRICE', displayName: 'Unit Price', dataType: 'DECIMAL', required: true },
-      {
-        fieldName: 'STOCK_QUANTITY',
-        displayName: 'Stock Quantity',
-        dataType: 'INTEGER',
+        maxLength: 200,
         required: true,
       },
       {
-        fieldName: 'DESCRIPTION',
-        displayName: 'Description',
+        fieldName: 'INFORMATION_AREA',
+        displayName: 'INFORMATION_AREA',
         dataType: 'STRING',
-        maxLength: 500,
-        required: false,
-      },
-      { fieldName: 'LAUNCH_DATE', displayName: 'Launch Date', dataType: 'DATE', required: false },
-      { fieldName: 'IS_AVAILABLE', displayName: 'Available', dataType: 'BOOLEAN', required: true },
-    ],
-  },
-  {
-    tableName: 'CUSTOMER_DATA',
-    displayName: 'Customer Information',
-    description: 'Customer relationship management and data system',
-    fields: [
-      {
-        fieldName: 'CUSTOMER_ID',
-        displayName: 'Customer ID',
-        dataType: 'STRING',
-        maxLength: 15,
-        required: true,
-      },
-      {
-        fieldName: 'COMPANY_NAME',
-        displayName: 'Company Name',
-        dataType: 'STRING',
-        maxLength: 80,
-        required: true,
-      },
-      {
-        fieldName: 'CONTACT_PERSON',
-        displayName: 'Contact Person',
-        dataType: 'STRING',
-        maxLength: 60,
-        required: true,
-      },
-      {
-        fieldName: 'PHONE',
-        displayName: 'Phone Number',
-        dataType: 'STRING',
-        maxLength: 20,
+        maxLength: 100,
         required: false,
       },
       {
-        fieldName: 'ADDRESS',
-        displayName: 'Address',
+        fieldName: 'NAME',
+        displayName: 'NAME',
         dataType: 'STRING',
         maxLength: 200,
         required: false,
       },
       {
-        fieldName: 'CREDIT_LIMIT',
-        displayName: 'Credit Limit',
-        dataType: 'DECIMAL',
+        fieldName: 'TYPE',
+        displayName: 'TYPE',
+        dataType: 'STRING',
+        maxLength: 50,
         required: false,
       },
       {
-        fieldName: 'REGISTRATION_DATE',
-        displayName: 'Registration Date',
-        dataType: 'DATE',
-        required: true,
+        fieldName: 'DESCRIPTION',
+        displayName: 'DESCRIPTION',
+        dataType: 'STRING',
+        maxLength: 2000,
+        required: false,
       },
-      { fieldName: 'IS_VIP', displayName: 'VIP Customer', dataType: 'BOOLEAN', required: true },
+      {
+        fieldName: 'QUERY_TECHNICAL_NAME/URL',
+        displayName: 'QUERY_TECHNICAL_NAME/URL',
+        dataType: 'STRING',
+        maxLength: 2000,
+        required: false,
+      },
+      {
+        fieldName: 'SYSTEM',
+        displayName: 'SYSTEM',
+        dataType: 'STRING',
+        maxLength: 30,
+        required: false,
+      },
+      {
+        fieldName: 'ROLE',
+        displayName: 'ROLE',
+        dataType: 'STRING',
+        maxLength: 200,
+        required: false,
+      },
+      {
+        fieldName: 'AVAILABLE_FIELDS',
+        displayName: 'AVAILABLE_FIELDS',
+        dataType: 'STRING',
+        maxLength: 5000,
+        required: false,
+      },
     ],
   },
 ];
@@ -895,29 +771,30 @@ export default function ExcelUploadComponent() {
     const headers = selectedSchema.fields.map((field) => field.displayName);
     const sampleRow = selectedSchema.fields.map((field) => {
       // Provide specific sample data for News Classifier table
-      if (selectedSchema.tableName === 'NEWS_CLASSIFIER') {
+      if (selectedSchema.tableName === 'Supply_Chain.PSCCT_Al::SCIC_CURRENT_REPORTS') {
         switch (field.fieldName) {
-          case 'ID':
-            return 1;
-          case 'TITLE':
-            return 'Sample News Article Title';
-          case 'CONTENT':
-            return 'This is a sample news article content that demonstrates the format expected for the CLOB field. It can contain long text content with multiple paragraphs and detailed information.';
-          case 'DATE':
-            return '2024-01-15';
-          case 'CAT':
+          case 'CATEGORY':
             return 'Technology';
-          case 'BRIEF':
-            return 'Brief summary of the news article highlighting key points';
-          case 'CREATED_AT':
-            return '2024-01-15 10:30:00';
-          case 'CREATED_BY':
-            return 'john.doe';
+          case 'INFORMATION_AREA':
+            return 'Software Development';
+          case 'NAME':
+            return 'Sample API Documentation';
+          case 'TYPE':
+            return 'Technical Document';
+          case 'DESCRIPTION':
+            return 'This is a sample description for the news classifier entry containing detailed information about the item.';
+          case 'QUERY_TECHNICAL_NAME/URL':
+            return 'https://api.example.com/docs/v1/users';
+          case 'SYSTEM':
+            return 'Production System';
+          case 'ROLE':
+            return 'Administrator';
+          case 'AVAILABLE_FIELDS':
+            return 'id, name, email, created_date, status, department';
           default:
             return '';
         }
       }
-
       // Default sample data for other tables
       switch (field.dataType) {
         case 'STRING':
@@ -1046,9 +923,6 @@ export default function ExcelUploadComponent() {
                                         variant="body2"
                                         className="font-medium text-white"
                                       >
-                                        {field.displayName}
-                                      </Typography>
-                                      <Typography variant="caption" className="text-gray-400">
                                         {field.fieldName}
                                       </Typography>
                                     </TableCell>
