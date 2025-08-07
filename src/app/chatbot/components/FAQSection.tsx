@@ -8,7 +8,10 @@ interface FAQItemProps {
 
 const FAQItem: React.FC<FAQItemProps> = ({ question, onClick }) => {
   return (
-    <div className="faq-card mb-1 cursor-pointer" onClick={onClick}>
+    <div
+      className="mb-1 cursor-pointer rounded-2xl border border-white/20 bg-[linear-gradient(180deg,#1e3a71_0%,#105993_45.19%,#0080bd_100%)] p-4 text-white backdrop-blur-sm transition-colors duration-200 hover:bg-white/20"
+      onClick={onClick}
+    >
       <p>{question}</p>
     </div>
   );
