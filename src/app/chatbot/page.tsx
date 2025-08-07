@@ -324,7 +324,12 @@ const ChatbotInterface: React.FC = () => {
       </div> */}
       {visible && (
         <div className="flex w-full max-w-5xl justify-end">
-          <div className="aspect-[2/3] h-28 w-28 bg-[url('/chatbot/smile.png')] bg-contain bg-right bg-no-repeat" />
+          <div
+            className="aspect-[2/3] h-28 w-28 bg-contain bg-right bg-no-repeat"
+            style={{
+              backgroundImage: `url('${process.env.NEXT_PUBLIC_BSP_NAME}/chatbot/smile.png')`,
+            }}
+          />
         </div>
       )}
 
