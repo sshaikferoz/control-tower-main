@@ -134,6 +134,8 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
   return (
     <>
       <style jsx>{`
+
+
         .chat-response-content {
           color: #ffffff;
           line-height: 1.6;
@@ -223,14 +225,20 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
 
         .chat-response-content a {
           color: #83bd01;
-          text-decoration: underline;
+          text-decoration: underline !important;
           font-weight: 500;
           transition: all 0.2s ease;
         }
 
+ .chat-response-content.prose a {
+  color: #83bd01 !important;
+  text-decoration: underline !important;
+  font-weight: 500 !important;
+}
+
+
         .chat-response-content a:hover {
           color: #a4d317;
-          text-decoration: none;
           background-color: rgba(131, 189, 1, 0.1);
           padding: 2px 4px;
           border-radius: 4px;
@@ -376,6 +384,19 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
           font-size: 0.75em;
           color: #83bd01;
         }
+                a {
+  text-decoration: underline !important;
+}
+
+
+.chat-response-content a,
+.chat-response-content a:link,
+.chat-response-content a:visited {
+  color: #83bd01 !important;
+  text-decoration: underline !important;
+  font-weight: 500 !important;
+}
+
 
         /* Responsive adjustments */
         @media (max-width: 768px) {
@@ -395,14 +416,16 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
           .chat-response-content h2 {
             font-size: 1.25rem;
           }
+
         }
+      
       `}</style>
 
       <div className="mb-8 flex flex-col justify-start">
         <div className="answer-card animate-fade-in isolate flex max-h-screen w-[1130px] max-w-[100%] flex-col items-start gap-[10px] rounded-[24px] bg-[#384F73] p-6 shadow-[0px_9px_4.4px_rgba(0,0,0,0.16)]">
           <div
             ref={contentRef}
-            className="chat-response-content prose prose-sm prose-invert w-full max-w-none"
+            className="chat-response-content  w-full max-w-none"
             dangerouslySetInnerHTML={{ __html: content }}
           />
         </div>
@@ -417,18 +440,16 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
             {!feedbackSubmitted ? (
               <div className="flex gap-2">
                 <button
-                  className={`rounded-full p-2 transition-colors ${
-                    isLiked === true ? 'bg-gray-700 text-white' : 'text-white hover:bg-gray-700'
-                  }`}
+                  className={`rounded-full p-2 transition-colors ${isLiked === true ? 'bg-gray-700 text-white' : 'text-white hover:bg-gray-700'
+                    }`}
                   title="Good response"
                   onClick={handleLike}
                 >
                   <ThumbsUp size={16} />
                 </button>
                 <button
-                  className={`rounded-full p-2 transition-colors ${
-                    isLiked === false ? 'bg-red-400 text-white' : 'text-white hover:bg-gray-700'
-                  }`}
+                  className={`rounded-full p-2 transition-colors ${isLiked === false ? 'bg-red-400 text-white' : 'text-white hover:bg-gray-700'
+                    }`}
                   title="Poor response"
                   onClick={handleDislike}
                 >
