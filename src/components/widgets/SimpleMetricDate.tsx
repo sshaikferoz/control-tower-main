@@ -1,21 +1,67 @@
-import React from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
 interface SimpleMetricDateProps {
   name: string;
   value: number;
   date: string;
+  color?: string; // Optional external color
+  setChangeColor?: (color: string) => void;
 }
 
-const SimpleMetricDate = ({ name, value, date }: SimpleMetricDateProps) => {
+const SimpleMetricDate = ({ name, value, date, color, setChangeColor }: SimpleMetricDateProps) => {
+  const [userColor, setUserColor] = useState<string | null>(null);
+  const colorInputRef = useRef<HTMLInputElement>(null);
+
+  const defaultBaseColor = '#00214E';
+  const defaultLighterColor = '#0164B0';
+
+  useEffect(() => {
+    if (color && !userColor) {
+      setUserColor(color);
+    }
+  }, [color]);
+
+  const handleDivClick = () => {
+    colorInputRef.current?.click();
+  };
+
+  const handleColorChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedColor = e.target.value;
+    setUserColor(selectedColor);
+    setChangeColor?.(selectedColor);
+  };
+
+  const baseColor = userColor || color || defaultBaseColor;
+  const lighterColor =
+    baseColor === defaultBaseColor ? defaultLighterColor : `${baseColor}80`;
+
+  const backgroundStyle = {
+    backgroundImage: `linear-gradient(to bottom, ${baseColor}, ${lighterColor})`,
+    color: '#ffffff',
+    cursor: 'pointer',
+  };
+
   return (
     <div className="h-full w-full">
-      <div className="h-full rounded-xl bg-gradient-to-b from-[#00214E] to-[#0164B0] p-4 text-white">
-        <div className="flex">
+      <div
+        className="h-full rounded-xl p-4"
+        style={backgroundStyle}
+        onClick={handleDivClick}
+      >
+        <div className="flex justify-between items-center">
           <h2 className="text-4xl font-bold">{value}</h2>
-          <span className="m-auto text-[13px]">{date}</span>
+          <span className="text-[13px]">{date}</span>
         </div>
-        <p>{name} </p>
+        <p>{name}</p>
       </div>
+
+      {/* Hidden color picker */}
+      <input
+        type="color"
+        ref={colorInputRef}
+        onChange={handleColorChange}
+        style={{ display: 'none' }}
+      />
     </div>
   );
 };

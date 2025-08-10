@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   BarChart,
   Bar,
@@ -7,9 +7,7 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-  Legend,
 } from 'recharts';
-import { Card, CardContent } from '@/components/ui/card';
 
 interface StackedBarChartProps {
   data: {
@@ -23,6 +21,8 @@ interface StackedBarChartProps {
     dataKey: string;
     color: string;
   }[];
+  color?: string;
+  setChangeColor?: (color: string) => void;
 }
 
 const StackedBarChart = ({
@@ -30,14 +30,52 @@ const StackedBarChart = ({
   title = 'Chart',
   totalValue = '',
   series = [],
+  color,
+  setChangeColor,
 }: StackedBarChartProps) => {
-  // Add default values to prevent null/undefined errors
+  const [userColor, setUserColor] = useState<string | null>(null);
+  const colorInputRef = useRef<HTMLInputElement>(null);
+
+  // ✅ Same default colors as in previous components
+  const defaultBaseColor = '#00214E';
+  const defaultLighterColor = '#0164B0';
+
+  useEffect(() => {
+    if (color && !userColor) {
+      setUserColor(color);
+    }
+  }, [color]);
+
+  const handleDivClick = () => {
+    colorInputRef.current?.click();
+  };
+
+  const handleColorChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedColor = e.target.value;
+    setUserColor(selectedColor);
+    setChangeColor?.(selectedColor);
+  };
+
+  const baseColor = userColor || color || defaultBaseColor;
+  const lighterColor =
+    baseColor === defaultBaseColor ? defaultLighterColor : `${baseColor}80`;
+
+  const backgroundStyle = {
+    backgroundImage: `linear-gradient(to bottom, ${baseColor}, ${lighterColor})`,
+    color: '#ffffff',
+    cursor: 'pointer',
+  };
+
   const safeData = data || [];
   const safeSeries = series || [];
 
   return (
     <div className="h-full w-full">
-      <div className="h-full rounded-xl bg-gradient-to-b from-[#00214E] to-[#0164B0] p-4 text-white">
+      <div
+        className="h-full rounded-xl p-4 text-white"
+        style={backgroundStyle}
+        onClick={handleDivClick}
+      >
         <div className="flex justify-between">
           <div className="flex flex-col items-start gap-[5px]">
             <h3 className="[font-family:'Ghawar-Hefty',Helvetica] text-base font-normal text-white">
@@ -62,21 +100,24 @@ const StackedBarChart = ({
             <ResponsiveContainer width="100%" height="100%">
               <BarChart
                 data={safeData}
-                margin={{
-                  top: 20,
-                  right: 30,
-                  left: 0,
-                  bottom: 5,
-                }}
+                margin={{ top: 20, right: 30, left: 0, bottom: 5 }}
                 barSize={24}
               >
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#ffffff30" />
+                <CartesianGrid
+                  strokeDasharray="3 3"
+                  vertical={false}
+                  stroke="#ffffff30"
+                />
                 <XAxis
                   dataKey="name"
                   axisLine={{ stroke: '#ffffff50' }}
                   tick={{ fill: '#ffffff' }}
                 />
-                <YAxis axisLine={false} tickLine={false} tick={{ fill: '#ffffff' }} />
+                <YAxis
+                  axisLine={false}
+                  tickLine={false}
+                  tick={{ fill: '#ffffff' }}
+                />
                 <Tooltip
                   contentStyle={{
                     backgroundColor: '#1E3A71',
@@ -86,7 +127,12 @@ const StackedBarChart = ({
                   }}
                 />
                 {safeSeries.map((item, index) => (
-                  <Bar key={index} dataKey={item.dataKey} stackId="a" fill={item.color} />
+                  <Bar
+                    key={index}
+                    dataKey={item.dataKey}
+                    stackId="a"
+                    fill={item.color}
+                  />
                 ))}
               </BarChart>
             </ResponsiveContainer>
@@ -96,6 +142,7 @@ const StackedBarChart = ({
             </div>
           )}
         </div>
+
         <div className="mt-2 flex items-center justify-center gap-4">
           {safeSeries.map((item, index) => (
             <div key={index} className="flex items-center gap-[5px]">
@@ -110,6 +157,14 @@ const StackedBarChart = ({
           ))}
         </div>
       </div>
+
+      {/* 🎨 Hidden color picker */}
+      <input
+        type="color"
+        ref={colorInputRef}
+        onChange={handleColorChange}
+        style={{ display: 'none' }}
+      />
     </div>
   );
 };

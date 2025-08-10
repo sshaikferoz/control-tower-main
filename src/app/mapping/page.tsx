@@ -50,6 +50,8 @@ import {
   Divider,
   Alert,
   Snackbar,
+  FormControlLabel,
+  Checkbox,
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import AddIcon from '@mui/icons-material/Add';
@@ -455,6 +457,7 @@ const MappingScreen: React.FC = () => {
 
   const [announcementCount, setAnnouncementCount] = useState(0);
   const [announcementValues, setAnnouncementValues] = useState<string[]>([])
+   const [changeColor,setChangeColorOneMetric] = useState<string>('')
 
   useEffect(() => {
     fetch('/api/endpoints')
@@ -472,6 +475,7 @@ const MappingScreen: React.FC = () => {
   const handleTabChange = (event: React.ChangeEvent<{}>, newValue: number) => {
     setTabValue(newValue);
   };
+
 
   const initializeWidgetMappingConfig = (widgetId: string, widgetName: string) => {
 
@@ -740,7 +744,6 @@ const MappingScreen: React.FC = () => {
 
   const handleWidgetClick = (id: string, event: React.MouseEvent) => {
     event.stopPropagation();
-
     if (selectedWidget === id) return;
     console.log(selectedWidget, 'ppppppppp', 'widgetclicked')
     const widgetInfo = getWidgetName(id);
@@ -812,6 +815,31 @@ const MappingScreen: React.FC = () => {
       setSelectedMetrics(config.quadrantConfig.metrics || []);
     }
   };
+
+
+ const setChangeColor = (color: string) => {
+  if(!selectedWidget) return
+  console.log('setChangeColor was called with:', color);
+  const field = 'color'
+ console.log(selectedWidget)
+    setFieldMappings((prev) => ({
+      ...prev,
+      [selectedWidget]: {
+        ...prev[selectedWidget],
+        fields: {
+          ...prev[selectedWidget].fields,
+          [field]: {
+            ...prev[selectedWidget].fields[field],
+            color: color,
+          },
+        },
+      },
+    }));
+
+    // Live update the widget configuration
+    handleLiveValueUpdate(field, color);
+  // Optionally update state or perform other actions here
+}
 
   // Handle roles change
   const handleRolesChange = (roles: string[]) => {
@@ -1183,6 +1211,45 @@ const MappingScreen: React.FC = () => {
     console.log(announcementValues, 'finalll values')
     handleLiveValueUpdate(field, announcementValues);
 
+  }
+
+  const handleDescriptionToggle = (value:boolean) =>{
+    console.log(value,'valueeee')
+   if (!selectedWidget) return;
+    const field = 'showdescription'
+
+
+    // console.log(fieldMappings,'--------------------------')
+    //  setPreviewData((prev: any) => ({
+    //     ...prev,
+    //     showdescription: value,
+    //   }));
+
+     setFieldMappings((prev) => ({
+
+      ...prev,
+      [selectedWidget]: {
+        ...prev[selectedWidget],
+        fields: {
+          ...prev[selectedWidget].fields,
+          [field]: {
+            ...prev[selectedWidget].fields[field],
+            inputType: 'manual',
+            manualValue: value,
+          },
+        },
+      },
+    }));
+
+
+    // Live update the widget configuration
+    console.log(value, 'finalll values')
+    handleLiveValueUpdate(field, value);
+
+
+
+
+      
   }
 
 
@@ -2016,7 +2083,7 @@ const MappingScreen: React.FC = () => {
                             <InfoIcon style={{ fontSize: 14 }} />
                         </div>
                         )} */}
-                    <Component {...widgetProps} />
+                    <Component {...widgetProps} setChangeColor={setChangeColor} />
                   </div>
                 );
               })}
@@ -3569,6 +3636,27 @@ const MappingScreen: React.FC = () => {
                   </>
                 );
               })()}
+
+                          <FormControl>
+                            <FormControlLabel
+                              control={
+                                <Checkbox
+                                  // checked={fieldMapping?.descriptionEnabled || false}
+                                 onChange={(e) => handleDescriptionToggle(e.target.checked)}
+                                  sx={{
+                                    color: 'white',
+                                    '&.Mui-checked': { color: 'white' },
+                                  }}
+                                />
+                              }
+                              label={
+                                <Typography variant="body2" sx={{ color: 'white' }}>
+                                  Add description icon
+                                </Typography>
+                              }
+                            />
+
+                            </FormControl>
 
               <Box mt={4} pt={2} borderTop={1} borderColor="rgba(255,255,255,0.2)">
                 <Button
