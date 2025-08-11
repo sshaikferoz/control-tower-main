@@ -22,7 +22,7 @@ import PSCLogo from '@/assets/PSCLogo';
 
 interface SidebarProps {
   selectedItem: string;
-  onItemSelect: (item: string) => void;
+  onItemSelect: (item: MenuItem) => void;
   menuItems: MenuItem[];
   onMenuItemsChange: (items: MenuItem[]) => void;
   isLoading?: boolean;
@@ -105,6 +105,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         };
 
         const savedItem = await sapODataService.saveMenuItem(newItem, false);
+        console.log(savedItem,'saveditem',menuItems)
         onMenuItemsChange([...menuItems, savedItem]);
       } else {
         const updatedItem = {
@@ -288,7 +289,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                               ? 'bg-white text-black'
                               : 'text-white hover:bg-[#ffffff30]'
                           } ${isSaving ? 'opacity-50' : ''} ${isCollapsed ? 'justify-center' : ''}`}
-                          onClick={() => !editMode && !isSaving && onItemSelect(item.type)}
+                          onClick={() => !editMode && !isSaving && onItemSelect(item)}
                           title={isCollapsed ? item.name : ''}
                         >
                           {editMode && !isCollapsed && (

@@ -27,7 +27,7 @@ export default function Home({
   console.log('isAdmin prop', isAdmin);
   console.log('isEditModeAllowed prop', isEditModeAllowed);
 
-  const tabId = selectedMenuItemId || '00000000000000000000000000000001';
+  const tabId = selectedMenuItemId.id || '00000000000000000000000000000001';
 
   const {
     dashboardData,

@@ -79,7 +79,8 @@ export interface TabConfigPayload {
   SortOrder: number;
   DelInd: string;
   Crudflag: string;
-  RolesItemSet: Role[];
+  // RolesItemSet: Role[];
+  TabRolesItem: Role[];
 }
 
 export interface SectionPayload {
@@ -137,8 +138,10 @@ export interface WidgetHeadRole {
 export interface WidgetHeadPayload {
   Id: string;
   CrudFlag: string;
-  headtowidget: WidgetHeadItem[];
-  HeadtoRoles: WidgetHeadRole[];
+  // headtowidget: WidgetHeadItem[];
+  // HeadtoRoles: WidgetHeadRole[];
+  WidgetHeadToConf: WidgetHeadItem[];
+  WidgetHeadRolesItem: WidgetHeadRole[];
 }
 
 export interface MenuItem {
@@ -239,8 +242,13 @@ export interface AdminRoleCheckResponse {
 class SAPODataService {
   private baseUrl =
     process.env.NODE_ENV === 'development'
-      ? 'https://ctapitester-a4mel9cxg6.dispatcher.sa1.hana.ondemand.com/sap/opu/odata/sap/ZSCM_CT_CONFIG_SRV'
-      : '/sap/opu/odata/sap/ZSCM_CT_CONFIG_SRV';
+      ? 'https://ctapitester-a4mel9cxg6.dispatcher.sa1.hana.ondemand.com/sap/opu/odata/sap/ZBW_CT_SCIC_SRV'
+      : '/sap/opu/odata/sap/ZBW_CT_SCIC_SRV';
+
+    // private baseUrl =
+    // process.env.NODE_ENV === 'development'
+    //   ? 'https://ctapitester-a4mel9cxg6.dispatcher.sa1.hana.ondemand.com/sap/opu/odata/sap/ZBW_CT_SCIC_SRV'
+    //   : '/sap/opu/odata/sap/ZBW_CT_SCIC_SRV';
 
   // Fetch all menu items
   async fetchMenuItems(): Promise<MenuItem[]> {
@@ -433,7 +441,8 @@ class SAPODataService {
         SortOrder: menuItem.order,
         DelInd: menuItem.deleted ? 'X' : '',
         Crudflag: isUpdate ? 'U' : 'C',
-        RolesItemSet: rolesForPayload,
+        // RolesItemSet: rolesForPayload,
+        TabRolesItem: rolesForPayload,
       };
 
       const newCSRFToken = await this.getNewCsrfToken(`${this.baseUrl}/TabConfSet`);
@@ -638,15 +647,17 @@ class SAPODataService {
       const payload: WidgetHeadPayload = {
         Id: '',
         CrudFlag: 'C',
-        headtowidget: allWidgets,
-        HeadtoRoles: allRoles,
+        // headtowidget: allWidgets,
+        // HeadtoRoles: allRoles,
+        WidgetHeadToConf: allWidgets,
+        WidgetHeadRolesItem: allRoles,
       };
 
       console.log('Saving all widgets in single request:', payload);
 
       // Get CSRF token and make the single request
-      const newCSRFToken = await this.getNewCsrfToken(`${this.baseUrl}/WidgetsHeadSet`);
-      const response = await fetch(`${this.baseUrl}/WidgetsHeadSet`, {
+      const newCSRFToken = await this.getNewCsrfToken(`${this.baseUrl}/WidgetHeadSet`);
+      const response = await fetch(`${this.baseUrl}/WidgetHeadSet`, {
         method: 'POST',
         headers: {
           Accept: 'application/json',
@@ -692,7 +703,8 @@ class SAPODataService {
         SortOrder: menuItem.order,
         DelInd: 'X', // Mark as deleted
         Crudflag: 'U', // Update operation
-        RolesItemSet: rolesForPayload,
+        // RolesItemSet: rolesForPayload,
+        TabRolesItem: rolesForPayload,
       };
 
       const newCSRFToken = await this.getNewCsrfToken(`${this.baseUrl}/TabConfSet`);

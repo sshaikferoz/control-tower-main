@@ -15,6 +15,7 @@ import { ConfigurationDialog } from '@/components/dialogs/ConfigurationDialog';
 import { LoadingScreen } from '@/components//ui/LoadingScreen';
 import { ErrorScreen } from '@/components/ui/ErrorScreen';
 import Home from '@/app/home/page'; // Assuming this exists
+import { MenuItem } from 'primereact/menuitem';
 
 const Dashboard: React.FC = () => {
   const [appState, setAppState] = useState<AppState>({
@@ -45,17 +46,17 @@ const Dashboard: React.FC = () => {
   }, [isAdmin, urlParams]);
 
   // Handle menu item selection (restrict for non-admin users)
-  const handleMenuItemSelect = (item: string) => {
-    if (!isAdmin && item !== 'Section') {
+  const handleMenuItemSelect = (item: any) => {
+    if (!isAdmin && item.type !== 'Section') {
       return;
     }
 
-    if (item === 'Section') {
+    if (item.type === 'Section') {
       setAppState({
         view: 'dashboard',
         selectedMenuItem: item,
       });
-    } else if (item === 'Dashboard') {
+    } else if (item.type === 'Dashboard') {
       setAppState({
         view: 'b2b-reports',
         selectedMenuItem: item,
@@ -192,12 +193,13 @@ const Dashboard: React.FC = () => {
   // Render based on current view
   const renderContent = () => {
     const selectedMenuItemData = menuItems.find((item) => item.name === appState.selectedMenuItem);
+    console.log("renderer called",menuItems,selectedMenuItemData,appState.selectedMenuItem)
 
     switch (appState.view) {
       case 'dashboard':
         return (
           <Home
-            selectedMenuItemId={selectedMenuItemData?.id}
+            selectedMenuItemId={appState.selectedMenuItem}
             isAdmin={isAdmin}
             isEditModeAllowed={isEditModeAllowed}
             configuration={configuration}
