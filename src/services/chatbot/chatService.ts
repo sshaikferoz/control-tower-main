@@ -11,6 +11,15 @@ export interface UserInfo {
   session_id: string;
 }
 
+interface FeedbackResponse {
+  code: string;
+  data: { message_id: string };
+  message: string;
+  status: string;
+}
+const BASE_URL = 'https://scic-chatbot.cml.apps.cdp-ds-test.aramco.com';
+
+
 export const generateResponse = async (
   message: string,
   userInfo: UserInfo
@@ -99,4 +108,74 @@ export const fetchMatchingFAQs = async (userInfo?: UserInfo): Promise<any[]> => 
     console.error('Error fetching FAQs:', error);
     return [];
   }
+};
+
+// Positive feedback payload & call
+export const submitPositiveFeedback = async (
+  messageId: string,
+  userInfo:UserInfo,
+  airesponse:any,
+ originalPrompt:string | undefined
+
+): Promise<FeedbackResponse> => {
+  const payload = {
+    rating: 'like',
+    message_id: messageId,
+    comment: '',
+    user_query: originalPrompt,
+    ai_response: airesponse,
+    tags: [],
+  };
+
+  const res = await fetch(`${BASE_URL}/api/feedback`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-User-Id': userInfo.user_id,
+      'X-Session-Id': userInfo.session_id,
+    },
+    body: JSON.stringify(payload),
+  });
+
+  if (res.status !== 201) {
+    throw new Error(`Unexpected status code: ${res.status}`);
+  }
+
+  return res.json();
+};
+
+// Negative feedback payload & call
+export const submitNegativeFeedback = async (
+  messageId: string,
+  userInfo:UserInfo,
+  airesponse:any,
+  originalPrompt:string | undefined,
+  comments:any,
+  tags: string[] = []
+
+  ): Promise<FeedbackResponse> => {
+  const payload = {
+    rating: 'dislike' ,
+    message_id: messageId,
+    comment :comments,
+    user_query: originalPrompt,
+    ai_response: airesponse,
+    tags : ["missing_data", "needs_context"],
+  };
+
+  const res = await fetch(`${BASE_URL}/api/feedback`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-User-Id': userInfo.user_id,
+      'X-Session-Id': userInfo.session_id,
+    },
+    body: JSON.stringify(payload),
+  });
+
+  if (res.status !== 201) {
+    throw new Error(`Unexpected status code: ${res.status}`);
+  }
+
+  return res.json();
 };

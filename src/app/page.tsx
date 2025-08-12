@@ -15,7 +15,6 @@ import { ConfigurationDialog } from '@/components/dialogs/ConfigurationDialog';
 import { LoadingScreen } from '@/components//ui/LoadingScreen';
 import { ErrorScreen } from '@/components/ui/ErrorScreen';
 import Home from '@/app/home/page'; // Assuming this exists
-import { MenuItem } from 'primereact/menuitem';
 
 const Dashboard: React.FC = () => {
   const [appState, setAppState] = useState<AppState>({
@@ -193,7 +192,6 @@ const Dashboard: React.FC = () => {
   // Render based on current view
   const renderContent = () => {
     const selectedMenuItemData = menuItems.find((item) => item.name === appState.selectedMenuItem);
-    console.log("renderer called",menuItems,selectedMenuItemData,appState.selectedMenuItem)
 
     switch (appState.view) {
       case 'dashboard':

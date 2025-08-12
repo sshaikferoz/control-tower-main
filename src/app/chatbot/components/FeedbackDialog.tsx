@@ -11,9 +11,15 @@ const FeedbackDialog: React.FC<FeedbackDialogProps> = ({ isOpen, onClose, onSubm
   const [rating, setRating] = useState(1);
   const [comments, setComments] = useState('');
   const [hoveredRating, setHoveredRating] = useState(0);
+  const [error, setError] = useState(''); // for validation error message
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (comments.trim() === '') {
+      setError('This is a required field');
+      return;
+    }
+    setError('');
     onSubmit(rating, comments);
     // Reset form
     setRating(1);
@@ -23,6 +29,7 @@ const FeedbackDialog: React.FC<FeedbackDialogProps> = ({ isOpen, onClose, onSubm
   const handleClose = () => {
     setRating(1);
     setComments('');
+    setError('');
     onClose();
   };
 
@@ -78,16 +85,21 @@ const FeedbackDialog: React.FC<FeedbackDialogProps> = ({ isOpen, onClose, onSubm
 
           <div className="mb-6">
             <label htmlFor="comments" className="mb-2 block text-sm font-medium text-gray-700">
-              What could be improved? (Optional)
+              What could be improved? <span className="text-red-500">*</span>
             </label>
             <textarea
               id="comments"
               value={comments}
               onChange={(e) => setComments(e.target.value)}
               rows={4}
-              className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+              className={`w-full rounded-md border px-3 py-2 text-sm focus:outline-none ${
+                error
+                  ? 'border-red-500 text-red-600 placeholder-red-300 focus:border-red-500 focus:ring-1 focus:ring-red-500'
+                  : 'border-gray-300 text-gray-900 focus:border-blue-500 focus:ring-1 focus:ring-blue-500'
+              }`}
               placeholder="Please share specific feedback about what went wrong or how we can improve..."
             />
+            {error && <p className="mt-1 text-xs text-red-600">{error}</p>}
           </div>
 
           <div className="flex gap-3">

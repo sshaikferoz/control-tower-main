@@ -1,12 +1,17 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Check, RotateCw, Copy, Clock, ThumbsUp, ThumbsDown } from 'lucide-react';
 import FeedbackDialog from './FeedbackDialog';
+import { submitNegativeFeedback, submitPositiveFeedback, UserInfo } from '@/services/chatbot/chatService';
+
+
 
 interface ChatMessageProps {
   id: string;
   content: string;
   isUser: boolean;
   timestamp?: string;
+  userInfo: UserInfo;
+  airesponse: any;
   onRegenerate?: (messageId: string, originalPrompt: string) => void;
   originalPrompt?: string;
 }
@@ -16,7 +21,9 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
   content,
   isUser,
   timestamp,
+  userInfo,
   onRegenerate,
+  airesponse,
   originalPrompt,
 }) => {
   const [showFeedbackDialog, setShowFeedbackDialog] = useState(false);
@@ -47,51 +54,39 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
 
     // Submit positive feedback to API
     try {
-      await fetch('/api/feedback', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          messageId: id,
-          feedback: 'positive',
-          rating: 5,
-          timestamp: new Date().toISOString(),
-        }),
-      });
-      console.log('Positive feedback submitted');
+      const response = await submitPositiveFeedback(
+        id,
+        userInfo,
+        airesponse,
+        originalPrompt
+      );
+      console.log(response.message);
     } catch (error) {
-      console.error('Failed to submit feedback:', error);
+      console.error('Failed to submit positive feedback:', error);
     }
   };
 
   const handleDislike = () => {
     setIsLiked(false);
     setShowFeedbackDialog(true);
+
   };
 
   const handleFeedbackSubmit = async (rating: number, comments: string) => {
     setFeedbackSubmitted(true);
     setShowFeedbackDialog(false);
-
     // Submit negative feedback to API
     try {
-      await fetch('/api/feedback', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          messageId: id,
-          feedback: 'negative',
-          rating,
-          comments,
-          timestamp: new Date().toISOString(),
-        }),
-      });
-      console.log('Negative feedback submitted');
+      const response = await submitNegativeFeedback(
+        id,
+        userInfo,
+        airesponse,
+        originalPrompt,
+        comments,
+      );
+      console.log(response.message);
     } catch (error) {
-      console.error('Failed to submit feedback:', error);
+      console.error('Failed to submit positive feedback:', error);
     }
   };
 

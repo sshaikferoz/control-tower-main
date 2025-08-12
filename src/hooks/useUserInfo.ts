@@ -11,8 +11,8 @@ export const useUserInfo = () => {
         setUserInfoLoading(true);
         const baseUrl =
           process.env.NODE_ENV === 'development'
-            ? 'https://ctapitester-a4mel9cxg6.dispatcher.sa1.hana.ondemand.com/sap/opu/odata/sap/ZSCM_CT_CONFIG_SRV'
-            : '/sap/opu/odata/sap/ZSCM_CT_CONFIG_SRV';
+            ? 'https://ctapitester-a4mel9cxg6.dispatcher.sa1.hana.ondemand.com/sap/opu/odata/sap/ZBW_CT_SCIC_SRV'
+            : '/sap/opu/odata/sap/ZBW_CT_SCIC_SRV';
 
         const response = await fetch(`${baseUrl}/LogUserSet('')?$format=json`, {
           method: 'GET',

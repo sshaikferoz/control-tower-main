@@ -15,7 +15,7 @@ interface Message {
   userMessageId?: string; // For bot messages, reference to the user message ID
 }
 
-interface UserInfo {
+export interface UserInfo {
   user_id: string;
   session_id: string;
 }
@@ -26,8 +26,9 @@ const ChatbotInterface: React.FC = () => {
   const [message, setMessage] = useState('');
   const [selectedCity, setSelectedCity] = useState(null);
   const [loading, setLoading] = useState<boolean>(false);
-  const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
+  const [userInfo, setUserInfo] = useState<any>('');
   const [userInfoLoading, setUserInfoLoading] = useState<boolean>(true);
+  const [airesponse ,setAiResponse]=useState<any>('');
 
   const cities = [
     { name: 'Professional', code: 'PRF' },
@@ -130,6 +131,7 @@ const ChatbotInterface: React.FC = () => {
     try {
       // Get response from service with user info
       const response = await generateResponse(message, userInfo);
+      setAiResponse(response)
 
       // Add bot response
       const botMessage: Message = {
@@ -248,6 +250,8 @@ const ChatbotInterface: React.FC = () => {
                   content={msg.content}
                   isUser={msg.isUser}
                   timestamp={msg.timestamp}
+                  userInfo={userInfo}
+                  airesponse={airesponse}
                   originalPrompt={msg.originalPrompt}
                   onRegenerate={!msg.isUser ? handleRegenerateResponse : undefined}
                 />
