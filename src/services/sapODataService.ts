@@ -303,7 +303,8 @@ class SAPODataService {
   async fetchSectionsByTabId(tabId: string): Promise<Section[]> {
     try {
       const response = await fetch(
-        `${this.baseUrl}/ZSCM_CT_V_SECTION?$expand=to_roles&$format=json&$filter=TabId eq '${tabId}'&orderby=sort_order`,
+        // `${this.baseUrl}/ZSCM_CT_V_SECTION?$expand=to_roles&$format=json&$filter=TabId eq '${tabId}'&orderby=sort_order`,
+       `${this.baseUrl}/SectionConfSet?$filter=TabId eq '${tabId}'&$expand=RolesSecItem&$format=json`,
         {
           method: 'GET',
           headers: {
@@ -320,7 +321,7 @@ class SAPODataService {
       const data = await response.json();
 
       const sections = data.d.results.map(
-        (item: SectionResponse): Section => ({
+        (item: any): Section => ({
           id: item.Id,
           tabId: item.TabId,
           name: item.Name,
@@ -329,7 +330,7 @@ class SAPODataService {
           description: item.Description,
           type: item.Type,
           deleted: item.DelInd === 'X',
-          roles: item.to_roles.results || [],
+          roles: item.RolesSecItem?.result || [],
           widgets: [], // Will be populated separately
           isNew: false,
           hasChanges: false,
@@ -353,7 +354,9 @@ class SAPODataService {
   async fetchWidgetsBySectionId(sectionId: string): Promise<Widget[]> {
     try {
       const response = await fetch(
-        `${this.baseUrl}/ZSCM_CT_V_WIDGETS?$expand=to_roles&$format=json&$filter=section_id%20eq%20%27${sectionId}%27`,
+        // `${this.baseUrl}/ZSCM_CT_V_WIDGETS?$expand=to_roles&$format=json&$filter=section_id%20eq%20%27${sectionId}%27`,
+         `${this.baseUrl}/WidgetConfSet?$filter=SectionId eq '${sectionId}'&$expand=WidgetConfRolesItem&$format=json`,
+
         {
           method: 'GET',
           headers: {
@@ -362,26 +365,31 @@ class SAPODataService {
           },
         }
       );
+          console.log("fetchwidgettriggered",response)
+
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
       const data = await response.json();
+                console.log("fetchwidgettriggered-------",response,data)
+                console.log(data.d.results,'----------------------------')
 
-      return data.d.results.map(
-        (item: WidgetResponse): Widget => ({
-          id: item.id,
-          sectionId: item.section_id,
-          name: item.name,
-          type: item.type,
-          description: item.description || '',
-          layoutConfig: this.safeJsonParse(item.layout_config),
-          fieldMappings: this.safeJsonParse(item.field_mappings),
-          properties: this.safeJsonParse(item.properties),
+
+      return data.d.results?.map(
+        (item: any): any => ({
+          id: item.Id,
+          sectionId: item.SectionId,
+          name: item.Name,
+          type: item.Type,
+          description: item.Description || '',
+          layoutConfig: this.safeJsonParse(item.LayoutConfig),
+          fieldMappings: this.safeJsonParse(item.FieldMappings),
+          properties: this.safeJsonParse(item.Properties),
           active: item.is_active === 'X',
           deleted: item.del_flag === 'X',
-          roles: item.to_roles.results || [],
+          roles: item.WidgetConfRolesItem?.results || [],
           isNew: false,
           hasChanges: false,
         })
@@ -396,7 +404,9 @@ class SAPODataService {
   async fetchMenuItemById(itemId: string): Promise<MenuItem> {
     try {
       const response = await fetch(
-        `${this.baseUrl}/ZSCM_CT_V_TABS?$expand=to_roles&$format=json&$filter=id eq '${itemId}'`,
+        // `${this.baseUrl}/ZSCM_CT_V_TABS?$expand=to_roles&$format=json&$filter=id eq '${itemId}'`,
+          `${this.baseUrl}/TabConfSet?$filter=Id eq '${itemId}'&$expand=TabRolesItem&$format=json&`,
+
         {
           method: 'GET',
           headers: {

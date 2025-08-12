@@ -223,9 +223,8 @@ const NewsFeed: React.FC = () => {
   const handleRetry = () => {
     window.location.reload(); // Simple retry by reloading
   };
-
   const backgroundStyle = {
-  backgroundImage: "url('/background/bg.png')",
+  backgroundImage: `url('${process.env.NEXT_PUBLIC_BSP_NAME}/background/bg.png')`,
   backgroundSize: 'cover',
   backgroundPosition: 'center center',
   backgroundRepeat: 'no-repeat',
@@ -342,7 +341,7 @@ const NewsFeed: React.FC = () => {
                     {categories.find((c: Category) => c.id === activeCategory)?.label ||
                       selectedNews.category}
                   </span>
-                  <span className="text-white/60">{selectedNews.date} &nbsp;&nbsp; {selectedNews.region}</span>
+                  <span className="text-white/60">{selectedNews.date} &nbsp;&nbsp; Region : {selectedNews.region}</span>
                 </div>
 
                 <h1
@@ -481,7 +480,7 @@ const NewsFeed: React.FC = () => {
 
                         <div className="mt-4 flex items-center justify-between">
                           <div className="text-sm leading-[30px] font-normal tracking-[-0.28px] whitespace-nowrap text-[#dadce2]">
-                            {article.date} &nbsp; &nbsp; {article.region}
+                            {article.date} &nbsp; &nbsp; Region : {article.region}
                           </div>
                           <div className="text-xs text-white/50 transition-colors hover:text-white/70">
                             Click to read more →

@@ -123,7 +123,7 @@ export const submitPositiveFeedback = async (
     message_id: messageId,
     comment: '',
     user_query: originalPrompt,
-    ai_response: airesponse,
+    ai_response: airesponse.content,
     tags: [],
   };
 
@@ -159,7 +159,7 @@ export const submitNegativeFeedback = async (
     message_id: messageId,
     comment :comments,
     user_query: originalPrompt,
-    ai_response: airesponse,
+    ai_response: airesponse.content,
     tags : ["missing_data", "needs_context"],
   };
 
