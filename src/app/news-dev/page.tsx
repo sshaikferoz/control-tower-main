@@ -19,6 +19,7 @@ interface NewsArticle {
   date: string;
   category: string;
   link: string;
+  region:string;
 }
 
 export interface NewsFeedResponse {
@@ -90,6 +91,7 @@ const mapNewsItemToArticle = (item: NewsItem): NewsArticle => ({
   date: item.DATEPUBLISHED,
   category: item.LABEL.toLowerCase(),
   link: item.LINK,
+  region:item.REGION
 });
 
 // Helper function to categorize news data
@@ -325,7 +327,7 @@ const NewsFeed: React.FC = () => {
                     {categories.find((c: Category) => c.id === activeCategory)?.label ||
                       selectedNews.category}
                   </span>
-                  <span className="text-white/60">{selectedNews.date}</span>
+                  <span className="text-white/60">{selectedNews.date} &nbsp;&nbsp; {selectedNews.region}</span>
                 </div>
 
                 <h1
@@ -464,7 +466,7 @@ const NewsFeed: React.FC = () => {
 
                         <div className="mt-4 flex items-center justify-between">
                           <div className="text-sm leading-[30px] font-normal tracking-[-0.28px] whitespace-nowrap text-[#dadce2]">
-                            {article.date}
+                            {article.date} &nbsp; &nbsp; {article.region}
                           </div>
                           <div className="text-xs text-white/50 transition-colors hover:text-white/70">
                             Click to read more →

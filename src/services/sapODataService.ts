@@ -239,6 +239,7 @@ export interface NewsItem {
   TITLE: string;
   BRIEF: string;
   ID: number;
+  REGION:string;
 }
 
 export interface NewsFeedResponse {
