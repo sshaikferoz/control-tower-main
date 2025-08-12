@@ -50,12 +50,12 @@ const categories: Category[] = [
     description: 'New technologies and methods',
     color: 'text-[#6bcf7f]',
   },
-  {
-    id: 'logistics',
-    label: 'Logistics',
-    description: 'Saudi Arabia supply chain logistics (non-disruptive)',
-    color: 'text-[#4dabf7]',
-  },
+  // {
+  //   id: 'logistics',
+  //   label: 'Logistics',
+  //   description: 'Saudi Arabia supply chain logistics (non-disruptive)',
+  //   color: 'text-[#4dabf7]',
+  // },
   // {
   //   id: "travel",
   //   label: "Travel",
@@ -72,13 +72,13 @@ const categories: Category[] = [
 
 // Helper function to map API response to NewsArticle
 const mapNewsItemToArticle = (item: NewsItem): NewsArticle => ({
-  id: item.id_num,
-  title: item.Title,
-  content: item.brief || item.Content.substring(0, 150) + '...', // Use brief or truncated content
-  fullContent: item.Content,
-  date: item.Date,
-  category: item.Label.toLowerCase(),
-  link: item.Link,
+  id: item.ID,
+  title: item.TITLE,
+  content: item.BRIEF || item.CONTENT.substring(0, 150) + '...', // Use brief or truncated content
+  fullContent: item.CONTENT,
+  date: item.DATEPUBLISHED,
+  category: item.LABEL.toLowerCase(),
+  link: item.LINK,
 });
 
 // Helper function to categorize news data

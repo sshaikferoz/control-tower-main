@@ -12,7 +12,7 @@ import { NewSectionDialog } from '@/components/dialogs/NewSectionDialog';
 import { EditSectionDialog } from '@/components/dialogs/EditSectionDialog';
 import { DeleteConfirmationDialog } from '@/components/dialogs/DeleteConfirmationDialog';
 import { WidgetSkeleton } from '@/components/ui/WidgetSkeleton';
-import NewsFeed from '@/components/widgets/NewsFeed';
+// import NewsFeed from '@/components/widgets/NewsFeed';
 import { getNextSectionOrder } from '@/utils/dashboardUtils';
 import { UIConfiguration } from '@/types/configuration';
 

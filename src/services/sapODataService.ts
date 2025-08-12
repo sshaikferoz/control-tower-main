@@ -220,14 +220,25 @@ export interface LayoutData {
   expanded?: string;
 }
 
+// export interface NewsItem {
+//   Content: string;
+//   DATECLASSIFIED: string;
+//   Label: string;
+//   Link: string;
+//   TITLE: string;
+//   brief: string;
+//   ID: number;
+// }
+
 export interface NewsItem {
-  Content: string;
-  Date: string;
-  Label: string;
-  Link: string;
-  Title: string;
-  brief: string;
-  id_num: number;
+  CONTENT: string;
+  DATEPUBLISHED:string;
+  DATECLASSIFIED: string;
+  LABEL: string;
+  LINK: string;
+  TITLE: string;
+  BRIEF: string;
+  ID: number;
 }
 
 export interface NewsFeedResponse {
