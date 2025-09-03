@@ -220,15 +220,6 @@ export interface LayoutData {
     expanded?: string;
 }
 
-// export interface NewsItem {
-//   Content: string;
-//   DATECLASSIFIED: string;
-//   Label: string;
-//   Link: string;
-//   TITLE: string;
-//   brief: string;
-//   ID: number;
-// }
 
 export interface NewsItem {
     CONTENT: string;
