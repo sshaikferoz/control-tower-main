@@ -32,6 +32,7 @@ export const useMenuItems = (isAdmin: boolean, adminCheckLoading: boolean) => {
         }
 
         const items = await sapODataService.fetchMenuItems();
+        console.log(items,'itemss')
 
         if (items.length === 0) {
           const defaultItems: MenuItem[] = [

@@ -97,10 +97,14 @@ const Header: React.FC<HeaderProps> = ({ configuration }) => {
       return;
     }
 
+
+
+    
+
     setIsSearching(true);
     try {
       const response = await fetch(
-        `https://psct-search.cml.apps.cdp-ds-test.aramco.com/api/search?query=${encodeURIComponent(query)}`
+        `https://psct-search.cml.apps.cdp-ds-prod.aramco.com/api/search?query=${encodeURIComponent(query)}`
       );
 
       if (!response.ok) {

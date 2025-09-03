@@ -45,17 +45,17 @@ const Dashboard: React.FC = () => {
   }, [isAdmin, urlParams]);
 
   // Handle menu item selection (restrict for non-admin users)
-  const handleMenuItemSelect = (item: string) => {
-    if (!isAdmin && item !== 'Section') {
+  const handleMenuItemSelect = (item: any) => {
+    if (!isAdmin && item.type !== 'Section') {
       return;
     }
 
-    if (item === 'Section') {
+    if (item.type === 'Section') {
       setAppState({
         view: 'dashboard',
         selectedMenuItem: item,
       });
-    } else if (item === 'Dashboard') {
+    } else if (item.type === 'Dashboard') {
       setAppState({
         view: 'b2b-reports',
         selectedMenuItem: item,
@@ -197,7 +197,7 @@ const Dashboard: React.FC = () => {
       case 'dashboard':
         return (
           <Home
-            selectedMenuItemId={selectedMenuItemData?.id}
+            selectedMenuItemId={appState.selectedMenuItem}
             isAdmin={isAdmin}
             isEditModeAllowed={isEditModeAllowed}
             configuration={configuration}

@@ -12,7 +12,7 @@ import { NewSectionDialog } from '@/components/dialogs/NewSectionDialog';
 import { EditSectionDialog } from '@/components/dialogs/EditSectionDialog';
 import { DeleteConfirmationDialog } from '@/components/dialogs/DeleteConfirmationDialog';
 import { WidgetSkeleton } from '@/components/ui/WidgetSkeleton';
-import NewsFeed from '@/components/widgets/NewsFeed';
+// import NewsFeed from '@/components/widgets/NewsFeed';
 import { getNextSectionOrder } from '@/utils/dashboardUtils';
 import { UIConfiguration } from '@/types/configuration';
 
@@ -27,7 +27,7 @@ export default function Home({
   console.log('isAdmin prop', isAdmin);
   console.log('isEditModeAllowed prop', isEditModeAllowed);
 
-  const tabId = selectedMenuItemId || '00000000000000000000000000000001';
+  const tabId = selectedMenuItemId?.id || '00000000000000000000000000000001';
 
   const {
     dashboardData,
@@ -349,7 +349,7 @@ export default function Home({
               {isEditModeAllowed ? (
                 <>
                   <Typography className="mb-4 text-white">
-                    Create a new section by clicking the "+" button in edit mode
+                    Create a new section by clicking the + button in edit mode
                   </Typography>
                   <Button
                     variant="contained"

@@ -19,6 +19,7 @@ interface NewsArticle {
   date: string;
   category: string;
   link: string;
+  region:string;
 }
 
 export interface NewsFeedResponse {
@@ -54,13 +55,7 @@ const categories: Category[] = [
     label: 'Innovation',
     description: 'New technologies and methods',
     color: 'text-[#6bcf7f]',
-  },
-  {
-    id: 'logistics',
-    label: 'Logistics',
-    description: 'Saudi Arabia supply chain logistics (non-disruptive)',
-    color: 'text-[#4dabf7]',
-  },
+  }
   // {
   //   id: "travel",
   //   label: "Travel",
@@ -77,13 +72,14 @@ const categories: Category[] = [
 
 // Helper function to map API response to NewsArticle
 const mapNewsItemToArticle = (item: NewsItem): NewsArticle => ({
-  id: item.id_num,
-  title: item.Title,
-  content: item.brief || item.Content.substring(0, 150) + '...', // Use brief or truncated content
-  fullContent: item.Content,
-  date: item.Date,
-  category: item.Label.toLowerCase(),
-  link: item.Link,
+  id: item.ID,
+  title: item.TITLE,
+  content: item.BRIEF || item.CONTENT.substring(0, 150) + '...', // Use brief or truncated content
+  fullContent: item.CONTENT,
+  date: item.DATEPUBLISHED,
+  category: item.LABEL.toLowerCase(),
+  link: item.LINK,
+  region:item.REGION
 });
 
 // Helper function to categorize news data
@@ -145,7 +141,7 @@ const NewsFeed: React.FC = () => {
   const FetchDummyProdData = async (): Promise<NewsItem[]> => {
     try {
       const response = await fetch(
-        'https://news-classifier-production-flask-api.cml.apps.cdp-ds-test.aramco.com/news_classifier',
+        'https://news-classifier-prw.cml.apps.cdp-ds-prod.aramco.com/news_classifier',
         {
           method: 'GET',
           headers: {
@@ -227,12 +223,20 @@ const NewsFeed: React.FC = () => {
   const handleRetry = () => {
     window.location.reload(); // Simple retry by reloading
   };
+  const backgroundStyle = {
+  backgroundImage: `url('${process.env.NEXT_PUBLIC_BSP_NAME}/background/bg.png')`,
+  backgroundSize: 'cover',
+  backgroundPosition: 'center center',
+  backgroundRepeat: 'no-repeat',
+  opacity: 1,
+};
+
 
   // Loading state
   if (loading) {
     return (
-      <section className="relative flex h-[100vh] w-full flex-[0_0_auto] flex-col items-center gap-[27px] !bg-black p-20">
-        <header className="relative flex w-full items-center bg-black">
+      <section className="relative flex h-[100vh] w-full flex-[0_0_auto] flex-col items-center gap-[27px] p-20" style={backgroundStyle}>
+        <header className="relative flex w-full items-center">
           <div className="flex h-[23px] w-[23px] items-center justify-center rounded bg-[#83bd01]">
             <div className="h-3 w-3 rounded-sm bg-white"></div>
           </div>
@@ -259,7 +263,7 @@ const NewsFeed: React.FC = () => {
   // Error state
   if (error) {
     return (
-      <section className="relative flex w-full flex-[0_0_auto] flex-col items-center gap-[27px]">
+      <section className="relative flex w-full flex-[0_0_auto] flex-col items-center gap-[27px] p-20"  style={backgroundStyle}>
         {/* <header className="relative flex w-full items-center">
           <div className="flex h-[23px] w-[23px] items-center justify-center rounded bg-[#83bd01]">
             <div className="h-3 w-3 rounded-sm bg-white"></div>
@@ -294,7 +298,7 @@ const NewsFeed: React.FC = () => {
   // Detail View Component
   if (selectedNews) {
     return (
-      <section className="relative flex w-full flex-[0_0_auto] flex-col items-center gap-[27px] !bg-black !p-8">
+      <section className="relative flex w-full flex-[0_0_auto] flex-col items-center gap-[27px]  p-20"  style={backgroundStyle}>
         <header className="relative flex w-full items-center">
           <div className="flex h-[23px] w-[23px] items-center justify-center rounded bg-[#83bd01]">
             <div className="h-3 w-3 rounded-sm bg-white"></div>
@@ -337,7 +341,7 @@ const NewsFeed: React.FC = () => {
                     {categories.find((c: Category) => c.id === activeCategory)?.label ||
                       selectedNews.category}
                   </span>
-                  <span className="text-white/60">{selectedNews.date}</span>
+                  <span className="text-white/60">{selectedNews.date} &nbsp;&nbsp; Region : {selectedNews.region}</span>
                 </div>
 
                 <h1
@@ -378,7 +382,7 @@ const NewsFeed: React.FC = () => {
   }
 
   return (
-    <section className="relative mx-auto flex h-[100vh] w-full flex-[0_0_auto] flex-col items-center gap-[27px] !bg-black p-20">
+    <section className="relative mx-auto flex h-[100vh] w-full flex-[0_0_auto] flex-col items-center gap-[27px]p-20 p-20"  style={backgroundStyle}>
       {/* <header className="relative flex w-full items-center">
         <div className="flex h-[23px] w-[23px] items-center justify-center rounded bg-[#83bd01]">
           <div className="h-3 w-3 rounded-sm bg-white"></div>
@@ -393,7 +397,6 @@ const NewsFeed: React.FC = () => {
 
       {/* Category Navigation */}
       <div className="w-full">
-        =
         <nav className="relative mb-4 flex flex-wrap gap-2">
           {categories.map((category: Category) => (
             <div key={category.id} className="relative">
@@ -417,7 +420,7 @@ const NewsFeed: React.FC = () => {
 
               {/* Tooltip */}
               {hoveredCategory === category.id && (
-                <div className="absolute top-full left-1/2 z-10 mt-2 -translate-x-1/2 transform rounded-lg border border-white/20 bg-black/90 px-3 py-2 text-xs whitespace-nowrap text-white shadow-xl">
+                <div className="absolute top-full left-1/2 z-10 mt-2 -translate-x-1/2 transform rounded-lg border border-white/20 px-3 py-2 text-xs whitespace-nowrap text-white shadow-xl">
                   {category.description}
                   <div className="absolute bottom-full left-1/2 h-0 w-0 -translate-x-1/2 transform border-r-4 border-b-4 border-l-4 border-transparent border-b-black/90"></div>
                 </div>
@@ -477,7 +480,7 @@ const NewsFeed: React.FC = () => {
 
                         <div className="mt-4 flex items-center justify-between">
                           <div className="text-sm leading-[30px] font-normal tracking-[-0.28px] whitespace-nowrap text-[#dadce2]">
-                            {article.date}
+                            {article.date} &nbsp; &nbsp; Region : {article.region}
                           </div>
                           <div className="text-xs text-white/50 transition-colors hover:text-white/70">
                             Click to read more →

@@ -22,7 +22,7 @@ import PSCLogo from '@/assets/PSCLogo';
 
 interface SidebarProps {
   selectedItem: string;
-  onItemSelect: (item: string) => void;
+  onItemSelect: (item: MenuItem) => void;
   menuItems: MenuItem[];
   onMenuItemsChange: (items: MenuItem[]) => void;
   isLoading?: boolean;
@@ -105,6 +105,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         };
 
         const savedItem = await sapODataService.saveMenuItem(newItem, false);
+        console.log(savedItem, 'saveditem', menuItems);
         onMenuItemsChange([...menuItems, savedItem]);
       } else {
         const updatedItem = {
@@ -186,8 +187,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
   return (
     <div
-      className={`flex h-screen flex-col bg-gradient-to-b from-[#00214E] to-[#0164B0] p-4 text-white transition-all duration-300 ease-in-out ${
-        isCollapsed ? 'w-16' : 'w-64'
+      className={`flex h-screen flex-col bg-gradient-to-b from-[#00214E] to-[#0164B0] p-4 text-white ease-in-out ${
+        isCollapsed ? 'w-16' : 'w-64 min-w-[16rem]'
       }`}
     >
       {/* Header with Toggle Button */}
@@ -288,7 +289,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                               ? 'bg-white text-black'
                               : 'text-white hover:bg-[#ffffff30]'
                           } ${isSaving ? 'opacity-50' : ''} ${isCollapsed ? 'justify-center' : ''}`}
-                          onClick={() => !editMode && !isSaving && onItemSelect(item.type)}
+                          onClick={() => !editMode && !isSaving && onItemSelect(item)}
                           title={isCollapsed ? item.name : ''}
                         >
                           {editMode && !isCollapsed && (
@@ -309,9 +310,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
                             <span className="flex-1">{item.name}</span>
                           )}
 
-                          {!isCollapsed && item.roles && item.roles.length > 0 && (
+                          {/* {!isCollapsed && item.roles && item.roles.length > 0 && (
                             <ShieldCheckIcon className="mr-1 h-4 w-4 text-blue-400" />
-                          )}
+                          )} */}
 
                           {editMode && !isCollapsed && (
                             <div className="flex space-x-1">

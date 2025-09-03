@@ -79,7 +79,8 @@ export interface TabConfigPayload {
   SortOrder: number;
   DelInd: string;
   Crudflag: string;
-  RolesItemSet: Role[];
+  // RolesItemSet: Role[];
+  TabRolesItem: Role[];
 }
 
 export interface SectionPayload {
@@ -137,8 +138,10 @@ export interface WidgetHeadRole {
 export interface WidgetHeadPayload {
   Id: string;
   CrudFlag: string;
-  headtowidget: WidgetHeadItem[];
-  HeadtoRoles: WidgetHeadRole[];
+  // headtowidget: WidgetHeadItem[];
+  // HeadtoRoles: WidgetHeadRole[];
+  WidgetHeadToConf: WidgetHeadItem[];
+  WidgetHeadRolesItem: WidgetHeadRole[];
 }
 
 export interface MenuItem {
@@ -217,14 +220,26 @@ export interface LayoutData {
   expanded?: string;
 }
 
+// export interface NewsItem {
+//   Content: string;
+//   DATECLASSIFIED: string;
+//   Label: string;
+//   Link: string;
+//   TITLE: string;
+//   brief: string;
+//   ID: number;
+// }
+
 export interface NewsItem {
-  Content: string;
-  Date: string;
-  Label: string;
-  Link: string;
-  Title: string;
-  brief: string;
-  id_num: number;
+  CONTENT: string;
+  DATEPUBLISHED: string;
+  DATECLASSIFIED: string;
+  LABEL: string;
+  LINK: string;
+  TITLE: string;
+  BRIEF: string;
+  ID: number;
+  REGION: string;
 }
 
 export interface NewsFeedResponse {
@@ -239,19 +254,30 @@ export interface AdminRoleCheckResponse {
 class SAPODataService {
   private baseUrl =
     process.env.NODE_ENV === 'development'
-      ? 'https://ctapitester-a4mel9cxg6.dispatcher.sa1.hana.ondemand.com/sap/opu/odata/sap/ZSCM_CT_CONFIG_SRV'
-      : '/sap/opu/odata/sap/ZSCM_CT_CONFIG_SRV';
+      ? 'https://ctapitester-a4mel9cxg6.dispatcher.sa1.hana.ondemand.com/sap/opu/odata/sap/ZBW_CT_SCIC_SRV'
+      : '/sap/opu/odata/sap/ZBW_CT_SCIC_SRV';
+
+
+
+  // private baseUrl =
+  // process.env.NODE_ENV === 'development'
+  //   ? 'https://ctapitester-a4mel9cxg6.dispatcher.sa1.hana.ondemand.com/sap/opu/odata/sap/ZBW_CT_SCIC_SRV'
+  //   : '/sap/opu/odata/sap/ZBW_CT_SCIC_SRV';
 
   // Fetch all menu items
-  async fetchMenuItems(): Promise<MenuItem[]> {
+
+  async fetchMenuItems(): Promise<any[]> {
     try {
-      const response = await fetch(`${this.baseUrl}/ZSCM_CT_V_TABS?$expand=to_roles&$format=json`, {
-        method: 'GET',
-        headers: {
-          Accept: 'application/json',
-          'Content-Type': 'application/json',
-        },
-      });
+      const response = await fetch(
+        // `${this.baseUrl}/ZSCM_CT_V_TABS?$expand=to_roles&$format=json&$filter=id eq '${itemId}'`,
+        `${this.baseUrl}/TabConfSet?&$expand=TabRolesItem&$format=json&`,
+        {
+          method: 'GET',
+          headers: {
+            Accept: 'application/json',
+            'Content-Type': 'application/json',
+          },
+        });
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -260,15 +286,15 @@ class SAPODataService {
       const data = await response.json();
 
       return data.d.results.map(
-        (item: TabConfigResponse): MenuItem => ({
-          id: item.id,
-          name: item.name,
-          description: item.description,
-          visible: item.visible === 'X',
+        (item: any): MenuItem => ({
+          id: item.Id,
+          name: item.Name,
+          description: item.Description,
+          visible: item.IsVisible === 'X',
           order: item.sort_order,
-          type: item.type,
+          type: item.Type,
           deleted: item.del_ind === 'X',
-          roles: item.to_roles.results || [],
+          roles: item.TabRolesItem.results || [],
           isNew: false,
           hasChanges: false,
         })
@@ -283,7 +309,8 @@ class SAPODataService {
   async fetchSectionsByTabId(tabId: string): Promise<Section[]> {
     try {
       const response = await fetch(
-        `${this.baseUrl}/ZSCM_CT_V_SECTION?$expand=to_roles&$format=json&$filter=TabId eq '${tabId}'&orderby=sort_order`,
+        // `${this.baseUrl}/ZSCM_CT_V_SECTION?$expand=to_roles&$format=json&$filter=TabId eq '${tabId}'&orderby=sort_order`,
+        `${this.baseUrl}/SectionConfSet?$filter=Id eq '${tabId}'&$expand=RolesSecItem&$format=json&`,
         {
           method: 'GET',
           headers: {
@@ -300,7 +327,7 @@ class SAPODataService {
       const data = await response.json();
 
       const sections = data.d.results.map(
-        (item: SectionResponse): Section => ({
+        (item: any): Section => ({
           id: item.Id,
           tabId: item.TabId,
           name: item.Name,
@@ -309,7 +336,7 @@ class SAPODataService {
           description: item.Description,
           type: item.Type,
           deleted: item.DelInd === 'X',
-          roles: item.to_roles.results || [],
+          roles: item.RolesSecItem?.result || [],
           widgets: [], // Will be populated separately
           isNew: false,
           hasChanges: false,
@@ -333,7 +360,9 @@ class SAPODataService {
   async fetchWidgetsBySectionId(sectionId: string): Promise<Widget[]> {
     try {
       const response = await fetch(
-        `${this.baseUrl}/ZSCM_CT_V_WIDGETS?$expand=to_roles&$format=json&$filter=section_id%20eq%20%27${sectionId}%27`,
+        // `${this.baseUrl}/ZSCM_CT_V_WIDGETS?$expand=to_roles&$format=json&$filter=section_id%20eq%20%27${sectionId}%27`,
+        `${this.baseUrl}/WidgetConfSet?$filter=SectionId eq '${sectionId}'&$expand=WidgetConfRolesItem&$format=json`,
+
         {
           method: 'GET',
           headers: {
@@ -342,26 +371,31 @@ class SAPODataService {
           },
         }
       );
+      console.log("fetchwidgettriggered", response)
+
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
       const data = await response.json();
+      console.log("fetchwidgettriggered-------", response, data)
+      console.log(data.d.results, '----------------------------')
 
-      return data.d.results.map(
-        (item: WidgetResponse): Widget => ({
-          id: item.id,
-          sectionId: item.section_id,
-          name: item.name,
-          type: item.type,
-          description: item.description || '',
-          layoutConfig: this.safeJsonParse(item.layout_config),
-          fieldMappings: this.safeJsonParse(item.field_mappings),
-          properties: this.safeJsonParse(item.properties),
+
+      return data.d.results?.map(
+        (item: any): any => ({
+          id: item.Id,
+          sectionId: item.SectionId,
+          name: item.Name,
+          type: item.Type,
+          description: item.Description || '',
+          layoutConfig: this.safeJsonParse(item.LayoutConfig),
+          fieldMappings: this.safeJsonParse(item.FieldMappings),
+          properties: this.safeJsonParse(item.Properties),
           active: item.is_active === 'X',
           deleted: item.del_flag === 'X',
-          roles: item.to_roles.results || [],
+          roles: item.WidgetConfRolesItem?.results || [],
           isNew: false,
           hasChanges: false,
         })
@@ -376,7 +410,9 @@ class SAPODataService {
   async fetchMenuItemById(itemId: string): Promise<MenuItem> {
     try {
       const response = await fetch(
-        `${this.baseUrl}/ZSCM_CT_V_TABS?$expand=to_roles&$format=json&$filter=id eq '${itemId}'`,
+        // `${this.baseUrl}/ZSCM_CT_V_TABS?$expand=to_roles&$format=json&$filter=id eq '${itemId}'`,
+        `${this.baseUrl}/TabConfSet?$filter=Id eq '${itemId}'&$expand=TabRolesItem&$format=json&`,
+
         {
           method: 'GET',
           headers: {
@@ -433,7 +469,8 @@ class SAPODataService {
         SortOrder: menuItem.order,
         DelInd: menuItem.deleted ? 'X' : '',
         Crudflag: isUpdate ? 'U' : 'C',
-        RolesItemSet: rolesForPayload,
+        // RolesItemSet: rolesForPayload,
+        TabRolesItem: rolesForPayload,
       };
 
       const newCSRFToken = await this.getNewCsrfToken(`${this.baseUrl}/TabConfSet`);
@@ -638,15 +675,17 @@ class SAPODataService {
       const payload: WidgetHeadPayload = {
         Id: '',
         CrudFlag: 'C',
-        headtowidget: allWidgets,
-        HeadtoRoles: allRoles,
+        // headtowidget: allWidgets,
+        // HeadtoRoles: allRoles,
+        WidgetHeadToConf: allWidgets,
+        WidgetHeadRolesItem: allRoles,
       };
 
       console.log('Saving all widgets in single request:', payload);
 
       // Get CSRF token and make the single request
-      const newCSRFToken = await this.getNewCsrfToken(`${this.baseUrl}/WidgetsHeadSet`);
-      const response = await fetch(`${this.baseUrl}/WidgetsHeadSet`, {
+      const newCSRFToken = await this.getNewCsrfToken(`${this.baseUrl}/WidgetHeadSet`);
+      const response = await fetch(`${this.baseUrl}/WidgetHeadSet`, {
         method: 'POST',
         headers: {
           Accept: 'application/json',
@@ -692,7 +731,8 @@ class SAPODataService {
         SortOrder: menuItem.order,
         DelInd: 'X', // Mark as deleted
         Crudflag: 'U', // Update operation
-        RolesItemSet: rolesForPayload,
+        // RolesItemSet: rolesForPayload,
+        TabRolesItem: rolesForPayload,
       };
 
       const newCSRFToken = await this.getNewCsrfToken(`${this.baseUrl}/TabConfSet`);
