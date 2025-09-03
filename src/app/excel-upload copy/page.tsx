@@ -614,52 +614,60 @@ export default function ExcelUploadComponent() {
     return errors;
   }, []);
 
-const handleFileUpload = useCallback(
-  async (file: File) => {
-    if (!selectedSchema) {
-      setErrorMessage('Please select a table first');
-      setShowError(true);
-      return;
-    }
+  const handleFileUpload = useCallback(
+    async (file: File) => {
+      if (!selectedSchema) {
+        setErrorMessage('Please select a table first');
+        setShowError(true);
+        return;
+      }
 
-    setIsProcessing(true);
-    setUploadProgress(20);
+      setIsProcessing(true);
+      setUploadProgress(20);
 
-    try {
-      const arrayBuffer = await file.arrayBuffer();
-      setUploadProgress(40);
+      try {
+        const arrayBuffer = await file.arrayBuffer();
+        setUploadProgress(40);
 
-      const workbook = XLSX.read(arrayBuffer, { type: 'array' });
-      const sheetName = workbook.SheetNames[0];
-      const worksheet = workbook.Sheets[sheetName];
+        const workbook = XLSX.read(arrayBuffer, { type: 'array' });
+        const sheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[sheetName];
 
-      setUploadProgress(60);
+        setUploadProgress(60);
 
-      const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
-      const headers = jsonData[0] as string[];
-      const dataRows = jsonData.slice(1) as any[][];
+        const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+        const headers = jsonData[0] as string[];
+        const dataRows = jsonData.slice(1) as any[][];
 
-      setUploadedData({
-        headers,
-        data: dataRows,
-        validationErrors: [],   // clear validation errors here, no local validation
-        validRowCount: dataRows.length,
-        totalRowCount: dataRows.length,
-      });
+        setUploadProgress(80);
 
-      setUploadProgress(100);
-      setIsProcessing(false);
-    } catch (error) {
-      console.error('Error processing file:', error);
-      setErrorMessage('Error processing Excel file. Please check the file format.');
-      setShowError(true);
-      setIsProcessing(false);
-      setUploadProgress(0);
-    }
-  },
-  [selectedSchema]
-);
+        const validationErrors = validateData(dataRows, selectedSchema);
+        const validRowCount =
+          dataRows.length -
+          validationErrors.filter(
+            (error, index, self) => self.findIndex((e) => e.row === error.row) === index
+          ).length;
 
+        setUploadedData({
+          headers,
+          data: dataRows,
+          validationErrors,
+          validRowCount,
+          totalRowCount: dataRows.length,
+        });
+
+        setUploadProgress(100);
+        setIsProcessing(false);
+      } catch (error) {
+        console.error('Error processing file:', error);
+        setErrorMessage('Error processing Excel file. Please check the file format.');
+        setShowError(true);
+        setIsProcessing(false);
+        setUploadProgress(0);
+      }
+    },
+    [selectedSchema, validateData]
+  );
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -721,47 +729,28 @@ const handleFileUpload = useCallback(
         formData.append('file', uploadedFile);
       }
       formData.append('tableName', selectedTable);
-      // formData.append('validRowCount', uploadedData.validRowCount.toString());
-      // formData.append('totalRowCount', uploadedData.totalRowCount.toString());
-      // formData.append('hasErrors', (uploadedData.validationErrors.length > 0).toString());
+      formData.append('validRowCount', uploadedData.validRowCount.toString());
+      formData.append('totalRowCount', uploadedData.totalRowCount.toString());
+      formData.append('hasErrors', (uploadedData.validationErrors.length > 0).toString());
 
       // Simulate API call
-      const res = await fetch(
-        `https://scic-chatbot.cml.apps.cdp-ds-prod.aramco.com/api/uploadExcel`,
+      const response = await fetch(
+        `https://scic-chatbot.cml.apps.cdp-ds-test.aramco.com/api/uploadExcel`,
         {
           method: 'POST',
           body: formData,
         }
       );
-    //   setShowSuccess(true);
-    //   setIsProcessing(false);
+      setShowSuccess(true);
+      setIsProcessing(false);
 
-    //   setTimeout(() => {
-    //     handleClearAll();
-    //   }, 3000);
-    // } catch (error) {
-    //   console.error('Upload error:', error);
-    //   setErrorMessage('Failed to upload data to server');
-    //   setShowError(true);
-    //   setIsProcessing(false);
-    // }
-    const response = await res.json();
-
-
-      if (response.status === "error") {
-        setErrorMessage(response.message || "Upload failed");
-        setShowError(true);
-      } else {
-        setShowSuccess(true);
-        setTimeout(() => {
-          handleClearAll();
-        }, 3000);
-      }
+      setTimeout(() => {
+        handleClearAll();
+      }, 3000);
     } catch (error) {
-      console.error("Upload error:", error);
-      setErrorMessage("Failed to upload data to server");
+      console.error('Upload error:', error);
+      setErrorMessage('Failed to upload data to server');
       setShowError(true);
-    } finally {
       setIsProcessing(false);
     }
   };
@@ -1089,7 +1078,7 @@ const handleFileUpload = useCallback(
                             startIcon={<SendIcon />}
                             onClick={handleUploadToAPI}
                             variant="contained"
-                            // disabled={isProcessing || uploadedData.validationErrors.length > 0}
+                            disabled={isProcessing || uploadedData.validationErrors.length > 0}
                           >
                             {isProcessing ? 'Uploading...' : 'Upload to Database'}
                           </Button>

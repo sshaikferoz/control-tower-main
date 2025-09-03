@@ -5,15 +5,13 @@ import { DashboardSection } from '../types/dashboard';
 export const transformSectionsToUIFormat = (sections: Section[]): DashboardSection[] => {
   console.log('Transforming sections to UI format', sections);
 
-  return sections
-    .filter((section) => !section.deleted && section.visible)
+  return sections?.filter((section) => !section.deleted && section.visible)
     .sort((a, b) => a.order - b.order)
     .map((section) => ({
       id: section.id,
       sectionName: section.name,
       expanded: section.expanded ? 'true' : 'false',
-      layout: section.widgets
-        .filter((widget) => !widget.deleted && widget.active)
+      layout: section.widgets?.filter((widget:any) => !widget.deleted )
         .map((widget, index) => {
           const defaultLayout = { w: 4, h: 3 };
           const savedLayout = widget.layoutConfig || {};
@@ -32,16 +30,17 @@ export const transformSectionsToUIFormat = (sections: Section[]): DashboardSecti
           };
         }),
       fieldMappings: section.widgets
-        .filter((widget) => !widget.deleted && widget.active)
+        .filter((widget:any) => !widget.deleted )
         .reduce(
           (acc, widget) => {
+            console.log(acc,widget,'widget--------------')
             acc[widget.id] = widget.fieldMappings || {};
             return acc;
           },
           {} as Record<string, any>
         ),
       widgets: section.widgets
-        .filter((widget) => !widget.deleted && widget.active)
+        .filter((widget:any) => !widget.deleted)
         .map((widget) => ({
           id: widget.id,
           name: widget.type,

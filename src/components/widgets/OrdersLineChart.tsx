@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   LineChart,
   Line,
@@ -8,6 +8,7 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from 'recharts';
+import { HexColorPicker } from 'react-colorful';
 
 interface OrdersLineChartProps {
   data: {
@@ -15,41 +16,69 @@ interface OrdersLineChartProps {
     value: number;
   }[];
   title: string;
-  //   totalValue: string;
+  color?: string;
+  setChangeColor?: (color: string) => void;
 }
 
-const OrdersLineChart = ({ data, title }: OrdersLineChartProps) => {
-  return (
-    <div className="h-full w-full">
-      <div className="h-full rounded-xl bg-gradient-to-b from-[#00214E] to-[#0164B0] p-4 text-white">
-        <div className="flex w-full items-start justify-between">
-          <div className="flex flex-col items-start gap-[5px]">
-            <h3 className="[font-family:'Ghawar-Hefty',Helvetica] text-base font-normal text-white">
-              {title}
-            </h3>
-          </div>
+const OrdersLineChart = ({
+  data,
+  title,
+}: OrdersLineChartProps) => {
+  const [bgColor, setBgColor] = useState('#00214E');       // background color
+  const [lineColor, setLineColor] = useState('#00a3e0');   // line color
+  const [showBgPicker, setShowBgPicker] = useState(false);
+  const [showLinePicker, setShowLinePicker] = useState(false);
+  const bgPickerRef = useRef<HTMLDivElement>(null);
+  const linePickerRef = useRef<HTMLDivElement>(null);
 
-          {/* <div className="flex flex-col items-center">
-            <span className="[font-family:'Ghawar-SmeiBold',Helvetica] text-xl font-bold whitespace-nowrap text-white">
-              {totalValue}
-            </span>
-            <span className="[font-family:'Ghawar-Regular',Helvetica] text-sm font-normal text-white">
-              Total Order Value
-            </span>
-          </div> */}
+  const lighterBgColor = `${bgColor}80`;
+
+  const backgroundStyle = {
+    backgroundImage: `linear-gradient(to bottom, ${bgColor}, ${lighterBgColor})`,
+    color: '#ffffff',
+    cursor: 'pointer',
+  };
+
+  // Close picker when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (bgPickerRef.current && !bgPickerRef.current.contains(e.target as Node)) {
+        setShowBgPicker(false);
+      }
+      if (linePickerRef.current && !linePickerRef.current.contains(e.target as Node)) {
+        setShowLinePicker(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  return (
+    <div className="relative h-full w-full">
+      <div className="h-full rounded-xl p-4" style={backgroundStyle}>
+        <div className="flex w-full items-start justify-between">
+          <h3 className="text-base font-normal text-white">{title}</h3>
+
+          {/* Buttons to open color pickers */}
+          <div className="flex gap-2">
+            <button
+              className="text-sm px-2 py-1 bg-white text-black rounded"
+              onClick={() => setShowBgPicker(true)}
+            >
+              Background
+            </button>
+            <button
+              className="text-sm px-2 py-1 bg-white text-black rounded"
+              onClick={() => setShowLinePicker(true)}
+            >
+              Line
+            </button>
+          </div>
         </div>
 
         <div className="mt-4 h-[180px]">
           <ResponsiveContainer width="100%" height="100%">
-            <LineChart
-              data={data}
-              margin={{
-                top: 5,
-                right: 30,
-                left: 0,
-                bottom: 5,
-              }}
-            >
+            <LineChart data={data} margin={{ top: 5, right: 30, left: 0, bottom: 5 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#ffffff30" />
               <XAxis dataKey="name" tick={{ fill: '#ffffff' }} axisLine={{ stroke: '#ffffff50' }} />
               <YAxis tick={{ fill: '#ffffff' }} axisLine={false} tickLine={false} />
@@ -64,17 +93,17 @@ const OrdersLineChart = ({ data, title }: OrdersLineChartProps) => {
               <Line
                 type="monotone"
                 dataKey="value"
-                stroke="#5899DA"
+                stroke={lineColor} // dynamic line color
                 strokeWidth={2}
                 dot={{
                   r: 4,
-                  fill: '#5899DA',
+                  fill: lineColor,
                   stroke: '#ffffff',
                   strokeWidth: 2,
                 }}
                 activeDot={{
                   r: 6,
-                  fill: '#5899DA',
+                  fill: lineColor,
                   stroke: '#ffffff',
                   strokeWidth: 2,
                 }}
@@ -83,8 +112,25 @@ const OrdersLineChart = ({ data, title }: OrdersLineChartProps) => {
           </ResponsiveContainer>
         </div>
       </div>
+
+      {/* Background Color Picker */}
+      {showBgPicker && (
+        <div ref={bgPickerRef} className="absolute left-[10%] top-full mt-2 z-50 bg-white p-2 rounded shadow-lg">
+          <HexColorPicker color={bgColor} onChange={setBgColor} />
+          <div className="text-sm text-black mt-2 text-center">{bgColor}</div>
+        </div>
+      )}
+
+      {/* Line Color Picker */}
+      {showLinePicker && (
+        <div ref={linePickerRef} className="absolute left-[70%] top-full mt-2 z-50 bg-white p-2 rounded shadow-lg">
+          <HexColorPicker color={lineColor} onChange={setLineColor} />
+          <div className="text-sm text-black mt-2 text-center">{lineColor}</div>
+        </div>
+      )}
     </div>
   );
 };
+
 
 export default OrdersLineChart;

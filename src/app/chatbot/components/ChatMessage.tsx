@@ -1,12 +1,17 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Check, RotateCw, Copy, Clock, ThumbsUp, ThumbsDown } from 'lucide-react';
 import FeedbackDialog from './FeedbackDialog';
+import { submitNegativeFeedback, submitPositiveFeedback, UserInfo } from '@/services/chatbot/chatService';
+
+
 
 interface ChatMessageProps {
   id: string;
   content: string;
   isUser: boolean;
   timestamp?: string;
+  userInfo: UserInfo;
+  airesponse: any;
   onRegenerate?: (messageId: string, originalPrompt: string) => void;
   originalPrompt?: string;
 }
@@ -16,7 +21,9 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
   content,
   isUser,
   timestamp,
+  userInfo,
   onRegenerate,
+  airesponse,
   originalPrompt,
 }) => {
   const [showFeedbackDialog, setShowFeedbackDialog] = useState(false);
@@ -47,51 +54,39 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
 
     // Submit positive feedback to API
     try {
-      await fetch('/api/feedback', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          messageId: id,
-          feedback: 'positive',
-          rating: 5,
-          timestamp: new Date().toISOString(),
-        }),
-      });
-      console.log('Positive feedback submitted');
+      const response = await submitPositiveFeedback(
+        id,
+        userInfo,
+        airesponse,
+        originalPrompt
+      );
+      console.log(response.message);
     } catch (error) {
-      console.error('Failed to submit feedback:', error);
+      console.error('Failed to submit positive feedback:', error);
     }
   };
 
   const handleDislike = () => {
     setIsLiked(false);
     setShowFeedbackDialog(true);
+
   };
 
   const handleFeedbackSubmit = async (rating: number, comments: string) => {
     setFeedbackSubmitted(true);
     setShowFeedbackDialog(false);
-
     // Submit negative feedback to API
     try {
-      await fetch('/api/feedback', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          messageId: id,
-          feedback: 'negative',
-          rating,
-          comments,
-          timestamp: new Date().toISOString(),
-        }),
-      });
-      console.log('Negative feedback submitted');
+      const response = await submitNegativeFeedback(
+        id,
+        userInfo,
+        airesponse,
+        originalPrompt,
+        comments,
+      );
+      console.log(response.message);
     } catch (error) {
-      console.error('Failed to submit feedback:', error);
+      console.error('Failed to submit positive feedback:', error);
     }
   };
 
@@ -134,6 +129,8 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
   return (
     <>
       <style jsx>{`
+
+
         .chat-response-content {
           color: #ffffff;
           line-height: 1.6;
@@ -223,14 +220,20 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
 
         .chat-response-content a {
           color: #83bd01;
-          text-decoration: underline;
+          text-decoration: underline !important;
           font-weight: 500;
           transition: all 0.2s ease;
         }
 
+ .chat-response-content.prose a {
+  color: #83bd01 !important;
+  text-decoration: underline !important;
+  font-weight: 500 !important;
+}
+
+
         .chat-response-content a:hover {
           color: #a4d317;
-          text-decoration: none;
           background-color: rgba(131, 189, 1, 0.1);
           padding: 2px 4px;
           border-radius: 4px;
@@ -376,6 +379,19 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
           font-size: 0.75em;
           color: #83bd01;
         }
+                a {
+  text-decoration: underline !important;
+}
+
+
+.chat-response-content a,
+.chat-response-content a:link,
+.chat-response-content a:visited {
+  color: #83bd01 !important;
+  text-decoration: underline !important;
+  font-weight: 500 !important;
+}
+
 
         /* Responsive adjustments */
         @media (max-width: 768px) {
@@ -395,14 +411,16 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
           .chat-response-content h2 {
             font-size: 1.25rem;
           }
+
         }
+      
       `}</style>
 
       <div className="mb-8 flex flex-col justify-start">
         <div className="answer-card animate-fade-in isolate flex max-h-screen w-[1130px] max-w-[100%] flex-col items-start gap-[10px] rounded-[24px] bg-[#384F73] p-6 shadow-[0px_9px_4.4px_rgba(0,0,0,0.16)]">
           <div
             ref={contentRef}
-            className="chat-response-content prose prose-sm prose-invert w-full max-w-none"
+            className="chat-response-content  w-full max-w-none"
             dangerouslySetInnerHTML={{ __html: content }}
           />
         </div>
@@ -417,18 +435,16 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
             {!feedbackSubmitted ? (
               <div className="flex gap-2">
                 <button
-                  className={`rounded-full p-2 transition-colors ${
-                    isLiked === true ? 'bg-gray-700 text-white' : 'text-white hover:bg-gray-700'
-                  }`}
+                  className={`rounded-full p-2 transition-colors ${isLiked === true ? 'bg-gray-700 text-white' : 'text-white hover:bg-gray-700'
+                    }`}
                   title="Good response"
                   onClick={handleLike}
                 >
                   <ThumbsUp size={16} />
                 </button>
                 <button
-                  className={`rounded-full p-2 transition-colors ${
-                    isLiked === false ? 'bg-red-400 text-white' : 'text-white hover:bg-gray-700'
-                  }`}
+                  className={`rounded-full p-2 transition-colors ${isLiked === false ? 'bg-red-400 text-white' : 'text-white hover:bg-gray-700'
+                    }`}
                   title="Poor response"
                   onClick={handleDislike}
                 >

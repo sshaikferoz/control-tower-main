@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { UserInfo } from '../../types';
 import { LoadingSpinner } from '../ui/LoadingSpinner';
 
@@ -13,6 +13,9 @@ export const UserProfile: React.FC<UserProfileProps> = ({
   userInfoLoading,
   formatTime,
 }) => {
+    useEffect(() => {
+    console.log('UserInfo:', userInfo);
+  }, [userInfo]);
   return (
     <div className="mt-auto flex items-center space-x-3 rounded bg-[#ffffff20] p-2">
       {userInfoLoading ? (

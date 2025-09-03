@@ -68,6 +68,7 @@ const gridWidgets = section.widgets?.filter((w: any) => w.name !== 'announcement
     const initialWidgetProps: Record<string, any> = {};
 
     section.widgets?.forEach((widget: any) => {
+      console.log(widget.props,'widgetpropssss')
       if (widget.props && Object.keys(widget.props).length > 0) {
         const { configType, widgetCategory, ...cleanProps } = widget.props;
         initialWidgetProps[widget.id] = cleanProps;
@@ -390,11 +391,12 @@ const layout = orderedWidgets.map((widget) => {
       <div
         key={widget.id}
         onClick={() =>
-          widget.name !== 'news-feed' &&
+          widget.name !== 'news-feed' && props.showdescription &&
           handleOpenReport(widget.fieldMappings?.targetReport)
         }
         className="relative cursor-pointer rounded-lg bg-transparent shadow-md transition-shadow duration-200 hover:shadow-lg"
       >
+        { props.showdescription &&
         <div className="absolute top-2 right-2 z-50 flex space-x-1">
           <Tooltip
             title={widget.description || 'No description available'}
@@ -418,26 +420,29 @@ const layout = orderedWidgets.map((widget) => {
             </IconButton>
           </Tooltip>
         </div>
+  }
 
-        {hasRoles && (
+        {/* {hasRoles && (
           <div className="absolute top-2 left-2 z-50 rounded-full bg-green-500 px-2 py-1 text-xs text-white">
             <SecurityIcon style={{ fontSize: 14 }} />
           </div>
-        )}
+        )} */}
 
-        <LazyWidgetContent
-          widget={widget}
-          Component={Component}
-          props={props}
-          onVisible={() => handleWidgetVisible(widget.id)}
-          isLoading={isLoading}
-        />
+ <div style={{ pointerEvents: !isEditMode ? 'none' : 'auto', display: 'contents',
+}}>
+  <LazyWidgetContent
+    widget={widget}
+    Component={Component}
+    props={props}
+    onVisible={() => handleWidgetVisible(widget.id)}
+    isLoading={isLoading}
+  />
+</div>
+
       </div>
     );
   })}
 </GridLayout>
-
-
       <WidgetDetailsDialog
         open={widgetDetailsDialog.open}
         onClose={handleWidgetDetailsClose}
