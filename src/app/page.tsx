@@ -303,7 +303,7 @@ const Dashboard: React.FC = () => {
       style={backgroundStyle}
     >
       {/* Show sidebar for admin users (regardless of edit mode) */}
-      {isAdmin && appState.view !== 'mapping' && (
+      {appState.view !== 'mapping' && (
         <Sidebar
           selectedItem={appState.selectedMenuItem}
           onItemSelect={handleMenuItemSelect}
