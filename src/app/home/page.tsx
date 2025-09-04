@@ -1,5 +1,5 @@
 'use client';
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { Suspense } from 'react';
 import { CircularProgress, Typography, Button, Snackbar, Alert } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
@@ -11,19 +11,17 @@ import { DashboardSection } from '@/components/dashboard/DashboardSection';
 import { NewSectionDialog } from '@/components/dialogs/NewSectionDialog';
 import { EditSectionDialog } from '@/components/dialogs/EditSectionDialog';
 import { DeleteConfirmationDialog } from '@/components/dialogs/DeleteConfirmationDialog';
+import { ConfigurationDialog } from '@/components/dialogs/ConfigurationDialog';
 import { WidgetSkeleton } from '@/components/ui/WidgetSkeleton';
-// import NewsFeed from '@/components/widgets/NewsFeed';
 import { getNextSectionOrder } from '@/utils/dashboardUtils';
-import { UIConfiguration } from '@/types/configuration';
+import { UIConfiguration, defaultConfiguration, ConfigurationManager } from '@/types/configuration';
 
 export default function Home({
   selectedMenuItemId,
   isAdmin = false,
   isEditModeAllowed = false,
-  configuration,
-  onOpenConfigDialog,
 }: any) {
-  const tabId = selectedMenuItemId || '00000000000000000000000000000001';
+  const tabId = selectedMenuItemId || '';
 
   const {
     dashboardData,
@@ -37,6 +35,16 @@ export default function Home({
     updateDashboardData,
   } = useDashboardData(tabId);
 
+  // Configuration state
+  const [configuration, setConfiguration] = useState<UIConfiguration>(defaultConfiguration);
+  const [configurationLoading, setConfigurationLoading] = useState(true);
+  const [showConfigDialog, setShowConfigDialog] = useState(false);
+  const [configSaveMessage, setConfigSaveMessage] = useState<{
+    type: 'success' | 'error';
+    text: string;
+  } | null>(null);
+
+  // Existing dashboard state
   const [isEditMode, setIsEditMode] = useState(false);
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -46,6 +54,103 @@ export default function Home({
   const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
   const [selectedSection, setSelectedSection] = useState<Section | null>(null);
 
+  // Load configuration when tab changes
+  useEffect(() => {
+    if (tabId) {
+      loadConfiguration();
+    }
+  }, [tabId]);
+  const loadConfiguration = async () => {
+    if (!tabId) return;
+    try {
+      setConfigurationLoading(true);
+      const configManager = ConfigurationManager.getInstance();
+      const tabConfig = await configManager.getConfiguration(tabId);
+      setConfiguration(tabConfig);
+    } catch (error) {
+      console.error('Failed to load configuration:', error);
+      setConfiguration(defaultConfiguration);
+      setError('Failed to load UI configuration');
+    } finally {
+      setConfigurationLoading(false);
+    }
+  };
+
+  const handleOpenConfigDialog = () => {
+    if (!isAdmin) return;
+    setShowConfigDialog(true);
+  };
+
+  const handleCloseConfigDialog = () => {
+    setShowConfigDialog(false);
+  };
+
+  const handleSaveConfiguration = async (newConfig: UIConfiguration): Promise<boolean> => {
+    if (!isAdmin) return false;
+
+    try {
+      setConfigurationLoading(true);
+      const configManager = ConfigurationManager.getInstance();
+      const savedConfig = await configManager.saveConfiguration(tabId, newConfig);
+
+      setConfiguration(savedConfig);
+      setConfigSaveMessage({
+        type: 'success',
+        text: 'Configuration saved successfully!',
+      });
+
+      return true;
+    } catch (error) {
+      console.error('Failed to save configuration:', error);
+      setConfigSaveMessage({
+        type: 'error',
+        text: 'Failed to save configuration. Please try again.',
+      });
+      return false;
+    } finally {
+      setConfigurationLoading(false);
+    }
+  };
+
+  const handleResetConfiguration = async () => {
+    if (!isAdmin) return;
+
+    try {
+      setConfigurationLoading(true);
+      const configManager = ConfigurationManager.getInstance();
+
+      // Clear cache for this tab and reload defaults
+      configManager.clearCache(tabId);
+      const defaultConfig = { ...defaultConfiguration };
+
+      // Save default configuration to server
+      const savedConfig = await configManager.saveConfiguration(tabId, defaultConfig);
+      setConfiguration(savedConfig);
+
+      setConfigSaveMessage({
+        type: 'success',
+        text: 'Configuration reset to defaults successfully!',
+      });
+    } catch (error) {
+      console.error('Failed to reset configuration:', error);
+      setConfigSaveMessage({
+        type: 'error',
+        text: 'Failed to reset configuration. Please try again.',
+      });
+    } finally {
+      setConfigurationLoading(false);
+    }
+  };
+
+  // Clear config save message after 3 seconds
+  useEffect(() => {
+    if (configSaveMessage) {
+      const timer = setTimeout(() => setConfigSaveMessage(null), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [configSaveMessage]);
+
+  // Existing dashboard handlers
   const toggleEditMode = () => {
     if (!isEditModeAllowed) return;
     setIsEditMode(!isEditMode);
@@ -272,27 +377,20 @@ export default function Home({
   };
 
   const handleSaveDashboard = () => {
-    // Save dashboard logic here
     console.log('Saving dashboard...');
     setIsEditMode(false);
   };
 
   const handleAddSection = () => {
-    // Add section logic here
     setShowNewSectionDialog(true);
   };
 
-  // Apply configuration-based styling
-  const getContentStyle = () => {
-    if (!configuration?.branding) return {};
+  // Get computed styles based on configuration
+  const configManager = ConfigurationManager.getInstance();
+  const backgroundStyle = configManager.getBackgroundStyle(configuration);
+  const themeVariables = configManager.getThemeVariables(configuration);
 
-    return {
-      '--primary-color': configuration.branding.primaryColor,
-      '--app-name': configuration.branding.appName,
-    } as React.CSSProperties;
-  };
-
-  if (loading) {
+  if (loading || configurationLoading) {
     return (
       <div className="flex h-screen items-center justify-center">
         <CircularProgress />
@@ -310,15 +408,11 @@ export default function Home({
   }
 
   return (
-    <div className="flex w-full">
+    <div className="flex w-full" style={themeVariables}>
       <div className="flex min-h-screen"></div>
       <div className="relative min-h-screen w-full">
-        <div
-          className="absolute inset-0 bg-cover bg-center"
-          style={{
-            backgroundImage: `url('${process.env.NEXT_PUBLIC_BSP_NAME}/background/bg.png')`,
-          }}
-        ></div>
+        {/* Dynamic background based on configuration */}
+        <div className="absolute inset-0" style={backgroundStyle}></div>
 
         <div className="relative z-10 flex max-h-screen flex-col overflow-y-auto text-white">
           <DashboardHeader
@@ -329,13 +423,8 @@ export default function Home({
             onSaveDashboard={handleSaveDashboard}
             onAddSection={handleAddSection}
             configuration={configuration}
-            onOpenConfigDialog={onOpenConfigDialog}
+            onOpenConfigDialog={handleOpenConfigDialog}
           />
-          {/* <div className="mx-auto flex w-full flex-col items-start gap-7 px-6 py-6">
-            <Suspense fallback={<WidgetSkeleton />}>
-              <NewsFeed />
-            </Suspense>
-          </div> */}
 
           {!dashboardData?.sections || dashboardData.sections.length === 0 ? (
             <div className="flex h-[60vh] flex-col items-center justify-center">
@@ -373,6 +462,18 @@ export default function Home({
         </div>
       </div>
 
+      {/* Configuration Dialog */}
+      {isAdmin && (
+        <ConfigurationDialog
+          visible={showConfigDialog}
+          onHide={handleCloseConfigDialog}
+          configuration={configuration}
+          onSave={handleSaveConfiguration}
+          onReset={handleResetConfiguration}
+        />
+      )}
+
+      {/* Dashboard Dialogs */}
       {isEditModeAllowed && (
         <>
           <NewSectionDialog
@@ -408,6 +509,18 @@ export default function Home({
           </Snackbar>
         </>
       )}
+
+      {/* Configuration Save Messages */}
+      <Snackbar
+        open={!!configSaveMessage}
+        autoHideDuration={3000}
+        onClose={() => setConfigSaveMessage(null)}
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+      >
+        <Alert severity={configSaveMessage?.type || 'info'} sx={{ width: '100%' }}>
+          {configSaveMessage?.text}
+        </Alert>
+      </Snackbar>
     </div>
   );
 }

@@ -18,13 +18,8 @@ import Home from '@/app/home/page'; // Assuming this exists
 
 const Dashboard: React.FC = () => {
   const [appState, setAppState] = useState<AppState>({
-    view: 'generic',
-    selectedMenuItem: {
-      id: '00000000000000000000000000000001',
-      name: 'Home',
-      type: 'Dashboard',
-      order: 0,
-    },
+    view: 'Dashboard',
+    selectedMenuItem: null, // Initialize as null until menuItems are loaded
   });
   const [modal, setModal] = useState<ModalState>({
     isOpen: false,
@@ -53,6 +48,27 @@ const Dashboard: React.FC = () => {
   const isStandaloneAllowed = useMemo(() => {
     return urlParams?.get('mode') === 'standalone' && !!urlParams?.get('appId');
   }, [urlParams]);
+
+  // Default to first menu item when menuItems are loaded
+  useEffect(() => {
+    if (menuItems.length > 0 && !appState.selectedMenuItem && !isStandaloneAllowed) {
+      // Sort menu items by order to ensure we get the first one
+      const sortedMenuItems = [...menuItems].sort((a, b) => (a.order || 0) - (b.order || 0));
+      const firstMenuItem = sortedMenuItems[0];
+
+      setAppState((prev) => ({
+        ...prev,
+        selectedMenuItem: firstMenuItem,
+        view:
+          firstMenuItem.type === 'Dashboard'
+            ? 'b2b-reports'
+            : firstMenuItem.type === 'Section'
+              ? 'dashboard'
+              : 'generic',
+      }));
+    }
+  }, [menuItems, appState.selectedMenuItem, isStandaloneAllowed]);
+
   // If standalone mode, force the selectedMenuItem to appId
   useEffect(() => {
     if (isStandaloneAllowed) {
@@ -212,11 +228,16 @@ const Dashboard: React.FC = () => {
   }, [configuration.background]);
 
   // Render based on current view
-  // Render based on current view
   const renderContent = () => {
+    // Don't render content if no menu item is selected yet
+    if (!appState.selectedMenuItem) {
+      return null;
+    }
+
     const selectedMenuItemData = menuItems.find(
       (item) => item.id === appState.selectedMenuItem?.id
     );
+
     // Determine the selectedMenuItemId based on standalone mode
     const getSelectedMenuItemId = () => {
       if (isStandaloneAllowed) {
@@ -228,6 +249,7 @@ const Dashboard: React.FC = () => {
     };
 
     const selectedMenuItem = getSelectedMenuItemId();
+    console.log('Selected Menu Item ID:', selectedMenuItem);
     switch (appState.view) {
       case 'dashboard':
         return (
@@ -306,8 +328,9 @@ const Dashboard: React.FC = () => {
         );
     }
   };
+
   // Show loading screen while checking admin status or loading configuration
-  if (adminCheckLoading || configLoading) {
+  if (adminCheckLoading || configLoading || isLoading) {
     return (
       <LoadingScreen
         title="Loading..."
@@ -335,7 +358,7 @@ const Dashboard: React.FC = () => {
       {/* Show sidebar for admin users (regardless of edit mode) */}
       {appState.view !== 'mapping' && !isStandaloneAllowed && (
         <Sidebar
-          selectedItem={appState.selectedMenuItem}
+          selectedItem={appState.selectedMenuItem?.id || ''} // Pass the ID instead of the whole object
           onItemSelect={handleMenuItemSelect}
           menuItems={menuItems}
           onMenuItemsChange={setMenuItems}

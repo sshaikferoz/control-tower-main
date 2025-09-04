@@ -51,13 +51,13 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
     if (position.includes('bottom')) {
       classes.push('bottom-6');
     } else {
-      classes.push('top-6');
+      classes.push('top-25');
     }
 
     if (position.includes('right')) {
-      classes.push('right-6');
+      classes.push('right-25');
     } else {
-      classes.push('left-6');
+      classes.push('left-auto');
     }
 
     return classes.join(' ');

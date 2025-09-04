@@ -1,5 +1,7 @@
 // services/sapODataService.ts
 
+import { UIConfiguration } from "@/types/configuration";
+
 export interface Role {
     RoleId: string;
     Id: string;
@@ -233,6 +235,32 @@ export interface NewsItem {
     BRIEF: string;
     ID: number;
     REGION: string;
+}
+export interface SettingsResponse {
+    Id: string;
+    TabId: string;
+    IsVisible: string;
+    Crudflag: string;
+    ConfigJson: string;
+    CreatedBy: string;
+    CreatedOn: string;
+    CreatedAt: string;
+    ChangedBy: string;
+    ChangedOn: string;
+    ChangedAt: string;
+}
+
+export interface SettingsPayload {
+    Id: string;
+    Crudflag: string;
+    CreatedBy: string;
+    CreatedOn: string;
+    CreatedAt: string;
+    ChangedBy: string;
+    ChangedOn: string;
+    ConfigJson: string;
+    IsVisible: string;
+    TabId: string;
 }
 
 export interface NewsFeedResponse {
@@ -920,7 +948,7 @@ class SAPODataService {
             // Check if results exist and if IsAdmin flag is set
             if (data.d.results && data.d.results.length > 0) {
                 const adminCheck: AdminRoleCheckResponse = data.d.results[0];
-                return adminCheck.IsAdmin === 'X';
+                return adminCheck.IsAdmin === '';
             }
 
             // If no results, user is not admin
@@ -931,6 +959,154 @@ class SAPODataService {
             return false;
         }
     }
+
+
+    /**
+     * Fetch UI configuration settings for a specific tab
+     */
+    async fetchSettingsByTabId(tabId: string): Promise<UIConfiguration | null> {
+        try {
+            const response = await fetch(
+                `${this.baseUrl}/SettingsSet?$filter=TabId eq '${tabId}'&$format=json`,
+                {
+                    method: 'GET',
+                    headers: {
+                        Accept: 'application/json',
+                        'Content-Type': 'application/json',
+                    },
+                }
+            );
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const data = await response.json();
+
+            if (data.d.results && data.d.results.length > 0) {
+                const settingsData: SettingsResponse = data.d.results[0];
+
+                // Parse the ConfigJson string to get the actual configuration
+                try {
+                    const configJson = JSON.parse(settingsData.ConfigJson);
+                    return {
+                        ...configJson,
+                        _metadata: {
+                            id: settingsData.Id,
+                            tabId: settingsData.TabId,
+                            isVisible: settingsData.IsVisible === 'X',
+                        }
+                    };
+                } catch (parseError) {
+                    console.warn('Failed to parse ConfigJson, returning default configuration:', parseError);
+                    return null;
+                }
+            }
+
+            // No settings found for this tab
+            return null;
+        } catch (error) {
+            console.error('Error fetching settings by tab ID:', error);
+            return null;
+        }
+    }
+
+    /**
+     * Save UI configuration settings for a specific tab
+     */
+    async saveSettings(tabId: string, configuration: UIConfiguration, existingId?: string): Promise<UIConfiguration> {
+        try {
+            const isUpdate = !!existingId;
+
+            // Remove metadata from configuration before saving
+            const configToSave = { ...configuration };
+            delete (configToSave as any)._metadata;
+
+            const payload: SettingsPayload = {
+                Id: isUpdate ? existingId : '', // Empty for new settings
+                Crudflag: isUpdate ? 'U' : 'C',
+                CreatedBy: '',
+                CreatedOn: '',
+                CreatedAt: '',
+                ChangedBy: '',
+                ChangedOn: '',
+                ConfigJson: JSON.stringify(configToSave),
+                IsVisible: 'X',
+                TabId: tabId,
+            };
+
+            console.log('Settings payload for', isUpdate ? 'update' : 'create', ':', payload);
+
+            const newCSRFToken = await this.getNewCsrfToken(`${this.baseUrl}/SettingsSet`);
+            const response = await fetch(`${this.baseUrl}/SettingsSet`, {
+                method: 'POST',
+                headers: {
+                    Accept: 'application/json',
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-Token': newCSRFToken,
+                },
+                body: JSON.stringify(payload),
+            });
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
+            }
+
+            const result = await response.json();
+            console.log('Settings save result:', result);
+
+            const savedId = result.d?.Id || existingId;
+
+            // Return the configuration with updated metadata
+            return {
+                ...configToSave,
+                _metadata: {
+                    id: savedId,
+                    tabId: tabId,
+                    isVisible: true,
+                }
+            };
+        } catch (error) {
+            console.error('Error saving settings:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Get settings ID for a specific tab (helper method)
+     */
+    async getSettingsId(tabId: string): Promise<string | null> {
+        try {
+            const response = await fetch(
+                `${this.baseUrl}/SettingsSet?$filter=TabId eq '${tabId}'&$format=json&$select=Id`,
+                {
+                    method: 'GET',
+                    headers: {
+                        Accept: 'application/json',
+                        'Content-Type': 'application/json',
+                    },
+                }
+            );
+
+            if (!response.ok) {
+                return null;
+            }
+
+            const data = await response.json();
+
+            if (data.d.results && data.d.results.length > 0) {
+                return data.d.results[0].Id;
+            }
+
+            return null;
+        } catch (error) {
+            console.error('Error getting settings ID:', error);
+            return null;
+        }
+    }
+
 }
 
 export const sapODataService = new SAPODataService();

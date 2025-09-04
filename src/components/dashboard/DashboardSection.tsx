@@ -60,15 +60,15 @@ export const DashboardSection: React.FC<DashboardSectionProps> = ({
 
   const sectionRef = useRef<HTMLDivElement>(null);
   const dataManager = useMemo(() => DataManager.getInstance(), []);
-const announcementWidgets = section.widgets?.filter((w: any) => w.name === 'announcement') || [];
-const gridWidgets = section.widgets?.filter((w: any) => w.name !== 'announcement') || [];
+  const announcementWidgets = section.widgets?.filter((w: any) => w.name === 'announcement') || [];
+  const gridWidgets = section.widgets?.filter((w: any) => w.name !== 'announcement') || [];
 
   // Initialize widget props with saved or default values
   useEffect(() => {
     const initialWidgetProps: Record<string, any> = {};
 
     section.widgets?.forEach((widget: any) => {
-      console.log(widget.props,'widgetpropssss')
+      console.log(widget.props, 'widgetpropssss');
       if (widget.props && Object.keys(widget.props).length > 0) {
         const { configType, widgetCategory, ...cleanProps } = widget.props;
         initialWidgetProps[widget.id] = cleanProps;
@@ -212,6 +212,7 @@ const gridWidgets = section.widgets?.filter((w: any) => w.name !== 'announcement
     }
     onDragEnd();
   };
+
   const handleOpenReport = (targetReport: any): void => {
     if (!targetReport?.technicalId) {
       alert('No Detailed Report configured for this widget.');
@@ -240,26 +241,28 @@ const gridWidgets = section.widgets?.filter((w: any) => w.name !== 'announcement
 
     window.open(reportUrl, '_blank', 'noopener,noreferrer');
   };
-const otherWidgets = section.widgets?.filter((w: any) => w.name !== 'announcement') || [];
 
-// Merge: announcements first
-const orderedWidgets = [...announcementWidgets, ...otherWidgets];
+  const otherWidgets = section.widgets?.filter((w: any) => w.name !== 'announcement') || [];
 
-// Recalculate layout: announcements on top, shift others down
-const originalLayout = section.layout || [];
+  // Merge: announcements first
+  const orderedWidgets = [...announcementWidgets, ...otherWidgets];
 
-let currentY = 0;
-const layout = orderedWidgets.map((widget) => {
-  const item = originalLayout.find((l: any) => l.i === widget.id);
+  // Recalculate layout: announcements on top, shift others down
+  const originalLayout = section.layout || [];
 
-  if (!item) return null;
+  let currentY = 0;
+  const layout = orderedWidgets
+    .map((widget) => {
+      const item = originalLayout.find((l: any) => l.i === widget.id);
 
-  const newItem = { ...item, y: currentY };
-  currentY += item.h;
+      if (!item) return null;
 
-  return newItem;
-}).filter(Boolean); // filter out nulls in case layout was missing
+      const newItem = { ...item, y: currentY };
+      currentY += item.h;
 
+      return newItem;
+    })
+    .filter(Boolean); // filter out nulls in case layout was missing
 
   return (
     <div
@@ -331,118 +334,119 @@ const layout = orderedWidgets.map((widget) => {
         </span>
       </div>
 
- {/* 🔔 Render announcement widgets outside the grid */}
-{announcementWidgets.map((widget) => {
-  const Component = widgetMapping[widget.name];
-  const props = widgetProps[widget.id] || defaultPropsMapping[widget.name] || {};
-  const isLoading = loadingWidgets.has(widget.id);
+      {/* FIXED: Conditionally render content based on isExpanded state */}
+      {isExpanded && (
+        <>
+          {/* 🔔 Render announcement widgets outside the grid */}
+          {announcementWidgets.map((widget) => {
+            const Component = widgetMapping[widget.name];
+            const props = widgetProps[widget.id] || defaultPropsMapping[widget.name] || {};
+            const isLoading = loadingWidgets.has(widget.id);
 
-  if (!Component) return null;
+            if (!Component) return null;
 
-  return (
-    <div
-      key={widget.id}
-      className="mb-4 rounded-lg p-4 shadow-md"
-    >
-      <LazyWidgetContent
-        widget={widget}
-        Component={Component}
-        props={props}
-        onVisible={() => handleWidgetVisible(widget.id)}
-        isLoading={isLoading}
-      />
-    </div>
-  );
-})}
+            return (
+              <div key={widget.id} className="mb-4 rounded-lg p-4 shadow-md">
+                <LazyWidgetContent
+                  widget={widget}
+                  Component={Component}
+                  props={props}
+                  onVisible={() => handleWidgetVisible(widget.id)}
+                  isLoading={isLoading}
+                />
+              </div>
+            );
+          })}
 
-{/* 🧱 GridLayout for all other widgets */}
-<GridLayout
-  className="layout w-full"
-  layout={layout}
-  cols={12}
-  rowHeight={80}
-  isResizable={false}
-  isDraggable={false}
->
-  {gridWidgets.map((widget: any) => {
-    const Component = widgetMapping[widget.name];
-    const props = widgetProps[widget.id] || defaultPropsMapping[widget.name] || {};
-    const isLoading = loadingWidgets.has(widget.id);
-    const hasRoles = widget.roles?.length > 0;
-
-    if (!Component) {
-      console.error(`Component not found for widget type: ${widget.name}`);
-      return (
-        <div
-          key={widget.id}
-          className="bg-opacity-30 relative flex items-center justify-center rounded-lg bg-red-500"
-        >
-          <div className="p-4 text-center text-white">
-            <p>Widget type not found: {widget.name}</p>
-            <p className="mt-2 text-xs">
-              Available types: {Object.keys(widgetMapping).join(', ')}
-            </p>
-          </div>
-        </div>
-      );
-    }
-
-    return (
-      <div
-        key={widget.id}
-        onClick={() =>
-          widget.name !== 'news-feed' && props.showdescription &&
-          handleOpenReport(widget.fieldMappings?.targetReport)
-        }
-        className="relative cursor-pointer rounded-lg bg-transparent shadow-md transition-shadow duration-200 hover:shadow-lg"
-      >
-        { props.showdescription &&
-        <div className="absolute top-2 right-2 z-50 flex space-x-1">
-          <Tooltip
-            title={widget.description || 'No description available'}
-            enterDelay={0}
-            leaveDelay={0}
-            placement="top"
-            arrow
+          {/* 🧱 GridLayout for all other widgets */}
+          <GridLayout
+            className="layout w-full"
+            layout={layout}
+            cols={12}
+            rowHeight={80}
+            isResizable={false}
+            isDraggable={false}
           >
-            <IconButton
-              onClick={() => handleWidgetExpand(widget)}
-              size="small"
-              sx={{
-                backgroundColor: 'rgba(255, 255, 255, 0.2)',
-                color: 'white',
-                '&:hover': {
-                  backgroundColor: 'rgba(255, 255, 255, 0.3)',
-                },
-              }}
-            >
-              <InfoIcon sx={{ fontSize: 16 }} />
-            </IconButton>
-          </Tooltip>
-        </div>
-  }
+            {gridWidgets.map((widget: any) => {
+              const Component = widgetMapping[widget.name];
+              const props = widgetProps[widget.id] || defaultPropsMapping[widget.name] || {};
+              const isLoading = loadingWidgets.has(widget.id);
+              const hasRoles = widget.roles?.length > 0;
 
-        {/* {hasRoles && (
-          <div className="absolute top-2 left-2 z-50 rounded-full bg-green-500 px-2 py-1 text-xs text-white">
-            <SecurityIcon style={{ fontSize: 14 }} />
-          </div>
-        )} */}
+              if (!Component) {
+                console.error(`Component not found for widget type: ${widget.name}`);
+                return (
+                  <div
+                    key={widget.id}
+                    className="bg-opacity-30 relative flex items-center justify-center rounded-lg bg-red-500"
+                  >
+                    <div className="p-4 text-center text-white">
+                      <p>Widget type not found: {widget.name}</p>
+                      <p className="mt-2 text-xs">
+                        Available types: {Object.keys(widgetMapping).join(', ')}
+                      </p>
+                    </div>
+                  </div>
+                );
+              }
 
- <div style={{ pointerEvents: !isEditMode ? 'none' : 'auto', display: 'contents',
-}}>
-  <LazyWidgetContent
-    widget={widget}
-    Component={Component}
-    props={props}
-    onVisible={() => handleWidgetVisible(widget.id)}
-    isLoading={isLoading}
-  />
-</div>
+              return (
+                <div
+                  key={widget.id}
+                  onClick={() =>
+                    widget.name !== 'news-feed' &&
+                    props.showdescription &&
+                    handleOpenReport(widget.fieldMappings?.targetReport)
+                  }
+                  className="relative cursor-pointer rounded-lg bg-transparent shadow-md transition-shadow duration-200 hover:shadow-lg"
+                >
+                  {props.showdescription && (
+                    <div className="absolute top-2 right-2 z-50 flex space-x-1">
+                      <Tooltip
+                        title={widget.description || 'No description available'}
+                        enterDelay={0}
+                        leaveDelay={0}
+                        placement="top"
+                        arrow
+                      >
+                        <IconButton
+                          onClick={() => handleWidgetExpand(widget)}
+                          size="small"
+                          sx={{
+                            backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                            color: 'white',
+                            '&:hover': {
+                              backgroundColor: 'rgba(255, 255, 255, 0.3)',
+                            },
+                          }}
+                        >
+                          <InfoIcon sx={{ fontSize: 16 }} />
+                        </IconButton>
+                      </Tooltip>
+                    </div>
+                  )}
 
-      </div>
-    );
-  })}
-</GridLayout>
+                  <div
+                    style={{
+                      pointerEvents: !isEditMode ? 'none' : 'auto',
+                      display: 'contents',
+                    }}
+                  >
+                    <LazyWidgetContent
+                      widget={widget}
+                      Component={Component}
+                      props={props}
+                      onVisible={() => handleWidgetVisible(widget.id)}
+                      isLoading={isLoading}
+                    />
+                  </div>
+                </div>
+              );
+            })}
+          </GridLayout>
+        </>
+      )}
+
       <WidgetDetailsDialog
         open={widgetDetailsDialog.open}
         onClose={handleWidgetDetailsClose}

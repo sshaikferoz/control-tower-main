@@ -13,6 +13,7 @@ import {
   EyeIcon,
   TrashIcon,
   ShieldCheckIcon,
+  LinkIcon,
 } from '@heroicons/react/24/outline';
 import { UserProfile } from './UserProfile';
 import { SidebarItemModal } from '../modals/SidebarItemModal';
@@ -21,7 +22,7 @@ import { Button } from '../ui/Button';
 import PSCLogo from '@/assets/PSCLogo';
 
 interface SidebarProps {
-  selectedItem: string;
+  selectedItem: string; // This should be the ID of the selected item
   onItemSelect: (item: MenuItem) => void;
   menuItems: MenuItem[];
   onMenuItemsChange: (items: MenuItem[]) => void;
@@ -46,6 +47,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const [tempItems, setTempItems] = useState<MenuItem[]>([]);
   const [isSaving, setIsSaving] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [copiedItemId, setCopiedItemId] = useState<string | null>(null);
 
   const { userInfo, userInfoLoading, formatTime } = useUserInfo();
 
@@ -89,6 +91,41 @@ export const Sidebar: React.FC<SidebarProps> = ({
       alert('Failed to delete menu item. Please try again.');
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const handleCopyUrl = async (item: MenuItem) => {
+    try {
+      const baseUrl = window.location.origin;
+      const standaloneUrl = `${baseUrl}/?&mode=standalone&appId=${item.id}`;
+
+      await navigator.clipboard.writeText(standaloneUrl);
+
+      // Show feedback that URL was copied
+      setCopiedItemId(item.id);
+      setTimeout(() => {
+        setCopiedItemId(null);
+      }, 2000);
+    } catch (error) {
+      console.error('Failed to copy URL:', error);
+      // Fallback for browsers that don't support clipboard API
+      try {
+        const textArea = document.createElement('textarea');
+        const baseUrl = window.location.origin;
+        const standaloneUrl = `${baseUrl}/?&mode=standalone&appId=${item.id}`;
+        textArea.value = standaloneUrl;
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+
+        setCopiedItemId(item.id);
+        setTimeout(() => {
+          setCopiedItemId(null);
+        }, 2000);
+      } catch (fallbackError) {
+        alert('Failed to copy URL to clipboard');
+      }
     }
   };
 
@@ -211,7 +248,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
           </div>
         )}
       </div>
-
       {/* Search and Edit Controls - Hidden when collapsed */}
       {!isCollapsed && (
         <div className="mt-4 flex items-center justify-between">
@@ -246,7 +282,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
           )}
         </div>
       )}
-
       {/* Add Item Button - Hidden when collapsed */}
       {editMode && !isCollapsed && (
         <div className="mt-2 flex justify-end">
@@ -261,8 +296,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
           </Button>
         </div>
       )}
-
       {/* Navigation Menu */}
+
       <nav className="mt-2 flex-grow overflow-hidden">
         {isLoading ? (
           <div className="flex h-32 items-center justify-center">
@@ -285,7 +320,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                           ref={provided.innerRef}
                           {...provided.draggableProps}
                           className={`group relative flex cursor-pointer items-center rounded px-3 py-2 transition-colors ${
-                            selectedItem === item.name
+                            selectedItem === item.id
                               ? 'bg-white text-black'
                               : 'text-white hover:bg-[#ffffff30]'
                           } ${isSaving ? 'opacity-50' : ''} ${isCollapsed ? 'justify-center' : ''}`}
@@ -308,6 +343,31 @@ export const Sidebar: React.FC<SidebarProps> = ({
                             </div>
                           ) : (
                             <span className="flex-1">{item.name}</span>
+                          )}
+
+                          {/* Copy URL button - only show in display mode and when not collapsed */}
+                          {!editMode && !isCollapsed && (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleCopyUrl(item);
+                              }}
+                              disabled={isSaving}
+                              className={`mr-2 rounded p-1 transition-colors disabled:opacity-50 ${
+                                copiedItemId === item.id
+                                  ? 'bg-green-600 hover:bg-green-700'
+                                  : selectedItem === item.id
+                                    ? 'bg-gray-600 hover:bg-gray-700'
+                                    : 'bg-blue-600 hover:bg-blue-700'
+                              }`}
+                              title={copiedItemId === item.id ? 'URL Copied!' : 'Copy URL'}
+                            >
+                              {copiedItemId === item.id ? (
+                                <CheckIcon className="h-3 w-3 text-white" />
+                              ) : (
+                                <LinkIcon className="h-3 w-3 text-white" />
+                              )}
+                            </button>
                           )}
 
                           {/* {!isCollapsed && item.roles && item.roles.length > 0 && (
@@ -376,7 +436,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
           </DragDropContext>
         )}
       </nav>
-
       {/* User Profile - Hidden when collapsed */}
       {!isCollapsed && (
         <UserProfile
@@ -385,7 +444,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
           formatTime={formatTime}
         />
       )}
-
       {/* Sidebar Item Modal */}
       <SidebarItemModal
         modal={sidebarModal}

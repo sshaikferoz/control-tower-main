@@ -1,16 +1,4 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Dialog } from 'primereact/dialog';
-import { TabView, TabPanel } from 'primereact/tabview';
-import { InputText } from 'primereact/inputtext';
-import { InputNumber } from 'primereact/inputnumber';
-import { Checkbox } from 'primereact/checkbox';
-import { Dropdown } from 'primereact/dropdown';
-import { Button } from 'primereact/button';
-import { ColorPicker } from 'primereact/colorpicker';
-import { Divider } from 'primereact/divider';
-import { Message } from 'primereact/message';
-import { FileUpload } from 'primereact/fileupload';
-import { RadioButton } from 'primereact/radiobutton';
 import { X } from 'lucide-react';
 import { UIConfiguration } from '../../types/configuration';
 
@@ -18,8 +6,8 @@ interface ConfigurationDialogProps {
   visible: boolean;
   onHide: () => void;
   configuration: UIConfiguration;
-  onSave: (config: UIConfiguration) => boolean;
-  onReset: () => void;
+  onSave: (config: UIConfiguration) => Promise<boolean>;
+  onReset: () => Promise<void>;
 }
 
 export const ConfigurationDialog: React.FC<ConfigurationDialogProps> = ({
@@ -34,12 +22,14 @@ export const ConfigurationDialog: React.FC<ConfigurationDialogProps> = ({
     type: 'success' | 'error';
     text: string;
   } | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isResetting, setIsResetting] = useState(false);
   const [backgroundPreview, setBackgroundPreview] = useState<string>('');
   const [logoPreview, setLogoPreview] = useState<string>('');
   const [activeTab, setActiveTab] = useState(0);
 
-  const backgroundFileRef = useRef<FileUpload>(null);
-  const logoFileRef = useRef<FileUpload>(null);
+  const backgroundFileRef = useRef<HTMLInputElement>(null);
+  const logoFileRef = useRef<HTMLInputElement>(null);
 
   // Update form data when configuration changes
   useEffect(() => {
@@ -82,8 +72,8 @@ export const ConfigurationDialog: React.FC<ConfigurationDialogProps> = ({
   };
 
   // Handle background file upload
-  const handleBackgroundUpload = async (event: any) => {
-    const file = event.files[0];
+  const handleBackgroundUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
     if (file) {
       try {
         const base64 = await fileToBase64(file);
@@ -95,16 +85,22 @@ export const ConfigurationDialog: React.FC<ConfigurationDialogProps> = ({
             useBase64: true,
           },
         });
-        backgroundFileRef.current?.clear();
+        if (backgroundFileRef.current) {
+          backgroundFileRef.current.value = '';
+        }
       } catch (error) {
         console.error('Error converting file to base64:', error);
+        setSaveMessage({
+          type: 'error',
+          text: 'Failed to process background image.',
+        });
       }
     }
   };
 
   // Handle logo file upload
-  const handleLogoUpload = async (event: any) => {
-    const file = event.files[0];
+  const handleLogoUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
     if (file) {
       try {
         const base64 = await fileToBase64(file);
@@ -116,31 +112,76 @@ export const ConfigurationDialog: React.FC<ConfigurationDialogProps> = ({
             useLogoBase64: true,
           },
         });
-        logoFileRef.current?.clear();
+        if (logoFileRef.current) {
+          logoFileRef.current.value = '';
+        }
       } catch (error) {
         console.error('Error converting file to base64:', error);
+        setSaveMessage({
+          type: 'error',
+          text: 'Failed to process logo image.',
+        });
       }
     }
   };
 
-  const handleSave = () => {
-    const success = onSave(formData);
-    setSaveMessage({
-      type: success ? 'success' : 'error',
-      text: success ? 'Configuration saved successfully!' : 'Failed to save configuration.',
-    });
+  const handleSave = async () => {
+    setIsSaving(true);
+    setSaveMessage(null);
+
+    try {
+      const success = await onSave(formData);
+      if (success) {
+        setSaveMessage({
+          type: 'success',
+          text: 'Configuration saved successfully!',
+        });
+        // Close dialog after a short delay on successful save
+        setTimeout(() => {
+          onHide();
+        }, 1500);
+      } else {
+        setSaveMessage({
+          type: 'error',
+          text: 'Failed to save configuration. Please try again.',
+        });
+      }
+    } catch (error) {
+      console.error('Save error:', error);
+      setSaveMessage({
+        type: 'error',
+        text: 'An error occurred while saving. Please try again.',
+      });
+    } finally {
+      setIsSaving(false);
+    }
   };
 
-  const handleReset = () => {
-    onReset();
-    setSaveMessage({
-      type: 'success',
-      text: 'Configuration reset to defaults.',
-    });
+  const handleReset = async () => {
+    setIsResetting(true);
+    setSaveMessage(null);
+
+    try {
+      await onReset();
+      setSaveMessage({
+        type: 'success',
+        text: 'Configuration reset to defaults successfully!',
+      });
+      // The parent component will update the configuration prop
+    } catch (error) {
+      console.error('Reset error:', error);
+      setSaveMessage({
+        type: 'error',
+        text: 'Failed to reset configuration. Please try again.',
+      });
+    } finally {
+      setIsResetting(false);
+    }
   };
 
   const handleCancel = () => {
     setFormData(configuration);
+    setSaveMessage(null);
     onHide();
   };
 
@@ -149,21 +190,6 @@ export const ConfigurationDialog: React.FC<ConfigurationDialogProps> = ({
     { label: 'Bottom Left', value: 'bottom-left' },
     { label: 'Top Right', value: 'top-right' },
     { label: 'Top Left', value: 'top-left' },
-  ];
-
-  const predefinedBackgrounds = [
-    {
-      label: 'Default Blue Gradient',
-      value: `${process.env.NEXT_PUBLIC_BSP_NAME}/background/bg.png`,
-    },
-    {
-      label: 'Corporate Theme',
-      value: `${process.env.NEXT_PUBLIC_BSP_NAME}/background/corporate.png`,
-    },
-    {
-      label: 'Modern Abstract',
-      value: `${process.env.NEXT_PUBLIC_BSP_NAME}/background/modern.png`,
-    },
   ];
 
   const tabs = [
@@ -182,10 +208,17 @@ export const ConfigurationDialog: React.FC<ConfigurationDialogProps> = ({
         <div className="mb-6 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <h2 className="text-xl font-semibold text-white">UI Configuration</h2>
+            {(isSaving || isResetting) && (
+              <div className="flex items-center gap-2 text-sm text-gray-300">
+                <div className="h-4 w-4 animate-spin rounded-full border-2 border-gray-300 border-t-transparent"></div>
+                {isSaving ? 'Saving...' : 'Resetting...'}
+              </div>
+            )}
           </div>
           <button
             onClick={handleCancel}
-            className="text-gray-400 transition-colors hover:text-white"
+            disabled={isSaving || isResetting}
+            className="text-gray-400 transition-colors hover:text-white disabled:opacity-50"
           >
             <X className="h-6 w-6" />
           </button>
@@ -210,7 +243,8 @@ export const ConfigurationDialog: React.FC<ConfigurationDialogProps> = ({
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(index)}
-                className={`flex items-center gap-2 px-4 py-3 text-sm font-medium transition-colors ${
+                disabled={isSaving || isResetting}
+                className={`flex items-center gap-2 px-4 py-3 text-sm font-medium transition-colors disabled:opacity-50 ${
                   activeTab === index
                     ? 'border-b-2 border-blue-500 text-blue-400'
                     : 'text-gray-400 hover:text-gray-300'
@@ -236,6 +270,7 @@ export const ConfigurationDialog: React.FC<ConfigurationDialogProps> = ({
                   <input
                     type="checkbox"
                     checked={formData.background.enabled}
+                    disabled={isSaving || isResetting}
                     onChange={(e) =>
                       setFormData({
                         ...formData,
@@ -244,7 +279,7 @@ export const ConfigurationDialog: React.FC<ConfigurationDialogProps> = ({
                     }
                     className="peer sr-only"
                   />
-                  <div className="peer h-6 w-11 rounded-full bg-gray-700 peer-checked:bg-blue-600 peer-focus:outline-none after:absolute after:top-[2px] after:left-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:after:translate-x-full peer-checked:after:border-white"></div>
+                  <div className="peer h-6 w-11 rounded-full bg-gray-700 peer-checked:bg-blue-600 peer-focus:outline-none peer-disabled:opacity-50 after:absolute after:top-[2px] after:left-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:after:translate-x-full peer-checked:after:border-white"></div>
                 </label>
               </div>
 
@@ -260,13 +295,14 @@ export const ConfigurationDialog: React.FC<ConfigurationDialogProps> = ({
                           type="radio"
                           id="bg-url"
                           checked={!formData.background.useBase64}
+                          disabled={isSaving || isResetting}
                           onChange={() =>
                             setFormData({
                               ...formData,
                               background: { ...formData.background, useBase64: false },
                             })
                           }
-                          className="h-4 w-4 border-gray-600 bg-gray-700 text-blue-600 focus:ring-blue-500"
+                          className="h-4 w-4 border-gray-600 bg-gray-700 text-blue-600 focus:ring-blue-500 disabled:opacity-50"
                         />
                         <label htmlFor="bg-url" className="text-gray-300">
                           Use Image URL
@@ -277,13 +313,14 @@ export const ConfigurationDialog: React.FC<ConfigurationDialogProps> = ({
                           type="radio"
                           id="bg-upload"
                           checked={formData.background.useBase64}
+                          disabled={isSaving || isResetting}
                           onChange={() =>
                             setFormData({
                               ...formData,
                               background: { ...formData.background, useBase64: true },
                             })
                           }
-                          className="h-4 w-4 border-gray-600 bg-gray-700 text-blue-600 focus:ring-blue-500"
+                          className="h-4 w-4 border-gray-600 bg-gray-700 text-blue-600 focus:ring-blue-500 disabled:opacity-50"
                         />
                         <label htmlFor="bg-upload" className="text-gray-300">
                           Upload Image
@@ -293,49 +330,25 @@ export const ConfigurationDialog: React.FC<ConfigurationDialogProps> = ({
                   </div>
 
                   {!formData.background.useBase64 && (
-                    <>
-                      {/* <div>
-                        <label className="mb-2 block text-sm font-medium text-gray-300">
-                          Background Preset
-                        </label>
-                        <select
-                          value={formData.background.imageUrl}
-                          onChange={(e) => {
-                            setFormData({
-                              ...formData,
-                              background: { ...formData.background, imageUrl: e.target.value },
-                            });
-                          }}
-                          className="w-full rounded border border-[#3a5a8b] bg-[#2a4a7b] p-3 text-white outline-none focus:border-blue-500"
-                        >
-                          <option value="">Select a background</option>
-                          {predefinedBackgrounds.map((bg) => (
-                            <option key={bg.value} value={bg.value}>
-                              {bg.label}
-                            </option>
-                          ))}
-                        </select>
-                      </div> */}
-
-                      <div>
-                        <label className="mb-2 block text-sm font-medium text-gray-300">
-                          Custom Background URL
-                        </label>
-                        <input
-                          type="text"
-                          value={formData.background.imageUrl}
-                          onChange={(e) =>
-                            setFormData({
-                              ...formData,
-                              background: { ...formData.background, imageUrl: e.target.value },
-                            })
-                          }
-                          placeholder="https://example.com/background.jpg"
-                          className="w-full rounded border border-[#3a5a8b] bg-[#2a4a7b] p-3 text-white outline-none focus:border-blue-500"
-                        />
-                        <small className="text-gray-400">Enter a custom background image URL</small>
-                      </div>
-                    </>
+                    <div>
+                      <label className="mb-2 block text-sm font-medium text-gray-300">
+                        Custom Background URL
+                      </label>
+                      <input
+                        type="text"
+                        value={formData.background.imageUrl}
+                        disabled={isSaving || isResetting}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            background: { ...formData.background, imageUrl: e.target.value },
+                          })
+                        }
+                        placeholder="https://example.com/background.jpg"
+                        className="w-full rounded border border-[#3a5a8b] bg-[#2a4a7b] p-3 text-white outline-none focus:border-blue-500 disabled:opacity-50"
+                      />
+                      <small className="text-gray-400">Enter a custom background image URL</small>
+                    </div>
                   )}
 
                   {formData.background.useBase64 && (
@@ -345,20 +358,19 @@ export const ConfigurationDialog: React.FC<ConfigurationDialogProps> = ({
                       </label>
                       <div className="w-full rounded border-2 border-dashed border-[#3a5a8b] bg-[#2a4a7b] p-6 text-center hover:border-blue-500">
                         <input
+                          ref={backgroundFileRef}
                           type="file"
                           accept="image/*"
-                          onChange={(e) => {
-                            const file = e.target.files?.[0];
-                            if (file) {
-                              handleBackgroundUpload({ files: [file] });
-                            }
-                          }}
+                          disabled={isSaving || isResetting}
+                          onChange={handleBackgroundUpload}
                           className="hidden"
                           id="bg-file-upload"
                         />
                         <label
                           htmlFor="bg-file-upload"
-                          className="cursor-pointer text-gray-300 hover:text-white"
+                          className={`cursor-pointer text-gray-300 hover:text-white ${
+                            isSaving || isResetting ? 'cursor-not-allowed opacity-50' : ''
+                          }`}
                         >
                           <i className="pi pi-upload mb-2 text-2xl" />
                           <div>Choose Background Image</div>
@@ -369,28 +381,6 @@ export const ConfigurationDialog: React.FC<ConfigurationDialogProps> = ({
                       </div>
                     </div>
                   )}
-
-                  {/* <div>
-                    <label className="mb-2 block text-sm font-medium text-gray-300">
-                      Background Opacity
-                    </label>
-                    <input
-                      type="number"
-                      min="0"
-                      max="100"
-                      value={formData.background.opacity}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          background: {
-                            ...formData.background,
-                            opacity: parseInt(e.target.value) || 100,
-                          },
-                        })
-                      }
-                      className="w-full rounded border border-[#3a5a8b] bg-[#2a4a7b] p-3 text-white outline-none focus:border-blue-500"
-                    />
-                  </div> */}
 
                   {/* Background Preview */}
                   <div>
@@ -427,6 +417,7 @@ export const ConfigurationDialog: React.FC<ConfigurationDialogProps> = ({
                   <input
                     type="checkbox"
                     checked={formData.chatbot.enabled}
+                    disabled={isSaving || isResetting}
                     onChange={(e) =>
                       setFormData({
                         ...formData,
@@ -435,7 +426,7 @@ export const ConfigurationDialog: React.FC<ConfigurationDialogProps> = ({
                     }
                     className="peer sr-only"
                   />
-                  <div className="peer h-6 w-11 rounded-full bg-gray-700 peer-checked:bg-blue-600 peer-focus:outline-none after:absolute after:top-[2px] after:left-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:after:translate-x-full peer-checked:after:border-white"></div>
+                  <div className="peer h-6 w-11 rounded-full bg-gray-700 peer-checked:bg-blue-600 peer-focus:outline-none peer-disabled:opacity-50 after:absolute after:top-[2px] after:left-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:after:translate-x-full peer-checked:after:border-white"></div>
                 </label>
               </div>
 
@@ -445,6 +436,7 @@ export const ConfigurationDialog: React.FC<ConfigurationDialogProps> = ({
                     <label className="mb-2 block text-sm font-medium text-gray-300">Position</label>
                     <select
                       value={formData.chatbot.position}
+                      disabled={isSaving || isResetting}
                       onChange={(e) =>
                         setFormData({
                           ...formData,
@@ -454,7 +446,7 @@ export const ConfigurationDialog: React.FC<ConfigurationDialogProps> = ({
                           },
                         })
                       }
-                      className="w-full rounded border border-[#3a5a8b] bg-[#2a4a7b] p-3 text-white outline-none focus:border-blue-500"
+                      className="w-full rounded border border-[#3a5a8b] bg-[#2a4a7b] p-3 text-white outline-none focus:border-blue-500 disabled:opacity-50"
                     >
                       {positionOptions.map((option) => (
                         <option key={option.value} value={option.value}>
@@ -471,13 +463,14 @@ export const ConfigurationDialog: React.FC<ConfigurationDialogProps> = ({
                     <input
                       type="color"
                       value={formData.chatbot.color}
+                      disabled={isSaving || isResetting}
                       onChange={(e) =>
                         setFormData({
                           ...formData,
                           chatbot: { ...formData.chatbot, color: e.target.value },
                         })
                       }
-                      className="h-12 w-10 rounded border border-[#3a5a8b] bg-[#2a4a7b] outline-none focus:border-blue-500"
+                      className="h-12 w-10 rounded border border-[#3a5a8b] bg-[#2a4a7b] outline-none focus:border-blue-500 disabled:opacity-50"
                     />
                   </div>
 
@@ -509,6 +502,7 @@ export const ConfigurationDialog: React.FC<ConfigurationDialogProps> = ({
                   <input
                     type="checkbox"
                     checked={formData.search.enabled}
+                    disabled={isSaving || isResetting}
                     onChange={(e) =>
                       setFormData({
                         ...formData,
@@ -517,7 +511,7 @@ export const ConfigurationDialog: React.FC<ConfigurationDialogProps> = ({
                     }
                     className="peer sr-only"
                   />
-                  <div className="peer h-6 w-11 rounded-full bg-gray-700 peer-checked:bg-blue-600 peer-focus:outline-none after:absolute after:top-[2px] after:left-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:after:translate-x-full peer-checked:after:border-white"></div>
+                  <div className="peer h-6 w-11 rounded-full bg-gray-700 peer-checked:bg-blue-600 peer-focus:outline-none peer-disabled:opacity-50 after:absolute after:top-[2px] after:left-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:after:translate-x-full peer-checked:after:border-white"></div>
                 </label>
               </div>
 
@@ -529,6 +523,7 @@ export const ConfigurationDialog: React.FC<ConfigurationDialogProps> = ({
                   <input
                     type="text"
                     value={formData.search.placeholder}
+                    disabled={isSaving || isResetting}
                     onChange={(e) =>
                       setFormData({
                         ...formData,
@@ -536,7 +531,7 @@ export const ConfigurationDialog: React.FC<ConfigurationDialogProps> = ({
                       })
                     }
                     placeholder="Enter search placeholder text"
-                    className="w-full rounded border border-[#3a5a8b] bg-[#2a4a7b] p-3 text-white outline-none focus:border-blue-500"
+                    className="w-full rounded border border-[#3a5a8b] bg-[#2a4a7b] p-3 text-white outline-none focus:border-blue-500 disabled:opacity-50"
                   />
                   <small className="text-gray-400">
                     This text will appear in the search input field
@@ -556,6 +551,7 @@ export const ConfigurationDialog: React.FC<ConfigurationDialogProps> = ({
                 <input
                   type="text"
                   value={formData.branding.appName}
+                  disabled={isSaving || isResetting}
                   onChange={(e) =>
                     setFormData({
                       ...formData,
@@ -563,7 +559,7 @@ export const ConfigurationDialog: React.FC<ConfigurationDialogProps> = ({
                     })
                   }
                   placeholder="mySCAI"
-                  className="w-full rounded border border-[#3a5a8b] bg-[#2a4a7b] p-3 text-white outline-none focus:border-blue-500"
+                  className="w-full rounded border border-[#3a5a8b] bg-[#2a4a7b] p-3 text-white outline-none focus:border-blue-500 disabled:opacity-50"
                 />
               </div>
 
@@ -575,13 +571,14 @@ export const ConfigurationDialog: React.FC<ConfigurationDialogProps> = ({
                       type="radio"
                       id="logo-url"
                       checked={!formData.branding.useLogoBase64}
+                      disabled={isSaving || isResetting}
                       onChange={() =>
                         setFormData({
                           ...formData,
                           branding: { ...formData.branding, useLogoBase64: false },
                         })
                       }
-                      className="h-4 w-4 border-gray-600 bg-gray-700 text-blue-600 focus:ring-blue-500"
+                      className="h-4 w-4 border-gray-600 bg-gray-700 text-blue-600 focus:ring-blue-500 disabled:opacity-50"
                     />
                     <label htmlFor="logo-url" className="text-gray-300">
                       Use Logo URL
@@ -592,13 +589,14 @@ export const ConfigurationDialog: React.FC<ConfigurationDialogProps> = ({
                       type="radio"
                       id="logo-upload"
                       checked={formData.branding.useLogoBase64}
+                      disabled={isSaving || isResetting}
                       onChange={() =>
                         setFormData({
                           ...formData,
                           branding: { ...formData.branding, useLogoBase64: true },
                         })
                       }
-                      className="h-4 w-4 border-gray-600 bg-gray-700 text-blue-600 focus:ring-blue-500"
+                      className="h-4 w-4 border-gray-600 bg-gray-700 text-blue-600 focus:ring-blue-500 disabled:opacity-50"
                     />
                     <label htmlFor="logo-upload" className="text-gray-300">
                       Upload Logo
@@ -613,6 +611,7 @@ export const ConfigurationDialog: React.FC<ConfigurationDialogProps> = ({
                   <input
                     type="text"
                     value={formData.branding.logoUrl}
+                    disabled={isSaving || isResetting}
                     onChange={(e) =>
                       setFormData({
                         ...formData,
@@ -620,7 +619,7 @@ export const ConfigurationDialog: React.FC<ConfigurationDialogProps> = ({
                       })
                     }
                     placeholder="https://example.com/logo.png"
-                    className="w-full rounded border border-[#3a5a8b] bg-[#2a4a7b] p-3 text-white outline-none focus:border-blue-500"
+                    className="w-full rounded border border-[#3a5a8b] bg-[#2a4a7b] p-3 text-white outline-none focus:border-blue-500 disabled:opacity-50"
                   />
                   <small className="text-gray-400">Leave empty to use default logo</small>
                 </div>
@@ -633,20 +632,19 @@ export const ConfigurationDialog: React.FC<ConfigurationDialogProps> = ({
                   </label>
                   <div className="w-full rounded border-2 border-dashed border-[#3a5a8b] bg-[#2a4a7b] p-6 text-center hover:border-blue-500">
                     <input
+                      ref={logoFileRef}
                       type="file"
                       accept="image/*"
-                      onChange={(e) => {
-                        const file = e.target.files?.[0];
-                        if (file) {
-                          handleLogoUpload({ files: [file] });
-                        }
-                      }}
+                      disabled={isSaving || isResetting}
+                      onChange={handleLogoUpload}
                       className="hidden"
                       id="logo-file-upload"
                     />
                     <label
                       htmlFor="logo-file-upload"
-                      className="cursor-pointer text-gray-300 hover:text-white"
+                      className={`cursor-pointer text-gray-300 hover:text-white ${
+                        isSaving || isResetting ? 'cursor-not-allowed opacity-50' : ''
+                      }`}
                     >
                       <i className="pi pi-upload mb-2 text-2xl" />
                       <div>Choose Logo Image</div>
@@ -680,13 +678,14 @@ export const ConfigurationDialog: React.FC<ConfigurationDialogProps> = ({
                 <input
                   type="color"
                   value={formData.branding.primaryColor}
+                  disabled={isSaving || isResetting}
                   onChange={(e) =>
                     setFormData({
                       ...formData,
                       branding: { ...formData.branding, primaryColor: e.target.value },
                     })
                   }
-                  className="h-12 w-10 rounded border border-[#3a5a8b] bg-[#2a4a7b] outline-none focus:border-blue-500"
+                  className="h-12 w-10 rounded border border-[#3a5a8b] bg-[#2a4a7b] outline-none focus:border-blue-500 disabled:opacity-50"
                 />
               </div>
             </div>
@@ -698,21 +697,24 @@ export const ConfigurationDialog: React.FC<ConfigurationDialogProps> = ({
           <div className="mt-8 flex justify-end space-x-3">
             <button
               onClick={handleReset}
-              className="rounded bg-gray-600 px-4 py-2 text-white transition-colors hover:bg-gray-700"
+              disabled={isSaving || isResetting}
+              className="rounded bg-gray-600 px-4 py-2 text-white transition-colors hover:bg-gray-700 disabled:cursor-not-allowed disabled:opacity-50"
             >
-              Reset to Defaults
+              {isResetting ? 'Resetting...' : 'Reset to Defaults'}
             </button>
             <button
               onClick={handleCancel}
-              className="rounded bg-gray-600 px-4 py-2 text-white transition-colors hover:bg-gray-700"
+              disabled={isSaving || isResetting}
+              className="rounded bg-gray-600 px-4 py-2 text-white transition-colors hover:bg-gray-700 disabled:cursor-not-allowed disabled:opacity-50"
             >
               Cancel
             </button>
             <button
               onClick={handleSave}
-              className="rounded bg-blue-600 px-4 py-2 text-white transition-colors hover:bg-blue-700"
+              disabled={isSaving || isResetting}
+              className="rounded bg-blue-600 px-4 py-2 text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
             >
-              Save Configuration
+              {isSaving ? 'Saving...' : 'Save Configuration'}
             </button>
           </div>
         </div>
