@@ -15,10 +15,9 @@ export const useMenuItems = (isAdmin: boolean, adminCheckLoading: boolean) => {
 
                 const items = await sapODataService.fetchMenuItems();
                 if (items.length === 0) {
-                    const defaultItems: MenuItem[] = [
-                    ];
-                    setMenuItems(defaultItems);
+                    setMenuItems([]);
                 } else {
+
                     setMenuItems(items.sort((a, b) => a.order - b.order));
                 }
             } catch (error) {

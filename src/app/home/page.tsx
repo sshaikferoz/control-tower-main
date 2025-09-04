@@ -23,11 +23,7 @@ export default function Home({
   configuration,
   onOpenConfigDialog,
 }: any) {
-  console.log('selected menu items id', selectedMenuItemId);
-  console.log('isAdmin prop', isAdmin);
-  console.log('isEditModeAllowed prop', isEditModeAllowed);
-
-  const tabId = selectedMenuItemId?.id || '00000000000000000000000000000001';
+  const tabId = selectedMenuItemId || '00000000000000000000000000000001';
 
   const {
     dashboardData,

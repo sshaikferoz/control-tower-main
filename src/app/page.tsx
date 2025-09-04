@@ -1,6 +1,6 @@
 // Updated Dashboard component with configuration support and dynamic sections
 'use client';
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { AppState, AppView, ModalState, Report, Section } from '../types';
 import { useURLParams } from '../hooks/useURLParams';
 import { useAdminCheck } from '../hooks/useAdminCheck';
@@ -8,18 +8,23 @@ import { useMenuItems } from '../hooks/useMenuItems';
 import { useConfiguration } from '../hooks/useConfiguration';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { B2BReportsPage } from '@/components/pages/B2BReportsPage';
-import { GenericPage } from '@/components//pages/GenericPage';
-import { MappingScreen } from '@/components//pages/MappingScreen';
-import { ReportModal } from '@/components//modals/ReportModal';
+import { GenericPage } from '@/components/pages/GenericPage';
+import { MappingScreen } from '@/components/pages/MappingScreen';
+import { ReportModal } from '@/components/modals/ReportModal';
 import { ConfigurationDialog } from '@/components/dialogs/ConfigurationDialog';
-import { LoadingScreen } from '@/components//ui/LoadingScreen';
+import { LoadingScreen } from '@/components/ui/LoadingScreen';
 import { ErrorScreen } from '@/components/ui/ErrorScreen';
 import Home from '@/app/home/page'; // Assuming this exists
 
 const Dashboard: React.FC = () => {
   const [appState, setAppState] = useState<AppState>({
     view: 'generic',
-    selectedMenuItem: 'My SCM',
+    selectedMenuItem: {
+      id: '00000000000000000000000000000001',
+      name: 'Home',
+      type: 'Dashboard',
+      order: 0,
+    },
   });
   const [modal, setModal] = useState<ModalState>({
     isOpen: false,
@@ -43,6 +48,23 @@ const Dashboard: React.FC = () => {
     if (!isAdmin) return false;
     return urlParams?.get('view') === 'edit';
   }, [isAdmin, urlParams]);
+
+  // Check if standalone mode is allowed based on URL params
+  const isStandaloneAllowed = useMemo(() => {
+    return urlParams?.get('mode') === 'standalone' && !!urlParams?.get('appId');
+  }, [urlParams]);
+  // If standalone mode, force the selectedMenuItem to appId
+  useEffect(() => {
+    if (isStandaloneAllowed) {
+      const appId = urlParams?.get('appId');
+      if (appId) {
+        setAppState((prev) => ({
+          ...prev,
+          selectedMenuItem: { id: appId },
+        }));
+      }
+    }
+  }, [isStandaloneAllowed, urlParams]);
 
   // Handle menu item selection (restrict for non-admin users)
   const handleMenuItemSelect = (item: any) => {
@@ -190,14 +212,27 @@ const Dashboard: React.FC = () => {
   }, [configuration.background]);
 
   // Render based on current view
+  // Render based on current view
   const renderContent = () => {
-    const selectedMenuItemData = menuItems.find((item) => item.name === appState.selectedMenuItem);
+    const selectedMenuItemData = menuItems.find(
+      (item) => item.id === appState.selectedMenuItem?.id
+    );
+    // Determine the selectedMenuItemId based on standalone mode
+    const getSelectedMenuItemId = () => {
+      if (isStandaloneAllowed) {
+        // In standalone mode, use the id from appState.selectedMenuItem
+        return appState.selectedMenuItem.id;
+      }
+      // In normal mode, use the id from the found menu item
+      return selectedMenuItemData?.id;
+    };
 
+    const selectedMenuItem = getSelectedMenuItemId();
     switch (appState.view) {
       case 'dashboard':
         return (
           <Home
-            selectedMenuItemId={appState.selectedMenuItem}
+            selectedMenuItemId={selectedMenuItem}
             isAdmin={isAdmin}
             isEditModeAllowed={isEditModeAllowed}
             configuration={configuration}
@@ -209,7 +244,7 @@ const Dashboard: React.FC = () => {
         if (!isAdmin) {
           return (
             <Home
-              selectedMenuItemId={selectedMenuItemData?.id}
+              selectedMenuItemId={selectedMenuItem}
               isAdmin={isAdmin}
               isEditModeAllowed={isEditModeAllowed}
               configuration={configuration}
@@ -223,10 +258,6 @@ const Dashboard: React.FC = () => {
             onViewReport={handleReportView}
             onEditReport={handleReportEdit}
             onDeleteReport={handleReportDelete}
-            // modal={modal}
-            // onModalSave={handleModalSave}
-            // onModalDelete={handleModalDelete}
-            // onModalClose={handleModalClose}
           />
         );
 
@@ -234,7 +265,7 @@ const Dashboard: React.FC = () => {
         if (!isAdmin) {
           return (
             <Home
-              selectedMenuItemId={selectedMenuItemData?.id}
+              selectedMenuItemId={selectedMenuItem}
               isAdmin={isAdmin}
               isEditModeAllowed={isEditModeAllowed}
               configuration={configuration}
@@ -253,7 +284,7 @@ const Dashboard: React.FC = () => {
         if (!isEditModeAllowed) {
           return (
             <Home
-              selectedMenuItemId={selectedMenuItemData?.id}
+              selectedMenuItemId={selectedMenuItem}
               isAdmin={isAdmin}
               isEditModeAllowed={isEditModeAllowed}
               configuration={configuration}
@@ -266,7 +297,7 @@ const Dashboard: React.FC = () => {
       default:
         return (
           <Home
-            selectedMenuItemId={selectedMenuItemData?.id}
+            selectedMenuItemId={selectedMenuItem}
             isAdmin={isAdmin}
             isEditModeAllowed={isEditModeAllowed}
             configuration={configuration}
@@ -275,7 +306,6 @@ const Dashboard: React.FC = () => {
         );
     }
   };
-
   // Show loading screen while checking admin status or loading configuration
   if (adminCheckLoading || configLoading) {
     return (
@@ -303,7 +333,7 @@ const Dashboard: React.FC = () => {
       style={backgroundStyle}
     >
       {/* Show sidebar for admin users (regardless of edit mode) */}
-      {appState.view !== 'mapping' && (
+      {appState.view !== 'mapping' && !isStandaloneAllowed && (
         <Sidebar
           selectedItem={appState.selectedMenuItem}
           onItemSelect={handleMenuItemSelect}
