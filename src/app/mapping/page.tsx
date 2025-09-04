@@ -86,6 +86,7 @@ interface Widget {
   id: string;
   name: string;
   props: Record<string, any>;
+  deleted?: boolean;
 }
 
 interface FieldMappings {
@@ -377,7 +378,7 @@ const defaultPropsMapping: Record<string, any> = {
       '🚧 Important Update! System maintenance scheduled for 2 AM.',
       '⚠️ New Feature! We’ve just released a new dashboard.',
       '🔒 Security Alert! Please update your password for better security.',
-    ]
+    ],
   },
 };
 
@@ -456,9 +457,8 @@ const MappingScreen: React.FC = () => {
   const [saveAlertSeverity, setSaveAlertSeverity] = useState<'success' | 'error'>('success');
 
   const [announcementCount, setAnnouncementCount] = useState(0);
-  const [announcementValues, setAnnouncementValues] = useState<string[]>([])
-   const [changeColor,setChangeColorOneMetric] = useState<string>('')
-
+  const [announcementValues, setAnnouncementValues] = useState<string[]>([]);
+  const [changeColor, setChangeColorOneMetric] = useState<string>('');
   useEffect(() => {
     fetch('/api/endpoints')
       .then((res) => res.json())
@@ -469,16 +469,129 @@ const MappingScreen: React.FC = () => {
     fetchReportData();
   }, []);
 
+  // Add this after the existing useEffect that fetches endpoints
   useEffect(() => {
-    setFieldsForAnnouncement()
-  }, announcementValues)
+    const loadExistingWidgets = async () => {
+      if (sectionId && sectionId !== 'undefined') {
+        try {
+          setLoading(true);
+          console.log('Loading existing widgets for section:', sectionId);
+
+          // Fetch widgets data from SAP using your specific method
+          const widgets = await sapODataService.fetchWidgetsBySectionId(sectionId);
+
+          if (widgets && widgets.length > 0) {
+            // Filter out deleted and inactive widgets
+            const activeWidgets = widgets.filter((widget: any) => widget.active && !widget.deleted);
+
+            if (activeWidgets.length > 0) {
+              console.log('Found existing widgets:', activeWidgets);
+
+              // Transform widgets to the format expected by MappingScreen
+              const transformedWidgets: Widget[] = activeWidgets.map((widget: any) => ({
+                id: widget.id,
+                name: widget.type,
+                props: widget.properties || {},
+              }));
+
+              // Set widgets state
+              setWidgets(transformedWidgets);
+
+              // Transform and set layout
+              const transformedLayout: LayoutItem[] = activeWidgets.map(
+                (widget: any, index: number) => {
+                  const layoutConfig = widget.layoutConfig || {};
+                  const { w, h } = widgetSizes[widget.type] || { w: 2, h: 2 };
+
+                  return {
+                    i: widget.id,
+                    x: layoutConfig.x ?? (index * w) % 12,
+                    y: layoutConfig.y ?? Math.floor((index * w) / 12) * h,
+                    w: layoutConfig.w ?? w,
+                    h: layoutConfig.h ?? h,
+                    static: layoutConfig.static || false,
+                    sectionName: sectionName,
+                  };
+                }
+              );
+
+              setLayout(transformedLayout);
+
+              // Set field mappings and widget configurations
+              const transformedFieldMappings: any = {};
+              const transformedWidgetConfigs: Record<string, any> = {};
+
+              activeWidgets.forEach((widget: any) => {
+                // Set field mappings
+                if (widget.fieldMappings) {
+                  transformedFieldMappings[widget.id] = widget.fieldMappings;
+                } else {
+                  // Initialize empty field mappings if none exist
+                  transformedFieldMappings[widget.id] = {
+                    reportName: reportName,
+                    mappingType: getWidgetMappingType(widget.type),
+                    fields: {},
+                    targetReport: {
+                      type: 'Bex Query',
+                      technicalId: '',
+                      name: '',
+                      description: '',
+                    },
+                  };
+                }
+
+                // Set widget configurations
+                transformedWidgetConfigs[widget.id] = {
+                  ...widget.properties,
+                  widgetType: widget.type,
+                  configType: getWidgetMappingType(widget.type),
+                  widgetCategory: getWidgetCategory(widget.type),
+                  roles: widget.roles || [],
+                  description: widget.description || '',
+                };
+              });
+
+              setFieldMappings(transformedFieldMappings);
+              setWidgetConfigurations(transformedWidgetConfigs);
+
+              console.log('Loaded existing widgets configuration:', {
+                widgets: transformedWidgets,
+                layout: transformedLayout,
+                fieldMappings: transformedFieldMappings,
+                widgetConfigs: transformedWidgetConfigs,
+              });
+            }
+          } else {
+            console.log('No widgets found for section:', sectionId);
+          }
+
+          setLoading(false);
+        } catch (error) {
+          console.error('Error loading existing widgets:', error);
+          setLoading(false);
+          // Set default empty states on error
+          setWidgets([]);
+          setLayout([]);
+          setFieldMappings({});
+          setWidgetConfigurations({});
+        }
+      }
+    };
+
+    // Only load existing widgets if we have a valid sectionId
+    if (sectionId && sectionId !== 'undefined' && sectionId !== '') {
+      loadExistingWidgets();
+    }
+  }, [sectionId, sectionName, reportName]); // Added dependencies for proper re-loading
+
+  useEffect(() => {
+    setFieldsForAnnouncement();
+  }, announcementValues);
   const handleTabChange = (event: React.ChangeEvent<{}>, newValue: number) => {
     setTabValue(newValue);
   };
 
-
   const initializeWidgetMappingConfig = (widgetId: string, widgetName: string) => {
-
     // Determine mapping type based on widget type
     const mappingType = getWidgetMappingType(widgetName);
     const widgetCategory = getWidgetCategory(widgetName);
@@ -596,41 +709,55 @@ const MappingScreen: React.FC = () => {
     }));
   };
 
-  const addWidget = (name: string) => {
+  const addWidget = (name: string, existingWidgetId?: string) => {
     if (!widgetMapping[name]) return;
-    const widgetId = `widget-${Date.now()}`;
+
+    // Use existing ID if provided, otherwise generate new one
+    const widgetId = existingWidgetId || `widget-${Date.now()}`;
     const { w, h } = widgetSizes[name] || { w: 2, h: 2 };
 
-    // Add widget to widgets array
-    setWidgets((prev) => [...prev, { id: widgetId, name, props: {} }]);
+    // Only add to widgets array if it's a new widget
+    if (!existingWidgetId) {
+      setWidgets((prev) => [...prev, { id: widgetId, name, props: {} }]);
 
-    // Add to layout
-    setLayout((prev: any) => [
-      ...prev,
-      { i: widgetId, x: 0, y: Infinity, w, h, static: false, sectionName },
-    ]);
+      // Add to layout only for new widgets
+      setLayout((prev: any) => [
+        ...prev,
+        { i: widgetId, x: 0, y: Infinity, w, h, static: false, sectionName },
+      ]);
+    }
 
-    // Initialize widget mapping config
-    initializeWidgetMappingConfig(widgetId, name);
+    // Initialize widget mapping config (for both new and existing widgets)
+    if (!fieldMappings[widgetId]) {
+      initializeWidgetMappingConfig(widgetId, name);
+    }
   };
 
   const removeWidget = (id: string) => {
-    setWidgets((prev) => prev.filter((widget) => widget.id !== id));
+    // Instead of removing, mark as deleted
+    setWidgets((prev) =>
+      prev.map((widget) => (widget.id === id ? { ...widget, deleted: true } : widget))
+    );
+
     setLayout((prev) => prev.filter((item) => item.i !== id));
 
-    // Remove from field mappings
-    setFieldMappings((prev) => {
-      const newMappings = { ...prev };
-      delete newMappings[id];
-      return newMappings;
-    });
+    // Keep field mappings and configurations for recovery if needed
+    // Or you can mark them as deleted too
+    setFieldMappings((prev) => ({
+      ...prev,
+      [id]: {
+        ...prev[id],
+        deleted: true,
+      },
+    }));
 
-    // Remove from widgetConfigurations
-    setWidgetConfigurations((prev) => {
-      const newConfigs = { ...prev };
-      delete newConfigs[id];
-      return newConfigs;
-    });
+    setWidgetConfigurations((prev) => ({
+      ...prev,
+      [id]: {
+        ...prev[id],
+        deleted: true,
+      },
+    }));
 
     if (selectedWidget === id) {
       setSelectedWidget(null);
@@ -683,6 +810,8 @@ const MappingScreen: React.FC = () => {
           roles: roles || [], // Include roles
           Description: description || '', // Save description as "Description"
           widgetType: widgetType || widget.name,
+          deleted: widget.deleted || false, // Add deleted flag
+          active: !widget.deleted, // Add active flag (opposite of deleted)
         };
       });
 
@@ -719,7 +848,8 @@ const MappingScreen: React.FC = () => {
       payload.push(newEntry);
       sessionStorage.setItem('payload', JSON.stringify(payload));
 
-      setSaveMessage(`Layout saved successfully! Saved ${widgets.length} widgets.`);
+      setSaveMessage(`Layout saved successfully!`);
+
       setSaveAlertSeverity('success');
       setShowSaveAlert(true);
 
@@ -745,12 +875,13 @@ const MappingScreen: React.FC = () => {
   const handleWidgetClick = (id: string, event: React.MouseEvent) => {
     event.stopPropagation();
     if (selectedWidget === id) return;
-    console.log(selectedWidget, 'ppppppppp', 'widgetclicked')
+
+    console.log('Widget clicked:', id);
+
     const widgetInfo = getWidgetName(id);
     if (widgetInfo && widgetInfo.name) {
       setSelectedWidgetName(widgetInfo.name);
     }
-
 
     // Save preview data to widget configurations if it exists
     if (selectedWidget && previewData) {
@@ -763,65 +894,50 @@ const MappingScreen: React.FC = () => {
       }));
     }
 
-    // Now select the new widget
+    // Select the new widget
     setSelectedWidget(id);
-
-    // Reset preview data
     setPreviewData(null);
-
-    // Reset tab to first tab (Data Mapping)
     setTabValue(0);
 
     // Load existing configuration for this widget
     const widget = widgets.find((w) => w.id === id);
     if (!widget) return;
 
-    // Initialize mapping config if not exists
+    // Initialize mapping config if not exists (for new widgets)
     if (!fieldMappings[id]) {
       initializeWidgetMappingConfig(id, widget.name);
-    }
+    } else {
+      // For existing widgets, load the saved configuration
+      const config = fieldMappings[id];
+      const widgetCategory = getWidgetCategory(widget.name);
 
-    // Load chart/table specific configurations
-    const config = fieldMappings[id];
-    const widgetCategory = getWidgetCategory(widget.name);
+      // Load chart/table specific configurations based on existing data
+      if (config?.mappingType === 'chart' && config.chartConfig) {
+        setChartXAxis(config.chartConfig.xAxis?.field || '');
 
-    if (config?.mappingType === 'chart' && config.chartConfig) {
-      setChartXAxis(config.chartConfig.xAxis.field);
-
-      // Handle different chart types
-      if (widgetCategory === 'dual-line' && Array.isArray(config.chartConfig.yAxis)) {
-        setChartYAxis(config.chartConfig.yAxis[0]?.field || '');
-        setChartYAxis2(config.chartConfig.yAxis[1]?.field || '');
-      } else if (widgetCategory === 'stacked-bar' && config.chartConfig.yAxis.fields) {
-        // For stacked bar charts, load the series config
-        setChartYAxis(''); // Reset single Y-axis
-
-        // Load the stacked series if available
-        if (config.seriesConfig && config.seriesConfig.series) {
-          setStackedSeries([...config.seriesConfig.series]); // Create a copy
+        if (widgetCategory === 'dual-line' && Array.isArray(config.chartConfig.yAxis)) {
+          setChartYAxis(config.chartConfig.yAxis[0]?.field || '');
+          setChartYAxis2(config.chartConfig.yAxis[1]?.field || '');
+        } else if (widgetCategory === 'stacked-bar' && config.chartConfig.yAxis?.fields) {
+          if (config.seriesConfig?.series) {
+            setStackedSeries([...config.seriesConfig.series]);
+          }
         } else {
-          // Initialize with empty array if there's no series configuration
-          setStackedSeries([]);
+          setChartYAxis(config.chartConfig.yAxis?.field || '');
         }
-      } else {
-        // Regular charts with single Y-axis
-        setChartYAxis(config.chartConfig.yAxis?.field || '');
-        setChartYAxis2(''); // Reset second Y-axis
+      } else if (config?.mappingType === 'table' && config.tableConfig) {
+        setTableColumns(config.tableConfig.columns || []);
+      } else if (config?.mappingType === 'quadrant' && config?.quadrantConfig) {
+        setSelectedMetrics(config.quadrantConfig.metrics || []);
       }
-    } else if (config?.mappingType === 'table' && config.tableConfig) {
-      setTableColumns(config.tableConfig.columns || []);
-    } else if (config?.mappingType === 'quadrant' && config?.quadrantConfig) {
-      // For quadrant metrics, load selected metrics
-      setSelectedMetrics(config.quadrantConfig.metrics || []);
     }
   };
 
-
- const setChangeColor = (color: string) => {
-  if(!selectedWidget) return
-  console.log('setChangeColor was called with:', color);
-  const field = 'color'
- console.log(selectedWidget)
+  const setChangeColor = (color: string) => {
+    if (!selectedWidget) return;
+    console.log('setChangeColor was called with:', color);
+    const field = 'color';
+    console.log(selectedWidget);
     setFieldMappings((prev) => ({
       ...prev,
       [selectedWidget]: {
@@ -838,8 +954,8 @@ const MappingScreen: React.FC = () => {
 
     // Live update the widget configuration
     handleLiveValueUpdate(field, color);
-  // Optionally update state or perform other actions here
-}
+    // Optionally update state or perform other actions here
+  };
 
   // Handle roles change
   const handleRolesChange = (roles: string[]) => {
@@ -900,7 +1016,7 @@ const MappingScreen: React.FC = () => {
 
     // Also update preview data if it exists
     if (previewData) {
-      console.log(previewData, 'previewwwwww')
+      console.log(previewData, 'previewwwwww');
       setPreviewData((prev: any) => ({
         ...prev,
         [field]: value,
@@ -1116,7 +1232,7 @@ const MappingScreen: React.FC = () => {
   const handleManualValueChange = (field: string, value: any) => {
     if (!selectedWidget) return;
 
-    console.log(value, field, '---', '----------')
+    console.log(value, field, '---', '----------');
 
     setFieldMappings((prev) => ({
       ...prev,
@@ -1139,7 +1255,7 @@ const MappingScreen: React.FC = () => {
 
   const handleAnnouncementValueChange = (field: string, value: any) => {
     if (!selectedWidget) return;
-    console.log(field, value, fieldMappings, '----------ooooooo')
+    console.log(field, value, fieldMappings, '----------ooooooo');
 
     setFieldMappings((prev) => ({
       ...prev,
@@ -1156,42 +1272,35 @@ const MappingScreen: React.FC = () => {
       },
     }));
 
-    console.log(fieldMappings, 'fielddddmapppingss')
+    console.log(fieldMappings, 'fielddddmapppingss');
 
     // Live update the widget configuration
     handleLiveValueUpdate(field, value);
   };
 
-
   const handleCountChange = (e: any) => {
     const count = parseInt(e.target.value);
     setAnnouncementCount(count);
-    setAnnouncementValues(Array(count).fill(''))
-
-  }
-
+    setAnnouncementValues(Array(count).fill(''));
+  };
 
   const handleAnnouncementValueChanges = (index: any, value: any) => {
-    console.log("valueee", value)
+    console.log('valueee', value);
     if (!selectedWidget) return;
     const updatedValues = [...announcementValues];
-    updatedValues[index] = value
-    setAnnouncementValues(updatedValues)
-    console.log(announcementValues, 'annnnnnounccccccccc')
+    updatedValues[index] = value;
+    setAnnouncementValues(updatedValues);
+    console.log(announcementValues, 'annnnnnounccccccccc');
 
-    setFieldsForAnnouncement()
-
-
-
-  }
+    setFieldsForAnnouncement();
+  };
 
   const setFieldsForAnnouncement = () => {
-    const field = 'announcement'
+    const field = 'announcement';
 
     if (!selectedWidget) return;
 
     setFieldMappings((prev) => ({
-
       ...prev,
       [selectedWidget]: {
         ...prev[selectedWidget],
@@ -1206,18 +1315,15 @@ const MappingScreen: React.FC = () => {
       },
     }));
 
-
     // Live update the widget configuration
-    console.log(announcementValues, 'finalll values')
+    console.log(announcementValues, 'finalll values');
     handleLiveValueUpdate(field, announcementValues);
+  };
 
-  }
-
-  const handleDescriptionToggle = (value:boolean) =>{
-    console.log(value,'valueeee')
-   if (!selectedWidget) return;
-    const field = 'showdescription'
-
+  const handleDescriptionToggle = (value: boolean) => {
+    console.log(value, 'valueeee');
+    if (!selectedWidget) return;
+    const field = 'showdescription';
 
     // console.log(fieldMappings,'--------------------------')
     //  setPreviewData((prev: any) => ({
@@ -1225,8 +1331,7 @@ const MappingScreen: React.FC = () => {
     //     showdescription: value,
     //   }));
 
-     setFieldMappings((prev) => ({
-
+    setFieldMappings((prev) => ({
       ...prev,
       [selectedWidget]: {
         ...prev[selectedWidget],
@@ -1241,18 +1346,10 @@ const MappingScreen: React.FC = () => {
       },
     }));
 
-
     // Live update the widget configuration
-    console.log(value, 'finalll values')
+    console.log(value, 'finalll values');
     handleLiveValueUpdate(field, value);
-
-
-
-
-      
-  }
-
-
+  };
 
   const handleMappedFieldSelection = (
     field: string,
@@ -1334,15 +1431,14 @@ const MappingScreen: React.FC = () => {
     return widget ? widget.name : null;
   };
 
-
   const getWidgetName = (id: any) => {
-    const widget = widgets.find((w) => w.id == id)
-    return widget
-  }
+    const widget = widgets.find((w) => w.id == id);
+    return widget;
+  };
 
   const getWidgetConfigFields = () => {
     const widgetType = getSelectedWidgetType();
-    console.log(widgetType, 'typeeee')
+    console.log(widgetType, 'typeeee');
     return widgetType
       ? widgetConfigFields[widgetType as keyof typeof widgetConfigFields] || []
       : [];
@@ -1668,8 +1764,9 @@ const MappingScreen: React.FC = () => {
             ];
 
             // Get title from metadata
-            const title = `${transformedData.FormMetadata[yAxis[0].field]?.label || yAxis[0].field
-              } vs ${transformedData.FormMetadata[yAxis[1].field]?.label || yAxis[1].field}`;
+            const title = `${
+              transformedData.FormMetadata[yAxis[0].field]?.label || yAxis[0].field
+            } vs ${transformedData.FormMetadata[yAxis[1].field]?.label || yAxis[1].field}`;
 
             previewProps = {
               data: data,
@@ -1934,29 +2031,29 @@ const MappingScreen: React.FC = () => {
         const tableData =
           chaValues.length > 0
             ? chaValues.map((chaValue) => {
-              const row: any = {};
+                const row: any = {};
 
-              // Process each column
-              columns.forEach((column: any) => {
-                // For the first column (CHA field), use the CHA value as the cell value
-                if (column.field === chaField) {
-                  row[column.field] = chaValue;
-                } else {
-                  // For KF fields, get the value from the data
-                  const value = getKFValue(chaField, chaValue, column.field);
-                  // Store the value with the column's field as key
-                  //   row[column.field] = column.field.toLowerCase().includes('value')
-                  //     ? formatValue(value, 'currency')
-                  //     : Number(value || 0);
-                  row[column.field] =
-                    column.field.toLowerCase().includes('value') && Number(value || 0);
-                  //     ? formatValue(value, 'currency')
-                  //     : Number(value || 0);
-                }
-              });
+                // Process each column
+                columns.forEach((column: any) => {
+                  // For the first column (CHA field), use the CHA value as the cell value
+                  if (column.field === chaField) {
+                    row[column.field] = chaValue;
+                  } else {
+                    // For KF fields, get the value from the data
+                    const value = getKFValue(chaField, chaValue, column.field);
+                    // Store the value with the column's field as key
+                    //   row[column.field] = column.field.toLowerCase().includes('value')
+                    //     ? formatValue(value, 'currency')
+                    //     : Number(value || 0);
+                    row[column.field] =
+                      column.field.toLowerCase().includes('value') && Number(value || 0);
+                    //     ? formatValue(value, 'currency')
+                    //     : Number(value || 0);
+                  }
+                });
 
-              return row;
-            })
+                return row;
+              })
             : [];
 
         // Get total from "Overall Result" (using the second column if available, or the first non-CHA column)
@@ -2003,8 +2100,7 @@ const MappingScreen: React.FC = () => {
     setShowSaveAlert(false);
   };
 
-  console.log(selectedWidgetName, "selectedwidget------->>")
-
+  console.log(selectedWidgetName, 'selectedwidget------->>');
 
   return (
     <div className="relative flex h-screen w-full">
@@ -2039,41 +2135,43 @@ const MappingScreen: React.FC = () => {
               isDraggable={true}
               onLayoutChange={(newLayout) => setLayout(newLayout as LayoutItem[])}
             >
-              {widgets.map(({ id, name }) => {
-                const Component = widgetMapping[name];
-                // Use widgetConfigurations if available, otherwise use default props
-                const widgetProps =
-                  previewData && selectedWidget === id
-                    ? previewData
-                    : widgetConfigurations[id] || defaultPropsMapping[name];
+              {widgets
+                .filter((widget) => !widget.deleted) // Add this filter
+                .map(({ id, name }) => {
+                  const Component = widgetMapping[name];
+                  // Use widgetConfigurations if available, otherwise use default props
+                  const widgetProps =
+                    previewData && selectedWidget === id
+                      ? previewData
+                      : widgetConfigurations[id] || defaultPropsMapping[name];
 
-                const hasRoles = widgetConfigurations[id]?.roles?.length > 0;
-                const hasDescription = widgetConfigurations[id]?.description?.trim();
+                  const hasRoles = widgetConfigurations[id]?.roles?.length > 0;
+                  const hasDescription = widgetConfigurations[id]?.description?.trim();
 
-                return (
-
-                  <div
-                    key={id}
-                    className={`relative z-100 rounded-lg shadow-md ${selectedWidget === id ? 'border-2 border-blue-500' : ''
+                  return (
+                    <div
+                      key={id}
+                      className={`relative z-100 rounded-lg shadow-md ${
+                        selectedWidget === id ? 'border-2 border-blue-500' : ''
                       } ${hasRoles ? 'border border-green-500' : ''}`}
-                    onMouseDown={(event) => event.stopPropagation()}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleWidgetClick(id, e);
-                    }}
-                  >
-                    <button
-                      className="absolute top-2 right-2 z-50 rounded bg-red-500 px-2 py-1 text-xs text-white"
-                      style={{ pointerEvents: 'auto' }}
                       onMouseDown={(event) => event.stopPropagation()}
-                      onClick={(event) => {
-                        event.stopPropagation();
-                        removeWidget(id);
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleWidgetClick(id, e);
                       }}
                     >
-                      ✕
-                    </button>
-                    {/* {hasRoles && (
+                      <button
+                        className="absolute top-2 right-2 z-50 rounded bg-red-500 px-2 py-1 text-xs text-white"
+                        style={{ pointerEvents: 'auto' }}
+                        onMouseDown={(event) => event.stopPropagation()}
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          removeWidget(id);
+                        }}
+                      >
+                        ✕
+                      </button>
+                      {/* {hasRoles && (
                         <div className="absolute top-2 left-2 z-50 rounded-full bg-green-500 px-2 py-1 text-xs text-white">
                             <SecurityIcon style={{ fontSize: 14 }} />
                         </div>
@@ -2083,10 +2181,10 @@ const MappingScreen: React.FC = () => {
                             <InfoIcon style={{ fontSize: 14 }} />
                         </div>
                         )} */}
-                    <Component {...widgetProps} setChangeColor={setChangeColor} />
-                  </div>
-                );
-              })}
+                      <Component {...widgetProps} setChangeColor={setChangeColor} />
+                    </div>
+                  );
+                })}
             </GridLayout>
           </div>
         </SplitterPanel>
@@ -2114,74 +2212,67 @@ const MappingScreen: React.FC = () => {
                 variant="scrollable"
                 scrollButtons={false}
               >
-
                 {selectedWidgetName === 'announcement'
                   ? [
-                    <Tab
-                      key="announcement"
-                      icon={<SettingsIcon />}
-                      label="Announcement Mapping"
-                      className="!text-white"
-                    />,
-                  ]
+                      <Tab
+                        key="announcement"
+                        icon={<SettingsIcon />}
+                        label="Announcement Mapping"
+                        className="!text-white"
+                      />,
+                    ]
                   : [
-                    <Tab
-                      key="data-mapping"
-                      icon={<SettingsIcon />}
-                      label="Data Mapping"
-                      className="!text-white"
-                    />,
-                    <Tab
-                      key="auth"
-                      icon={<SecurityIcon />}
-                      label="Authorization"
-                      className="!text-white"
-                    />,
-                    <Tab
-                      key="info"
-                      icon={<InfoIcon />}
-                      label="Info"
-                      className="!text-white"
-                    />,
-                    fieldMappings[selectedWidget]?.mappingType === 'chart' && (
                       <Tab
-                        key="chart"
-                        icon={<DataIcon />}
-                        label="Chart Config"
+                        key="data-mapping"
+                        icon={<SettingsIcon />}
+                        label="Data Mapping"
                         className="!text-white"
-                      />
-                    ),
-                    fieldMappings[selectedWidget]?.mappingType === 'table' && (
+                      />,
                       <Tab
-                        key="table"
-                        icon={<DataIcon />}
-                        label="Table Config"
+                        key="auth"
+                        icon={<SecurityIcon />}
+                        label="Authorization"
                         className="!text-white"
-                      />
-                    ),
-                    fieldMappings[selectedWidget]?.mappingType === 'quadrant' && (
+                      />,
+                      <Tab key="info" icon={<InfoIcon />} label="Info" className="!text-white" />,
+                      fieldMappings[selectedWidget]?.mappingType === 'chart' && (
+                        <Tab
+                          key="chart"
+                          icon={<DataIcon />}
+                          label="Chart Config"
+                          className="!text-white"
+                        />
+                      ),
+                      fieldMappings[selectedWidget]?.mappingType === 'table' && (
+                        <Tab
+                          key="table"
+                          icon={<DataIcon />}
+                          label="Table Config"
+                          className="!text-white"
+                        />
+                      ),
+                      fieldMappings[selectedWidget]?.mappingType === 'quadrant' && (
+                        <Tab
+                          key="quadrant"
+                          icon={<DataIcon />}
+                          label="Quadrant Config"
+                          className="!text-white"
+                        />
+                      ),
                       <Tab
-                        key="quadrant"
-                        icon={<DataIcon />}
-                        label="Quadrant Config"
+                        key="data-preview"
+                        icon={<PreviewIcon />}
+                        label="Data Preview"
                         className="!text-white"
-                      />
-                    ),
-                    <Tab
-                      key="data-preview"
-                      icon={<PreviewIcon />}
-                      label="Data Preview"
-                      className="!text-white"
-                    />,
-                    <Tab
-                      key="widget-preview"
-                      icon={<VisibilityIcon />}
-                      label="Widget Preview"
-                      className="!text-white"
-                    />,
-                  ].filter(Boolean)}
+                      />,
+                      <Tab
+                        key="widget-preview"
+                        icon={<VisibilityIcon />}
+                        label="Widget Preview"
+                        className="!text-white"
+                      />,
+                    ].filter(Boolean)}
               </Tabs>
-
 
               {(() => {
                 const tabIndices = getTabIndices();
@@ -2235,7 +2326,7 @@ const MappingScreen: React.FC = () => {
 
                       {/* Field mapping configuration */}
                       {getWidgetConfigFields().map(({ field }) => {
-                        console.log(field, 'fielddd')
+                        console.log(field, 'fielddd');
                         const fieldMapping = fieldMappings[selectedWidget]?.fields[field];
                         const isManualInput = fieldMapping?.inputType === 'manual';
                         const mappedConfig = fieldMapping?.mappedConfig;
@@ -2247,110 +2338,153 @@ const MappingScreen: React.FC = () => {
                           field !== 'metrics' &&
                           field !== 'menuItems' &&
                           field !== 'chartData' &&
-                          selectedWidgetName !== 'announcement' ?
-                          (
-                            <FormControl fullWidth variant="outlined" margin="normal" key={field}>
-                              <Typography variant="subtitle2" sx={{ color: 'white', mb: 1 }}>
-                                {/* {field} */}
-                                {field === 'name' || field === 'widget_name'
-                                  ? 'TITLE'
-                                  : field?.toUpperCase()}
-                              </Typography>
+                          selectedWidgetName !== 'announcement' ? (
+                          <FormControl fullWidth variant="outlined" margin="normal" key={field}>
+                            <Typography variant="subtitle2" sx={{ color: 'white', mb: 1 }}>
+                              {/* {field} */}
+                              {field === 'name' || field === 'widget_name'
+                                ? 'TITLE'
+                                : field?.toUpperCase()}
+                            </Typography>
 
-                              {/* Input Type Selection */}
-                              <FormControl fullWidth variant="outlined" margin="normal" size="small">
-                                <InputLabel sx={{ color: 'white' }}>Input Type</InputLabel>
-                                <Select
-                                  value={isManualInput ? 'manual' : 'mapped'}
-                                  onChange={(e) =>
-                                    handleFieldMappingTypeChange(
-                                      field,
-                                      e.target.value as 'manual' | 'mapped'
-                                    )
-                                  }
-                                  label="Input Type"
-                                  sx={{
-                                    color: 'white',
-                                    '& .MuiOutlinedInput-notchedOutline': {
+                            {/* Input Type Selection */}
+                            <FormControl fullWidth variant="outlined" margin="normal" size="small">
+                              <InputLabel sx={{ color: 'white' }}>Input Type</InputLabel>
+                              <Select
+                                value={isManualInput ? 'manual' : 'mapped'}
+                                onChange={(e) =>
+                                  handleFieldMappingTypeChange(
+                                    field,
+                                    e.target.value as 'manual' | 'mapped'
+                                  )
+                                }
+                                label="Input Type"
+                                sx={{
+                                  color: 'white',
+                                  '& .MuiOutlinedInput-notchedOutline': {
+                                    borderColor: 'white',
+                                  },
+                                  '&:hover .MuiOutlinedInput-notchedOutline': {
+                                    borderColor: 'white',
+                                  },
+                                  '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                                    borderColor: 'white',
+                                  },
+                                  '& .MuiSvgIcon-root': { color: 'white' },
+                                }}
+                              >
+                                <MenuItem value="manual">Manual Input</MenuItem>
+                                <MenuItem value="mapped">Query Mapping</MenuItem>
+                              </Select>
+                            </FormControl>
+
+                            {/* Manual Input Field */}
+                            {isManualInput ? (
+                              <TextField
+                                label={`Value for ${field}`}
+                                value={fieldMapping?.manualValue || ''}
+                                onChange={(e) => handleManualValueChange(field, e.target.value)}
+                                fullWidth
+                                margin="normal"
+                                size="small"
+                                sx={{
+                                  input: { color: 'white' },
+                                  label: { color: 'white' },
+                                  '& .MuiOutlinedInput-root': {
+                                    '& fieldset': { borderColor: 'white' },
+                                    '&:hover fieldset': { borderColor: 'white' },
+                                    '&.Mui-focused fieldset': {
                                       borderColor: 'white',
                                     },
-                                    '&:hover .MuiOutlinedInput-notchedOutline': {
-                                      borderColor: 'white',
-                                    },
-                                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                                      borderColor: 'white',
-                                    },
-                                    '& .MuiSvgIcon-root': { color: 'white' },
-                                  }}
-                                >
-                                  <MenuItem value="manual">Manual Input</MenuItem>
-                                  <MenuItem value="mapped">Query Mapping</MenuItem>
-                                </Select>
-                              </FormControl>
+                                  },
+                                }}
+                              />
+                            ) : (
+                              /* Mapped Input Field Configuration */
+                              <Box
+                                mt={2}
+                                p={2}
+                                border={1}
+                                borderColor="rgba(255,255,255,0.3)"
+                                borderRadius={1}
+                                sx={{ backgroundColor: '#ffffff10' }}
+                              >
+                                <Typography variant="subtitle2" sx={{ color: 'white', mb: 2 }}>
+                                  Data Mapping Configuration
+                                </Typography>
+                                {!parsedResponse && (
+                                  <Alert
+                                    severity="warning"
+                                    sx={{ mb: 2, backgroundColor: '#ff980020' }}
+                                  >
+                                    <Typography sx={{ color: 'white' }}>
+                                      Please configure and fetch report data first to enable field
+                                      mapping.
+                                    </Typography>
+                                  </Alert>
+                                )}
 
-                              {/* Manual Input Field */}
-                              {isManualInput ? (
-                                <TextField
-                                  label={`Value for ${field}`}
-                                  value={fieldMapping?.manualValue || ''}
-                                  onChange={(e) => handleManualValueChange(field, e.target.value)}
-                                  fullWidth
-                                  margin="normal"
-                                  size="small"
-                                  sx={{
-                                    input: { color: 'white' },
-                                    label: { color: 'white' },
-                                    '& .MuiOutlinedInput-root': {
-                                      '& fieldset': { borderColor: 'white' },
-                                      '&:hover fieldset': { borderColor: 'white' },
-                                      '&.Mui-focused fieldset': {
-                                        borderColor: 'white',
-                                      },
-                                    },
-                                  }}
-                                />
-                              ) : (
-                                /* Mapped Input Field Configuration */
-                                <Box
-                                  mt={2}
-                                  p={2}
-                                  border={1}
-                                  borderColor="rgba(255,255,255,0.3)"
-                                  borderRadius={1}
-                                  sx={{ backgroundColor: '#ffffff10' }}
-                                >
-                                  <Typography variant="subtitle2" sx={{ color: 'white', mb: 2 }}>
-                                    Data Mapping Configuration
-                                  </Typography>
-                                  {!parsedResponse && (
-                                    <Alert
-                                      severity="warning"
-                                      sx={{ mb: 2, backgroundColor: '#ff980020' }}
-                                    >
-                                      <Typography sx={{ color: 'white' }}>
-                                        Please configure and fetch report data first to enable field
-                                        mapping.
-                                      </Typography>
-                                    </Alert>
-                                  )}
+                                {parsedResponse && (
+                                  <Grid container spacing={2}>
+                                    <Grid item xs={12}>
+                                      <FormControl fullWidth size="small">
+                                        <InputLabel sx={{ color: 'white' }}>CHA Field</InputLabel>
+                                        <Select
+                                          value={mappedConfig?.chaField || ''}
+                                          onChange={(e) => {
+                                            const chaField = e.target.value as string;
+                                            handleMappedFieldSelection(
+                                              field,
+                                              chaField,
+                                              mappedConfig?.chaValue || '',
+                                              mappedConfig?.kfField || ''
+                                            );
+                                          }}
+                                          label="CHA Field"
+                                          sx={{
+                                            color: 'white',
+                                            '& .MuiOutlinedInput-notchedOutline': {
+                                              borderColor: 'white',
+                                            },
+                                            '&:hover .MuiOutlinedInput-notchedOutline': {
+                                              borderColor: 'white',
+                                            },
+                                            '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                                              borderColor: 'white',
+                                            },
+                                            '& .MuiSvgIcon-root': {
+                                              color: 'white',
+                                            },
+                                          }}
+                                        >
+                                          {getCHAFields().map((chaField: any) => (
+                                            <MenuItem
+                                              key={chaField.fieldName}
+                                              value={chaField.fieldName}
+                                            >
+                                              {chaField.label} ({chaField.fieldName})
+                                            </MenuItem>
+                                          ))}
+                                        </Select>
+                                      </FormControl>
+                                    </Grid>
 
-                                  {parsedResponse && (
-                                    <Grid container spacing={2}>
+                                    {mappedConfig?.chaField && (
                                       <Grid item xs={12}>
                                         <FormControl fullWidth size="small">
-                                          <InputLabel sx={{ color: 'white' }}>CHA Field</InputLabel>
+                                          <InputLabel sx={{ color: 'white' }}>CHA Value</InputLabel>
                                           <Select
-                                            value={mappedConfig?.chaField || ''}
+                                            value={mappedConfig?.chaValue || ''}
                                             onChange={(e) => {
-                                              const chaField = e.target.value as string;
+                                              const chaValue = e.target.value as string;
                                               handleMappedFieldSelection(
                                                 field,
-                                                chaField,
-                                                mappedConfig?.chaValue || '',
+                                                mappedConfig?.chaField || '',
+                                                chaValue,
                                                 mappedConfig?.kfField || ''
                                               );
                                             }}
-                                            label="CHA Field"
+                                            label="CHA Value"
                                             sx={{
                                               color: 'white',
                                               '& .MuiOutlinedInput-notchedOutline': {
@@ -2367,232 +2501,205 @@ const MappingScreen: React.FC = () => {
                                               },
                                             }}
                                           >
-                                            {getCHAFields().map((chaField: any) => (
-                                              <MenuItem
-                                                key={chaField.fieldName}
-                                                value={chaField.fieldName}
-                                              >
-                                                {chaField.label} ({chaField.fieldName})
+                                            {getCHAValues(mappedConfig?.chaField).map((value) => (
+                                              <MenuItem key={value} value={value}>
+                                                {value}
                                               </MenuItem>
                                             ))}
                                           </Select>
                                         </FormControl>
                                       </Grid>
+                                    )}
 
-                                      {mappedConfig?.chaField && (
-                                        <Grid item xs={12}>
-                                          <FormControl fullWidth size="small">
-                                            <InputLabel sx={{ color: 'white' }}>CHA Value</InputLabel>
-                                            <Select
-                                              value={mappedConfig?.chaValue || ''}
-                                              onChange={(e) => {
-                                                const chaValue = e.target.value as string;
-                                                handleMappedFieldSelection(
-                                                  field,
-                                                  mappedConfig?.chaField || '',
-                                                  chaValue,
-                                                  mappedConfig?.kfField || ''
-                                                );
-                                              }}
-                                              label="CHA Value"
-                                              sx={{
+                                    {mappedConfig?.chaField && mappedConfig?.chaValue && (
+                                      <Grid item xs={12}>
+                                        <FormControl fullWidth size="small">
+                                          <InputLabel sx={{ color: 'white' }}>KF Field</InputLabel>
+                                          <Select
+                                            value={mappedConfig?.kfField || ''}
+                                            onChange={(e) => {
+                                              const kfField = e.target.value as string;
+                                              handleMappedFieldSelection(
+                                                field,
+                                                mappedConfig?.chaField || '',
+                                                mappedConfig?.chaValue || '',
+                                                kfField
+                                              );
+                                            }}
+                                            label="KF Field"
+                                            sx={{
+                                              color: 'white',
+                                              '& .MuiOutlinedInput-notchedOutline': {
+                                                borderColor: 'white',
+                                              },
+                                              '&:hover .MuiOutlinedInput-notchedOutline': {
+                                                borderColor: 'white',
+                                              },
+                                              '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                                                borderColor: 'white',
+                                              },
+                                              '& .MuiSvgIcon-root': {
                                                 color: 'white',
-                                                '& .MuiOutlinedInput-notchedOutline': {
-                                                  borderColor: 'white',
-                                                },
-                                                '&:hover .MuiOutlinedInput-notchedOutline': {
-                                                  borderColor: 'white',
-                                                },
-                                                '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                                                  borderColor: 'white',
-                                                },
-                                                '& .MuiSvgIcon-root': {
-                                                  color: 'white',
-                                                },
-                                              }}
-                                            >
-                                              {getCHAValues(mappedConfig?.chaField).map((value) => (
-                                                <MenuItem key={value} value={value}>
-                                                  {value}
-                                                </MenuItem>
-                                              ))}
-                                            </Select>
-                                          </FormControl>
+                                              },
+                                            }}
+                                          >
+                                            {getKFFields().map((kfField: any) => (
+                                              <MenuItem
+                                                key={kfField.fieldName}
+                                                value={kfField.fieldName}
+                                              >
+                                                {kfField.label} ({kfField.fieldName})
+                                              </MenuItem>
+                                            ))}
+                                          </Select>
+                                        </FormControl>
+                                      </Grid>
+                                    )}
+
+                                    {mappedConfig?.chaField &&
+                                      mappedConfig?.chaValue &&
+                                      mappedConfig?.kfField && (
+                                        <Grid item xs={12}>
+                                          <Alert
+                                            severity="success"
+                                            sx={{ backgroundColor: '#4caf5020' }}
+                                          >
+                                            <Typography variant="body2" sx={{ color: 'white' }}>
+                                              Mapped Value:{' '}
+                                              {getKFValue(
+                                                mappedConfig.chaField,
+                                                mappedConfig.chaValue,
+                                                mappedConfig.kfField
+                                              ) || 'No data'}
+                                            </Typography>
+                                          </Alert>
                                         </Grid>
                                       )}
-
-                                      {mappedConfig?.chaField && mappedConfig?.chaValue && (
-                                        <Grid item xs={12}>
-                                          <FormControl fullWidth size="small">
-                                            <InputLabel sx={{ color: 'white' }}>KF Field</InputLabel>
-                                            <Select
-                                              value={mappedConfig?.kfField || ''}
-                                              onChange={(e) => {
-                                                const kfField = e.target.value as string;
-                                                handleMappedFieldSelection(
-                                                  field,
-                                                  mappedConfig?.chaField || '',
-                                                  mappedConfig?.chaValue || '',
-                                                  kfField
-                                                );
-                                              }}
-                                              label="KF Field"
-                                              sx={{
-                                                color: 'white',
-                                                '& .MuiOutlinedInput-notchedOutline': {
-                                                  borderColor: 'white',
-                                                },
-                                                '&:hover .MuiOutlinedInput-notchedOutline': {
-                                                  borderColor: 'white',
-                                                },
-                                                '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                                                  borderColor: 'white',
-                                                },
-                                                '& .MuiSvgIcon-root': {
-                                                  color: 'white',
-                                                },
-                                              }}
-                                            >
-                                              {getKFFields().map((kfField: any) => (
-                                                <MenuItem
-                                                  key={kfField.fieldName}
-                                                  value={kfField.fieldName}
-                                                >
-                                                  {kfField.label} ({kfField.fieldName})
-                                                </MenuItem>
-                                              ))}
-                                            </Select>
-                                          </FormControl>
-                                        </Grid>
-                                      )}
-
-                                      {mappedConfig?.chaField &&
-                                        mappedConfig?.chaValue &&
-                                        mappedConfig?.kfField && (
-                                          <Grid item xs={12}>
-                                            <Alert
-                                              severity="success"
-                                              sx={{ backgroundColor: '#4caf5020' }}
-                                            >
-                                              <Typography variant="body2" sx={{ color: 'white' }}>
-                                                Mapped Value:{' '}
-                                                {getKFValue(
-                                                  mappedConfig.chaField,
-                                                  mappedConfig.chaValue,
-                                                  mappedConfig.kfField
-                                                ) || 'No data'}
-                                              </Typography>
-                                            </Alert>
-                                          </Grid>
-                                        )}
-                                    </Grid>
-                                  )}
-                                </Box>
-                              )}
-                            </FormControl>
-                          ) : null;
+                                  </Grid>
+                                )}
+                              </Box>
+                            )}
+                          </FormControl>
+                        ) : null;
                       })}
-                      {selectedWidgetName === 'announcement' ? (() => {
-                        const fieldMapping = fieldMappings[selectedWidget]?.fields['title'];
-                        console.log(fieldMapping,)
-                        return (
-                          <>
-                            <Box sx={{ color: 'white' }}>
-                              <FormControl fullWidth variant="outlined" margin="normal" key={'title'}>
-                                <TextField
-                                  label='TITLE'
-                                  onChange={(e) => handleAnnouncementValueChange('title', e.target.value)}
-                                  fullWidth
-                                  margin="normal"
-                                  value={fieldMapping?.manualValue || ''}
-                                  size="small"
-                                  sx={{
-                                    input: { color: 'white' },
-                                    label: { color: 'white' },
-                                    '& .MuiOutlinedInput-root': {
-                                      '& fieldset': { borderColor: 'white' },
-                                      '&:hover fieldset': { borderColor: 'white' },
-                                      '&.Mui-focused fieldset': {
-                                        borderColor: 'white',
-                                      },
-                                    },
-                                  }}
-                                />
-                              </FormControl>
-                              {/* Dropdown to choose number of announcements */}
-                              <FormControl fullWidth variant="outlined" margin="normal">
-                                <InputLabel sx={{ color: 'white' }}>Number of Announcements</InputLabel>
-                                <Select
-                                  value={announcementCount}
-                                  onChange={handleCountChange}
-                                  label="Number of Announcements"
-                                  size="small"
-                                  sx={{
-                                    color: 'white',
-                                    '& .MuiOutlinedInput-notchedOutline': {
-                                      borderColor: 'white',
-                                    },
-                                    '&:hover .MuiOutlinedInput-notchedOutline': {
-                                      borderColor: 'white',
-                                    },
-                                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                                      borderColor: 'white',
-                                    },
-                                  }}
-                                >
-                                  {[...Array(5).keys()].map((num) => (
-                                    <MenuItem key={num + 1} value={num + 1}>
-                                      {num + 1}
-                                    </MenuItem>
-                                  ))}
-                                </Select>
-                              </FormControl>
-
-                              {/* Dynamic Announcement Fields */}
-                              {announcementValues.map((value, index) => (
-                                <FormControl fullWidth variant="outlined" margin="normal" key={`announcement-${index}`}>
-                                  <TextField
-                                    label={`ANNOUNCEMENT ${index + 1}`}
-                                    value={value}
-                                    onChange={(e) => handleAnnouncementValueChanges(index, e.target.value)}
+                      {selectedWidgetName === 'announcement'
+                        ? (() => {
+                            const fieldMapping = fieldMappings[selectedWidget]?.fields['title'];
+                            console.log(fieldMapping);
+                            return (
+                              <>
+                                <Box sx={{ color: 'white' }}>
+                                  <FormControl
                                     fullWidth
-                                    multiline
-                                    minRows={3}
-                                    InputProps={{
-                                      style: {
+                                    variant="outlined"
+                                    margin="normal"
+                                    key={'title'}
+                                  >
+                                    <TextField
+                                      label="TITLE"
+                                      onChange={(e) =>
+                                        handleAnnouncementValueChange('title', e.target.value)
+                                      }
+                                      fullWidth
+                                      margin="normal"
+                                      value={fieldMapping?.manualValue || ''}
+                                      size="small"
+                                      sx={{
+                                        input: { color: 'white' },
+                                        label: { color: 'white' },
+                                        '& .MuiOutlinedInput-root': {
+                                          '& fieldset': { borderColor: 'white' },
+                                          '&:hover fieldset': { borderColor: 'white' },
+                                          '&.Mui-focused fieldset': {
+                                            borderColor: 'white',
+                                          },
+                                        },
+                                      }}
+                                    />
+                                  </FormControl>
+                                  {/* Dropdown to choose number of announcements */}
+                                  <FormControl fullWidth variant="outlined" margin="normal">
+                                    <InputLabel sx={{ color: 'white' }}>
+                                      Number of Announcements
+                                    </InputLabel>
+                                    <Select
+                                      value={announcementCount}
+                                      onChange={handleCountChange}
+                                      label="Number of Announcements"
+                                      size="small"
+                                      sx={{
                                         color: 'white',
-                                        fontSize: '1.1rem', // <-- Bigger font
-                                        fontWeight: '500',   // <-- Slightly bolder
-                                      },
-                                    }}
-                                    InputLabelProps={{
-                                      style: {
-                                        color: 'white',
-                                        fontSize: '1rem',
-                                      },
-                                    }}
-                                    size="small"
-                                    sx={{
-                                      input: { color: 'white' },
-                                      label: { color: 'white' },
-                                      '& .MuiOutlinedInput-root': {
-                                        '& fieldset': { borderColor: 'white' },
-                                        '&:hover fieldset': { borderColor: 'white' },
-                                        '&.Mui-focused fieldset': {
+                                        '& .MuiOutlinedInput-notchedOutline': {
                                           borderColor: 'white',
                                         },
-                                      },
-                                    }}
-                                  />
-                                </FormControl>
-                              ))}
-                            </Box>
+                                        '&:hover .MuiOutlinedInput-notchedOutline': {
+                                          borderColor: 'white',
+                                        },
+                                        '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                                          borderColor: 'white',
+                                        },
+                                      }}
+                                    >
+                                      {[...Array(5).keys()].map((num) => (
+                                        <MenuItem key={num + 1} value={num + 1}>
+                                          {num + 1}
+                                        </MenuItem>
+                                      ))}
+                                    </Select>
+                                  </FormControl>
 
-                            {console.log(fieldMappings)}
-                          </>
-                        );
-                      })() : null}
+                                  {/* Dynamic Announcement Fields */}
+                                  {announcementValues.map((value, index) => (
+                                    <FormControl
+                                      fullWidth
+                                      variant="outlined"
+                                      margin="normal"
+                                      key={`announcement-${index}`}
+                                    >
+                                      <TextField
+                                        label={`ANNOUNCEMENT ${index + 1}`}
+                                        value={value}
+                                        onChange={(e) =>
+                                          handleAnnouncementValueChanges(index, e.target.value)
+                                        }
+                                        fullWidth
+                                        multiline
+                                        minRows={3}
+                                        InputProps={{
+                                          style: {
+                                            color: 'white',
+                                            fontSize: '1.1rem', // <-- Bigger font
+                                            fontWeight: '500', // <-- Slightly bolder
+                                          },
+                                        }}
+                                        InputLabelProps={{
+                                          style: {
+                                            color: 'white',
+                                            fontSize: '1rem',
+                                          },
+                                        }}
+                                        size="small"
+                                        sx={{
+                                          input: { color: 'white' },
+                                          label: { color: 'white' },
+                                          '& .MuiOutlinedInput-root': {
+                                            '& fieldset': { borderColor: 'white' },
+                                            '&:hover fieldset': { borderColor: 'white' },
+                                            '&.Mui-focused fieldset': {
+                                              borderColor: 'white',
+                                            },
+                                          },
+                                        }}
+                                      />
+                                    </FormControl>
+                                  ))}
+                                </Box>
 
+                                {console.log(fieldMappings)}
+                              </>
+                            );
+                          })()
+                        : null}
                     </TabPanel>
 
                     {/* Authorization/Roles Tab - Second tab */}
@@ -3011,7 +3118,7 @@ const MappingScreen: React.FC = () => {
 
                               {/* Y-Axis configuration based on chart type */}
                               {getWidgetCategory(getSelectedWidgetType() || '') ===
-                                'stacked-bar' ? (
+                              'stacked-bar' ? (
                                 // Stacked bar chart - multiple Y axes with series
                                 <Box mt={3} className="stacked-series-config">
                                   <Typography
@@ -3637,26 +3744,25 @@ const MappingScreen: React.FC = () => {
                 );
               })()}
 
-                          <FormControl>
-                            <FormControlLabel
-                              control={
-                                <Checkbox
-                                  // checked={fieldMapping?.descriptionEnabled || false}
-                                 onChange={(e) => handleDescriptionToggle(e.target.checked)}
-                                  sx={{
-                                    color: 'white',
-                                    '&.Mui-checked': { color: 'white' },
-                                  }}
-                                />
-                              }
-                              label={
-                                <Typography variant="body2" sx={{ color: 'white' }}>
-                                  Add description icon
-                                </Typography>
-                              }
-                            />
-
-                            </FormControl>
+              <FormControl>
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      // checked={fieldMapping?.descriptionEnabled || false}
+                      onChange={(e) => handleDescriptionToggle(e.target.checked)}
+                      sx={{
+                        color: 'white',
+                        '&.Mui-checked': { color: 'white' },
+                      }}
+                    />
+                  }
+                  label={
+                    <Typography variant="body2" sx={{ color: 'white' }}>
+                      Add description icon
+                    </Typography>
+                  }
+                />
+              </FormControl>
 
               <Box mt={4} pt={2} borderTop={1} borderColor="rgba(255,255,255,0.2)">
                 <Button

@@ -194,6 +194,8 @@ export interface Widget {
 
 // Interface for layout data from MappingScreen
 export interface LayoutWidget {
+    active: any;
+    deleted: any;
     id: string;
     name: string;
     Description: string;
@@ -384,8 +386,8 @@ class SAPODataService {
                     layoutConfig: this.safeJsonParse(item.LayoutConfig),
                     fieldMappings: this.safeJsonParse(item.FieldMappings),
                     properties: this.safeJsonParse(item.Properties),
-                    active: item.is_active === 'X',
-                    deleted: item.del_flag === 'X',
+                    active: item.IsActive === 'X',
+                    deleted: item.DelFlag === 'X',
                     roles: item.WidgetConfRolesItem?.results || [],
                     isNew: false,
                     hasChanges: false,
@@ -640,9 +642,9 @@ class SAPODataService {
                     LayoutConfig: JSON.stringify(layoutConfig || {}),
                     FieldMappings: JSON.stringify(fieldMapping || {}),
                     Properties: JSON.stringify(widget.props || {}),
-                    IsActive: 'X',
+                    IsActive: widget.active ? 'X' : '',
                     SortOrder: i + 1,
-                    DelFlag: '',
+                    DelFlag: widget.deleted ? 'X' : '',
                     CrudFlag: 'C',
                 };
 
