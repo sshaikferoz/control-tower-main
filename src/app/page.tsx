@@ -16,6 +16,7 @@ import { LoadingScreen } from '@/components/ui/LoadingScreen';
 import { ErrorScreen } from '@/components/ui/ErrorScreen';
 import Home from '@/app/home/page'; // Assuming this exists
 
+
 const Dashboard: React.FC = () => {
   const [appState, setAppState] = useState<AppState>({
     view: 'Dashboard',

@@ -55,7 +55,7 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
     }
 
     if (position.includes('right')) {
-      classes.push('right-25');
+      classes.push('right-6');
     } else {
       classes.push('left-auto');
     }

@@ -1,7 +1,7 @@
 'use client';
 
 import SidebarMapping from '@/components/SidebarMapping';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import RGL, { WidthProvider, Layout } from 'react-grid-layout';
 import 'react-grid-layout/css/styles.css';
 import 'react-resizable/css/styles.css';
@@ -78,6 +78,11 @@ import GeoSpendMapWidget from '@/components/widgets/GeoSpendMapWidget';
 import NewsFeed from '@/components/widgets/NewsFeed';
 import { get } from 'http';
 import { title } from 'process';
+// Add these imports after the existing imports
+import { LoadingScreen } from '@/components/ui/LoadingScreen';
+import { ErrorScreen } from '@/components/ui/ErrorScreen';
+import { useAdminCheck } from '@/hooks/useAdminCheck';
+import { useURLParams } from '@/hooks/useURLParams';
 
 // Setup GridLayout with width provider
 const GridLayout = WidthProvider(RGL);
@@ -404,6 +409,16 @@ function TabPanel(props: TabPanelProps) {
 }
 
 const MappingScreen: React.FC = () => {
+  // Add admin check hooks
+  const urlParams = useURLParams();
+  const { isAdmin, adminCheckLoading, adminCheckError } = useAdminCheck();
+
+  // Check if edit mode is allowed based on admin status and URL parameter
+  const isEditModeAllowed = useMemo(() => {
+    if (!isAdmin) return false;
+    return urlParams?.get('state') === 'edit';
+  }, [isAdmin, urlParams]);
+
   let sectionName = '';
   let sectionId = '';
   let isExpanded = '';
@@ -460,14 +475,17 @@ const MappingScreen: React.FC = () => {
   const [announcementValues, setAnnouncementValues] = useState<string[]>([]);
   const [changeColor, setChangeColorOneMetric] = useState<string>('');
   useEffect(() => {
-    fetch('/api/endpoints')
-      .then((res) => res.json())
-      .then((data) => setApiEndpoints(data.endpoints))
-      .catch((err) => console.error('Failed to fetch endpoints:', err));
+    // Only proceed if admin check is complete and user is authorized
+    if (!adminCheckLoading && isAdmin) {
+      fetch('/api/endpoints')
+        .then((res) => res.json())
+        .then((data) => setApiEndpoints(data.endpoints))
+        .catch((err) => console.error('Failed to fetch endpoints:', err));
 
-    // For test data, automatically fetch on load
-    fetchReportData();
-  }, []);
+      // For test data, automatically fetch on load
+      fetchReportData();
+    }
+  }, [adminCheckLoading, isAdmin]);
 
   // Add this after the existing useEffect that fetches endpoints
   useEffect(() => {
@@ -2100,7 +2118,52 @@ const MappingScreen: React.FC = () => {
     setShowSaveAlert(false);
   };
 
-  console.log(selectedWidgetName, 'selectedwidget------->>');
+  // Show loading screen while checking admin status
+  if (adminCheckLoading) {
+    return <LoadingScreen title="Loading..." message="Checking user permissions..." />;
+  }
+
+  // Show error message if there's an admin check error
+  if (adminCheckError) {
+    return (
+      <ErrorScreen
+        title="Access Error"
+        message={adminCheckError || 'Unable to verify permissions'}
+        onRetry={() => window.location.reload()}
+      />
+    );
+  }
+
+  // Restrict access to admin users only
+  if (!isAdmin) {
+    return (
+      <ErrorScreen
+        title="Access Denied"
+        message="You don't have permission to access the mapping configuration."
+        onRetry={() => {
+          window.location.href =
+            process.env.NODE_ENV === 'development'
+              ? '/'
+              : `${process.env.NEXT_PUBLIC_BSP_NAME}/index.html`;
+        }}
+      />
+    );
+  }
+
+  // Additional check for edit mode if you want to be more restrictive
+  if (!isEditModeAllowed) {
+    return (
+      <ErrorScreen
+        title="Edit Mode Required"
+        message="Mapping configuration requires edit mode. Add '?state=edit' to the URL."
+        onRetry={() => {
+          const currentUrl = new URL(window.location.href);
+          currentUrl.searchParams.set('state', 'edit');
+          window.location.href = currentUrl.toString();
+        }}
+      />
+    );
+  }
 
   return (
     <div className="relative flex h-screen w-full">

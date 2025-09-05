@@ -1,5 +1,5 @@
 'use client';
-import React, { useState, useCallback, useRef } from 'react';
+import React, { useState, useCallback, useRef, useMemo } from 'react';
 import {
   Paper,
   Typography,
@@ -53,6 +53,11 @@ import {
   CloudDone as CloudDoneIcon,
 } from '@mui/icons-material';
 import * as XLSX from 'xlsx';
+// Add these imports after the existing imports
+import { useAdminCheck } from '@/hooks/useAdminCheck';
+import { useURLParams } from '@/hooks/useURLParams';
+import { LoadingScreen } from '@/components/ui/LoadingScreen';
+import { ErrorScreen } from '@/components/ui/ErrorScreen';
 
 // Corporate dark theme matching your existing dashboard
 const corporateTheme = createTheme({
@@ -506,6 +511,13 @@ const TABLE_SCHEMAS: TableSchema[] = [
 ];
 
 export default function ExcelUploadComponent() {
+  const { isAdmin, adminCheckLoading, adminCheckError } = useAdminCheck();
+
+  // Check if edit mode is allowed based on admin status and URL parameter
+  const isEditModeAllowed = useMemo(() => {
+    if (!isAdmin) return false;
+  }, [isAdmin]);
+
   const [selectedTable, setSelectedTable] = useState('');
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [uploadedData, setUploadedData] = useState<UploadedData | null>(null);
@@ -614,52 +626,51 @@ export default function ExcelUploadComponent() {
     return errors;
   }, []);
 
-const handleFileUpload = useCallback(
-  async (file: File) => {
-    if (!selectedSchema) {
-      setErrorMessage('Please select a table first');
-      setShowError(true);
-      return;
-    }
+  const handleFileUpload = useCallback(
+    async (file: File) => {
+      if (!selectedSchema) {
+        setErrorMessage('Please select a table first');
+        setShowError(true);
+        return;
+      }
 
-    setIsProcessing(true);
-    setUploadProgress(20);
+      setIsProcessing(true);
+      setUploadProgress(20);
 
-    try {
-      const arrayBuffer = await file.arrayBuffer();
-      setUploadProgress(40);
+      try {
+        const arrayBuffer = await file.arrayBuffer();
+        setUploadProgress(40);
 
-      const workbook = XLSX.read(arrayBuffer, { type: 'array' });
-      const sheetName = workbook.SheetNames[0];
-      const worksheet = workbook.Sheets[sheetName];
+        const workbook = XLSX.read(arrayBuffer, { type: 'array' });
+        const sheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[sheetName];
 
-      setUploadProgress(60);
+        setUploadProgress(60);
 
-      const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
-      const headers = jsonData[0] as string[];
-      const dataRows = jsonData.slice(1) as any[][];
+        const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+        const headers = jsonData[0] as string[];
+        const dataRows = jsonData.slice(1) as any[][];
 
-      setUploadedData({
-        headers,
-        data: dataRows,
-        validationErrors: [],   // clear validation errors here, no local validation
-        validRowCount: dataRows.length,
-        totalRowCount: dataRows.length,
-      });
+        setUploadedData({
+          headers,
+          data: dataRows,
+          validationErrors: [], // clear validation errors here, no local validation
+          validRowCount: dataRows.length,
+          totalRowCount: dataRows.length,
+        });
 
-      setUploadProgress(100);
-      setIsProcessing(false);
-    } catch (error) {
-      console.error('Error processing file:', error);
-      setErrorMessage('Error processing Excel file. Please check the file format.');
-      setShowError(true);
-      setIsProcessing(false);
-      setUploadProgress(0);
-    }
-  },
-  [selectedSchema]
-);
-
+        setUploadProgress(100);
+        setIsProcessing(false);
+      } catch (error) {
+        console.error('Error processing file:', error);
+        setErrorMessage('Error processing Excel file. Please check the file format.');
+        setShowError(true);
+        setIsProcessing(false);
+        setUploadProgress(0);
+      }
+    },
+    [selectedSchema]
+  );
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -709,7 +720,6 @@ const handleFileUpload = useCallback(
     },
     [handleFileUpload]
   );
-
   const handleUploadToAPI = async () => {
     if (!uploadedData || !selectedSchema) return;
 
@@ -733,23 +743,22 @@ const handleFileUpload = useCallback(
           body: formData,
         }
       );
-    //   setShowSuccess(true);
-    //   setIsProcessing(false);
+      //   setShowSuccess(true);
+      //   setIsProcessing(false);
 
-    //   setTimeout(() => {
-    //     handleClearAll();
-    //   }, 3000);
-    // } catch (error) {
-    //   console.error('Upload error:', error);
-    //   setErrorMessage('Failed to upload data to server');
-    //   setShowError(true);
-    //   setIsProcessing(false);
-    // }
-    const response = await res.json();
+      //   setTimeout(() => {
+      //     handleClearAll();
+      //   }, 3000);
+      // } catch (error) {
+      //   console.error('Upload error:', error);
+      //   setErrorMessage('Failed to upload data to server');
+      //   setShowError(true);
+      //   setIsProcessing(false);
+      // }
+      const response = await res.json();
 
-
-      if (response.status === "error") {
-        setErrorMessage(response.message || "Upload failed");
+      if (response.status === 'error') {
+        setErrorMessage(response.message || 'Upload failed');
         setShowError(true);
       } else {
         setShowSuccess(true);
@@ -758,8 +767,8 @@ const handleFileUpload = useCallback(
         }, 3000);
       }
     } catch (error) {
-      console.error("Upload error:", error);
-      setErrorMessage("Failed to upload data to server");
+      console.error('Upload error:', error);
+      setErrorMessage('Failed to upload data to server');
       setShowError(true);
     } finally {
       setIsProcessing(false);
@@ -830,6 +839,38 @@ const handleFileUpload = useCallback(
     XLSX.utils.book_append_sheet(wb, ws, 'Template');
     XLSX.writeFile(wb, `${selectedSchema.displayName}_Template.xlsx`);
   };
+
+  // Show loading screen while checking admin status
+  if (adminCheckLoading) {
+    return <LoadingScreen title="Loading..." message="Checking user permissions..." />;
+  }
+
+  // Show error message if there's an admin check error
+  if (adminCheckError) {
+    return (
+      <ErrorScreen
+        title="Access Error"
+        message={adminCheckError || 'Unable to verify permissions'}
+        onRetry={() => window.location.reload()}
+      />
+    );
+  }
+
+  // Restrict access to admin users only
+  if (!isAdmin) {
+    return (
+      <ErrorScreen
+        title="Access Denied"
+        message="You don't have permission to access the Excel upload functionality."
+        onRetry={() => {
+          window.location.href =
+            process.env.NODE_ENV === 'development'
+              ? '/'
+              : `${process.env.NEXT_PUBLIC_BSP_NAME}/index.html`;
+        }}
+      />
+    );
+  }
 
   return (
     <ThemeProvider theme={corporateTheme}>

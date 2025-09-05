@@ -948,7 +948,7 @@ class SAPODataService {
             // Check if results exist and if IsAdmin flag is set
             if (data.d.results && data.d.results.length > 0) {
                 const adminCheck: AdminRoleCheckResponse = data.d.results[0];
-                return adminCheck.IsAdmin === '';
+                return adminCheck.IsAdmin === 'X';
             }
 
             // If no results, user is not admin
@@ -988,7 +988,12 @@ class SAPODataService {
 
                 // Parse the ConfigJson string to get the actual configuration
                 try {
-                    const configJson = JSON.parse(settingsData.ConfigJson);
+                    const configJson = this.safeJsonParse(settingsData.ConfigJson);
+
+                    // Check if configJson is an empty object and return null if so
+                    if (configJson && typeof configJson === 'object' && Object.keys(configJson).length === 0) {
+                        return null;
+                    }
                     return {
                         ...configJson,
                         _metadata: {
