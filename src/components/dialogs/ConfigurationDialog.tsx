@@ -6,7 +6,7 @@ interface ConfigurationDialogProps {
   visible: boolean;
   onHide: () => void;
   configuration: UIConfiguration;
-  onSave: (config: UIConfiguration) => Promise<boolean>;
+  onSave: (config: UIConfiguration) => Promise<any>;
   onReset: () => Promise<void>;
 }
 

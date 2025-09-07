@@ -43,7 +43,7 @@ export interface AdminRoleCheckResponse {
     IsAdmin: string;
 }
 
-export type AppView = 'dashboard' | 'mapping' | 'b2b-reports' | 'generic';
+export type AppView = 'Dashboard' | 'mapping' | 'b2b-reports' | 'generic';
 
 export interface AppState {
     view: AppView;
@@ -128,7 +128,7 @@ export interface AdminRoleCheckResponse {
 
 export interface AppState {
     view: AppView;
-    selectedMenuItem: string;
+    selectedMenuItem: any;
     mappingParams?: {
         sectionName: string;
         expanded: string;

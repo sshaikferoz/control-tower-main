@@ -16,7 +16,6 @@ import { LoadingScreen } from '@/components/ui/LoadingScreen';
 import { ErrorScreen } from '@/components/ui/ErrorScreen';
 import Home from '@/app/home/page'; // Assuming this exists
 
-
 const Dashboard: React.FC = () => {
   const [appState, setAppState] = useState<AppState>({
     view: 'Dashboard',
@@ -57,7 +56,7 @@ const Dashboard: React.FC = () => {
       const sortedMenuItems = [...menuItems].sort((a, b) => (a.order || 0) - (b.order || 0));
       const firstMenuItem = sortedMenuItems[0];
 
-      setAppState((prev) => ({
+      setAppState((prev: any) => ({
         ...prev,
         selectedMenuItem: firstMenuItem,
         view:
@@ -91,7 +90,7 @@ const Dashboard: React.FC = () => {
 
     if (item.type === 'Section') {
       setAppState({
-        view: 'dashboard',
+        view: 'Dashboard',
         selectedMenuItem: item,
       });
     } else if (item.type === 'Dashboard') {
@@ -196,14 +195,14 @@ const Dashboard: React.FC = () => {
   }, []);
 
   const handleSaveConfiguration = useCallback(
-    (config: any) => {
-      return saveConfiguration(config);
+    async (config: any) => {
+      return await saveConfiguration(config);
     },
     [saveConfiguration]
   );
 
-  const handleResetConfiguration = useCallback(() => {
-    resetConfiguration();
+  const handleResetConfiguration = useCallback(async () => {
+    await resetConfiguration();
   }, [resetConfiguration]);
 
   // Generate background style based on configuration
@@ -252,7 +251,7 @@ const Dashboard: React.FC = () => {
     const selectedMenuItem = getSelectedMenuItemId();
     console.log('Selected Menu Item ID:', selectedMenuItem);
     switch (appState.view) {
-      case 'dashboard':
+      case 'Dashboard':
         return (
           <Home
             selectedMenuItemId={selectedMenuItem}

@@ -96,7 +96,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
   const handleCopyUrl = async (item: MenuItem) => {
     try {
-      const baseUrl = window.location.origin;
+      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
       const standaloneUrl = `${baseUrl}/?&mode=standalone&appId=${item.id}`;
 
       await navigator.clipboard.writeText(standaloneUrl);
@@ -111,7 +111,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       // Fallback for browsers that don't support clipboard API
       try {
         const textArea = document.createElement('textarea');
-        const baseUrl = window.location.origin;
+        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
         const standaloneUrl = `${baseUrl}/?&mode=standalone&appId=${item.id}`;
         textArea.value = standaloneUrl;
         document.body.appendChild(textArea);

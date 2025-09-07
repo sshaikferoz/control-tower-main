@@ -1022,6 +1022,7 @@ class SAPODataService {
     async saveSettings(tabId: string, configuration: UIConfiguration, existingId?: string): Promise<UIConfiguration> {
         try {
             const isUpdate = !!existingId;
+            console.log('Saving settings for tabId:', tabId, 'isUpdate:', isUpdate, 'existingId:', existingId);
 
             // Remove metadata from configuration before saving
             const configToSave = { ...configuration };
@@ -1102,7 +1103,7 @@ class SAPODataService {
             const data = await response.json();
 
             if (data.d.results && data.d.results.length > 0) {
-                return data.d.results[0].Id;
+                return data.d.results[0].Id === '00000000000000000000000000000000' ? null : data.d.results[0].Id;
             }
 
             return null;
