@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Fetch Until Success</title>
+</head>
+
+<body>
+    <h2>Fetch API Retry Example</h2>
+    <p>Check the console for status updates. A sound will play on success.</p>
+
+    <script>
+        // URL of the API you want to call
+        const apiUrl = "https://ctapitester-a4mel9cxg6.dispatcher.sa1.hana.ondemand.com/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/ZSCM_CT_V_ADMIN_ROLE_CHECK?$format=json"; // Replace with your API URL
+
+        // Function to play a sound
+        function playSound() {
+            const audio = new Audio("https://www.soundjay.com/free-music/midnight-ride-01a.mp3");
+            audio.play();
+        }
+
+        // Function to repeatedly fetch until success
+        async function fetchUntilSuccess(url) {
+            let success = false;
+            // playSound(); // Play sound when success
+            while (!success) {
+                try {
+                    const response = await fetch(url);
+
+                    if (response.ok) {  // HTTP 200–299
+                        console.log("✅ Success!", response);
+                        // playSound(); // Play sound when success
+                        success = true;
+                    } else {
+                        console.log(`⚠️ Request failed with status ${response.status}, retrying...`);
+                        // playSound(); // Play sound when success
+                    }
+                } catch (error) {
+                    console.log("❌ Fetch error, retrying...", error);
+                }
+
+                if (!success) {
+                    // Wait 2 seconds before retrying
+                    await new Promise(resolve => setTimeout(resolve, 300000));
+                }
+            }
+        }
+
+        // Start fetching
+        fetchUntilSuccess(apiUrl);
+    </script>
+</body>
+
+</html>

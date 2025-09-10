@@ -6,9 +6,8 @@ import SaveIcon from '@mui/icons-material/Save';
 import AddIcon from '@mui/icons-material/Add';
 import SettingsIcon from '@mui/icons-material/Settings';
 import Header from '@/components/Header';
-import ChatbotDialog from '@/app/chat/ChatbotDialog';
+import ChatbotDialog from '@/components/dialogs/ChatbotDialog';
 import { UIConfiguration } from '@/types/configuration';
-import ChatbotInterface from '@/app/chatbot/page';
 
 interface DashboardHeaderProps {
   isAdmin: boolean;
@@ -72,20 +71,23 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
         <div className={getPositionClasses()}>
           <button
             onClick={openChat}
-            className="focus:ring-opacity-50 rounded-full p-4 text-white shadow-lg transition-all duration-300 hover:scale-110 focus:ring-4 focus:outline-none"
-            style={{
-              backgroundColor: chatbotConfig.color,
-              //   '--hover-color': `${chatbotConfig.color}dd`, // Add transparency for hover
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = `${chatbotConfig.color}dd`;
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = chatbotConfig.color;
-            }}
+            className="focus:ring-opacity-50 rounded-full p-4 text-white shadow-lg transition-all duration-300 hover:scale-110 hover:cursor-pointer focus:outline-none"
+            // className="focus:ring-opacity-50 rounded-full p-4 text-white shadow-lg transition-all duration-300 hover:scale-110 focus:ring-4 focus:outline-none"
+            style={
+              {
+                //   backgroundColor: chatbotConfig.color,
+                //   '--hover-color': `${chatbotConfig.color}dd`, // Add transparency for hover
+              }
+            }
+            // onMouseEnter={(e) => {
+            //   e.currentTarget.style.backgroundColor = `${chatbotConfig.color}dd`;
+            // }}
+            // onMouseLeave={(e) => {
+            //   e.currentTarget.style.backgroundColor = chatbotConfig.color;
+            // }}
             aria-label="Open chat"
           >
-            <svg
+            {/* <svg
               xmlns="http://www.w3.org/2000/svg"
               className="h-6 w-6 text-white"
               fill="none"
@@ -100,7 +102,9 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
               />
               <path strokeLinecap="round" strokeLinejoin="round" d="M9.5 9h.01M14.5 9h.01" />
               <path strokeLinecap="round" strokeLinejoin="round" d="M9.5 13a3.5 3.5 0 0 0 5 0" />
-            </svg>
+            </svg> */}
+
+            <img src="chatbot/Group-4108.png" width={140}></img>
           </button>
         </div>
       )}

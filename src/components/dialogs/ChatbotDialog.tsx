@@ -1,11 +1,6 @@
 'use client';
 import React, { useState, useRef, useEffect } from 'react';
-import ChatHeader from './components/ChatHeader';
-import ChatMessage from './components/ChatMessage';
-import FAQSection from './components/FAQSection';
-import { generateResponse } from '../../services/chat/chatService';
-import { Dropdown } from 'primereact/dropdown';
-import ChatbotInterface from '../chatbot/page';
+import ChatbotInterface from '../../app/chatbot/page';
 
 interface Message {
   content: string;
@@ -22,15 +17,6 @@ const ChatbotDialog: React.FC<ChatbotDialogProps> = ({ isOpen, onClose }) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [visible, setVisible] = useState<boolean>(true);
   const [message, setMessage] = useState('');
-  const [selectedCity, setSelectedCity] = useState(null);
-
-  const style = [
-    { name: 'Professional', code: 'PRF' },
-    { name: 'Casual', code: 'CSL' },
-    { name: 'Technical', code: 'TECH' },
-    { name: 'Concise', code: 'CON' },
-    { name: 'Normal', code: 'NOR' },
-  ];
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const dialogRef = useRef<HTMLDivElement>(null);
@@ -80,47 +66,47 @@ const ChatbotDialog: React.FC<ChatbotDialogProps> = ({ isOpen, onClose }) => {
     };
   }, [isOpen, onClose]);
 
-  const handleSendMessage = async (message: string, visible: boolean) => {
-    setMessage('');
-    setVisible(visible);
+  //   const handleSendMessage = async (message: string, visible: boolean) => {
+  //     setMessage('');
+  //     setVisible(visible);
 
-    // Add user message
-    const userMessage: Message = {
-      content: message,
-      isUser: true,
-      timestamp: new Date().toISOString(),
-    };
+  //     // Add user message
+  //     const userMessage: Message = {
+  //       content: message,
+  //       isUser: true,
+  //       timestamp: new Date().toISOString(),
+  //     };
 
-    setMessages((prev) => [...prev, userMessage]);
+  //     setMessages((prev) => [...prev, userMessage]);
 
-    try {
-      // Get response from service
-      const response = await generateResponse(message);
+  //     try {
+  //       // Get response from service
+  //       const response = await generateResponse(message, visible);
 
-      // Add bot response
-      const botMessage: Message = {
-        content: response.content,
-        isUser: false,
-        timestamp: response.metadata?.timestamp,
-      };
+  //       // Add bot response
+  //       const botMessage: Message = {
+  //         content: response.content,
+  //         isUser: false,
+  //         timestamp: response.metadata?.timestamp,
+  //       };
 
-      setMessages((prev) => [...prev, botMessage]);
-    } catch (error) {
-      console.error('Error generating response:', error);
+  //       setMessages((prev) => [...prev, botMessage]);
+  //     } catch (error) {
+  //       console.error('Error generating response:', error);
 
-      // Add error message
-      const errorMessage: Message = {
-        content: 'Sorry, I encountered an error processing your request.',
-        isUser: false,
-      };
+  //       // Add error message
+  //       const errorMessage: Message = {
+  //         content: 'Sorry, I encountered an error processing your request.',
+  //         isUser: false,
+  //       };
 
-      setMessages((prev) => [...prev, errorMessage]);
-    }
-  };
+  //       setMessages((prev) => [...prev, errorMessage]);
+  //     }
+  //   };
 
-  const handleSelectQuestion = (question: string, visible: boolean) => {
-    handleSendMessage(question, visible);
-  };
+  //   const handleSelectQuestion = (question: string, visible: boolean) => {
+  //     handleSendMessage(question, visible);
+  //   };
 
   if (!isOpen) return null;
 

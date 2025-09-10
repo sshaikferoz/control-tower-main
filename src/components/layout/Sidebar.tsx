@@ -346,7 +346,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                           )}
 
                           {/* Copy URL button - only show in display mode and when not collapsed */}
-                          {!editMode && !isCollapsed && (
+                          {/* {!editMode && !isCollapsed && (
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
@@ -368,7 +368,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                                 <LinkIcon className="h-3 w-3 text-white" />
                               )}
                             </button>
-                          )}
+                          )} */}
 
                           {/* {!isCollapsed && item.roles && item.roles.length > 0 && (
                             <ShieldCheckIcon className="mr-1 h-4 w-4 text-blue-400" />

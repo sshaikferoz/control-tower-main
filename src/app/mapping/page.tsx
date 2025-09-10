@@ -52,6 +52,9 @@ import {
   Snackbar,
   FormControlLabel,
   Checkbox,
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import AddIcon from '@mui/icons-material/Add';
@@ -63,6 +66,8 @@ import SecurityIcon from '@mui/icons-material/Security';
 import PreviewIcon from '@mui/icons-material/Visibility';
 import InfoIcon from '@mui/icons-material/Info';
 import AssignmentIcon from '@mui/icons-material/Assignment';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import SearchIcon from '@mui/icons-material/Search';
 import { transformFormMetadata, getValueByPath, formatValue } from '@/helpers/transformHelpers';
 import {
   TransformedData,
@@ -83,6 +88,7 @@ import { LoadingScreen } from '@/components/ui/LoadingScreen';
 import { ErrorScreen } from '@/components/ui/ErrorScreen';
 import { useAdminCheck } from '@/hooks/useAdminCheck';
 import { useURLParams } from '@/hooks/useURLParams';
+import * as MUIIcons from '@mui/icons-material';
 
 // Setup GridLayout with width provider
 const GridLayout = WidthProvider(RGL);
@@ -121,6 +127,7 @@ interface TargetReportConfig {
 
 // MirageJS mock API server setup
 if (process.env.NODE_ENV === 'development') mirageServer();
+
 // Component mapping
 const widgetMapping: Record<string, React.ComponentType<any>> = {
   'two-metrics': MultiMetrics,
@@ -170,8 +177,12 @@ const REPORT_TYPE_OPTIONS = [
 ];
 
 // Determine the widget mapping type based on widget name
-const getWidgetMappingType = (widgetName: string): 'simple' | 'chart' | 'table' | 'quadrant' => {
-  if (widgetName.includes('table')) {
+const getWidgetMappingType = (
+  widgetName: string
+): 'simple' | 'chart' | 'table' | 'quadrant' | 'loans-app-tray' => {
+  if (widgetName === 'loans-app-tray') {
+    return 'loans-app-tray';
+  } else if (widgetName.includes('table')) {
     return 'table';
   } else if (widgetName === 'quadrant-metrics') {
     return 'quadrant';
@@ -203,6 +214,8 @@ const getWidgetCategory = (widgetName: string): string => {
     return 'pie-total';
   } else if (widgetName === 'quadrant-metrics') {
     return 'quadrant';
+  } else if (widgetName === 'loans-app-tray') {
+    return 'loans-app-tray';
   } else if (widgetName.includes('piechart')) {
     return 'pie';
   } else if (widgetName.includes('linechart')) {
@@ -212,6 +225,14 @@ const getWidgetCategory = (widgetName: string): string => {
   } else {
     return 'simple';
   }
+};
+
+// Get all available MUI icons
+const getAllMUIIcons = () => {
+  return Object.keys(MUIIcons).filter(
+    (key) =>
+      key !== 'createSvgIcon' && key !== 'default' && typeof (MUIIcons as any)[key] === 'function'
+  );
 };
 
 // Default widget props for preview
@@ -239,11 +260,6 @@ const defaultPropsMapping: Record<string, any> = {
         { date: '01-06-2024', Actual: 195, unit: '%' },
       ],
       chart_yaxis: 'Actual',
-      //   metric_data: {
-      //     metric_value: '$142',
-      //     metric_variance: '+5.40%',
-      //     metric_label: 'Received Payments',
-      //   },
       widget_name: 'Successful Payments',
     },
   },
@@ -259,7 +275,6 @@ const defaultPropsMapping: Record<string, any> = {
     },
   },
   'one-metric-table': {
-    // totalAmount: '$15,223',
     title: 'Top Suppliers',
     data: [
       { supplier_name: 'Reliable Suppliers', contracts: 7, value: '52,345' },
@@ -331,8 +346,6 @@ const defaultPropsMapping: Record<string, any> = {
     ],
     title: 'With P&SCM Buyers',
     totalValue: '$3,128B',
-    // subValue: '$339.1B',
-    // variance: '+23.98%',
   },
   'quadrant-metrics': {
     metrics: [
@@ -342,30 +355,29 @@ const defaultPropsMapping: Record<string, any> = {
       { title: 'Completed Order', value: '1,247', position: 'bottom-right' },
     ],
   },
-  // Add this to the defaultPropsMapping object
   'loans-app-tray': {
     menuItems: [
       {
         id: 1,
-        icon: `${process.env.NEXT_PUBLIC_BSP_NAME}/vector.svg`,
+        iconName: 'Assignment',
         label: 'Open PR',
         count: 13,
       },
       {
         id: 2,
-        icon: `${process.env.NEXT_PUBLIC_BSP_NAME}/group-1000003443.png`,
+        iconName: 'Schedule',
         label: 'Contract Expiring',
         count: 85,
       },
       {
         id: 3,
-        icon: `${process.env.NEXT_PUBLIC_BSP_NAME}/group-1000003444.png`,
+        iconName: 'Pending',
         label: 'Pending SES',
         count: 32,
       },
       {
         id: 4,
-        icon: `${process.env.NEXT_PUBLIC_BSP_NAME}/vector-1.svg`,
+        iconName: 'TrendingUp',
         label: 'Contract with 80%\nConsumed Values',
         count: 24,
       },
@@ -376,12 +388,14 @@ const defaultPropsMapping: Record<string, any> = {
       { name: 'SES', value: 114, color: '#ffaa04' },
       { name: 'CV', value: 126, color: '#ff0000' },
     ],
+    menuItemConfigs: {},
+    chartDataConfig: {},
   },
   announcement: {
     title: 'Welcome to Our Platform! 🎉',
     announcement: [
       '🚧 Important Update! System maintenance scheduled for 2 AM.',
-      '⚠️ New Feature! We’ve just released a new dashboard.',
+      "⚠️ New Feature! We've just released a new dashboard.",
       '🔒 Security Alert! Please update your password for better security.',
     ],
   },
@@ -407,6 +421,660 @@ function TabPanel(props: TabPanelProps) {
     </div>
   );
 }
+
+// LoansAppTray Configuration Component
+interface LoansAppTrayConfigProps {
+  selectedWidget: string;
+  fieldMappings: any;
+  setFieldMappings: (mappings: any) => void;
+  widgetConfigurations: any;
+  setWidgetConfigurations: (configs: any) => void;
+  parsedResponse: any;
+  getCHAFields: () => any[];
+  getKFFields: () => any[];
+  getCHAValues: (chaField: string) => string[];
+  getKFValue: (chaField: string, chaValue: string, kfField: string) => any;
+  reportName: string;
+  handleReportNameChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
+  fetchReportData: () => void;
+  loading: boolean;
+}
+
+const LoansAppTrayConfig: React.FC<LoansAppTrayConfigProps> = ({
+  selectedWidget,
+  fieldMappings,
+  setFieldMappings,
+  widgetConfigurations,
+  setWidgetConfigurations,
+  parsedResponse,
+  getCHAFields,
+  getKFFields,
+  getCHAValues,
+  getKFValue,
+  reportName,
+  handleReportNameChange,
+  fetchReportData,
+  loading,
+}) => {
+  const [iconDialogOpen, setIconDialogOpen] = useState(false);
+  const [selectedMenuItemForIcon, setSelectedMenuItemForIcon] = useState<number | null>(null);
+  const [iconSearchQuery, setIconSearchQuery] = useState('');
+  const [menuItems, setMenuItems] = useState([
+    { id: 1, label: 'Open PR', iconName: 'Assignment', count: 13 },
+    { id: 2, label: 'Contract Expiring', iconName: 'Schedule', count: 85 },
+    { id: 3, label: 'Pending SES', iconName: 'Pending', count: 32 },
+    { id: 4, label: 'Contract with 80% Consumed Values', iconName: 'TrendingUp', count: 24 },
+  ]);
+
+  const allIcons = getAllMUIIcons();
+  const filteredIcons = allIcons.filter((iconName) =>
+    iconName.toLowerCase().includes(iconSearchQuery.toLowerCase())
+  );
+
+  // Initialize menu item configurations
+  useEffect(() => {
+    if (selectedWidget && !fieldMappings[selectedWidget]?.menuItemConfigs) {
+      const defaultMenuItemConfigs = menuItems.reduce((acc, item) => {
+        acc[item.id] = {
+          reportName: reportName,
+          queryConfig: {
+            inputType: 'manual',
+            manualValue: item.count,
+          },
+        };
+        return acc;
+      }, {} as any);
+
+      setFieldMappings((prev: any) => ({
+        ...prev,
+        [selectedWidget]: {
+          ...prev[selectedWidget],
+          menuItemConfigs: defaultMenuItemConfigs,
+          chartDataConfig: {
+            reportName: reportName,
+            inputType: 'manual',
+            manualData: [
+              { name: 'PR', value: 86, color: '#449ca4' },
+              { name: 'CE', value: 156, color: '#5899da' },
+              { name: 'SES', value: 114, color: '#ffaa04' },
+              { name: 'CV', value: 126, color: '#ff0000' },
+            ],
+          },
+        },
+      }));
+    }
+  }, [selectedWidget]);
+
+  const handleMenuItemChange = (itemId: number, field: string, value: any) => {
+    setMenuItems((prev) =>
+      prev.map((item) => (item.id === itemId ? { ...item, [field]: value } : item))
+    );
+
+    // Update widget configuration
+    setWidgetConfigurations((prev: any) => ({
+      ...prev,
+      [selectedWidget]: {
+        ...prev[selectedWidget],
+        menuItems: menuItems.map((item) =>
+          item.id === itemId ? { ...item, [field]: value } : item
+        ),
+      },
+    }));
+  };
+
+  const handleMenuItemQueryConfigChange = (itemId: number, configField: string, value: any) => {
+    setFieldMappings((prev: any) => ({
+      ...prev,
+      [selectedWidget]: {
+        ...prev[selectedWidget],
+        menuItemConfigs: {
+          ...prev[selectedWidget]?.menuItemConfigs,
+          [itemId]: {
+            ...prev[selectedWidget]?.menuItemConfigs?.[itemId],
+            queryConfig: {
+              ...prev[selectedWidget]?.menuItemConfigs?.[itemId]?.queryConfig,
+              [configField]: value,
+            },
+          },
+        },
+      },
+    }));
+  };
+
+  const handleIconSelect = (iconName: string) => {
+    if (selectedMenuItemForIcon !== null) {
+      handleMenuItemChange(selectedMenuItemForIcon, 'iconName', iconName);
+      setIconDialogOpen(false);
+      setSelectedMenuItemForIcon(null);
+    }
+  };
+
+  const renderIconDialog = () => (
+    <Dialog open={iconDialogOpen} onClose={() => setIconDialogOpen(false)} maxWidth="md" fullWidth>
+      <DialogTitle>Select Icon</DialogTitle>
+      <DialogContent>
+        <TextField
+          fullWidth
+          placeholder="Search icons..."
+          value={iconSearchQuery}
+          onChange={(e) => setIconSearchQuery(e.target.value)}
+          margin="normal"
+          InputProps={{
+            startAdornment: <SearchIcon />,
+          }}
+        />
+        <Box sx={{ maxHeight: 400, overflow: 'auto' }}>
+          <Grid container spacing={1}>
+            {filteredIcons.slice(0, 100).map((iconName) => {
+              const IconComponent = (MUIIcons as any)[iconName];
+              return (
+                <Grid item xs={3} sm={2} key={iconName}>
+                  <Paper
+                    sx={{
+                      p: 1,
+                      textAlign: 'center',
+                      cursor: 'pointer',
+                      '&:hover': { bgcolor: 'primary.light' },
+                    }}
+                    onClick={() => handleIconSelect(iconName)}
+                  >
+                    <IconComponent sx={{ fontSize: 24 }} />
+                    <Typography variant="caption" display="block">
+                      {iconName}
+                    </Typography>
+                  </Paper>
+                </Grid>
+              );
+            })}
+          </Grid>
+        </Box>
+      </DialogContent>
+    </Dialog>
+  );
+
+  return (
+    <Box>
+      <Typography variant="h6" gutterBottom sx={{ color: 'white' }}>
+        LoansAppTray Configuration
+      </Typography>
+
+      {/* Menu Items Configuration */}
+      <Typography variant="subtitle1" gutterBottom sx={{ color: 'white', mt: 2 }}>
+        Menu Items Configuration
+      </Typography>
+
+      {menuItems.map((item, index) => (
+        <Accordion
+          key={item.id}
+          sx={{
+            backgroundColor: '#ffffff20',
+            color: 'white',
+            mb: 1,
+            '&:before': { display: 'none' },
+          }}
+        >
+          <AccordionSummary expandIcon={<ExpandMoreIcon sx={{ color: 'white' }} />}>
+            <Typography sx={{ color: 'white' }}>
+              Menu Item {item.id}: {item.label}
+            </Typography>
+          </AccordionSummary>
+          <AccordionDetails>
+            <Grid container spacing={2}>
+              {/* Label */}
+              <Grid item xs={12}>
+                <TextField
+                  label="Label"
+                  fullWidth
+                  value={item.label}
+                  onChange={(e) => handleMenuItemChange(item.id, 'label', e.target.value)}
+                  sx={{
+                    input: { color: 'white' },
+                    label: { color: 'white' },
+                    '& .MuiOutlinedInput-root': {
+                      '& fieldset': { borderColor: 'white' },
+                      '&:hover fieldset': { borderColor: 'white' },
+                      '&.Mui-focused fieldset': { borderColor: 'white' },
+                    },
+                  }}
+                />
+              </Grid>
+
+              {/* Icon Selection */}
+              <Grid item xs={12} sm={6}>
+                <Box display="flex" alignItems="center" gap={2}>
+                  <Typography sx={{ color: 'white' }}>Icon:</Typography>
+                  {item.iconName && (
+                    <Chip
+                      icon={React.createElement((MUIIcons as any)[item.iconName])}
+                      label={item.iconName}
+                      sx={{ bgcolor: '#ffffff20', color: 'white' }}
+                    />
+                  )}
+                  <Button
+                    label="Select Icon"
+                    onClick={() => {
+                      setSelectedMenuItemForIcon(item.id);
+                      setIconDialogOpen(true);
+                    }}
+                  />
+                </Box>
+              </Grid>
+
+              {/* Count Configuration */}
+              <Grid item xs={12}>
+                <Typography variant="subtitle2" sx={{ color: 'white', mb: 1 }}>
+                  Count Configuration
+                </Typography>
+
+                <FormControl fullWidth margin="normal">
+                  <InputLabel sx={{ color: 'white' }}>Input Type</InputLabel>
+                  <Select
+                    value={
+                      fieldMappings[selectedWidget]?.menuItemConfigs?.[item.id]?.queryConfig
+                        ?.inputType || 'manual'
+                    }
+                    onChange={(e) =>
+                      handleMenuItemQueryConfigChange(item.id, 'inputType', e.target.value)
+                    }
+                    label="Input Type"
+                    sx={{
+                      color: 'white',
+                      '& .MuiOutlinedInput-notchedOutline': { borderColor: 'white' },
+                      '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: 'white' },
+                      '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: 'white' },
+                      '& .MuiSvgIcon-root': { color: 'white' },
+                    }}
+                  >
+                    <MenuItem value="manual">Manual Input</MenuItem>
+                    <MenuItem value="mapped">Query Mapping</MenuItem>
+                  </Select>
+                </FormControl>
+
+                {fieldMappings[selectedWidget]?.menuItemConfigs?.[item.id]?.queryConfig
+                  ?.inputType === 'manual' ? (
+                  <TextField
+                    label="Count Value"
+                    type="number"
+                    fullWidth
+                    value={
+                      fieldMappings[selectedWidget]?.menuItemConfigs?.[item.id]?.queryConfig
+                        ?.manualValue || 0
+                    }
+                    onChange={(e) => {
+                      const value = parseInt(e.target.value) || 0;
+                      handleMenuItemQueryConfigChange(item.id, 'manualValue', value);
+                      handleMenuItemChange(item.id, 'count', value);
+                    }}
+                    sx={{
+                      input: { color: 'white' },
+                      label: { color: 'white' },
+                      '& .MuiOutlinedInput-root': {
+                        '& fieldset': { borderColor: 'white' },
+                        '&:hover fieldset': { borderColor: 'white' },
+                        '&.Mui-focused fieldset': { borderColor: 'white' },
+                      },
+                    }}
+                  />
+                ) : (
+                  <Box mt={2} p={2} border={1} borderColor="rgba(255,255,255,0.3)" borderRadius={1}>
+                    <Typography variant="subtitle2" sx={{ color: 'white', mb: 2 }}>
+                      Query Mapping for Menu Item {item.id}
+                    </Typography>
+
+                    {/* Individual Report Name */}
+                    <TextField
+                      label={`Report Name for ${item.label}`}
+                      fullWidth
+                      margin="normal"
+                      value={
+                        fieldMappings[selectedWidget]?.menuItemConfigs?.[item.id]?.reportName ||
+                        reportName
+                      }
+                      onChange={(e) => {
+                        setFieldMappings((prev: any) => ({
+                          ...prev,
+                          [selectedWidget]: {
+                            ...prev[selectedWidget],
+                            menuItemConfigs: {
+                              ...prev[selectedWidget]?.menuItemConfigs,
+                              [item.id]: {
+                                ...prev[selectedWidget]?.menuItemConfigs?.[item.id],
+                                reportName: e.target.value,
+                              },
+                            },
+                          },
+                        }));
+                      }}
+                      sx={{
+                        input: { color: 'white' },
+                        label: { color: 'white' },
+                        '& .MuiOutlinedInput-root': {
+                          '& fieldset': { borderColor: 'white' },
+                          '&:hover fieldset': { borderColor: 'white' },
+                          '&.Mui-focused fieldset': { borderColor: 'white' },
+                        },
+                      }}
+                    />
+
+                    {parsedResponse && (
+                      <Grid container spacing={2}>
+                        <Grid item xs={12}>
+                          <FormControl fullWidth size="small">
+                            <InputLabel sx={{ color: 'white' }}>CHA Field</InputLabel>
+                            <Select
+                              value={
+                                fieldMappings[selectedWidget]?.menuItemConfigs?.[item.id]
+                                  ?.queryConfig?.mappedConfig?.chaField || ''
+                              }
+                              onChange={(e) => {
+                                handleMenuItemQueryConfigChange(item.id, 'mappedConfig', {
+                                  ...fieldMappings[selectedWidget]?.menuItemConfigs?.[item.id]
+                                    ?.queryConfig?.mappedConfig,
+                                  chaField: e.target.value,
+                                });
+                              }}
+                              label="CHA Field"
+                              sx={{
+                                color: 'white',
+                                '& .MuiOutlinedInput-notchedOutline': { borderColor: 'white' },
+                                '&:hover .MuiOutlinedInput-notchedOutline': {
+                                  borderColor: 'white',
+                                },
+                                '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                                  borderColor: 'white',
+                                },
+                                '& .MuiSvgIcon-root': { color: 'white' },
+                              }}
+                            >
+                              {getCHAFields().map((chaField: any) => (
+                                <MenuItem key={chaField.fieldName} value={chaField.fieldName}>
+                                  {chaField.label} ({chaField.fieldName})
+                                </MenuItem>
+                              ))}
+                            </Select>
+                          </FormControl>
+                        </Grid>
+
+                        {fieldMappings[selectedWidget]?.menuItemConfigs?.[item.id]?.queryConfig
+                          ?.mappedConfig?.chaField && (
+                          <Grid item xs={12}>
+                            <FormControl fullWidth size="small">
+                              <InputLabel sx={{ color: 'white' }}>CHA Value</InputLabel>
+                              <Select
+                                value={
+                                  fieldMappings[selectedWidget]?.menuItemConfigs?.[item.id]
+                                    ?.queryConfig?.mappedConfig?.chaValue || ''
+                                }
+                                onChange={(e) => {
+                                  handleMenuItemQueryConfigChange(item.id, 'mappedConfig', {
+                                    ...fieldMappings[selectedWidget]?.menuItemConfigs?.[item.id]
+                                      ?.queryConfig?.mappedConfig,
+                                    chaValue: e.target.value,
+                                  });
+                                }}
+                                label="CHA Value"
+                                sx={{
+                                  color: 'white',
+                                  '& .MuiOutlinedInput-notchedOutline': { borderColor: 'white' },
+                                  '&:hover .MuiOutlinedInput-notchedOutline': {
+                                    borderColor: 'white',
+                                  },
+                                  '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                                    borderColor: 'white',
+                                  },
+                                  '& .MuiSvgIcon-root': { color: 'white' },
+                                }}
+                              >
+                                {getCHAValues(
+                                  fieldMappings[selectedWidget]?.menuItemConfigs?.[item.id]
+                                    ?.queryConfig?.mappedConfig?.chaField
+                                ).map((value) => (
+                                  <MenuItem key={value} value={value}>
+                                    {value}
+                                  </MenuItem>
+                                ))}
+                              </Select>
+                            </FormControl>
+                          </Grid>
+                        )}
+
+                        {fieldMappings[selectedWidget]?.menuItemConfigs?.[item.id]?.queryConfig
+                          ?.mappedConfig?.chaField &&
+                          fieldMappings[selectedWidget]?.menuItemConfigs?.[item.id]?.queryConfig
+                            ?.mappedConfig?.chaValue && (
+                            <Grid item xs={12}>
+                              <FormControl fullWidth size="small">
+                                <InputLabel sx={{ color: 'white' }}>KF Field</InputLabel>
+                                <Select
+                                  value={
+                                    fieldMappings[selectedWidget]?.menuItemConfigs?.[item.id]
+                                      ?.queryConfig?.mappedConfig?.kfField || ''
+                                  }
+                                  onChange={(e) => {
+                                    const kfField = e.target.value;
+                                    const chaField =
+                                      fieldMappings[selectedWidget]?.menuItemConfigs?.[item.id]
+                                        ?.queryConfig?.mappedConfig?.chaField;
+                                    const chaValue =
+                                      fieldMappings[selectedWidget]?.menuItemConfigs?.[item.id]
+                                        ?.queryConfig?.mappedConfig?.chaValue;
+
+                                    handleMenuItemQueryConfigChange(item.id, 'mappedConfig', {
+                                      ...fieldMappings[selectedWidget]?.menuItemConfigs?.[item.id]
+                                        ?.queryConfig?.mappedConfig,
+                                      kfField: kfField,
+                                    });
+
+                                    // Update the count value with mapped data
+                                    if (chaField && chaValue && kfField) {
+                                      const mappedValue = getKFValue(chaField, chaValue, kfField);
+                                      if (mappedValue !== null) {
+                                        handleMenuItemChange(
+                                          item.id,
+                                          'count',
+                                          parseInt(mappedValue) || 0
+                                        );
+                                      }
+                                    }
+                                  }}
+                                  label="KF Field"
+                                  sx={{
+                                    color: 'white',
+                                    '& .MuiOutlinedInput-notchedOutline': { borderColor: 'white' },
+                                    '&:hover .MuiOutlinedInput-notchedOutline': {
+                                      borderColor: 'white',
+                                    },
+                                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                                      borderColor: 'white',
+                                    },
+                                    '& .MuiSvgIcon-root': { color: 'white' },
+                                  }}
+                                >
+                                  {getKFFields().map((kfField: any) => (
+                                    <MenuItem key={kfField.fieldName} value={kfField.fieldName}>
+                                      {kfField.label} ({kfField.fieldName})
+                                    </MenuItem>
+                                  ))}
+                                </Select>
+                              </FormControl>
+                            </Grid>
+                          )}
+                      </Grid>
+                    )}
+                  </Box>
+                )}
+              </Grid>
+            </Grid>
+          </AccordionDetails>
+        </Accordion>
+      ))}
+
+      {/* Chart Data Configuration */}
+      <Typography variant="subtitle1" gutterBottom sx={{ color: 'white', mt: 3 }}>
+        Chart Data Configuration
+      </Typography>
+
+      <Paper elevation={2} sx={{ p: 2, backgroundColor: '#ffffff20', mb: 2 }}>
+        <FormControl fullWidth margin="normal">
+          <InputLabel sx={{ color: 'white' }}>Chart Input Type</InputLabel>
+          <Select
+            value={fieldMappings[selectedWidget]?.chartDataConfig?.inputType || 'manual'}
+            onChange={(e) => {
+              setFieldMappings((prev: any) => ({
+                ...prev,
+                [selectedWidget]: {
+                  ...prev[selectedWidget],
+                  chartDataConfig: {
+                    ...prev[selectedWidget]?.chartDataConfig,
+                    inputType: e.target.value,
+                  },
+                },
+              }));
+            }}
+            label="Chart Input Type"
+            sx={{
+              color: 'white',
+              '& .MuiOutlinedInput-notchedOutline': { borderColor: 'white' },
+              '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: 'white' },
+              '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: 'white' },
+              '& .MuiSvgIcon-root': { color: 'white' },
+            }}
+          >
+            <MenuItem value="manual">Manual Input</MenuItem>
+            <MenuItem value="mapped">Query Mapping</MenuItem>
+          </Select>
+        </FormControl>
+
+        {fieldMappings[selectedWidget]?.chartDataConfig?.inputType === 'mapped' && (
+          <Box mt={2}>
+            {/* Chart Query Configuration */}
+            <Alert severity="info" sx={{ mb: 2, backgroundColor: '#2196f320' }}>
+              <Typography sx={{ color: 'white' }}>
+                Configure the SAP BW report to fetch chart data.
+              </Typography>
+            </Alert>
+
+            <TextField
+              label="Chart Report Name"
+              fullWidth
+              margin="normal"
+              value={fieldMappings[selectedWidget]?.chartDataConfig?.reportName || reportName}
+              onChange={(e) => {
+                setFieldMappings((prev: any) => ({
+                  ...prev,
+                  [selectedWidget]: {
+                    ...prev[selectedWidget],
+                    chartDataConfig: {
+                      ...prev[selectedWidget]?.chartDataConfig,
+                      reportName: e.target.value,
+                    },
+                  },
+                }));
+              }}
+              sx={{
+                input: { color: 'white' },
+                label: { color: 'white' },
+                '& .MuiOutlinedInput-root': {
+                  '& fieldset': { borderColor: 'white' },
+                  '&:hover fieldset': { borderColor: 'white' },
+                  '&.Mui-focused fieldset': { borderColor: 'white' },
+                },
+              }}
+            />
+
+            {parsedResponse && (
+              <Grid container spacing={2} mt={1}>
+                <Grid item xs={6}>
+                  <FormControl fullWidth>
+                    <InputLabel sx={{ color: 'white' }}>X-Axis (Categories)</InputLabel>
+                    <Select
+                      value={
+                        fieldMappings[selectedWidget]?.chartDataConfig?.chartConfig?.xAxis?.field ||
+                        ''
+                      }
+                      onChange={(e) => {
+                        setFieldMappings((prev: any) => ({
+                          ...prev,
+                          [selectedWidget]: {
+                            ...prev[selectedWidget],
+                            chartDataConfig: {
+                              ...prev[selectedWidget]?.chartDataConfig,
+                              chartConfig: {
+                                ...prev[selectedWidget]?.chartDataConfig?.chartConfig,
+                                xAxis: { field: e.target.value, type: 'CHA' },
+                              },
+                            },
+                          },
+                        }));
+                      }}
+                      label="X-Axis (Categories)"
+                      sx={{
+                        color: 'white',
+                        '& .MuiOutlinedInput-notchedOutline': { borderColor: 'white' },
+                        '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: 'white' },
+                        '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: 'white' },
+                        '& .MuiSvgIcon-root': { color: 'white' },
+                      }}
+                    >
+                      {getCHAFields().map((field: any) => (
+                        <MenuItem key={field.fieldName} value={field.fieldName}>
+                          {field.label} ({field.fieldName})
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                </Grid>
+
+                <Grid item xs={6}>
+                  <FormControl fullWidth>
+                    <InputLabel sx={{ color: 'white' }}>Y-Axis (Values)</InputLabel>
+                    <Select
+                      value={
+                        fieldMappings[selectedWidget]?.chartDataConfig?.chartConfig?.yAxis?.field ||
+                        ''
+                      }
+                      onChange={(e) => {
+                        setFieldMappings((prev: any) => ({
+                          ...prev,
+                          [selectedWidget]: {
+                            ...prev[selectedWidget],
+                            chartDataConfig: {
+                              ...prev[selectedWidget]?.chartDataConfig,
+                              chartConfig: {
+                                ...prev[selectedWidget]?.chartDataConfig?.chartConfig,
+                                yAxis: { field: e.target.value, type: 'KF' },
+                              },
+                            },
+                          },
+                        }));
+                      }}
+                      label="Y-Axis (Values)"
+                      sx={{
+                        color: 'white',
+                        '& .MuiOutlinedInput-notchedOutline': { borderColor: 'white' },
+                        '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: 'white' },
+                        '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: 'white' },
+                        '& .MuiSvgIcon-root': { color: 'white' },
+                      }}
+                    >
+                      {getKFFields().map((field: any) => (
+                        <MenuItem key={field.fieldName} value={field.fieldName}>
+                          {field.label} ({field.fieldName})
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                </Grid>
+              </Grid>
+            )}
+          </Box>
+        )}
+      </Paper>
+
+      {renderIconDialog()}
+    </Box>
+  );
+};
 
 const MappingScreen: React.FC = () => {
   // Add admin check hooks
@@ -474,6 +1142,7 @@ const MappingScreen: React.FC = () => {
   const [announcementCount, setAnnouncementCount] = useState(0);
   const [announcementValues, setAnnouncementValues] = useState<string[]>([]);
   const [changeColor, setChangeColorOneMetric] = useState<string>('');
+
   useEffect(() => {
     // Only proceed if admin check is complete and user is authorized
     if (!adminCheckLoading && isAdmin) {
@@ -564,7 +1233,7 @@ const MappingScreen: React.FC = () => {
                   widgetType: widget.type,
                   configType: getWidgetMappingType(widget.type),
                   widgetCategory: getWidgetCategory(widget.type),
-                  roles: widget.roles || [],
+                  roles: widget.roles ? widget.roles.map((role: any) => role.Name || role) : [], // Extract just the names
                   description: widget.description || '',
                 };
               });
@@ -604,7 +1273,8 @@ const MappingScreen: React.FC = () => {
 
   useEffect(() => {
     setFieldsForAnnouncement();
-  }, announcementValues);
+  }, [announcementValues]);
+
   const handleTabChange = (event: React.ChangeEvent<{}>, newValue: number) => {
     setTabValue(newValue);
   };
@@ -645,10 +1315,62 @@ const MappingScreen: React.FC = () => {
       targetReport: targetReportConfig, // Add Detailed Report configuration
     };
 
-    // Add chart-specific configuration
+    // Add specific configurations based on widget type
     let configToSave;
 
-    if (mappingType === 'chart') {
+    if (widgetName === 'loans-app-tray') {
+      // Initialize with separate query configs for each menu item
+      const defaultMenuItemConfigs = {
+        1: {
+          reportName: reportName,
+          queryConfig: {
+            inputType: 'manual',
+            manualValue: 13,
+          },
+        },
+        2: {
+          reportName: reportName,
+          queryConfig: {
+            inputType: 'manual',
+            manualValue: 85,
+          },
+        },
+        3: {
+          reportName: reportName,
+          queryConfig: {
+            inputType: 'manual',
+            manualValue: 32,
+          },
+        },
+        4: {
+          reportName: reportName,
+          queryConfig: {
+            inputType: 'manual',
+            manualValue: 24,
+          },
+        },
+      };
+
+      const chartDataConfig = {
+        reportName: reportName,
+        inputType: 'manual',
+        manualData: [
+          { name: 'PR', value: 86, color: '#449ca4' },
+          { name: 'CE', value: 156, color: '#5899da' },
+          { name: 'SES', value: 114, color: '#ffaa04' },
+          { name: 'CV', value: 126, color: '#ff0000' },
+        ],
+      };
+
+      configToSave = {
+        ...baseConfig,
+        mappingType: 'loans-app-tray',
+        menuItemConfigs: defaultMenuItemConfigs,
+        chartDataConfig: chartDataConfig,
+      };
+    }
+    // Add chart-specific configuration
+    else if (mappingType === 'chart') {
       if (widgetCategory === 'dual-line') {
         configToSave = {
           ...baseConfig,
@@ -1343,12 +2065,6 @@ const MappingScreen: React.FC = () => {
     if (!selectedWidget) return;
     const field = 'showdescription';
 
-    // console.log(fieldMappings,'--------------------------')
-    //  setPreviewData((prev: any) => ({
-    //     ...prev,
-    //     showdescription: value,
-    //   }));
-
     setFieldMappings((prev) => ({
       ...prev,
       [selectedWidget]: {
@@ -1581,6 +2297,7 @@ const MappingScreen: React.FC = () => {
   const getTabIndices = () => {
     if (!selectedWidget || !fieldMappings[selectedWidget]) return {};
     const mappingType: any = fieldMappings[selectedWidget]?.mappingType;
+    const widgetType = getSelectedWidgetType();
     let currentIndex = 0;
 
     const indices: any = {
@@ -1590,7 +2307,9 @@ const MappingScreen: React.FC = () => {
     };
 
     // Add conditional tabs
-    if (mappingType === 'chart') {
+    if (widgetType === 'loans-app-tray') {
+      indices.loansAppTrayConfig = currentIndex++;
+    } else if (mappingType === 'chart') {
       indices.chartConfig = currentIndex++;
     } else if (mappingType === 'table') {
       indices.tableConfig = currentIndex++;
@@ -1604,12 +2323,103 @@ const MappingScreen: React.FC = () => {
     return indices;
   };
 
+  // LoansAppTray preview generation
+  const generateLoansAppTrayPreview = () => {
+    if (!selectedWidget || !fieldMappings[selectedWidget]) return;
+
+    const config: any = fieldMappings[selectedWidget];
+    const previewProps: any = {
+      menuItems: [],
+      chartData: [],
+      menuItemConfigs: config.menuItemConfigs || {},
+      chartDataConfig: config.chartDataConfig || {},
+    };
+
+    // Process menu items
+    if (config.menuItemConfigs) {
+      const processedMenuItems = Object.entries(config.menuItemConfigs).map(
+        ([itemId, itemConfig]: [string, any]) => {
+          let count = 0;
+
+          if (itemConfig.queryConfig?.inputType === 'manual') {
+            count = itemConfig.queryConfig.manualValue || 0;
+          } else if (
+            itemConfig.queryConfig?.inputType === 'mapped' &&
+            itemConfig.queryConfig.mappedConfig
+          ) {
+            const { chaField, chaValue, kfField } = itemConfig.queryConfig.mappedConfig;
+            if (chaField && chaValue && kfField && transformedData) {
+              const mappedValue = getKFValue(chaField, chaValue, kfField);
+              count = mappedValue ? parseInt(mappedValue) : 0;
+            }
+          }
+
+          // Get the menu item details from widgetConfigurations
+          const widgetConfig = widgetConfigurations[selectedWidget];
+          const menuItem = widgetConfig?.menuItems?.find(
+            (item: any) => item.id === parseInt(itemId)
+          );
+
+          return {
+            id: parseInt(itemId),
+            iconName: menuItem?.iconName || 'Assignment',
+            label: menuItem?.label || `Menu Item ${itemId}`,
+            count: count,
+          };
+        }
+      );
+
+      previewProps.menuItems = processedMenuItems;
+    }
+
+    // Process chart data
+    if (config.chartDataConfig?.inputType === 'manual') {
+      previewProps.chartData = config.chartDataConfig.manualData || [
+        { name: 'PR', value: 86, color: '#449ca4' },
+        { name: 'CE', value: 156, color: '#5899da' },
+        { name: 'SES', value: 114, color: '#ffaa04' },
+        { name: 'CV', value: 126, color: '#ff0000' },
+      ];
+    } else if (
+      config.chartDataConfig?.inputType === 'mapped' &&
+      config.chartDataConfig?.chartConfig &&
+      transformedData
+    ) {
+      const { xAxis, yAxis } = config.chartDataConfig.chartConfig;
+
+      if (xAxis?.field && yAxis?.field) {
+        const chartData = Object.entries(transformedData.FormStructure[xAxis.field] || {})
+          .filter(([chaValue]) => chaValue !== 'Overall Result')
+          .map(([chaValue, values]: [string, any], index) => {
+            const value = values[yAxis.field] ? Number(values[yAxis.field]) : 0;
+            const colors = ['#449ca4', '#5899da', '#ffaa04', '#ff0000', '#8979FF'];
+
+            return {
+              name: chaValue,
+              value: value,
+              color: colors[index % colors.length],
+            };
+          });
+
+        previewProps.chartData = chartData;
+      }
+    }
+
+    updateWidgetConfiguration(selectedWidget, previewProps);
+  };
+
   // Generate preview data based on widget type and mappings
   const generatePreview = () => {
     if (!selectedWidget || !transformedData) return;
 
     const widgetType = getSelectedWidgetType();
     if (!widgetType) return;
+
+    // Handle LoansAppTray first
+    if (widgetType === 'loans-app-tray') {
+      generateLoansAppTrayPreview();
+      return;
+    }
 
     const config = fieldMappings[selectedWidget];
     const widgetCategory = getWidgetCategory(widgetType);
@@ -1914,11 +2724,6 @@ const MappingScreen: React.FC = () => {
               data: {
                 chart_data: chartData || [],
                 chart_yaxis: yAxis.field,
-                // metric_data: {
-                //   metric_value: formatValue(overallValue, 'currency'),
-                //   metric_variance: '+0.00%', // Placeholder variance
-                //   metric_label: transformedData.FormMetadata[yAxis.field]?.label || yAxis.field,
-                // },
                 widget_name: transformedData.FormMetadata[yAxis.field]?.label || 'Chart',
               },
             };
@@ -1950,17 +2755,13 @@ const MappingScreen: React.FC = () => {
             data: {
               chart_data: [],
               chart_yaxis: '',
-              //   metric_data: {
-              //     metric_value: '$0',
-              //     metric_variance: '0%',
-              //     metric_label: 'Error',
-              //   },
               widget_name: 'Chart Preview Error',
             },
           };
         } else {
           previewProps = { data: [], title: 'Chart Preview Error' };
         }
+        updateWidgetConfiguration(selectedWidget, previewProps);
       }
     }
     // Handle quadrant metrics
@@ -2031,6 +2832,7 @@ const MappingScreen: React.FC = () => {
             { title: 'Error', value: '0', position: 'bottom-right' },
           ],
         };
+        updateWidgetConfiguration(selectedWidget, previewProps);
       }
     }
     // Handle table widgets
@@ -2060,13 +2862,8 @@ const MappingScreen: React.FC = () => {
                     // For KF fields, get the value from the data
                     const value = getKFValue(chaField, chaValue, column.field);
                     // Store the value with the column's field as key
-                    //   row[column.field] = column.field.toLowerCase().includes('value')
-                    //     ? formatValue(value, 'currency')
-                    //     : Number(value || 0);
                     row[column.field] =
                       column.field.toLowerCase().includes('value') && Number(value || 0);
-                    //     ? formatValue(value, 'currency')
-                    //     : Number(value || 0);
                   }
                 });
 
@@ -2092,7 +2889,6 @@ const MappingScreen: React.FC = () => {
         const tableTitle = transformedData.FormMetadata[chaField]?.label || 'Top Items';
 
         previewProps = {
-          //   totalAmount: formatValue(total, 'currency'),
           title: tableTitle,
           data: tableData,
           columns: columns.map((col) => {
@@ -2234,16 +3030,6 @@ const MappingScreen: React.FC = () => {
                       >
                         ✕
                       </button>
-                      {/* {hasRoles && (
-                        <div className="absolute top-2 left-2 z-50 rounded-full bg-green-500 px-2 py-1 text-xs text-white">
-                            <SecurityIcon style={{ fontSize: 14 }} />
-                        </div>
-                        )}
-                        {hasDescription && (
-                        <div className="absolute top-2 left-8 z-50 rounded-full bg-blue-500 px-2 py-1 text-xs text-white">
-                            <InfoIcon style={{ fontSize: 14 }} />
-                        </div>
-                        )} */}
                       <Component {...widgetProps} setChangeColor={setChangeColor} />
                     </div>
                   );
@@ -2298,6 +3084,14 @@ const MappingScreen: React.FC = () => {
                         className="!text-white"
                       />,
                       <Tab key="info" icon={<InfoIcon />} label="Info" className="!text-white" />,
+                      getSelectedWidgetType() === 'loans-app-tray' && (
+                        <Tab
+                          key="loans-app-tray"
+                          icon={<DataIcon />}
+                          label="LoansApp Config"
+                          className="!text-white"
+                        />
+                      ),
                       fieldMappings[selectedWidget]?.mappingType === 'chart' && (
                         <Tab
                           key="chart"
@@ -2401,10 +3195,11 @@ const MappingScreen: React.FC = () => {
                           field !== 'metrics' &&
                           field !== 'menuItems' &&
                           field !== 'chartData' &&
+                          field !== 'menuItemConfigs' &&
+                          field !== 'chartDataConfig' &&
                           selectedWidgetName !== 'announcement' ? (
                           <FormControl fullWidth variant="outlined" margin="normal" key={field}>
                             <Typography variant="subtitle2" sx={{ color: 'white', mb: 1 }}>
-                              {/* {field} */}
                               {field === 'name' || field === 'widget_name'
                                 ? 'TITLE'
                                 : field?.toUpperCase()}
@@ -2830,7 +3625,10 @@ const MappingScreen: React.FC = () => {
 
                         <List>
                           {(widgetConfigurations[selectedWidget]?.roles || []).map(
-                            (role: string, index: number) => (
+                            (
+                              role: any,
+                              index: number // Change from string to any/object type
+                            ) => (
                               <ListItem key={index} sx={{ px: 0 }}>
                                 <Box
                                   width="100%"
@@ -2844,14 +3642,17 @@ const MappingScreen: React.FC = () => {
                                     py: 1,
                                   }}
                                 >
-                                  <Typography sx={{ color: 'white' }}>{role}</Typography>
+                                  <Typography sx={{ color: 'white' }}>
+                                    {role.Name || role}{' '}
+                                    {/* Access the Name property, fallback to role if it's a string */}
+                                  </Typography>
                                   <IconButton
                                     edge="end"
                                     onClick={() => {
                                       const currentRoles =
                                         widgetConfigurations[selectedWidget]?.roles || [];
                                       const updatedRoles = currentRoles.filter(
-                                        (_: string, i: number) => i !== index
+                                        (_: any, i: number) => i !== index
                                       );
                                       handleRolesChange(updatedRoles);
                                     }}
@@ -2873,6 +3674,7 @@ const MappingScreen: React.FC = () => {
                         </List>
                       </Box>
                     </TabPanel>
+
                     {/* Info Tab - Third tab */}
                     <TabPanel value={tabValue} index={tabIndices.info}>
                       <Box>
@@ -3081,6 +3883,29 @@ const MappingScreen: React.FC = () => {
                         </Box>
                       </Box>
                     </TabPanel>
+
+                    {/* LoansAppTray Configuration Tab */}
+                    {getSelectedWidgetType() === 'loans-app-tray' && (
+                      <TabPanel value={tabValue} index={tabIndices.loansAppTrayConfig!}>
+                        <LoansAppTrayConfig
+                          selectedWidget={selectedWidget}
+                          fieldMappings={fieldMappings}
+                          setFieldMappings={setFieldMappings}
+                          widgetConfigurations={widgetConfigurations}
+                          setWidgetConfigurations={setWidgetConfigurations}
+                          parsedResponse={parsedResponse}
+                          getCHAFields={getCHAFields}
+                          getKFFields={getKFFields}
+                          getCHAValues={getCHAValues}
+                          getKFValue={getKFValue}
+                          reportName={reportName}
+                          handleReportNameChange={handleReportNameChange}
+                          fetchReportData={fetchReportData}
+                          loading={loading}
+                        />
+                      </TabPanel>
+                    )}
+
                     {/* Chart Configuration Tab */}
                     {fieldMappings[selectedWidget]?.mappingType === 'chart' && (
                       <TabPanel value={tabValue} index={tabIndices.chartConfig!}>
@@ -3413,6 +4238,7 @@ const MappingScreen: React.FC = () => {
                         </Box>
                       </TabPanel>
                     )}
+
                     {/* Table Configuration Tab */}
                     {fieldMappings[selectedWidget]?.mappingType === 'table' && (
                       <TabPanel value={tabValue} index={tabIndices.tableConfig!}>
@@ -3540,6 +4366,7 @@ const MappingScreen: React.FC = () => {
                         )}
                       </TabPanel>
                     )}
+
                     {/* Quadrant Metrics Configuration Tab */}
                     {fieldMappings[selectedWidget]?.mappingType === 'quadrant' && (
                       <TabPanel value={tabValue} index={tabIndices.quadrantConfig!}>
@@ -3676,6 +4503,7 @@ const MappingScreen: React.FC = () => {
                         )}
                       </TabPanel>
                     )}
+
                     {/* Data Preview Tab */}
                     <TabPanel value={tabValue} index={tabIndices.dataPreview}>
                       <Typography variant="h6" gutterBottom sx={{ color: 'white' }}>
@@ -3770,6 +4598,7 @@ const MappingScreen: React.FC = () => {
                         </Typography>
                       )}
                     </TabPanel>
+
                     {/* Widget Preview Tab */}
                     <TabPanel value={tabValue} index={tabIndices.widgetPreview}>
                       <Box textAlign="center" mb={3}>
@@ -3811,7 +4640,6 @@ const MappingScreen: React.FC = () => {
                 <FormControlLabel
                   control={
                     <Checkbox
-                      // checked={fieldMapping?.descriptionEnabled || false}
                       onChange={(e) => handleDescriptionToggle(e.target.checked)}
                       sx={{
                         color: 'white',
