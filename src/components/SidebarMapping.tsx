@@ -20,7 +20,7 @@ const menuItems = [
   { name: 'quadrant-metrics', imageURL: '' },
   { name: 'loans-app-tray', imageURL: '' },
   { name: 'news-feed', imageURL: '' },
-  { name: 'announcement', imageURL: '' },
+  //   { name: 'announcement', imageURL: '' },
 ];
 
 interface SidebarMappingProps {
