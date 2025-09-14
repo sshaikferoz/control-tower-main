@@ -1,3 +1,4 @@
+//Newsfeed widget
 import React, { useState, useEffect, useRef } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { sapODataService, NewsItem } from '../../services/sapODataService'; // Import the service

@@ -16,7 +16,7 @@ import TableMetric from '@/components/widgets/TableMetric';
 import BarMetric from '@/components/widgets/BarMetric';
 import StackedBarChart from '@/components/widgets/StackedBarChart';
 import OrdersLineChart from '@/components/widgets/OrdersLineChart';
-import AnnouncementWidget from '@/components/widgets/Announcement';
+import AnnouncementWidget from '@/components/widgets/Announcement1';
 import DualLineChart from '@/components/widgets/DualLineChart';
 import PieChartWithTotal from '@/components/widgets/PieChartWithTotal';
 import QuadrantMetrics from '@/components/widgets/QuadrantMetrics';

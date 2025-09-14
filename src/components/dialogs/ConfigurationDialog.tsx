@@ -197,6 +197,7 @@ export const ConfigurationDialog: React.FC<ConfigurationDialogProps> = ({
     { label: 'Chatbot', icon: 'pi pi-comments', id: 'chatbot' },
     { label: 'Search', icon: 'pi pi-search', id: 'search' },
     { label: 'Branding', icon: 'pi pi-palette', id: 'branding' },
+    { label: 'Announcement', icon: 'pi pi-megaphone', id: 'announcement' },
   ];
 
   if (!visible) return null;
@@ -688,6 +689,102 @@ export const ConfigurationDialog: React.FC<ConfigurationDialogProps> = ({
                   className="h-12 w-10 rounded border border-[#3a5a8b] bg-[#2a4a7b] outline-none focus:border-blue-500 disabled:opacity-50"
                 />
               </div>
+            </div>
+          )}
+
+          {/* Announcement Settings */}
+          {activeTab === 4 && (
+            <div className="space-y-6">
+              <div className="flex items-center justify-between">
+                <label className="block text-sm font-medium text-gray-300">
+                  Enable Announcement
+                </label>
+                <label className="relative inline-flex cursor-pointer items-center">
+                  <input
+                    type="checkbox"
+                    checked={formData.announcement?.enabled}
+                    disabled={isSaving || isResetting}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        announcement: { ...formData.announcement, enabled: e.target.checked },
+                      })
+                    }
+                    className="peer sr-only"
+                  />
+                  <div className="peer h-6 w-11 rounded-full bg-gray-700 peer-checked:bg-blue-600 peer-focus:outline-none peer-disabled:opacity-50 after:absolute after:top-[2px] after:left-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:after:translate-x-full peer-checked:after:border-white"></div>
+                </label>
+              </div>
+
+              {formData.announcement?.enabled && (
+                <>
+                  <div>
+                    <label className="mb-2 block text-sm font-medium text-gray-300">
+                      Announcement Title
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.announcement.title}
+                      disabled={isSaving || isResetting}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          announcement: { ...formData.announcement, title: e.target.value },
+                        })
+                      }
+                      placeholder="Enter announcement title"
+                      className="w-full rounded border border-[#3a5a8b] bg-[#2a4a7b] p-3 text-white outline-none focus:border-blue-500 disabled:opacity-50"
+                    />
+                    <small className="text-gray-400">
+                      This will be displayed as the main announcement heading
+                    </small>
+                  </div>
+
+                  <div>
+                    <label className="mb-2 block text-sm font-medium text-gray-300">
+                      Announcement Description
+                    </label>
+                    <textarea
+                      value={formData.announcement.description}
+                      disabled={isSaving || isResetting}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          announcement: { ...formData.announcement, description: e.target.value },
+                        })
+                      }
+                      placeholder="Enter announcement description or message"
+                      rows={4}
+                      className="resize-vertical w-full rounded border border-[#3a5a8b] bg-[#2a4a7b] p-3 text-white outline-none focus:border-blue-500 disabled:opacity-50"
+                    />
+                    <small className="text-gray-400">
+                      Provide detailed information about the announcement
+                    </small>
+                  </div>
+
+                  {/* Announcement Preview */}
+                  <div>
+                    <label className="mb-2 block text-sm font-medium text-gray-300">Preview</label>
+                    <div className="w-full rounded-xl border border-solid border-[#00a3e0] bg-gradient-to-b from-[#1e3a71] via-[#0080bd] to-[#0d366f] shadow-[3px_8px_30px_1px_#a8afb84c]">
+                      <div className="p-[13px]">
+                        <div className="mb-4 flex items-center gap-3">
+                          <div className="flex h-[23px] w-[23px] items-center justify-center rounded bg-[#83bd01]">
+                            <div className="h-3 w-3 rounded-sm bg-white"></div>
+                          </div>
+                          <h3 className="text-lg font-bold text-[#83bd01]">
+                            {formData.announcement.title || 'Announcement Title'}
+                          </h3>
+                          <div className="h-px flex-grow bg-gradient-to-r from-[#83bd01] to-transparent"></div>
+                        </div>
+                        <p className="leading-relaxed text-white/90">
+                          {formData.announcement.description ||
+                            'Announcement description will appear here...'}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
           )}
         </div>

@@ -1,4 +1,4 @@
-// types/configuration.ts - Updated with metadata support
+// types/configuration.ts - Updated with announcement support
 
 export interface UIConfiguration {
     background: {
@@ -23,6 +23,11 @@ export interface UIConfiguration {
         useLogoBase64: boolean;
         appName: string;
         primaryColor: string;
+    };
+    announcement: {
+        enabled: boolean;
+        title: string;
+        description: string;
     };
     // Metadata for tracking server state
     _metadata?: {
@@ -55,6 +60,11 @@ export const defaultConfiguration: UIConfiguration = {
         useLogoBase64: false,
         appName: 'mySCAI',
         primaryColor: '#0164B0',
+    },
+    announcement: {
+        enabled: false,
+        title: 'Welcome to mySCAI Dashboard',
+        description: 'Stay updated with the latest announcements and important information.',
     },
 };
 

@@ -13,6 +13,7 @@ import { EditSectionDialog } from '@/components/dialogs/EditSectionDialog';
 import { DeleteConfirmationDialog } from '@/components/dialogs/DeleteConfirmationDialog';
 import { ConfigurationDialog } from '@/components/dialogs/ConfigurationDialog';
 import { WidgetSkeleton } from '@/components/ui/WidgetSkeleton';
+import { Announcement } from '@/components/widgets/Announcement';
 import { getNextSectionOrder } from '@/utils/dashboardUtils';
 import { UIConfiguration, defaultConfiguration, ConfigurationManager } from '@/types/configuration';
 
@@ -424,7 +425,18 @@ export default function Home({
             onAddSection={handleAddSection}
             configuration={configuration}
             onOpenConfigDialog={handleOpenConfigDialog}
+            tabId={tabId}
           />
+
+          {/* Announcement Section - Render at the top when enabled */}
+          {configuration.announcement?.enabled && (
+            <div className="px-8">
+              <Announcement
+                title={configuration.announcement.title}
+                description={configuration.announcement.description}
+              />
+            </div>
+          )}
 
           {!dashboardData?.sections || dashboardData.sections.length === 0 ? (
             <div className="flex h-[60vh] flex-col items-center justify-center">
