@@ -146,6 +146,16 @@ export interface WidgetHeadPayload {
     WidgetHeadRolesItem: WidgetHeadRole[];
 }
 
+// New interfaces for ServiceUrlsSet endpoint
+export interface ServiceUrl {
+    Id: string;
+    FullUrl: string;
+}
+
+export interface ServiceUrlsResponse {
+    results: ServiceUrl[];
+}
+
 export interface MenuItem {
     id: string;
     name: string;
@@ -278,7 +288,10 @@ class SAPODataService {
             ? 'https://ctapitester-a4mel9cxg6.dispatcher.sa1.hana.ondemand.com/sap/opu/odata/sap/ZBW_CT_SCIC_SRV'
             : '/sap/opu/odata/sap/ZBW_CT_SCIC_SRV';
 
-
+    // Cache for service URLs to avoid repeated API calls
+    private serviceUrlsCache: Map<string, string> = new Map();
+    private serviceUrlsCacheTime: number = 0;
+    private readonly CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 
     // private baseUrl =
     // process.env.NODE_ENV === 'development'
@@ -424,6 +437,63 @@ class SAPODataService {
         } catch (error) {
             console.error('Error fetching widgets:', error);
             throw error;
+        }
+    }
+
+    // NEW: Fetch service URLs from ServiceUrlsSet endpoint
+    async fetchServiceUrls(): Promise<Map<string, string>> {
+        try {
+            const response = await fetch(
+                `${this.baseUrl}/ServiceUrlsSet?$format=json`,
+                {
+                    method: 'GET',
+                    headers: {
+                        Accept: 'application/json',
+                        'Content-Type': 'application/json',
+                    },
+                }
+            );
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const data = await response.json();
+            const serviceUrlsMap = new Map<string, string>();
+
+            data.d.results.forEach((item: ServiceUrl) => {
+                serviceUrlsMap.set(item.Id, item.FullUrl);
+            });
+
+            return serviceUrlsMap;
+        } catch (error) {
+            console.error('Error fetching service URLs:', error);
+            throw error;
+        }
+    }
+
+    // NEW: Get specific service URL with caching
+    async getServiceUrl(serviceType: string): Promise<string | null> {
+        try {
+            const now = Date.now();
+
+            // Check if cache is valid and contains the requested service type
+            if (this.serviceUrlsCache.has(serviceType) &&
+                (now - this.serviceUrlsCacheTime) < this.CACHE_DURATION) {
+                return this.serviceUrlsCache.get(serviceType) || null;
+            }
+
+            // If cache is expired or doesn't contain the service type, fetch all URLs
+            if ((now - this.serviceUrlsCacheTime) > this.CACHE_DURATION || this.serviceUrlsCache.size === 0) {
+                const serviceUrlsMap = await this.fetchServiceUrls();
+                this.serviceUrlsCache = serviceUrlsMap;
+                this.serviceUrlsCacheTime = now;
+            }
+
+            return this.serviceUrlsCache.get(serviceType) || null;
+        } catch (error) {
+            console.error('Error getting service URL:', error);
+            return null;
         }
     }
 

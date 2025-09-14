@@ -35,57 +35,6 @@ body {
   padding: 0;
 }
 
-@layer base {
-  .chatbot-container {
-    min-height: 100vh;
-    width: 100%;
-    background-size: cover;
-    background-position: center;
-    position: relative;
-    background-image: url('../../public/chatbot/bg.png');
-  }
-
-  .chat-input {
-    background-color: white;
-    border: 0;
-    outline: none;
-    border-radius: 9999px; /* equivalent to rounded-full */
-    padding: 0.75rem 1rem; /* py-3 px-4 */
-    width: 100%;
-    color: #374151; /* text-gray-700 */
-    transition:
-      box-shadow 0.2s,
-      border-color 0.2s;
-  }
-
-  .chat-input:focus {
-    box-shadow: 0 0 0 2px var(--chatbot-accent); /* Replace with actual color */
-  }
-
-  .faq-card {
-    background: linear-gradient(180deg, #1e3a71 0%, #105993 45.19%, #0080bd 100%);
-    background-color: rgba(255, 255, 255, 0.9); /* bg-opacity-90 */
-    backdrop-filter: blur(4px); /* backdrop-blur-sm */
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    border-radius: 1rem; /* rounded-2xl */
-    padding: 1rem;
-    color: white;
-    transition: background-color 0.2s;
-  }
-
-  .faq-card:hover {
-    background-color: rgba(255, 255, 255, 0.2); /* hover:bg-opacity-20 */
-  }
-
-  .answer-card {
-    background-color: rgb(132 204 22); /* Replace with actual color */
-    color: white;
-    padding: 1.5rem; /* p-6 */
-    border-radius: 0.5rem; /* rounded-lg */
-    overflow-y: auto;
-    height: 100%;
-  }
-}
 /* Target the scrollbar */
 ::-webkit-scrollbar {
   width: 8px; /* Adjust size as needed */

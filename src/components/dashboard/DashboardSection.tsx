@@ -16,6 +16,7 @@ import MappingIcon from '@mui/icons-material/Map';
 import DeleteIcon from '@mui/icons-material/Delete';
 import InfoIcon from '@mui/icons-material/Info';
 import SecurityIcon from '@mui/icons-material/Security';
+import LaunchIcon from '@mui/icons-material/Launch';
 import RGL, { WidthProvider } from 'react-grid-layout';
 import MyContractsIcon from '@/assets/MyContractsIcon';
 import { DashboardSectionProps } from '@/types/dashboard';
@@ -25,10 +26,18 @@ import { DataManager } from '@/services/DataManager';
 import { processWidgetMappings } from '@/helpers/transformHelpers';
 import { defaultPropsMapping, widgetMapping } from '@/constants/widgetConfig';
 import { Announcement } from '@mui/icons-material';
+import { sapODataService } from '@/services/sapODataService';
 
 const GridLayout = WidthProvider(RGL);
 
-export const DashboardSection: React.FC<DashboardSectionProps> = ({
+// Updated interface to include highlighting props
+interface ExtendedDashboardSectionProps extends DashboardSectionProps {
+  // Optional highlighting props
+  highlightSectionId?: string;
+  highlightWidgetIds?: string[];
+}
+
+export const DashboardSection: React.FC<ExtendedDashboardSectionProps> = ({
   section,
   index,
   isEditMode,
@@ -40,6 +49,9 @@ export const DashboardSection: React.FC<DashboardSectionProps> = ({
   onDeleteSection,
   onOpenMapping,
   onAddWidgets,
+  // New highlighting props
+  highlightSectionId,
+  highlightWidgetIds = [],
 }) => {
   const [reportData, setReportData] = useState<Record<string, any>>({});
   const [widgetProps, setWidgetProps] = useState<Record<string, any>>({});
@@ -62,6 +74,31 @@ export const DashboardSection: React.FC<DashboardSectionProps> = ({
   const dataManager = useMemo(() => DataManager.getInstance(), []);
   const announcementWidgets = section.widgets?.filter((w: any) => w.name === 'announcement') || [];
   const gridWidgets = section.widgets?.filter((w: any) => w.name !== 'announcement') || [];
+
+  // Check if this section should be highlighted
+  const isSectionHighlighted =
+    highlightSectionId === section.id || highlightSectionId === section.originalSection?.id;
+
+  // Check if any widgets in this section should be highlighted
+  const hasHighlightedWidgets =
+    section.widgets?.some((widget: any) => highlightWidgetIds.includes(widget.id)) || false;
+
+  // Function to check if a specific widget should be highlighted
+  const isWidgetHighlighted = (widgetId: string) => {
+    return highlightWidgetIds.includes(widgetId);
+  };
+
+  // Function to check if a widget should be dimmed (when highlighting is active but this widget is not highlighted)
+  const isWidgetDimmed = (widgetId: string) => {
+    const isHighlightingActive = highlightWidgetIds.length > 0;
+    return isHighlightingActive && !highlightWidgetIds.includes(widgetId);
+  };
+
+  // Function to check if the section should be dimmed
+  const isSectionDimmed = () => {
+    const isHighlightingActive = highlightSectionId || highlightWidgetIds.length > 0;
+    return isHighlightingActive && !isSectionHighlighted && !hasHighlightedWidgets;
+  };
 
   // Initialize widget props with saved or default values
   useEffect(() => {
@@ -213,7 +250,7 @@ export const DashboardSection: React.FC<DashboardSectionProps> = ({
     onDragEnd();
   };
 
-  const handleOpenReport = (targetReport: any): void => {
+  const handleOpenReport = async (targetReport: any): Promise<void> => {
     if (!targetReport?.technicalId) {
       alert('No Detailed Report configured for this widget.');
       return;
@@ -221,25 +258,84 @@ export const DashboardSection: React.FC<DashboardSectionProps> = ({
 
     let reportUrl = '';
 
-    switch (targetReport.type) {
-      case 'Bex Query':
-        reportUrl = `/sap/bc/bsp/sap/zbw_reporting/execute_report_oo.htm?query=${targetReport.technicalId}`;
-        break;
-      case 'Lumira':
-        reportUrl = `/sap/bc/ui5_ui5/ui2/ushell/shells/abap/FioriLaunchpad.html#LumiraViewer-display&/lumira/${targetReport.technicalId}`;
-        break;
-      case 'WAD Template':
-        reportUrl = `/sap/bc/bsp/sap/bw_web_template/webtemplate.htm?template=${targetReport.technicalId}`;
-        break;
-      case 'Web Link':
-        reportUrl = targetReport.technicalId;
-        break;
-      default:
-        alert('Unknown report type.');
+    try {
+      switch (targetReport.type) {
+        case 'Bex Query':
+          const bexUrl = await sapODataService.getServiceUrl('BexQuery');
+          reportUrl = bexUrl ? `${bexUrl}${targetReport.technicalId}` : '';
+          break;
+        case 'Lumira':
+          const lumiraUrl = await sapODataService.getServiceUrl('Lumira');
+          reportUrl = lumiraUrl ? `${lumiraUrl}${targetReport.technicalId}` : '';
+          break;
+        case 'WAD Template':
+          const wadUrl = await sapODataService.getServiceUrl('WADTemplate');
+          reportUrl = wadUrl ? `${wadUrl}${targetReport.technicalId}` : '';
+          break;
+        case 'Web Link':
+          reportUrl = targetReport.technicalId;
+          break;
+        default:
+          alert('Unknown report type.');
+          return;
+      }
+
+      if (!reportUrl && targetReport.type !== 'Web Link') {
+        alert('Unable to retrieve service URL for this report type.');
         return;
+      }
+
+      window.open(reportUrl, '_blank', 'noopener,noreferrer');
+    } catch (error) {
+      console.error('Error opening report:', error);
+      alert('Error opening report. Please try again.');
+    }
+  };
+
+  // Handle widget click to open report
+  const handleWidgetClick = (e: React.MouseEvent, widget: any) => {
+    // Don't handle click in edit mode
+    if (isEditMode) return;
+
+    // Check if the click target or its parent is an action button
+    const target = e.target as HTMLElement;
+    const isActionButton = target.closest('[data-action-button="true"]') !== null;
+
+    if (isActionButton) {
+      return; // Let the action button handle the click
     }
 
-    window.open(reportUrl, '_blank', 'noopener,noreferrer');
+    e.preventDefault();
+    e.stopPropagation();
+
+    // Check for target report in widget's field mappings first
+    let targetReport = widget.fieldMappings?.targetReport;
+
+    // If not found, check section-level field mappings
+    if (!targetReport) {
+      const sectionMapping = section.fieldMappings?.[widget.id];
+      targetReport = sectionMapping?.targetReport;
+    }
+
+    if (targetReport) {
+      handleOpenReport(targetReport);
+    } else {
+      console.log('No report configured for this widget');
+    }
+  };
+
+  // Handle info icon click - prevent event bubbling
+  const handleInfoClick = (e: React.MouseEvent, widget: any) => {
+    e.stopPropagation(); // Prevent widget click
+    e.preventDefault();
+    handleWidgetExpand(widget);
+  };
+
+  // Handle launch icon click - prevent event bubbling and open report
+  const handleLaunchClick = (e: React.MouseEvent, targetReport: any) => {
+    e.stopPropagation(); // Prevent widget click
+    e.preventDefault();
+    handleOpenReport(targetReport);
   };
 
   const otherWidgets = section.widgets?.filter((w: any) => w.name !== 'announcement') || [];
@@ -264,6 +360,45 @@ export const DashboardSection: React.FC<DashboardSectionProps> = ({
     })
     .filter(Boolean); // filter out nulls in case layout was missing
 
+  // Generate dynamic classes for section highlighting
+  const getSectionClasses = () => {
+    let classes = `mb-8 transition-all duration-300 ease-in-out ${
+      isEditMode ? 'cursor-move rounded-lg border-2 border-dashed border-blue-300' : ''
+    }`;
+
+    if (isSectionHighlighted) {
+      classes += ' ring-4 ring-yellow-400 ring-opacity-70 bg-yellow-50 bg-opacity-10';
+    } else if (isSectionDimmed()) {
+      classes += ' opacity-40';
+    }
+
+    return classes;
+  };
+
+  // Generate dynamic classes for widget highlighting
+  const getWidgetClasses = (widgetId: string, baseClasses: string = '') => {
+    let classes = `${baseClasses} transition-all duration-300 ease-in-out`;
+
+    if (isWidgetHighlighted(widgetId)) {
+      classes +=
+        ' ring-4 ring-yellow-400 ring-opacity-70 bg-yellow-50 bg-opacity-10 scale-105 z-10 relative';
+    } else if (isWidgetDimmed(widgetId)) {
+      classes += ' opacity-40';
+    }
+
+    // Add cursor pointer when not in edit mode and has mapped report
+    if (!isEditMode) {
+      const widget = section.widgets?.find((w: any) => w.id === widgetId);
+      const hasReport =
+        widget?.fieldMappings?.targetReport || section.fieldMappings?.[widgetId]?.targetReport;
+      if (hasReport) {
+        classes += ' cursor-pointer';
+      }
+    }
+
+    return classes;
+  };
+
   return (
     <div
       ref={sectionRef}
@@ -272,9 +407,7 @@ export const DashboardSection: React.FC<DashboardSectionProps> = ({
       onDragOver={handleDragOver}
       onDragEnter={handleDragEnter}
       onDragEnd={handleDragEnd}
-      className={`mb-8 ${
-        isEditMode ? 'cursor-move rounded-lg border-2 border-dashed border-blue-300' : ''
-      }`}
+      className={getSectionClasses()}
       data-index={index}
     >
       <div className="m-2 flex items-center gap-2 p-4">
@@ -346,7 +479,70 @@ export const DashboardSection: React.FC<DashboardSectionProps> = ({
             if (!Component) return null;
 
             return (
-              <div key={widget.id} className="mb-4 rounded-lg p-4 shadow-md">
+              <div
+                key={widget.id}
+                className={getWidgetClasses(widget.id, 'relative mb-4 rounded-lg p-4 shadow-md')}
+                onClick={(e) => handleWidgetClick(e, widget)}
+              >
+                {/* Action buttons for announcements */}
+                {props.showdescription && (
+                  <div className="absolute top-2 right-2 z-50 flex space-x-1">
+                    <Tooltip
+                      title={widget.description || 'No description available'}
+                      enterDelay={0}
+                      leaveDelay={0}
+                      placement="top"
+                      arrow
+                    >
+                      <IconButton
+                        onClick={(e) => handleInfoClick(e, widget)}
+                        size="small"
+                        data-action-button="true"
+                        sx={{
+                          backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                          color: 'white',
+                          '&:hover': {
+                            backgroundColor: 'rgba(255, 255, 255, 0.3)',
+                          },
+                        }}
+                      >
+                        <InfoIcon sx={{ fontSize: 16 }} />
+                      </IconButton>
+                    </Tooltip>
+                    {(widget.fieldMappings?.targetReport ||
+                      section.fieldMappings?.[widget.id]?.targetReport) && (
+                      <Tooltip
+                        title="Open detailed report"
+                        enterDelay={0}
+                        leaveDelay={0}
+                        placement="top"
+                        arrow
+                      >
+                        <IconButton
+                          onClick={(e) =>
+                            handleLaunchClick(
+                              e,
+                              widget.fieldMappings?.targetReport ||
+                                section.fieldMappings?.[widget.id]?.targetReport
+                            )
+                          }
+                          size="small"
+                          data-action-button="true"
+                          sx={{
+                            backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                            color: 'white',
+                            '&:hover': {
+                              backgroundColor: 'rgba(255, 255, 255, 0.3)',
+                            },
+                          }}
+                        >
+                          <LaunchIcon sx={{ fontSize: 16 }} />
+                        </IconButton>
+                      </Tooltip>
+                    )}
+                  </div>
+                )}
+
                 <LazyWidgetContent
                   widget={widget}
                   Component={Component}
@@ -378,7 +574,10 @@ export const DashboardSection: React.FC<DashboardSectionProps> = ({
                 return (
                   <div
                     key={widget.id}
-                    className="bg-opacity-30 relative flex items-center justify-center rounded-lg bg-red-500"
+                    className={getWidgetClasses(
+                      widget.id,
+                      'bg-opacity-30 relative flex items-center justify-center rounded-lg bg-red-500'
+                    )}
                   >
                     <div className="p-4 text-center text-white">
                       <p>Widget type not found: {widget.name}</p>
@@ -393,13 +592,14 @@ export const DashboardSection: React.FC<DashboardSectionProps> = ({
               return (
                 <div
                   key={widget.id}
-                  onClick={() =>
-                    widget.name !== 'news-feed' &&
-                    props.showdescription &&
-                    handleOpenReport(widget.fieldMappings?.targetReport)
-                  }
-                  className="relative cursor-pointer rounded-lg bg-transparent shadow-md transition-shadow duration-200 hover:shadow-lg"
+                  className={getWidgetClasses(
+                    widget.id,
+                    'relative rounded-lg bg-transparent shadow-md transition-shadow duration-200 hover:shadow-lg'
+                  )}
+                  data-widget-id={widget.id}
+                  onClick={(e) => handleWidgetClick(e, widget)}
                 >
+                  {/* Action buttons overlay */}
                   {props.showdescription && (
                     <div className="absolute top-2 right-2 z-50 flex space-x-1">
                       <Tooltip
@@ -410,8 +610,9 @@ export const DashboardSection: React.FC<DashboardSectionProps> = ({
                         arrow
                       >
                         <IconButton
-                          onClick={() => handleWidgetExpand(widget)}
+                          onClick={(e) => handleInfoClick(e, widget)}
                           size="small"
+                          data-action-button="true"
                           sx={{
                             backgroundColor: 'rgba(255, 255, 255, 0.2)',
                             color: 'white',
@@ -423,23 +624,48 @@ export const DashboardSection: React.FC<DashboardSectionProps> = ({
                           <InfoIcon sx={{ fontSize: 16 }} />
                         </IconButton>
                       </Tooltip>
+                      {(widget.fieldMappings?.targetReport ||
+                        section.fieldMappings?.[widget.id]?.targetReport) && (
+                        <Tooltip
+                          title="Open detailed report"
+                          enterDelay={0}
+                          leaveDelay={0}
+                          placement="top"
+                          arrow
+                        >
+                          <IconButton
+                            onClick={(e) =>
+                              handleLaunchClick(
+                                e,
+                                widget.fieldMappings?.targetReport ||
+                                  section.fieldMappings?.[widget.id]?.targetReport
+                              )
+                            }
+                            size="small"
+                            data-action-button="true"
+                            sx={{
+                              backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                              color: 'white',
+                              '&:hover': {
+                                backgroundColor: 'rgba(255, 255, 255, 0.3)',
+                              },
+                            }}
+                          >
+                            <LaunchIcon sx={{ fontSize: 16 }} />
+                          </IconButton>
+                        </Tooltip>
+                      )}
                     </div>
                   )}
 
-                  <div
-                    style={{
-                      pointerEvents: !isEditMode ? 'none' : 'auto',
-                      display: 'contents',
-                    }}
-                  >
-                    <LazyWidgetContent
-                      widget={widget}
-                      Component={Component}
-                      props={props}
-                      onVisible={() => handleWidgetVisible(widget.id)}
-                      isLoading={isLoading}
-                    />
-                  </div>
+                  {/* Widget content - now with click handling */}
+                  <LazyWidgetContent
+                    widget={widget}
+                    Component={Component}
+                    props={props}
+                    onVisible={() => handleWidgetVisible(widget.id)}
+                    isLoading={isLoading}
+                  />
                 </div>
               );
             })}

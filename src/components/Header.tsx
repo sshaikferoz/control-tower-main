@@ -34,9 +34,10 @@ interface SearchResponse {
 
 interface HeaderProps {
   configuration?: UIConfiguration;
+  tabId: any;
 }
 
-const Header: React.FC<HeaderProps> = ({ configuration }) => {
+const Header: React.FC<HeaderProps> = ({ configuration, tabId }) => {
   const [visible, setVisible] = useState(false);
   const [sectionName, setSectionName] = useState('');
   const [isExpanded, setIsExpanded] = useState(true);
@@ -99,16 +100,128 @@ const Header: React.FC<HeaderProps> = ({ configuration }) => {
 
     setIsSearching(true);
     try {
-      const response = await fetch(
-        `https://scic-search.cml.apps.cdp-ds-prod.aramco.com/api/search?query=${encodeURIComponent(query)}`
-      );
+      //   const response = await fetch(
+      //     `https://scic-search.cml.apps.cdp-ds-prod.aramco.com/api/search?query=${encodeURIComponent(query)}`
+      //   );
+      const response = {
+        results: [
+          {
+            ai_summary:
+              'Here is an overview of your active contracts. This includes the total number of active contracts, the most recent contract added, and the oldest contract still in effect.',
+            ai_title: 'Active Contracts Overview Summary',
+            level: 'widget',
+            match_text:
+              'Hierarchy:\n- Tab: MySCM Dashboard\n  - Section: Procurement Updated\n    - Widget: Active Contracts Desc [one-metric]\n      - Technical Name: ',
+            metadata: {
+              SectionDescription: 'Procurement Desc',
+              SectionId: '00000000000000000000000000000005',
+              SectionName: 'Procurement Updated',
+              TabDescription: 'MySCM Dashboard',
+              TabId: '00000000000000000000000000000064',
+              TechnicalName: '',
+              WidgetDescription: 'Active Contracts Desc',
+              WidgetId: '00000000000000000001751799011017',
+              WidgetType: 'one-metric',
+            },
+            score: 1.6878890991210938,
+          },
+          {
+            ai_summary: 'Here is a summary of the procurement updates. This includes:',
+            ai_title: 'Overview of Procurement Updates',
+            level: 'section',
+            match_text:
+              'Hierarchy:\n- Tab: MySCM Dashboard\n  - Section: Procurement Updated\n    - Widget:  [two-metrics-piechart]\n      - Technical Name: ',
+            metadata: {
+              SectionDescription: 'Procurement Desc',
+              SectionId: '00000000000000000000000000000005',
+              SectionName: 'Procurement Updated',
+              TabDescription: 'MySCM Dashboard',
+              TabId: '00000000000000000000000000000001',
+              TechnicalName: '',
+              WidgetDescription: '',
+              WidgetId: '00000000000000000001751799016589',
+              WidgetType: 'two-metrics-piechart',
+            },
+            score: 1.6924619674682617,
+          },
+          {
+            ai_summary:
+              "This search provides an overview of the latest procurement activities on your SCM dashboard. Here's what you might find:",
+            ai_title: 'Recent Procurement Updates Overview',
+            level: 'tab',
+            match_text:
+              'Hierarchy:\n- Tab: MySCM Dashboard\n  - Section: Procurement Updated\n    - Widget:  [one-metric-date]\n      - Technical Name: ',
+            metadata: {
+              SectionDescription: 'Procurement Desc',
+              SectionId: '00000000000000000000000000000005',
+              SectionName: 'Procurement Updated',
+              TabDescription: 'MySCM Dashboard',
+              TabId: '00000000000000000000000000000001',
+              TechnicalName: '',
+              WidgetDescription: '',
+              WidgetId: '00000000000000000001751799011451',
+              WidgetType: 'one-metric-date',
+            },
+            score: 1.6998200416564941,
+          },
+          {
+            ai_summary:
+              'This search provides a snapshot of recent procurement activities. Key details include:',
+            ai_title: 'Overview of Procurement Updates',
+            level: 'section',
+            match_text:
+              'Hierarchy:\n- Tab: MySCM Dashboard\n  - Section: Procurement Updated\n    - Widget:  [one-metric-table]\n      - Technical Name: ',
+            metadata: {
+              SectionDescription: 'Procurement Desc',
+              SectionId: '00000000000000000000000000000005',
+              SectionName: 'Procurement Updated',
+              TabDescription: 'MySCM Dashboard',
+              TabId: '00000000000000000000000000000001',
+              TechnicalName: '',
+              WidgetDescription: '',
+              WidgetId: '00000000000000000001751799133340',
+              WidgetType: 'one-metric-table',
+            },
+            score: 1.7320101261138916,
+          },
+          {
+            ai_summary:
+              'This search provides an overview of the procurement section of your SCM dashboard. It includes:',
+            ai_title: 'Procurement Dashboard Overview',
+            level: 'tab',
+            match_text:
+              'Hierarchy:\n- Tab: MySCM Dashboard\n  - Section: Procurement Updated\n    - Widget:  [two-metrics]\n      - Technical Name: ',
+            metadata: {
+              SectionDescription: 'Procurement Desc',
+              SectionId: '00000000000000000000000000000005',
+              SectionName: 'Procurement Updated',
+              TabDescription: 'MySCM Dashboard',
+              TabId: '00000000000000000000000000000001',
+              TechnicalName: '',
+              WidgetDescription: '',
+              WidgetId: '00000000000000000001751799014314',
+              WidgetType: 'two-metrics',
+            },
+            score: 1.7338515520095825,
+          },
+        ],
+      };
+      //   if (!response.ok) {
+      //     throw new Error(`HTTP error! status: ${response.status}`);
+      //   }
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
+      //   const data: SearchResponse = await response.json();
 
-      const data: SearchResponse = await response.json();
-      setSearchResults(data.results || []);
+      const filterByTabId = (results: any[], tabId: string) => {
+        return results.filter((item) => item.metadata?.TabId === tabId);
+      };
+
+      // Example usage
+      const filteredResults = filterByTabId(response.results, '00000000000000000000000000000064');
+
+      console.log('filteredResults', filteredResults);
+
+      setSearchResults(filteredResults || []);
       setShowDropdown(true);
       setSelectedIndex(-1);
     } catch (error) {

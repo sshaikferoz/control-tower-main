@@ -18,6 +18,7 @@ interface DashboardHeaderProps {
   onAddSection: () => void;
   configuration?: UIConfiguration;
   onOpenConfigDialog?: () => void;
+  tabId: any;
 }
 
 export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
@@ -29,6 +30,7 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
   onAddSection,
   configuration,
   onOpenConfigDialog,
+  tabId,
 }) => {
   const [isChatOpen, setIsChatOpen] = useState(false);
 
@@ -64,7 +66,7 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 
   return (
     <div className="mb-4 flex w-full items-center justify-between px-8">
-      <Header configuration={configuration} />
+      <Header configuration={configuration} tabId={tabId} />
 
       {/* Chat Button - Only render if chatbot is enabled */}
       {chatbotConfig.enabled && (
@@ -72,39 +74,9 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
           <button
             onClick={openChat}
             className="focus:ring-opacity-50 rounded-full p-4 text-white shadow-lg transition-all duration-300 hover:scale-110 hover:cursor-pointer focus:outline-none"
-            // className="focus:ring-opacity-50 rounded-full p-4 text-white shadow-lg transition-all duration-300 hover:scale-110 focus:ring-4 focus:outline-none"
-            style={
-              {
-                //   backgroundColor: chatbotConfig.color,
-                //   '--hover-color': `${chatbotConfig.color}dd`, // Add transparency for hover
-              }
-            }
-            // onMouseEnter={(e) => {
-            //   e.currentTarget.style.backgroundColor = `${chatbotConfig.color}dd`;
-            // }}
-            // onMouseLeave={(e) => {
-            //   e.currentTarget.style.backgroundColor = chatbotConfig.color;
-            // }}
             aria-label="Open chat"
           >
-            {/* <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-6 w-6 text-white"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              strokeWidth="2"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M18 4a3 3 0 0 1 3 3v8a3 3 0 0 1 -3 3h-5l-5 3v-3h-2a3 3 0 0 1 -3 -3V7a3 3 0 0 1 3 -3h12z"
-              />
-              <path strokeLinecap="round" strokeLinejoin="round" d="M9.5 9h.01M14.5 9h.01" />
-              <path strokeLinecap="round" strokeLinejoin="round" d="M9.5 13a3.5 3.5 0 0 0 5 0" />
-            </svg> */}
-
-            <img src="chatbot/Group-4108.png" width={140}></img>
+            <img src="chatbot/SCAI.png" width={100}></img>
           </button>
         </div>
       )}

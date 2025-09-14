@@ -28,7 +28,7 @@ const ChatbotInterface: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(false);
   const [userInfo, setUserInfo] = useState<any>('');
   const [userInfoLoading, setUserInfoLoading] = useState<boolean>(true);
-  const [airesponse ,setAiResponse]=useState<any>('');
+  const [airesponse, setAiResponse] = useState<any>('');
 
   const cities = [
     { name: 'Professional', code: 'PRF' },
@@ -131,7 +131,7 @@ const ChatbotInterface: React.FC = () => {
     try {
       // Get response from service with user info
       const response = await generateResponse(message, userInfo);
-      setAiResponse(response)
+      setAiResponse(response);
 
       // Add bot response
       const botMessage: Message = {
@@ -225,7 +225,7 @@ const ChatbotInterface: React.FC = () => {
   // Show loading state while fetching user info
   if (userInfoLoading) {
     return (
-      <div className="relative flex max-h-[80vh] min-h-screen w-full flex-col items-center justify-center overflow-auto bg-[url('../../public/chatbot/bg.png')] bg-cover bg-center p-1 md:p-8">
+      <div className="relative flex max-h-[80vh] min-h-screen w-full flex-col items-center justify-center overflow-auto bg-[url('../../public/chatbot/bg.jpg')] bg-cover bg-center p-1 md:p-8">
         <div className="flex items-center gap-2">
           <div className="h-4 w-4 animate-bounce rounded-full bg-blue-500 [animation-delay:0s]"></div>
           <div className="h-4 w-4 animate-bounce rounded-full bg-blue-500 [animation-delay:0.2s]"></div>
@@ -237,7 +237,7 @@ const ChatbotInterface: React.FC = () => {
   }
 
   return (
-    <div className="relative flex max-h-[80vh] min-h-screen w-full flex-col items-center justify-between overflow-auto bg-[url('../../public/chatbot/bg.png')] bg-cover bg-center p-1 md:p-8">
+    <div className="relative flex max-h-[80vh] min-h-screen w-full flex-col items-center justify-between overflow-auto bg-[url('../../public/chatbot/bg.jpg')] bg-cover bg-center p-1  md:p-8">
       <div className="flex w-full max-w-5xl flex-grow flex-col overflow-hidden">
         {visible && <ChatHeader />}
         <div className="mb-6 flex-grow overflow-y-auto px-2 md:px-4">
@@ -326,7 +326,7 @@ const ChatbotInterface: React.FC = () => {
           </div>
         </div>
       </div> */}
-      {visible && (
+      {/* {visible && (
         <div className="flex w-full max-w-5xl justify-end">
           <div
             className="aspect-[2/3] h-28 w-28 bg-contain bg-right bg-no-repeat"
@@ -335,7 +335,7 @@ const ChatbotInterface: React.FC = () => {
             }}
           />
         </div>
-      )}
+      )} */}
 
       {/* Input Box */}
       <div className="relative z-10 flex w-full max-w-5xl flex-col justify-between rounded-3xl border border-[#83BD01] bg-white px-6 pt-4 pb-3 shadow-lg">
