@@ -1,5 +1,5 @@
 import React from 'react';
-import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 
 interface PieChartWithTotalProps {
   data: {
@@ -12,6 +12,20 @@ interface PieChartWithTotalProps {
   subValue: string;
   variance: string;
 }
+
+// Custom tooltip component for better styling
+const CustomTooltip = ({ active, payload }: any) => {
+  if (active && payload && payload.length) {
+    const data = payload[0];
+    return (
+      <div className="rounded-lg border border-gray-600 bg-gray-800 px-3 py-2 text-white shadow-lg">
+        <p className="font-medium">{data.name}</p>
+        <p className="text-sm text-gray-300">{data.value}</p>
+      </div>
+    );
+  }
+  return null;
+};
 
 const PieChartWithTotal = ({
   data,
@@ -55,9 +69,9 @@ const PieChartWithTotal = ({
             </div> */}
         </div>
 
-        <div className="mt-4 flex h-[180px] w-full justify-center">
+        <div className="mt-4 flex h-[200px] w-full justify-center">
           <div className="relative flex flex-col items-center">
-            <div className="h-[120px] w-[120px]">
+            <div className="h-[140px] w-[140px]">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
@@ -70,14 +84,21 @@ const PieChartWithTotal = ({
                     dataKey="value"
                   >
                     {data.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.fill} />
+                      <Cell key={`cell-${index}`} fill={entry.fill} style={{ cursor: 'pointer' }} />
                     ))}
                   </Pie>
+                  <Tooltip
+                    content={<CustomTooltip />}
+                    cursor={{ fill: 'rgba(255, 255, 255, 0.1)' }}
+                    position={{ x: 0, y: 0 }}
+                    offset={80}
+                    allowEscapeViewBox={{ x: true, y: true }}
+                  />
                 </PieChart>
               </ResponsiveContainer>
             </div>
 
-            <div className="absolute top-[40px] w-full text-center">
+            <div className="absolute top-[50px] w-full text-center">
               <div className="[font-family:'Ghawar-SmeiBold',Helvetica] text-xl font-bold tracking-[-0.75px] whitespace-nowrap text-white">
                 {totalValue}
               </div>

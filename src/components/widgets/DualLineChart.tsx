@@ -24,6 +24,12 @@ interface DualLineChartProps {
 }
 
 const DualLineChart = ({ data, title, series }: DualLineChartProps) => {
+  // Custom tooltip formatter to show legend names instead of dataKey
+  const formatTooltipLabel = (dataKey: string) => {
+    const seriesItem = series.find((item) => item.dataKey === dataKey);
+    return seriesItem ? seriesItem.name : dataKey;
+  };
+
   return (
     <div className="h-full w-full">
       <div className="h-full rounded-xl bg-gradient-to-b from-[#00214E] to-[#0164B0] p-4 text-white">
@@ -69,6 +75,7 @@ const DualLineChart = ({ data, title, series }: DualLineChartProps) => {
                   borderRadius: '8px',
                   color: '#ffffff',
                 }}
+                formatter={(value, name) => [value, formatTooltipLabel(name as string)]}
               />
               {series.map((item, index) => (
                 <Line
@@ -98,5 +105,4 @@ const DualLineChart = ({ data, title, series }: DualLineChartProps) => {
     </div>
   );
 };
-
 export default DualLineChart;
