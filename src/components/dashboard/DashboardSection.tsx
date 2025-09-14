@@ -509,37 +509,6 @@ export const DashboardSection: React.FC<ExtendedDashboardSectionProps> = ({
                         <InfoIcon sx={{ fontSize: 16 }} />
                       </IconButton>
                     </Tooltip>
-                    {(widget.fieldMappings?.targetReport ||
-                      section.fieldMappings?.[widget.id]?.targetReport) && (
-                      <Tooltip
-                        title="Open detailed report"
-                        enterDelay={0}
-                        leaveDelay={0}
-                        placement="top"
-                        arrow
-                      >
-                        <IconButton
-                          onClick={(e) =>
-                            handleLaunchClick(
-                              e,
-                              widget.fieldMappings?.targetReport ||
-                                section.fieldMappings?.[widget.id]?.targetReport
-                            )
-                          }
-                          size="small"
-                          data-action-button="true"
-                          sx={{
-                            backgroundColor: 'rgba(255, 255, 255, 0.2)',
-                            color: 'white',
-                            '&:hover': {
-                              backgroundColor: 'rgba(255, 255, 255, 0.3)',
-                            },
-                          }}
-                        >
-                          <LaunchIcon sx={{ fontSize: 16 }} />
-                        </IconButton>
-                      </Tooltip>
-                    )}
                   </div>
                 )}
 
@@ -624,37 +593,6 @@ export const DashboardSection: React.FC<ExtendedDashboardSectionProps> = ({
                           <InfoIcon sx={{ fontSize: 16 }} />
                         </IconButton>
                       </Tooltip>
-                      {(widget.fieldMappings?.targetReport ||
-                        section.fieldMappings?.[widget.id]?.targetReport) && (
-                        <Tooltip
-                          title="Open detailed report"
-                          enterDelay={0}
-                          leaveDelay={0}
-                          placement="top"
-                          arrow
-                        >
-                          <IconButton
-                            onClick={(e) =>
-                              handleLaunchClick(
-                                e,
-                                widget.fieldMappings?.targetReport ||
-                                  section.fieldMappings?.[widget.id]?.targetReport
-                              )
-                            }
-                            size="small"
-                            data-action-button="true"
-                            sx={{
-                              backgroundColor: 'rgba(255, 255, 255, 0.2)',
-                              color: 'white',
-                              '&:hover': {
-                                backgroundColor: 'rgba(255, 255, 255, 0.3)',
-                              },
-                            }}
-                          >
-                            <LaunchIcon sx={{ fontSize: 16 }} />
-                          </IconButton>
-                        </Tooltip>
-                      )}
                     </div>
                   )}
 
