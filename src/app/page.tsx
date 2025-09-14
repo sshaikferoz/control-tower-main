@@ -1,3 +1,4 @@
+//app page.tsx
 // Updated Dashboard component with configuration support and dynamic sections
 'use client';
 import React, { useState, useCallback, useMemo, useEffect } from 'react';

@@ -1,3 +1,4 @@
+//Home page.tsx
 'use client';
 import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { Suspense } from 'react';
@@ -16,6 +17,26 @@ import { WidgetSkeleton } from '@/components/ui/WidgetSkeleton';
 import { Announcement } from '@/components/widgets/Announcement';
 import { getNextSectionOrder } from '@/utils/dashboardUtils';
 import { UIConfiguration, defaultConfiguration, ConfigurationManager } from '@/types/configuration';
+
+// Define SearchResult interface
+interface SearchResult {
+  metadata: {
+    TabId: string;
+    TabDescription: string;
+    SectionId: string;
+    SectionName: string;
+    SectionDescription: string;
+    WidgetId: string;
+    WidgetType: string;
+    TechnicalName: string;
+    WidgetDescription: string;
+  };
+  match_text: string;
+  score: number;
+  level: string;
+  ai_title: string;
+  ai_summary: string;
+}
 
 export default function Home({
   selectedMenuItemId,
@@ -45,6 +66,10 @@ export default function Home({
     text: string;
   } | null>(null);
 
+  // Search highlighting state
+  const [highlightSectionId, setHighlightSectionId] = useState<string>('');
+  const [highlightWidgetIds, setHighlightWidgetIds] = useState<string[]>([]);
+
   // Existing dashboard state
   const [isEditMode, setIsEditMode] = useState(false);
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
@@ -61,6 +86,7 @@ export default function Home({
       loadConfiguration();
     }
   }, [tabId]);
+
   const loadConfiguration = async () => {
     if (!tabId) return;
     try {
@@ -75,6 +101,63 @@ export default function Home({
     } finally {
       setConfigurationLoading(false);
     }
+  };
+
+  // Handle search selection for highlighting
+  const handleSearchSelect = (result: SearchResult | null) => {
+    if (!result) {
+      // Clear highlighting
+      setHighlightSectionId('');
+      setHighlightWidgetIds([]);
+      return;
+    }
+
+    console.log('Search result selected for highlighting:', result);
+
+    // Set highlighting based on search result level and metadata
+    switch (result.level) {
+      case 'widget':
+        // Highlight specific widget and its section
+        setHighlightSectionId(result.metadata.SectionId);
+        setHighlightWidgetIds([result.metadata.WidgetId]);
+        break;
+      case 'section':
+        // Highlight entire section
+        setHighlightSectionId(result.metadata.SectionId);
+        setHighlightWidgetIds([]);
+        break;
+      case 'tab':
+        // For tab level, highlight the section mentioned in the result
+        setHighlightSectionId(result.metadata.SectionId);
+        setHighlightWidgetIds([]);
+        break;
+      default:
+        // Fallback: highlight section if available
+        if (result.metadata.SectionId) {
+          setHighlightSectionId(result.metadata.SectionId);
+          setHighlightWidgetIds(result.metadata.WidgetId ? [result.metadata.WidgetId] : []);
+        }
+        break;
+    }
+
+    // Auto-scroll to highlighted element after a brief delay
+    setTimeout(() => {
+      let targetElement = null;
+
+      // For widget-level searches, try to scroll to the specific widget first
+      if (result.level === 'widget' && result.metadata.WidgetId) {
+        targetElement = document.querySelector(`[data-widget-id="${result.metadata.WidgetId}"]`);
+      }
+
+      // If no widget found or it's a section/tab level search, scroll to the section
+      if (!targetElement && result.metadata.SectionId) {
+        targetElement = document.querySelector(`[data-section-id="${result.metadata.SectionId}"]`);
+      }
+
+      if (targetElement) {
+        targetElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }, 100);
   };
 
   const handleOpenConfigDialog = () => {
@@ -155,6 +238,12 @@ export default function Home({
   const toggleEditMode = () => {
     if (!isEditModeAllowed) return;
     setIsEditMode(!isEditMode);
+
+    // Clear highlighting when entering edit mode
+    if (!isEditMode) {
+      setHighlightSectionId('');
+      setHighlightWidgetIds([]);
+    }
   };
 
   const saveDashboard = async () => {
@@ -370,6 +459,9 @@ export default function Home({
       onDeleteSection={handleDeleteSection}
       onOpenMapping={handleOpenMapping}
       onAddWidgets={handleAddWidgets}
+      // Pass highlighting props
+      highlightSectionId={highlightSectionId}
+      highlightWidgetIds={highlightWidgetIds}
     />
   );
 
@@ -426,6 +518,7 @@ export default function Home({
             configuration={configuration}
             onOpenConfigDialog={handleOpenConfigDialog}
             tabId={tabId}
+            onSearchSelect={handleSearchSelect} // Pass search selection handler
           />
 
           {/* Announcement Section - Render at the top when enabled */}

@@ -1,4 +1,5 @@
-// Updated Header component with configuration support
+//Header.tsx
+// Updated Header component with search selection callback
 'use client';
 import { Search, Clock, TrendingUp, Loader2, X } from 'lucide-react';
 import SCMLogo from '@/assets/SCMLogo';
@@ -35,9 +36,10 @@ interface SearchResponse {
 interface HeaderProps {
   configuration?: UIConfiguration;
   tabId: any;
+  onSearchSelect?: (result: SearchResult) => void; // New callback prop
 }
 
-const Header: React.FC<HeaderProps> = ({ configuration, tabId }) => {
+const Header: React.FC<HeaderProps> = ({ configuration, tabId, onSearchSelect }) => {
   const [visible, setVisible] = useState(false);
   const [sectionName, setSectionName] = useState('');
   const [isExpanded, setIsExpanded] = useState(true);
@@ -100,9 +102,7 @@ const Header: React.FC<HeaderProps> = ({ configuration, tabId }) => {
 
     setIsSearching(true);
     try {
-      //   const response = await fetch(
-      //     `https://scic-search.cml.apps.cdp-ds-prod.aramco.com/api/search?query=${encodeURIComponent(query)}`
-      //   );
+      // Hardcoded response for now
       const response = {
         results: [
           {
@@ -114,13 +114,13 @@ const Header: React.FC<HeaderProps> = ({ configuration, tabId }) => {
               'Hierarchy:\n- Tab: MySCM Dashboard\n  - Section: Procurement Updated\n    - Widget: Active Contracts Desc [one-metric]\n      - Technical Name: ',
             metadata: {
               SectionDescription: 'Procurement Desc',
-              SectionId: '00000000000000000000000000000005',
+              SectionId: '00000000000000000000000000000061',
               SectionName: 'Procurement Updated',
               TabDescription: 'MySCM Dashboard',
               TabId: '00000000000000000000000000000064',
               TechnicalName: '',
               WidgetDescription: 'Active Contracts Desc',
-              WidgetId: '00000000000000000001751799011017',
+              WidgetId: '00000000000000000001757309563871',
               WidgetType: 'one-metric',
             },
             score: 1.6878890991210938,
@@ -206,19 +206,13 @@ const Header: React.FC<HeaderProps> = ({ configuration, tabId }) => {
           },
         ],
       };
-      //   if (!response.ok) {
-      //     throw new Error(`HTTP error! status: ${response.status}`);
-      //   }
 
-      //   const data: SearchResponse = await response.json();
-
+      // Filter results by current tabId
       const filterByTabId = (results: any[], tabId: string) => {
         return results.filter((item) => item.metadata?.TabId === tabId);
       };
 
-      // Example usage
-      const filteredResults = filterByTabId(response.results, '00000000000000000000000000000064');
-
+      const filteredResults = filterByTabId(response.results, tabId);
       console.log('filteredResults', filteredResults);
 
       setSearchResults(filteredResults || []);
@@ -275,16 +269,17 @@ const Header: React.FC<HeaderProps> = ({ configuration, tabId }) => {
     }
   };
 
-  // Handle result selection
+  // Handle result selection - MODIFIED to call parent callback
   const handleResultSelect = (result: SearchResult) => {
     console.log('Selected result:', result);
     setSearchQuery(result.ai_title);
     setShowDropdown(false);
     setSelectedIndex(-1);
 
-    // You can implement navigation logic here
-    // For example: navigate to the specific tab/section/widget
-    // router.push(`/tabs/${result.metadata.TabId}/sections/${result.metadata.SectionId}`);
+    // Call parent callback to handle highlighting
+    if (onSearchSelect) {
+      onSearchSelect(result);
+    }
   };
 
   // Clear search
@@ -294,6 +289,11 @@ const Header: React.FC<HeaderProps> = ({ configuration, tabId }) => {
     setShowDropdown(false);
     setSelectedIndex(-1);
     inputRef.current?.focus();
+
+    // Clear highlighting when search is cleared
+    if (onSearchSelect) {
+      onSearchSelect(null);
+    }
   };
 
   const handleCreateSection = () => {

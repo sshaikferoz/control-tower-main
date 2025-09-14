@@ -1,4 +1,5 @@
-// Updated DashboardHeader component with configuration support
+//DashboardHeader.tsx
+// Updated DashboardHeader component with search selection support
 import React, { useState, Suspense } from 'react';
 import { IconButton, Button, Tooltip } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
@@ -8,6 +9,26 @@ import SettingsIcon from '@mui/icons-material/Settings';
 import Header from '@/components/Header';
 import ChatbotDialog from '@/components/dialogs/ChatbotDialog';
 import { UIConfiguration } from '@/types/configuration';
+
+// Define SearchResult interface locally since it's used here
+interface SearchResult {
+  metadata: {
+    TabId: string;
+    TabDescription: string;
+    SectionId: string;
+    SectionName: string;
+    SectionDescription: string;
+    WidgetId: string;
+    WidgetType: string;
+    TechnicalName: string;
+    WidgetDescription: string;
+  };
+  match_text: string;
+  score: number;
+  level: string;
+  ai_title: string;
+  ai_summary: string;
+}
 
 interface DashboardHeaderProps {
   isAdmin: boolean;
@@ -19,6 +40,7 @@ interface DashboardHeaderProps {
   configuration?: UIConfiguration;
   onOpenConfigDialog?: () => void;
   tabId: any;
+  onSearchSelect?: (result: SearchResult | null) => void; // New prop for search selection
 }
 
 export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
@@ -31,6 +53,7 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
   configuration,
   onOpenConfigDialog,
   tabId,
+  onSearchSelect, // New prop
 }) => {
   const [isChatOpen, setIsChatOpen] = useState(false);
 
@@ -66,7 +89,11 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 
   return (
     <div className="mb-4 flex w-full items-center justify-between px-8">
-      <Header configuration={configuration} tabId={tabId} />
+      <Header
+        configuration={configuration}
+        tabId={tabId}
+        onSearchSelect={onSearchSelect} // Pass the callback to Header
+      />
 
       {/* Chat Button - Only render if chatbot is enabled */}
       {chatbotConfig.enabled && (
