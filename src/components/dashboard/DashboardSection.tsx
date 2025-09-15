@@ -252,7 +252,7 @@ export const DashboardSection: React.FC<ExtendedDashboardSectionProps> = ({
 
   const handleOpenReport = async (targetReport: any): Promise<void> => {
     if (!targetReport?.technicalId) {
-      alert('No Detailed Report configured for this widget.');
+      //   alert('No Detailed Report configured for this widget.');
       return;
     }
 
