@@ -103,7 +103,7 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
             className="focus:ring-opacity-50 rounded-full p-4 text-white shadow-lg transition-all duration-300 hover:scale-110 hover:cursor-pointer focus:outline-none"
             aria-label="Open chat"
           >
-            <img src="chatbot/SCAI.png" width={100}></img>
+            <img src="chatbot/SCAI.png" width={90}></img>
           </button>
         </div>
       )}

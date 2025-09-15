@@ -36,7 +36,7 @@ interface SearchResponse {
 interface HeaderProps {
   configuration?: UIConfiguration;
   tabId: any;
-  onSearchSelect?: (result: SearchResult) => void; // New callback prop
+  onSearchSelect?: (result: SearchResult | null) => void; // New callback prop
 }
 
 const Header: React.FC<HeaderProps> = ({ configuration, tabId, onSearchSelect }) => {
@@ -102,110 +102,115 @@ const Header: React.FC<HeaderProps> = ({ configuration, tabId, onSearchSelect })
 
     setIsSearching(true);
     try {
-      // Hardcoded response for now
-      const response = {
-        results: [
-          {
-            ai_summary:
-              'Here is an overview of your active contracts. This includes the total number of active contracts, the most recent contract added, and the oldest contract still in effect.',
-            ai_title: 'Active Contracts Overview Summary',
-            level: 'widget',
-            match_text:
-              'Hierarchy:\n- Tab: MySCM Dashboard\n  - Section: Procurement Updated\n    - Widget: Active Contracts Desc [one-metric]\n      - Technical Name: ',
-            metadata: {
-              SectionDescription: 'Procurement Desc',
-              SectionId: '00000000000000000000000000000061',
-              SectionName: 'Procurement Updated',
-              TabDescription: 'MySCM Dashboard',
-              TabId: '00000000000000000000000000000064',
-              TechnicalName: '',
-              WidgetDescription: 'Active Contracts Desc',
-              WidgetId: '00000000000000000001757309563871',
-              WidgetType: 'one-metric',
-            },
-            score: 1.6878890991210938,
-          },
-          {
-            ai_summary: 'Here is a summary of the procurement updates. This includes:',
-            ai_title: 'Overview of Procurement Updates',
-            level: 'section',
-            match_text:
-              'Hierarchy:\n- Tab: MySCM Dashboard\n  - Section: Procurement Updated\n    - Widget:  [two-metrics-piechart]\n      - Technical Name: ',
-            metadata: {
-              SectionDescription: 'Procurement Desc',
-              SectionId: '00000000000000000000000000000005',
-              SectionName: 'Procurement Updated',
-              TabDescription: 'MySCM Dashboard',
-              TabId: '00000000000000000000000000000001',
-              TechnicalName: '',
-              WidgetDescription: '',
-              WidgetId: '00000000000000000001751799016589',
-              WidgetType: 'two-metrics-piechart',
-            },
-            score: 1.6924619674682617,
-          },
-          {
-            ai_summary:
-              "This search provides an overview of the latest procurement activities on your SCM dashboard. Here's what you might find:",
-            ai_title: 'Recent Procurement Updates Overview',
-            level: 'tab',
-            match_text:
-              'Hierarchy:\n- Tab: MySCM Dashboard\n  - Section: Procurement Updated\n    - Widget:  [one-metric-date]\n      - Technical Name: ',
-            metadata: {
-              SectionDescription: 'Procurement Desc',
-              SectionId: '00000000000000000000000000000005',
-              SectionName: 'Procurement Updated',
-              TabDescription: 'MySCM Dashboard',
-              TabId: '00000000000000000000000000000001',
-              TechnicalName: '',
-              WidgetDescription: '',
-              WidgetId: '00000000000000000001751799011451',
-              WidgetType: 'one-metric-date',
-            },
-            score: 1.6998200416564941,
-          },
-          {
-            ai_summary:
-              'This search provides a snapshot of recent procurement activities. Key details include:',
-            ai_title: 'Overview of Procurement Updates',
-            level: 'section',
-            match_text:
-              'Hierarchy:\n- Tab: MySCM Dashboard\n  - Section: Procurement Updated\n    - Widget:  [one-metric-table]\n      - Technical Name: ',
-            metadata: {
-              SectionDescription: 'Procurement Desc',
-              SectionId: '00000000000000000000000000000005',
-              SectionName: 'Procurement Updated',
-              TabDescription: 'MySCM Dashboard',
-              TabId: '00000000000000000000000000000001',
-              TechnicalName: '',
-              WidgetDescription: '',
-              WidgetId: '00000000000000000001751799133340',
-              WidgetType: 'one-metric-table',
-            },
-            score: 1.7320101261138916,
-          },
-          {
-            ai_summary:
-              'This search provides an overview of the procurement section of your SCM dashboard. It includes:',
-            ai_title: 'Procurement Dashboard Overview',
-            level: 'tab',
-            match_text:
-              'Hierarchy:\n- Tab: MySCM Dashboard\n  - Section: Procurement Updated\n    - Widget:  [two-metrics]\n      - Technical Name: ',
-            metadata: {
-              SectionDescription: 'Procurement Desc',
-              SectionId: '00000000000000000000000000000005',
-              SectionName: 'Procurement Updated',
-              TabDescription: 'MySCM Dashboard',
-              TabId: '00000000000000000000000000000001',
-              TechnicalName: '',
-              WidgetDescription: '',
-              WidgetId: '00000000000000000001751799014314',
-              WidgetType: 'two-metrics',
-            },
-            score: 1.7338515520095825,
-          },
-        ],
-      };
+      const res = await fetch(
+        `https://scic-search.cml.apps.cdp-ds-test.aramco.com/api/search?query=${encodeURIComponent(query)}`
+      );
+      const response = await res.json();
+
+      //   // Hardcoded response for now
+      //   const response = {
+      //     results: [
+      //       {
+      //         ai_summary:
+      //           'Here is an overview of your active contracts. This includes the total number of active contracts, the most recent contract added, and the oldest contract still in effect.',
+      //         ai_title: 'Active Contracts Overview Summary',
+      //         level: 'widget',
+      //         match_text:
+      //           'Hierarchy:\n- Tab: MySCM Dashboard\n  - Section: Procurement Updated\n    - Widget: Active Contracts Desc [one-metric]\n      - Technical Name: ',
+      //         metadata: {
+      //           SectionDescription: 'Procurement Desc',
+      //           SectionId: '00000000000000000000000000000061',
+      //           SectionName: 'Procurement Updated',
+      //           TabDescription: 'MySCM Dashboard',
+      //           TabId: '00000000000000000000000000000064',
+      //           TechnicalName: '',
+      //           WidgetDescription: 'Active Contracts Desc',
+      //           WidgetId: '00000000000000000001757309563871',
+      //           WidgetType: 'one-metric',
+      //         },
+      //         score: 1.6878890991210938,
+      //       },
+      //       {
+      //         ai_summary: 'Here is a summary of the procurement updates. This includes:',
+      //         ai_title: 'Overview of Procurement Updates',
+      //         level: 'section',
+      //         match_text:
+      //           'Hierarchy:\n- Tab: MySCM Dashboard\n  - Section: Procurement Updated\n    - Widget:  [two-metrics-piechart]\n      - Technical Name: ',
+      //         metadata: {
+      //           SectionDescription: 'Procurement Desc',
+      //           SectionId: '00000000000000000000000000000005',
+      //           SectionName: 'Procurement Updated',
+      //           TabDescription: 'MySCM Dashboard',
+      //           TabId: '00000000000000000000000000000001',
+      //           TechnicalName: '',
+      //           WidgetDescription: '',
+      //           WidgetId: '00000000000000000001751799016589',
+      //           WidgetType: 'two-metrics-piechart',
+      //         },
+      //         score: 1.6924619674682617,
+      //       },
+      //       {
+      //         ai_summary:
+      //           "This search provides an overview of the latest procurement activities on your SCM dashboard. Here's what you might find:",
+      //         ai_title: 'Recent Procurement Updates Overview',
+      //         level: 'tab',
+      //         match_text:
+      //           'Hierarchy:\n- Tab: MySCM Dashboard\n  - Section: Procurement Updated\n    - Widget:  [one-metric-date]\n      - Technical Name: ',
+      //         metadata: {
+      //           SectionDescription: 'Procurement Desc',
+      //           SectionId: '00000000000000000000000000000005',
+      //           SectionName: 'Procurement Updated',
+      //           TabDescription: 'MySCM Dashboard',
+      //           TabId: '00000000000000000000000000000001',
+      //           TechnicalName: '',
+      //           WidgetDescription: '',
+      //           WidgetId: '00000000000000000001751799011451',
+      //           WidgetType: 'one-metric-date',
+      //         },
+      //         score: 1.6998200416564941,
+      //       },
+      //       {
+      //         ai_summary:
+      //           'This search provides a snapshot of recent procurement activities. Key details include:',
+      //         ai_title: 'Overview of Procurement Updates',
+      //         level: 'section',
+      //         match_text:
+      //           'Hierarchy:\n- Tab: MySCM Dashboard\n  - Section: Procurement Updated\n    - Widget:  [one-metric-table]\n      - Technical Name: ',
+      //         metadata: {
+      //           SectionDescription: 'Procurement Desc',
+      //           SectionId: '00000000000000000000000000000005',
+      //           SectionName: 'Procurement Updated',
+      //           TabDescription: 'MySCM Dashboard',
+      //           TabId: '00000000000000000000000000000001',
+      //           TechnicalName: '',
+      //           WidgetDescription: '',
+      //           WidgetId: '00000000000000000001751799133340',
+      //           WidgetType: 'one-metric-table',
+      //         },
+      //         score: 1.7320101261138916,
+      //       },
+      //       {
+      //         ai_summary:
+      //           'This search provides an overview of the procurement section of your SCM dashboard. It includes:',
+      //         ai_title: 'Procurement Dashboard Overview',
+      //         level: 'tab',
+      //         match_text:
+      //           'Hierarchy:\n- Tab: MySCM Dashboard\n  - Section: Procurement Updated\n    - Widget:  [two-metrics]\n      - Technical Name: ',
+      //         metadata: {
+      //           SectionDescription: 'Procurement Desc',
+      //           SectionId: '00000000000000000000000000000005',
+      //           SectionName: 'Procurement Updated',
+      //           TabDescription: 'MySCM Dashboard',
+      //           TabId: '00000000000000000000000000000001',
+      //           TechnicalName: '',
+      //           WidgetDescription: '',
+      //           WidgetId: '00000000000000000001751799014314',
+      //           WidgetType: 'two-metrics',
+      //         },
+      //         score: 1.7338515520095825,
+      //       },
+      //     ],
+      //   };
 
       // Filter results by current tabId
       const filterByTabId = (results: any[], tabId: string) => {
@@ -292,7 +297,7 @@ const Header: React.FC<HeaderProps> = ({ configuration, tabId, onSearchSelect })
 
     // Clear highlighting when search is cleared
     if (onSearchSelect) {
-      onSearchSelect(null);
+      onSearchSelect(null); // Passing null or empty to clear highlights
     }
   };
 
@@ -412,9 +417,9 @@ const Header: React.FC<HeaderProps> = ({ configuration, tabId, onSearchSelect })
                     <div className="min-w-0 flex-1">
                       <div className="mb-2 flex items-center gap-2">
                         <h3 className="truncate font-semibold text-gray-900">{result.ai_title}</h3>
-                        <span className="inline-flex items-center rounded-full bg-blue-100 px-2 py-1 text-xs font-medium text-blue-800">
+                        {/* <span className="inline-flex items-center rounded-full bg-blue-100 px-2 py-1 text-xs font-medium text-blue-800">
                           {result.metadata.WidgetType}
-                        </span>
+                        </span> */}
                       </div>
 
                       <div className="mb-2">{formatAISummary(result.ai_summary)}</div>
@@ -428,13 +433,13 @@ const Header: React.FC<HeaderProps> = ({ configuration, tabId, onSearchSelect })
                       </div>
 
                       <div className="mt-1 flex items-center gap-2">
-                        <div className="flex items-center gap-1">
+                        {/* <div className="flex items-center gap-1">
                           <div className="h-2 w-2 rounded-full bg-green-400"></div>
                           <span className="text-xs text-gray-500">
                             Score: {(result.score * 100).toFixed(0)}%
                           </span>
-                        </div>
-                        <span className="text-xs text-gray-400">•</span>
+                        </div> */}
+                        {/* <span className="text-xs text-gray-400">•</span> */}
                         <span className="text-xs text-gray-500 capitalize">
                           {result.level} level
                         </span>

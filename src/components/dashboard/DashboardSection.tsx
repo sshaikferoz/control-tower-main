@@ -9,7 +9,6 @@ import {
   Typography,
   Tooltip,
 } from '@mui/material';
-
 import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import EditIcon from '@mui/icons-material/Edit';
@@ -368,7 +367,7 @@ export const DashboardSection: React.FC<ExtendedDashboardSectionProps> = ({
     }`;
 
     if (isSectionHighlighted) {
-      classes += ' ring-1 ring-yellow-400 ring-opacity-70 bg-[#012452] bg-opacity-10';
+      classes += ' ring-1 ring-yellow-400 ring-opacity-70 scale-98 bg-[#012452] bg-opacity-10';
     } else if (isSectionDimmed()) {
       classes += ' opacity-40';
     }
@@ -381,7 +380,7 @@ export const DashboardSection: React.FC<ExtendedDashboardSectionProps> = ({
     let classes = `${baseClasses} transition-all duration-300 ease-in-out`;
 
     if (isWidgetHighlighted(widgetId)) {
-      classes += ' ring-2 ring-yellow-400 ring-opacity-70 relative';
+      classes += ' ring-2 ring-yellow-400 ring-opacity-70  relative';
     } else if (isWidgetDimmed(widgetId)) {
       classes += ' opacity-40';
     }
@@ -417,7 +416,7 @@ export const DashboardSection: React.FC<ExtendedDashboardSectionProps> = ({
             <DragIndicatorIcon className="text-white" />
           </div>
         )}
-        <MyContractsIcon />
+        {/* <MyContractsIcon /> */}
         <p className="text-[#fff]">{section.sectionName}</p>
         <div className="h-px flex-grow bg-[#E8E9EE80]"></div>
 
