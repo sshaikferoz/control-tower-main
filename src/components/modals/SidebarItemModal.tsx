@@ -21,6 +21,7 @@ export const SidebarItemModal: React.FC<SidebarItemModalProps> = ({
   const [item, setItem] = useState<MenuItem>({
     id: '',
     name: '',
+    appid: '',
     description: '',
     visible: true,
     order: 0,
@@ -37,6 +38,7 @@ export const SidebarItemModal: React.FC<SidebarItemModalProps> = ({
       setItem({
         id: '',
         name: '',
+        appid: '',
         description: '',
         visible: true,
         order: 0,
@@ -80,6 +82,14 @@ export const SidebarItemModal: React.FC<SidebarItemModalProps> = ({
             disabled={isSaving}
           />
 
+          {/* Add the appid field here */}
+          <Input
+            label="App ID"
+            value={item.appid}
+            onChange={(e) => setItem({ ...item, appid: e.target.value })}
+            placeholder="Enter app identifier"
+            disabled={isSaving}
+          />
           <div>
             <label className="mb-2 block text-sm font-medium text-gray-300">Description</label>
             <textarea

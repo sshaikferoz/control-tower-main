@@ -54,7 +54,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
     setFeedbackSubmitted(true);
     try {
       const response = await submitPositiveFeedback(id, userInfo, airesponse, originalPrompt);
-      console.log(response.message);
+      //   console.log(response.message);
     } catch (error) {
       console.error('Failed to submit positive feedback:', error);
     }
@@ -76,7 +76,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
         originalPrompt,
         comments
       );
-      console.log(response.message);
+      //   console.log(response.message);
     } catch (error) {
       console.error('Failed to submit negative feedback:', error);
     }

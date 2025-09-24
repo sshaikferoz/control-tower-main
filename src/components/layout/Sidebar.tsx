@@ -137,6 +137,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         const newItem = {
           ...item,
           id: '',
+          appid: item.appid || '',
           order: menuItems.length,
           isNew: true,
         };
@@ -147,6 +148,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       } else {
         const updatedItem = {
           ...item,
+          appid: item.appid || '',
           hasChanges: true,
           isNew: false,
         };

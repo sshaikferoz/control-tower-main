@@ -112,7 +112,7 @@ export default function Home({
       return;
     }
 
-    console.log('Search result selected for highlighting:', result);
+    // console.log('Search result selected for highlighting:', result);
 
     // Set highlighting based on search result level and metadata
     switch (result.level) {
@@ -264,7 +264,7 @@ export default function Home({
       setIsEditMode(false);
       setLoading(false);
       setShowSaveSuccess(true);
-      console.log('Dashboard saved to SAP successfully');
+      //   console.log('Dashboard saved to SAP successfully');
     } catch (err) {
       console.error('Error saving dashboard data:', err);
       setError('Failed to save dashboard configuration to SAP');
@@ -285,7 +285,7 @@ export default function Home({
       };
 
       const newSection = await sapODataService.saveSection(sectionWithOrder as Section, false);
-      console.log('Created new section:', newSection);
+      //   console.log('Created new section:', newSection);
 
       const updatedSections = [...sapSections, newSection];
       updateDashboardData(updatedSections);
@@ -310,10 +310,10 @@ export default function Home({
 
     try {
       setLoading(true);
-      console.log('Updating section with data:', updatedSection);
+      //   console.log('Updating section with data:', updatedSection);
 
       const savedSection = await sapODataService.saveSection(updatedSection, true);
-      console.log('Updated section response:', savedSection);
+      //   console.log('Updated section response:', savedSection);
 
       const updatedSections = sapSections.map((section) =>
         section.id === savedSection.id ? savedSection : section
@@ -343,7 +343,7 @@ export default function Home({
       setLoading(true);
 
       await sapODataService.deleteSection(selectedSection);
-      console.log('Deleted section:', selectedSection.id);
+      //   console.log('Deleted section:', selectedSection.id);
 
       const updatedSections = sapSections.filter((section) => section.id !== selectedSection.id);
       updateDashboardData(updatedSections);
@@ -470,7 +470,7 @@ export default function Home({
   };
 
   const handleSaveDashboard = () => {
-    console.log('Saving dashboard...');
+    // console.log('Saving dashboard...');
     setIsEditMode(false);
   };
 

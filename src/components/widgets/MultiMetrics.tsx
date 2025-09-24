@@ -10,7 +10,14 @@ interface MultiMetricProps {
   setChangeColor?: (color: string) => void; // Callback to notify the parent about the color change
 }
 
-const MultiMetrics = ({ metric1, value1, metric2, value2, color, setChangeColor }: MultiMetricProps) => {
+const MultiMetrics = ({
+  metric1,
+  value1,
+  metric2,
+  value2,
+  color,
+  setChangeColor,
+}: MultiMetricProps) => {
   const [userColor, setUserColor] = useState<string>(color || '#00214E');
   const [showPicker, setShowPicker] = useState(false);
   const pickerRef = useRef<HTMLDivElement>(null);
@@ -67,7 +74,7 @@ const MultiMetrics = ({ metric1, value1, metric2, value2, color, setChangeColor 
       <div
         className="h-full rounded-xl p-4"
         style={backgroundStyle}
-        onClick={() => setShowPicker(true)} // Toggle color picker on card click
+        onClick={() => setShowPicker(false)} // Toggle color picker on card click
       >
         <div className="flex flex-row gap-3">
           {/* First Metric */}
@@ -91,10 +98,10 @@ const MultiMetrics = ({ metric1, value1, metric2, value2, color, setChangeColor 
       {showPicker && (
         <div
           ref={pickerRef}
-          className="absolute left-[50%] top-full mt-2 z-50 bg-white p-2 rounded shadow-lg"
+          className="absolute top-full left-[50%] z-50 mt-2 rounded bg-white p-2 shadow-lg"
         >
           <HexColorPicker color={userColor} onChange={handleColorChange} />
-          <div className="text-sm text-black mt-2 text-center">{userColor}</div>
+          <div className="mt-2 text-center text-sm text-black">{userColor}</div>
         </div>
       )}
     </div>

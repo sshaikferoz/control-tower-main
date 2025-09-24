@@ -19,6 +19,7 @@ export interface UserInfo {
 export interface MenuItem {
     id: string;
     name: string;
+    appid: string;
     description: string;
     visible: boolean;
     order: number;

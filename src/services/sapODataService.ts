@@ -13,6 +13,7 @@ export interface Role {
 
 export interface TabConfigResponse {
     id: string;
+    appid: string;
     name: string;
     visible: string;
     description: string;
@@ -74,6 +75,7 @@ export interface WidgetResponse {
 
 export interface TabConfigPayload {
     Id: string;
+    appid: string;
     Name: string;
     IsVisible: string;
     Description: string;
@@ -158,6 +160,7 @@ export interface ServiceUrlsResponse {
 
 export interface MenuItem {
     id: string;
+    appid: string;
     name: string;
     description: string;
     visible: boolean;
@@ -322,6 +325,7 @@ class SAPODataService {
             return data.d.results.map(
                 (item: any): MenuItem => ({
                     id: item.Id,
+                    appid: item.appid || '',
                     name: item.Name,
                     description: item.Description,
                     visible: item.IsVisible === 'X',
@@ -522,6 +526,7 @@ class SAPODataService {
 
             return {
                 id: item.id,
+                appid: item.appid,
                 name: item.name,
                 description: item.description,
                 visible: item.is_visible === 'X',
@@ -553,6 +558,7 @@ class SAPODataService {
 
             const payload: TabConfigPayload = {
                 Id: isUpdate ? menuItem.id : '', // Empty for new items
+                appid: menuItem.appid,
                 Name: menuItem.name,
                 IsVisible: menuItem.visible ? 'X' : '',
                 Description: menuItem.description,
@@ -815,6 +821,7 @@ class SAPODataService {
 
             const payload: TabConfigPayload = {
                 Id: menuItem.id,
+                appid: menuItem.appid,
                 Name: menuItem.name,
                 IsVisible: menuItem.visible ? 'X' : '',
                 Description: menuItem.description,

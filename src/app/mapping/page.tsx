@@ -1162,7 +1162,7 @@ const MappingScreen: React.FC = () => {
       if (sectionId && sectionId !== 'undefined') {
         try {
           setLoading(true);
-          console.log('Loading existing widgets for section:', sectionId);
+          //   console.log('Loading existing widgets for section:', sectionId);
 
           // Fetch widgets data from SAP using your specific method
           const widgets = await sapODataService.fetchWidgetsBySectionId(sectionId);
@@ -1172,7 +1172,7 @@ const MappingScreen: React.FC = () => {
             const activeWidgets = widgets.filter((widget: any) => widget.active && !widget.deleted);
 
             if (activeWidgets.length > 0) {
-              console.log('Found existing widgets:', activeWidgets);
+              //   console.log('Found existing widgets:', activeWidgets);
 
               // Transform widgets to the format expected by MappingScreen
               const transformedWidgets: Widget[] = activeWidgets.map((widget: any) => ({

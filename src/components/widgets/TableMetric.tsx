@@ -77,7 +77,7 @@ const TableMetric = ({
   columns,
   title = 'My Top Items',
   color,
-  setChangeColor
+  setChangeColor,
 }: TableMetricProps) => {
   const [userColor, setUserColor] = useState<string>(color || '#00214E');
   const [showPicker, setShowPicker] = useState(false);
@@ -118,7 +118,7 @@ const TableMetric = ({
   const backgroundStyle = {
     backgroundImage: `linear-gradient(to bottom, ${baseColor}, ${lighterColor})`,
     color: '#ffffff',
-    cursor: 'pointer'
+    cursor: 'pointer',
   };
 
   const tableColumns =
@@ -139,67 +139,66 @@ const TableMetric = ({
     return 'auto';
   };
 
-return (
-  <div className="relative">
-    <style>{tableStyles}</style>
+  return (
+    <div className="relative">
+      <style>{tableStyles}</style>
 
-    <div
-      className="h-full w-full overflow-hidden rounded-xl border border-solid border-[#00214E]"
-      onClick={() => setShowPicker(true)}
-    >
-      <div className="h-full p-0">
-        {/* ✅ Apply gradient only here */}
-        <div className="relative h-full rounded-xl" style={backgroundStyle}>
-          {/* Card Header */}
-          <div className="flex items-center justify-between px-7 pt-1.5 pb-3">
-            <div className="flex items-center gap-2">
-              <div
-                className="text-base leading-4 font-normal tracking-[-0.16px] text-white"
-                style={{ fontFamily: 'Ghawar-Hefty, Helvetica' }}
-              >
-                {title}
+      <div
+        className="h-full w-full overflow-hidden rounded-xl border border-solid border-[#00214E]"
+        onClick={() => setShowPicker(false)}
+      >
+        <div className="h-full p-0">
+          {/* ✅ Apply gradient only here */}
+          <div className="relative h-full rounded-xl" style={backgroundStyle}>
+            {/* Card Header */}
+            <div className="flex items-center justify-between px-7 pt-1.5 pb-3">
+              <div className="flex items-center gap-2">
+                <div
+                  className="text-base leading-4 font-normal tracking-[-0.16px] text-white"
+                  style={{ fontFamily: 'Ghawar-Hefty, Helvetica' }}
+                >
+                  {title}
+                </div>
               </div>
             </div>
-          </div>
 
-          {/* Table */}
-          <div className="flex-grow overflow-auto px-7 pb-4">
-            <div className="metric-table">
-              <DataTable
-                value={data}
-                className="max-h-[175px] overflow-auto border-[0.6px] border-solid border-[#d1d1d1]"
-                showGridlines={false}
-              >
-                {tableColumns.map((col, index) => (
-                  <Column
-                    key={col.field}
-                    field={col.field}
-                    header={col.header}
-                    style={{
-                      width: getColumnWidth(index, tableColumns.length),
-                    }}
-                  />
-                ))}
-              </DataTable>
+            {/* Table */}
+            <div className="flex-grow overflow-auto px-7 pb-4">
+              <div className="metric-table">
+                <DataTable
+                  value={data}
+                  className="max-h-[175px] overflow-auto border-[0.6px] border-solid border-[#d1d1d1]"
+                  showGridlines={false}
+                >
+                  {tableColumns.map((col, index) => (
+                    <Column
+                      key={col.field}
+                      field={col.field}
+                      header={col.header}
+                      style={{
+                        width: getColumnWidth(index, tableColumns.length),
+                      }}
+                    />
+                  ))}
+                </DataTable>
+              </div>
             </div>
           </div>
         </div>
       </div>
+
+      {/* Color Picker */}
+      {showPicker && (
+        <div
+          ref={pickerRef}
+          className="absolute top-full left-[50%] z-50 mt-2 rounded bg-white p-2 shadow-lg"
+        >
+          <HexColorPicker color={userColor} onChange={handleColorChange} />
+          <div className="mt-2 text-center text-sm text-black">{userColor}</div>
+        </div>
+      )}
     </div>
-
-    {/* Color Picker */}
-    {showPicker && (
-      <div
-        ref={pickerRef}
-        className="absolute left-[50%] top-full mt-2 z-50 bg-white p-2 rounded shadow-lg"
-      >
-        <HexColorPicker color={userColor} onChange={handleColorChange} />
-        <div className="text-sm text-black mt-2 text-center">{userColor}</div>
-      </div>
-    )}
-  </div>
-);
-
+  );
 };
 
 export default TableMetric;

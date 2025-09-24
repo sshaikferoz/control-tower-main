@@ -79,7 +79,7 @@ const ChatbotInterface: React.FC = () => {
           const user_id = data.d.UserName;
           const session_id = Math.random().toString(36).substring(2, 7);
 
-          console.log('User info retrieved from SAP:', { user_id, session_id });
+          //   console.log('User info retrieved from SAP:', { user_id, session_id });
 
           setUserInfo({
             user_id,
@@ -237,7 +237,7 @@ const ChatbotInterface: React.FC = () => {
   }
 
   return (
-    <div className="relative flex max-h-[80vh] min-h-screen w-full flex-col items-center justify-between overflow-auto bg-[url('../../public/chatbot/bg.jpg')] bg-cover bg-center p-1  md:p-8">
+    <div className="relative flex max-h-[80vh] min-h-screen w-full flex-col items-center justify-between overflow-auto bg-[url('../../public/chatbot/bg.jpg')] bg-cover bg-center p-1 md:p-8">
       <div className="flex w-full max-w-5xl flex-grow flex-col overflow-hidden">
         {visible && <ChatHeader />}
         <div className="mb-6 flex-grow overflow-y-auto px-2 md:px-4">

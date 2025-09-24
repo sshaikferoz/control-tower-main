@@ -32,8 +32,7 @@ const SimpleMetricDate = ({ name, value, date, color, setChangeColor }: SimpleMe
   };
 
   const baseColor = userColor || color || defaultBaseColor;
-  const lighterColor =
-    baseColor === defaultBaseColor ? defaultLighterColor : `${baseColor}80`;
+  const lighterColor = baseColor === defaultBaseColor ? defaultLighterColor : `${baseColor}80`;
 
   const backgroundStyle = {
     backgroundImage: `linear-gradient(to bottom, ${baseColor}, ${lighterColor})`,
@@ -46,9 +45,9 @@ const SimpleMetricDate = ({ name, value, date, color, setChangeColor }: SimpleMe
       <div
         className="h-full rounded-xl p-4"
         style={backgroundStyle}
-        onClick={handleDivClick}
+        // onClick={handleDivClick}
       >
-        <div className="flex justify-between items-center">
+        <div className="flex items-center justify-between">
           <h2 className="text-4xl font-bold">{value}</h2>
           <span className="text-[13px]">{date}</span>
         </div>

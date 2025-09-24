@@ -250,7 +250,7 @@ const Dashboard: React.FC = () => {
     };
 
     const selectedMenuItem = getSelectedMenuItemId();
-    console.log('Selected Menu Item ID:', selectedMenuItem);
+    // console.log('Selected Menu Item ID:', selectedMenuItem);
     switch (appState.view) {
       case 'Dashboard':
         return (

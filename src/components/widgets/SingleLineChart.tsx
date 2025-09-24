@@ -1,18 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
-import {
-  ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
-} from '@/components/ui/chart';
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 
-import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  ReferenceArea,
-  ReferenceLine,
-} from 'recharts';
+import { LineChart, Line, XAxis, YAxis, ReferenceArea, ReferenceLine } from 'recharts';
 
 interface ChartDataItem {
   date: string;
@@ -55,8 +44,7 @@ const SingleLineChart = ({ data, color, setChangeColor }: ChartProps) => {
   };
 
   const baseColor = userColor || color || defaultBaseColor;
-  const lighterColor =
-    baseColor === defaultBaseColor ? defaultLighterColor : `${baseColor}80`;
+  const lighterColor = baseColor === defaultBaseColor ? defaultLighterColor : `${baseColor}80`;
 
   const backgroundStyle = {
     backgroundImage: `linear-gradient(to bottom, ${baseColor}, ${lighterColor})`,
@@ -72,12 +60,10 @@ const SingleLineChart = ({ data, color, setChangeColor }: ChartProps) => {
       <div
         className="h-full rounded-xl p-4 text-white"
         style={backgroundStyle}
-        onClick={handleDivClick}
+        // onClick={handleDivClick}
       >
         <div className="flex justify-between">
-          <h3 className="flex items-center text-lg font-semibold">
-            {data?.widget_name}
-          </h3>
+          <h3 className="flex items-center text-lg font-semibold">{data?.widget_name}</h3>
         </div>
 
         <div className="flex items-center justify-center rounded pt-8">
@@ -146,10 +132,7 @@ const SingleLineChart = ({ data, color, setChangeColor }: ChartProps) => {
                 }}
               />
 
-              <ChartTooltip
-                content={<ChartTooltipContent indicator="line" />}
-                cursor={false}
-              />
+              <ChartTooltip content={<ChartTooltipContent indicator="line" />} cursor={false} />
             </LineChart>
           </ChartContainer>
         </div>

@@ -1,13 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-} from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 interface StackedBarChartProps {
   data: {
@@ -57,8 +49,7 @@ const StackedBarChart = ({
   };
 
   const baseColor = userColor || color || defaultBaseColor;
-  const lighterColor =
-    baseColor === defaultBaseColor ? defaultLighterColor : `${baseColor}80`;
+  const lighterColor = baseColor === defaultBaseColor ? defaultLighterColor : `${baseColor}80`;
 
   const backgroundStyle = {
     backgroundImage: `linear-gradient(to bottom, ${baseColor}, ${lighterColor})`,
@@ -74,7 +65,7 @@ const StackedBarChart = ({
       <div
         className="h-full rounded-xl p-4 text-white"
         style={backgroundStyle}
-        onClick={handleDivClick}
+        // onClick={handleDivClick}
       >
         <div className="flex justify-between">
           <div className="flex flex-col items-start gap-[5px]">
@@ -103,21 +94,13 @@ const StackedBarChart = ({
                 margin={{ top: 20, right: 30, left: 0, bottom: 5 }}
                 barSize={24}
               >
-                <CartesianGrid
-                  strokeDasharray="3 3"
-                  vertical={false}
-                  stroke="#ffffff30"
-                />
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#ffffff30" />
                 <XAxis
                   dataKey="name"
                   axisLine={{ stroke: '#ffffff50' }}
                   tick={{ fill: '#ffffff' }}
                 />
-                <YAxis
-                  axisLine={false}
-                  tickLine={false}
-                  tick={{ fill: '#ffffff' }}
-                />
+                <YAxis axisLine={false} tickLine={false} tick={{ fill: '#ffffff' }} />
                 <Tooltip
                   contentStyle={{
                     backgroundColor: '#1E3A71',
@@ -127,12 +110,7 @@ const StackedBarChart = ({
                   }}
                 />
                 {safeSeries.map((item, index) => (
-                  <Bar
-                    key={index}
-                    dataKey={item.dataKey}
-                    stackId="a"
-                    fill={item.color}
-                  />
+                  <Bar key={index} dataKey={item.dataKey} stackId="a" fill={item.color} />
                 ))}
               </BarChart>
             </ResponsiveContainer>

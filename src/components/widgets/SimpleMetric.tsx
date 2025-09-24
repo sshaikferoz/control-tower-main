@@ -29,8 +29,7 @@ const SimpleMetric = ({ name, value, color, setChangeColor }: SimpleMetricProps)
   };
 
   const baseColor = userColor || defaultBaseColor;
-  const lighterColor =
-    baseColor === defaultBaseColor ? defaultLighterColor : `${baseColor}80`;
+  const lighterColor = baseColor === defaultBaseColor ? defaultLighterColor : `${baseColor}80`;
 
   const backgroundStyle = {
     backgroundImage: `linear-gradient(to bottom, ${baseColor}, ${lighterColor})`,
@@ -41,10 +40,7 @@ const SimpleMetric = ({ name, value, color, setChangeColor }: SimpleMetricProps)
   // Close the picker when clicked outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (
-        pickerRef.current &&
-        !pickerRef.current.contains(event.target as Node)
-      ) {
+      if (pickerRef.current && !pickerRef.current.contains(event.target as Node)) {
         setShowPicker(false);
       }
     };
@@ -66,7 +62,7 @@ const SimpleMetric = ({ name, value, color, setChangeColor }: SimpleMetricProps)
       <div
         className="h-full rounded-xl p-4"
         style={backgroundStyle}
-        onClick={() => setShowPicker(true)}
+        onClick={() => setShowPicker(false)}
       >
         <h2 className="text-4xl font-bold">{value}</h2>
         <p>{name}</p>
@@ -76,10 +72,10 @@ const SimpleMetric = ({ name, value, color, setChangeColor }: SimpleMetricProps)
       {showPicker && (
         <div
           ref={pickerRef}
-          className="absolute left-[50%] top-full mt-2 z-50 bg-white p-2 rounded shadow-lg"
+          className="absolute top-full left-[50%] z-50 mt-2 rounded bg-white p-2 shadow-lg"
         >
           <HexColorPicker color={userColor} onChange={handleColorChange} />
-          <div className="text-sm text-black mt-2  text-center">{userColor}</div>
+          <div className="mt-2 text-center text-sm text-black">{userColor}</div>
         </div>
       )}
     </div>
