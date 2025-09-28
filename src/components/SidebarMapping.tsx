@@ -20,6 +20,7 @@ const menuItems = [
   { name: 'quadrant-metrics', imageURL: '' },
   { name: 'loans-app-tray', imageURL: '' },
   { name: 'news-feed', imageURL: '' },
+  { name: 'pie-chart', imageURL: '' },
   //   { name: 'announcement', imageURL: '' },
 ];
 

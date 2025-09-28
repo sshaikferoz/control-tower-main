@@ -111,7 +111,8 @@ export type WidgetTypes =
     | 'pie-chart-total'
     | 'quadrant-metrics'
     | 'loans-app-tray'
-    | 'announcement';
+    | 'announcement'
+    | 'pie-chart'
 
 // Mapping configurations for each widget type
 export const widgetConfigFields: Record<
@@ -208,6 +209,10 @@ export const widgetConfigFields: Record<
     announcement: [
         { field: 'title', type: 'string', path: 'title' },
         { field: 'announcement', type: 'string', path: 'announcement' },
+    ],
+    'pie-chart': [
+        { field: 'data', type: 'array', path: 'data' },
+        { field: 'title', type: 'string', path: 'title' },
     ],
 };
 

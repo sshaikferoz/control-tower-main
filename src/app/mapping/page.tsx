@@ -89,6 +89,7 @@ import { ErrorScreen } from '@/components/ui/ErrorScreen';
 import { useAdminCheck } from '@/hooks/useAdminCheck';
 import { useURLParams } from '@/hooks/useURLParams';
 import * as MUIIcons from '@mui/icons-material';
+import PieChartComponent from '@/components/widgets/PieChart';
 
 // Setup GridLayout with width provider
 const GridLayout = WidthProvider(RGL);
@@ -146,6 +147,7 @@ const widgetMapping: Record<string, React.ComponentType<any>> = {
   'loans-app-tray': LoansAppTray,
   'news-feed': NewsFeed, // Placeholder for news feed
   announcement: AnnouncementWidget, // Placeholder for map component
+  'pie-chart': PieChartComponent, // Reusing PieChartWithTotal for pie-chart
 };
 
 // Widget size configurations
@@ -166,6 +168,7 @@ const widgetSizes: Record<string, { w: number; h: number }> = {
   'loans-app-tray': { w: 6, h: 3 }, // Wide component to fit menu + chart
   'news-feed': { w: 12, h: 3 }, // Placeholder for news feed: { w: 12, h: 12 }, // Map component
   announcement: { w: 12, h: 3 }, // Placeholder for announcement widget
+  'pie-chart': { w: 2.5, h: 3 },
 };
 
 // Report type options
@@ -217,6 +220,8 @@ const getWidgetCategory = (widgetName: string): string => {
   } else if (widgetName === 'loans-app-tray') {
     return 'loans-app-tray';
   } else if (widgetName.includes('piechart')) {
+    return 'pie';
+  } else if (widgetName.includes('pie-chart')) {
     return 'pie';
   } else if (widgetName.includes('linechart')) {
     return 'line';
@@ -398,6 +403,15 @@ const defaultPropsMapping: Record<string, any> = {
       "⚠️ New Feature! We've just released a new dashboard.",
       '🔒 Security Alert! Please update your password for better security.',
     ],
+  },
+  'pie-chart': {
+    data: [
+      { label: 'Segment 1', value: 400, fill: '#84BD00' },
+      { label: 'Segment 2', value: 300, fill: '#E1553F' },
+      { label: 'Segment 3', value: 200, fill: '#5899DA' },
+      { label: 'Segment 4', value: 100, fill: '#FFC846' },
+    ],
+    title: 'Distribution Chart',
   },
 };
 
@@ -2853,6 +2867,36 @@ const MappingScreen: React.FC = () => {
         };
         updateWidgetConfiguration(selectedWidget, previewProps);
       }
+    } else if (widgetCategory === 'pie') {
+      const { xAxis, yAxis }: any = config.chartConfig;
+      if (xAxis?.field && yAxis?.field) {
+        // Generate pie data
+        const chartData = Object.entries(transformedData.FormStructure[xAxis.field] || {})
+          .filter(([chaValue]) => chaValue !== 'Overall Result')
+          .map(([chaValue, values]: [string, any], index) => {
+            const value = Number(values[yAxis.field] || 0);
+            const colors = ['#84BD00', '#E1553F', '#5899DA', '#FFC846', '#8979FF'];
+
+            return {
+              label: chaValue,
+              value: value,
+              fill: colors[index % colors.length],
+            };
+          });
+
+        // Calculate total value
+        const totalSum = chartData.reduce((sum, item) => sum + item.value, 0);
+        const totalValue = totalSum.toLocaleString();
+
+        const title = transformedData.FormMetadata[yAxis.field]?.label || 'Pie Chart';
+
+        previewProps = {
+          data: chartData,
+          title: title,
+          totalValue: totalValue,
+        };
+      }
+      updateWidgetConfiguration(selectedWidget, previewProps);
     }
     // Handle table widgets
     else if (config.mappingType === 'table' && config.tableConfig) {

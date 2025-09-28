@@ -5,6 +5,7 @@ import {
     CubeIcon,
     ChartBarIcon,
 } from '@heroicons/react/24/outline';
+import PieChartComponent from '@/components/widgets/PieChart';
 
 // Lazy load all widget components
 const MultiMetrics = lazy(() => import('@/components/widgets/MultiMetrics'));
@@ -22,6 +23,7 @@ const QuadrantMetrics = lazy(() => import('@/components/widgets/QuadrantMetrics'
 const LoansAppTray = lazy(() => import('@/components/widgets/LoansAppTray'));
 const NewsFeed = lazy(() => import('@/components/widgets/NewsFeed'));
 const Announcement = lazy(() => import('@/components/widgets/Announcement1'));
+const pieChart = lazy(() => import('@/components/widgets/PieChart'));
 
 // Component mappings with lazy loading
 export const widgetMapping: Record<string, React.ComponentType<any>> = {
@@ -40,6 +42,7 @@ export const widgetMapping: Record<string, React.ComponentType<any>> = {
     'loans-app-tray': LoansAppTray,
     'news-feed': NewsFeed,
     announcement: Announcement,
+    'pie-chart': pieChart,
 };
 
 // Default widget props for when data isn't available
@@ -216,5 +219,14 @@ export const defaultPropsMapping: Record<string, any> = {
         title: 'Welcome to Our Platform! 🎉',
         announcement:
             "🚀 Exciting new features are now live! Check out our enhanced dashboard, improved performance, and brand new analytics tools. 📊 Don't forget to explore the updated user interface for a better experience! ✨",
+    },
+    'pie-chart': {
+        data: [
+            { label: 'Segment 1', value: 400, fill: '#84BD00' },
+            { label: 'Segment 2', value: 300, fill: '#E1553F' },
+            { label: 'Segment 3', value: 200, fill: '#5899DA' },
+            { label: 'Segment 4', value: 100, fill: '#FFC846' },
+        ],
+        title: 'Distribution Chart',
     },
 };
