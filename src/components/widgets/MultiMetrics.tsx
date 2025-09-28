@@ -74,22 +74,24 @@ const MultiMetrics = ({
       <div
         className="h-full rounded-xl p-4"
         style={backgroundStyle}
-        onClick={() => setShowPicker(false)} // Toggle color picker on card click
+        onClick={() => setShowPicker(false)}
       >
-        <div className="flex flex-row gap-3">
-          {/* First Metric */}
-          <div className="flex flex-col">
-            <p className="text-bold text-center text-4xl">{value1}</p>
-            <p>{metric1}</p>
-          </div>
+        <div className="flex h-full w-full items-center justify-center">
+          <div className="flex items-center gap-6">
+            {/* First Metric */}
+            <div className="flex flex-col items-center justify-center text-center">
+              <p className="text-4xl font-bold">{value1}</p>
+              <p>{metric1}</p>
+            </div>
 
-          {/* Divider between metrics */}
-          <div className="w-0.3 h-[4rem] border-l-2 border-dashed border-white"></div>
+            {/* Divider */}
+            <div className="h-[4rem] w-px border-l-2 border-dashed border-white"></div>
 
-          {/* Second Metric */}
-          <div className="flex flex-col">
-            <p className="text-bold text-center text-4xl">{value2}</p>
-            <p>{metric2}</p>
+            {/* Second Metric */}
+            <div className="flex flex-col items-center justify-center text-center">
+              <p className="text-4xl font-bold">{value2}</p>
+              <p>{metric2}</p>
+            </div>
           </div>
         </div>
       </div>
@@ -98,7 +100,7 @@ const MultiMetrics = ({
       {showPicker && (
         <div
           ref={pickerRef}
-          className="absolute top-full left-[50%] z-50 mt-2 rounded bg-white p-2 shadow-lg"
+          className="absolute top-full left-1/2 z-50 mt-2 -translate-x-1/2 rounded bg-white p-2 shadow-lg"
         >
           <HexColorPicker color={userColor} onChange={handleColorChange} />
           <div className="mt-2 text-center text-sm text-black">{userColor}</div>
