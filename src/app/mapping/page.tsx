@@ -1105,7 +1105,7 @@ const MappingScreen: React.FC = () => {
   const [apiEndpoints, setApiEndpoints] = useState<ApiEndpoint[]>([]);
   const [fieldMappings, setFieldMappings] = useState<FieldMappings>({});
   const [loading, setLoading] = useState<boolean>(false);
-  const [reportName, setReportName] = useState<string>('YSCM_CT_PROC_OSS');
+  const [reportName, setReportName] = useState<string>('');
   const [parsedResponse, setParsedResponse] = useState<any>(null);
   const [transformedData, setTransformedData] = useState<TransformedData | null>(null);
   const [isMappingDialogOpen, setIsMappingDialogOpen] = useState<boolean>(false);
@@ -3059,7 +3059,7 @@ const MappingScreen: React.FC = () => {
                 aria-label="mapping tabs"
                 className="!bg-[#ffffff20]"
                 variant="scrollable"
-                scrollButtons={false}
+                scrollButtons={true}
               >
                 {selectedWidgetName === 'announcement'
                   ? [
