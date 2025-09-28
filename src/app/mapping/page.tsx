@@ -265,8 +265,8 @@ const defaultPropsMapping: Record<string, any> = {
         { date: '01-06-2024', Actual: 195, unit: '%' },
       ],
       chart_yaxis: 'Actual',
-      widget_name: 'Successful Payments',
     },
+    widget_name: 'Successful Payments',
   },
   'two-metrics-piechart': {
     data: [

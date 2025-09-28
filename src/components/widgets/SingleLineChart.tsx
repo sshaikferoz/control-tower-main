@@ -13,13 +13,13 @@ interface ChartProps {
   data: {
     chart_data: ChartDataItem[];
     chart_yaxis: string;
-    widget_name: string;
   };
+  widget_name: string;
   color?: string;
   setChangeColor?: (color: string) => void;
 }
 
-const SingleLineChart = ({ data, color, setChangeColor }: ChartProps) => {
+const SingleLineChart = ({ widget_name, data, color, setChangeColor }: ChartProps) => {
   const [userColor, setUserColor] = useState<string | null>(null);
   const colorInputRef = useRef<HTMLInputElement>(null);
 
@@ -63,7 +63,7 @@ const SingleLineChart = ({ data, color, setChangeColor }: ChartProps) => {
         // onClick={handleDivClick}
       >
         <div className="flex justify-between">
-          <h3 className="flex items-center text-lg font-semibold">{data?.widget_name}</h3>
+          <h3 className="flex items-center text-lg font-semibold">{widget_name}</h3>
         </div>
 
         <div className="flex items-center justify-center rounded pt-8">
