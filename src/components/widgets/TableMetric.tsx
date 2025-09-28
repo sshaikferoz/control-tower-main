@@ -140,7 +140,7 @@ const TableMetric = ({
   };
 
   return (
-    <div className="relative">
+    <div className="relative h-full w-full">
       <style>{tableStyles}</style>
 
       <div

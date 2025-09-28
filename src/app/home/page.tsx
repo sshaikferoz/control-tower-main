@@ -14,7 +14,6 @@ import { EditSectionDialog } from '@/components/dialogs/EditSectionDialog';
 import { DeleteConfirmationDialog } from '@/components/dialogs/DeleteConfirmationDialog';
 import { ConfigurationDialog } from '@/components/dialogs/ConfigurationDialog';
 import { WidgetSkeleton } from '@/components/ui/WidgetSkeleton';
-import { Announcement } from '@/components/widgets/Announcement';
 import { getNextSectionOrder } from '@/utils/dashboardUtils';
 import { UIConfiguration, defaultConfiguration, ConfigurationManager } from '@/types/configuration';
 
@@ -111,8 +110,6 @@ export default function Home({
       setHighlightWidgetIds([]);
       return;
     }
-
-    // console.log('Search result selected for highlighting:', result);
 
     // Set highlighting based on search result level and metadata
     switch (result.level) {
@@ -264,7 +261,6 @@ export default function Home({
       setIsEditMode(false);
       setLoading(false);
       setShowSaveSuccess(true);
-      //   console.log('Dashboard saved to SAP successfully');
     } catch (err) {
       console.error('Error saving dashboard data:', err);
       setError('Failed to save dashboard configuration to SAP');
@@ -285,7 +281,6 @@ export default function Home({
       };
 
       const newSection = await sapODataService.saveSection(sectionWithOrder as Section, false);
-      //   console.log('Created new section:', newSection);
 
       const updatedSections = [...sapSections, newSection];
       updateDashboardData(updatedSections);
@@ -310,10 +305,8 @@ export default function Home({
 
     try {
       setLoading(true);
-      //   console.log('Updating section with data:', updatedSection);
 
       const savedSection = await sapODataService.saveSection(updatedSection, true);
-      //   console.log('Updated section response:', savedSection);
 
       const updatedSections = sapSections.map((section) =>
         section.id === savedSection.id ? savedSection : section
@@ -343,7 +336,6 @@ export default function Home({
       setLoading(true);
 
       await sapODataService.deleteSection(selectedSection);
-      //   console.log('Deleted section:', selectedSection.id);
 
       const updatedSections = sapSections.filter((section) => section.id !== selectedSection.id);
       updateDashboardData(updatedSections);
@@ -470,7 +462,6 @@ export default function Home({
   };
 
   const handleSaveDashboard = () => {
-    // console.log('Saving dashboard...');
     setIsEditMode(false);
   };
 
@@ -521,15 +512,7 @@ export default function Home({
             onSearchSelect={handleSearchSelect} // Pass search selection handler
           />
 
-          {/* Announcement Section - Render at the top when enabled */}
-          {configuration.announcement?.enabled && (
-            <div className="px-8">
-              <Announcement
-                title={configuration.announcement.title}
-                description={configuration.announcement.description}
-              />
-            </div>
-          )}
+          {/* Removed the separate Announcement component since it's now integrated in the header */}
 
           {!dashboardData?.sections || dashboardData.sections.length === 0 ? (
             <div className="flex h-[60vh] flex-col items-center justify-center">
