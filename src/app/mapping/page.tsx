@@ -1142,6 +1142,7 @@ const MappingScreen: React.FC = () => {
   const [announcementCount, setAnnouncementCount] = useState(0);
   const [announcementValues, setAnnouncementValues] = useState<string[]>([]);
   const [changeColor, setChangeColorOneMetric] = useState<string>('');
+  const [currentLoadedReport, setCurrentLoadedReport] = useState<string>('');
 
   useEffect(() => {
     // Only proceed if admin check is complete and user is authorized
@@ -1247,6 +1248,13 @@ const MappingScreen: React.FC = () => {
                 fieldMappings: transformedFieldMappings,
                 widgetConfigs: transformedWidgetConfigs,
               });
+              const firstWidgetMapping = activeWidgets[0]?.fieldMappings;
+              if (firstWidgetMapping?.reportName) {
+                setReportName(firstWidgetMapping.reportName);
+              }
+
+              setFieldMappings(transformedFieldMappings);
+              setWidgetConfigurations(transformedWidgetConfigs);
             }
           } else {
             console.log('No widgets found for section:', sectionId);
@@ -1269,7 +1277,14 @@ const MappingScreen: React.FC = () => {
     if (sectionId && sectionId !== 'undefined' && sectionId !== '') {
       loadExistingWidgets();
     }
-  }, [sectionId, sectionName, reportName]); // Added dependencies for proper re-loading
+  }, [sectionId, sectionName]); // Added dependencies for proper re-loading
+
+  useEffect(() => {
+    if (reportName && reportName !== currentLoadedReport && isAdmin) {
+      console.log('Fetching new report:', reportName, 'Previous:', currentLoadedReport);
+      fetchReportData();
+    }
+  }, [reportName, currentLoadedReport, isAdmin]);
 
   useEffect(() => {
     setFieldsForAnnouncement();
@@ -1597,8 +1612,8 @@ const MappingScreen: React.FC = () => {
       setTimeout(() => {
         window.location.href =
           process.env.NODE_ENV === 'development'
-            ? '/'
-            : `${process.env.NEXT_PUBLIC_BSP_NAME}/index.html`;
+            ? '/?view=edit'
+            : `${process.env.NEXT_PUBLIC_BSP_NAME}/index.html?view=edit`;
       }, 2000);
     } catch (error) {
       console.error('Error saving layout:', error);
@@ -1611,12 +1626,10 @@ const MappingScreen: React.FC = () => {
       setIsSaving(false);
     }
   };
-
+  // Update the handleWidgetClick function to better load configurations
   const handleWidgetClick = (id: string, event: React.MouseEvent) => {
     event.stopPropagation();
     if (selectedWidget === id) return;
-
-    console.log('Widget clicked:', id);
 
     const widgetInfo = getWidgetName(id);
     if (widgetInfo && widgetInfo.name) {
@@ -1639,19 +1652,22 @@ const MappingScreen: React.FC = () => {
     setPreviewData(null);
     setTabValue(0);
 
-    // Load existing configuration for this widget
     const widget = widgets.find((w) => w.id === id);
     if (!widget) return;
 
-    // Initialize mapping config if not exists (for new widgets)
     if (!fieldMappings[id]) {
       initializeWidgetMappingConfig(id, widget.name);
     } else {
-      // For existing widgets, load the saved configuration
+      // ADD THIS: Load the report name from this widget's mapping
+      const widgetMapping = fieldMappings[id];
+      if (widgetMapping.reportName && widgetMapping.reportName !== reportName) {
+        setReportName(widgetMapping.reportName);
+      }
+
+      // Load existing chart/table configurations
       const config = fieldMappings[id];
       const widgetCategory = getWidgetCategory(widget.name);
 
-      // Load chart/table specific configurations based on existing data
       if (config?.mappingType === 'chart' && config.chartConfig) {
         setChartXAxis(config.chartConfig.xAxis?.field || '');
 
@@ -2211,6 +2227,9 @@ const MappingScreen: React.FC = () => {
       // Transform the data for easier access
       const transformed = transformFormMetadata(parsedJSON);
       setTransformedData(transformed);
+
+      // Track which report is currently loaded
+      setCurrentLoadedReport(reportName);
 
       console.log('Transformed data:', transformed);
     } catch (error) {
