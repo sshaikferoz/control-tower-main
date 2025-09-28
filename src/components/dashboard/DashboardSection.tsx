@@ -346,20 +346,12 @@ export const DashboardSection: React.FC<ExtendedDashboardSectionProps> = ({
   // Recalculate layout: announcements on top, shift others down
   const originalLayout = section.layout || [];
 
-  let currentY = 0;
-  const layout = orderedWidgets
+  const layout = gridWidgets
     .map((widget) => {
       const item = originalLayout.find((l: any) => l.i === widget.id);
-
-      if (!item) return null;
-
-      const newItem = { ...item, y: currentY };
-      currentY += item.h;
-
-      return newItem;
+      return item || null;
     })
-    .filter(Boolean); // filter out nulls in case layout was missing
-
+    .filter(Boolean);
   // Generate dynamic classes for section highlighting
   const getSectionClasses = () => {
     let classes = `mb-8 transition-all duration-300 ease-in-out ${
