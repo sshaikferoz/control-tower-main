@@ -231,7 +231,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       }`}
     >
       {/* Header with Toggle Button */}
-      <div className="flex flex-row items-center justify-between">
+      <div className="flex flex-row items-center">
         <button
           onClick={toggleSidebar}
           className="rounded-md p-2 text-white transition-colors hover:bg-[#ffffff20]"
@@ -244,8 +244,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           <div className="flex flex-row items-center space-x-2">
             <PSCLogo />
             <div className="flex flex-col">
-              <h1 className="text-lg font-semibold">P&SC</h1>
-              <h1 className="text-lg font-semibold">Intelligence Centre</h1>
+              <h1 className="text-lg font-semibold">P&SC Intelligence Centre</h1>
             </div>
           </div>
         )}

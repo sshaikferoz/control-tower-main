@@ -73,7 +73,8 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
     const classes = ['fixed', 'z-50', 'm-2'];
 
     if (position.includes('bottom')) {
-      classes.push('bottom-6');
+      // Push chatbot lower when in edit mode to avoid edit controls
+      classes.push(isEditMode ? 'bottom-28' : 'bottom-6');
     } else {
       classes.push('top-25');
     }
@@ -86,7 +87,6 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 
     return classes.join(' ');
   };
-
   return (
     <div className="mb-4 flex w-full items-center justify-between px-8">
       <Header

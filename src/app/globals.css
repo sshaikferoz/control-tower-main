@@ -12,6 +12,7 @@
   --secondary1: #00214e;
   --scrollbar-thumb: #003871;
   --scrollbar-track: transparent;
+  --font-manifa: 'Manifa2', sans-serif;
 }
 
 /* Dark mode variables */
@@ -44,19 +45,24 @@
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
-
 html,
 body {
   min-height: 100vh;
   background: var(--background);
   color: var(--foreground);
   font-family:
-    'Poppins', system-ui, 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans',
-    Arial, sans-serif !important;
+    'Manifa2', 'Poppins', system-ui, 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande',
+    'Lucida Sans', Arial, sans-serif;
   font-weight: 300;
   transition:
     background-color 0.3s ease,
     color 0.3s ease;
+}
+
+* {
+  font-family:
+    'Manifa2', 'Poppins', system-ui, 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande',
+    'Lucida Sans', Arial, sans-serif !important;
 }
 
 .grid-stack-item-content {

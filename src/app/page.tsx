@@ -47,7 +47,7 @@ const Dashboard: React.FC = () => {
 
   // Check if standalone mode is allowed based on URL params
   const isStandaloneAllowed = useMemo(() => {
-    return urlParams?.get('mode') === 'standalone' && !!urlParams?.get('appId');
+    return !!urlParams?.get('appId'); // Just check if appId exists
   }, [urlParams]);
 
   // Default to first menu item when menuItems are loaded
@@ -74,14 +74,24 @@ const Dashboard: React.FC = () => {
   useEffect(() => {
     if (isStandaloneAllowed) {
       const appId = urlParams?.get('appId');
-      if (appId) {
-        setAppState((prev) => ({
-          ...prev,
-          selectedMenuItem: { id: appId },
-        }));
+      if (appId && menuItems.length > 0) {
+        // Find the menu item that matches the appId
+        const matchedItem = menuItems.find((item) => item.appid === appId);
+        if (matchedItem) {
+          setAppState((prev) => ({
+            ...prev,
+            selectedMenuItem: matchedItem, // Pass the entire matchedItem object
+            view:
+              matchedItem.type === 'Section'
+                ? 'Dashboard'
+                : matchedItem.type === 'Dashboard'
+                  ? 'b2b-reports'
+                  : 'generic',
+          }));
+        }
       }
     }
-  }, [isStandaloneAllowed, urlParams]);
+  }, [isStandaloneAllowed, urlParams, menuItems]);
 
   // Handle menu item selection (restrict for non-admin users)
   const handleMenuItemSelect = (item: any) => {
@@ -239,14 +249,8 @@ const Dashboard: React.FC = () => {
       (item) => item.id === appState.selectedMenuItem?.id
     );
 
-    // Determine the selectedMenuItemId based on standalone mode
     const getSelectedMenuItemId = () => {
-      if (isStandaloneAllowed) {
-        // In standalone mode, use the id from appState.selectedMenuItem
-        return appState.selectedMenuItem.id;
-      }
-      // In normal mode, use the id from the found menu item
-      return selectedMenuItemData?.id;
+      return appState.selectedMenuItem?.id || selectedMenuItemData?.id;
     };
 
     const selectedMenuItem = getSelectedMenuItemId();

@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import './globals.css';
 import { PrimeReactProvider } from 'primereact/api';
+import FontStyle from '@/components/FontStyle';
 
 export const metadata: Metadata = {
   title: 'P&SC Intelligence Centre',
@@ -15,6 +16,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
+        <FontStyle />
         <PrimeReactProvider>
           <div className="flex min-h-screen">
             {/* <Sidebar /> */}
