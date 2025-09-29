@@ -21,7 +21,7 @@ const menuItems = [
   { name: 'loans-app-tray', imageURL: '' },
   { name: 'news-feed', imageURL: '' },
   { name: 'pie-chart', imageURL: '' },
-  { name: 'stacked-column-chart', imageURL: '' },
+  { name: 'column-chart', imageURL: '' },
   { name: 'prediction-chart', imageURL: '' },
   { name: 'radar-chart', imageURL: '' },
   //   { name: 'announcement', imageURL: '' },

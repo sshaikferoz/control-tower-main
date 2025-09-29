@@ -90,7 +90,7 @@ import { useAdminCheck } from '@/hooks/useAdminCheck';
 import { useURLParams } from '@/hooks/useURLParams';
 import * as MUIIcons from '@mui/icons-material';
 import PieChartComponent from '@/components/widgets/PieChart';
-import StackedColumn from '@/components/widgets/StackedColumnChart';
+import StackedColumn from '@/components/widgets/ColumnChart';
 import PredictionChart from '@/components/widgets/Prediction';
 import RadarChartComponent from '@/components/widgets/RadarChart';
 
@@ -151,7 +151,7 @@ const widgetMapping: Record<string, React.ComponentType<any>> = {
   'news-feed': NewsFeed, // Placeholder for news feed
   announcement: AnnouncementWidget, // Placeholder for map component
   'pie-chart': PieChartComponent, // Reusing PieChartWithTotal for pie-chart
-  'stacked-column-chart': StackedColumn, // New Stacked Column Chart component
+  'column-chart': StackedColumn, // New Stacked Column Chart component
   'prediction-chart': PredictionChart,
   'radar-chart': RadarChartComponent,
 };
@@ -175,7 +175,7 @@ const widgetSizes: Record<string, { w: number; h: number }> = {
   'news-feed': { w: 12, h: 3 }, // Placeholder for news feed: { w: 12, h: 12 }, // Map component
   announcement: { w: 12, h: 3 }, // Placeholder for announcement widget
   'pie-chart': { w: 4, h: 3 },
-  'stacked-column-chart': { w: 6, h: 3 },
+  'column-chart': { w: 6, h: 3 },
   'prediction-chart': { w: 6, h: 3 },
   'radar-chart': { w: 6, h: 3 },
 };
@@ -203,7 +203,7 @@ const getWidgetMappingType = (
     widgetName.includes('piechart') ||
     widgetName.includes('bar-chart') ||
     widgetName.includes('stacked-bar') ||
-    widgetName.includes('stacked-column') ||
+    widgetName.includes('column-chart') ||
     widgetName.includes('line-chart') ||
     widgetName.includes('pie-chart') ||
     widgetName.includes('prediction')
@@ -220,7 +220,7 @@ const getWidgetCategory = (widgetName: string): string => {
     return 'bar';
   } else if (widgetName === 'stacked-bar-chart') {
     return 'stacked-bar';
-  } else if (widgetName === 'stacked-column-chart') {
+  } else if (widgetName === 'column-chart') {
     return 'stacked-bar';
   } else if (widgetName === 'prediction-chart') {
     return 'stacked-bar';
@@ -387,7 +387,7 @@ const defaultPropsMapping: Record<string, any> = {
       { name: 'Supplier C', dataKey: 'Supplier3', color: '#8979FF' },
     ],
   },
-  'stacked-column-chart': {
+  'column-chart': {
     data: [
       { name: 'Jan', Supplier1: 400, Supplier2: 240, Supplier3: 100 },
       { name: 'Feb', Supplier1: 300, Supplier2: 200, Supplier3: 150 },
@@ -1085,168 +1085,6 @@ const LoansAppTrayConfig: React.FC<LoansAppTrayConfigProps> = ({
         </Accordion>
       ))}
 
-      {/* Chart Data Configuration */}
-      <Typography variant="subtitle1" gutterBottom sx={{ color: 'white', mt: 3 }}>
-        Chart Data Configuration
-      </Typography>
-
-      <Paper elevation={2} sx={{ p: 2, backgroundColor: '#ffffff20', mb: 2 }}>
-        <FormControl fullWidth margin="normal">
-          <InputLabel sx={{ color: 'white' }}>Chart Input Type</InputLabel>
-          <Select
-            value={fieldMappings[selectedWidget]?.chartDataConfig?.inputType || 'manual'}
-            onChange={(e) => {
-              setFieldMappings((prev: any) => ({
-                ...prev,
-                [selectedWidget]: {
-                  ...prev[selectedWidget],
-                  chartDataConfig: {
-                    ...prev[selectedWidget]?.chartDataConfig,
-                    inputType: e.target.value,
-                  },
-                },
-              }));
-            }}
-            label="Chart Input Type"
-            sx={{
-              color: 'white',
-              '& .MuiOutlinedInput-notchedOutline': { borderColor: 'white' },
-              '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: 'white' },
-              '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: 'white' },
-              '& .MuiSvgIcon-root': { color: 'white' },
-            }}
-          >
-            <MenuItem value="manual">Manual Input</MenuItem>
-            <MenuItem value="mapped">Query Mapping</MenuItem>
-          </Select>
-        </FormControl>
-
-        {fieldMappings[selectedWidget]?.chartDataConfig?.inputType === 'mapped' && (
-          <Box mt={2}>
-            {/* Chart Query Configuration */}
-            <Alert severity="info" sx={{ mb: 2, backgroundColor: '#2196f320' }}>
-              <Typography sx={{ color: 'white' }}>
-                Configure the SAP BW report to fetch chart data.
-              </Typography>
-            </Alert>
-
-            <TextField
-              label="Chart Report Name"
-              fullWidth
-              margin="normal"
-              value={fieldMappings[selectedWidget]?.chartDataConfig?.reportName || reportName}
-              onChange={(e) => {
-                setFieldMappings((prev: any) => ({
-                  ...prev,
-                  [selectedWidget]: {
-                    ...prev[selectedWidget],
-                    chartDataConfig: {
-                      ...prev[selectedWidget]?.chartDataConfig,
-                      reportName: e.target.value,
-                    },
-                  },
-                }));
-              }}
-              sx={{
-                input: { color: 'white' },
-                label: { color: 'white' },
-                '& .MuiOutlinedInput-root': {
-                  '& fieldset': { borderColor: 'white' },
-                  '&:hover fieldset': { borderColor: 'white' },
-                  '&.Mui-focused fieldset': { borderColor: 'white' },
-                },
-              }}
-            />
-
-            {parsedResponse && (
-              <Grid container spacing={2} mt={1}>
-                <Grid item xs={6}>
-                  <FormControl fullWidth>
-                    <InputLabel sx={{ color: 'white' }}>X-Axis (Categories)</InputLabel>
-                    <Select
-                      value={
-                        fieldMappings[selectedWidget]?.chartDataConfig?.chartConfig?.xAxis?.field ||
-                        ''
-                      }
-                      onChange={(e) => {
-                        setFieldMappings((prev: any) => ({
-                          ...prev,
-                          [selectedWidget]: {
-                            ...prev[selectedWidget],
-                            chartDataConfig: {
-                              ...prev[selectedWidget]?.chartDataConfig,
-                              chartConfig: {
-                                ...prev[selectedWidget]?.chartDataConfig?.chartConfig,
-                                xAxis: { field: e.target.value, type: 'CHA' },
-                              },
-                            },
-                          },
-                        }));
-                      }}
-                      label="X-Axis (Categories)"
-                      sx={{
-                        color: 'white',
-                        '& .MuiOutlinedInput-notchedOutline': { borderColor: 'white' },
-                        '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: 'white' },
-                        '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: 'white' },
-                        '& .MuiSvgIcon-root': { color: 'white' },
-                      }}
-                    >
-                      {getCHAFields().map((field: any) => (
-                        <MenuItem key={field.fieldName} value={field.fieldName}>
-                          {field.label} ({field.fieldName})
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
-                </Grid>
-
-                <Grid item xs={6}>
-                  <FormControl fullWidth>
-                    <InputLabel sx={{ color: 'white' }}>Y-Axis (Values)</InputLabel>
-                    <Select
-                      value={
-                        fieldMappings[selectedWidget]?.chartDataConfig?.chartConfig?.yAxis?.field ||
-                        ''
-                      }
-                      onChange={(e) => {
-                        setFieldMappings((prev: any) => ({
-                          ...prev,
-                          [selectedWidget]: {
-                            ...prev[selectedWidget],
-                            chartDataConfig: {
-                              ...prev[selectedWidget]?.chartDataConfig,
-                              chartConfig: {
-                                ...prev[selectedWidget]?.chartDataConfig?.chartConfig,
-                                yAxis: { field: e.target.value, type: 'KF' },
-                              },
-                            },
-                          },
-                        }));
-                      }}
-                      label="Y-Axis (Values)"
-                      sx={{
-                        color: 'white',
-                        '& .MuiOutlinedInput-notchedOutline': { borderColor: 'white' },
-                        '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: 'white' },
-                        '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: 'white' },
-                        '& .MuiSvgIcon-root': { color: 'white' },
-                      }}
-                    >
-                      {getKFFields().map((field: any) => (
-                        <MenuItem key={field.fieldName} value={field.fieldName}>
-                          {field.label} ({field.fieldName})
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
-                </Grid>
-              </Grid>
-            )}
-          </Box>
-        )}
-      </Paper>
-
       {renderIconDialog()}
     </Box>
   );
@@ -1851,7 +1689,7 @@ const MappingScreen: React.FC = () => {
           setChartYAxis(config.chartConfig.yAxis[0]?.field || '');
           setChartYAxis2(config.chartConfig.yAxis[1]?.field || '');
         } else if (
-          (widgetCategory === 'stacked-bar' || 'stacked-column') &&
+          (widgetCategory === 'stacked-bar' || 'column-chart') &&
           config.chartConfig.yAxis?.fields
         ) {
           if (config.seriesConfig?.series) {
@@ -1927,7 +1765,7 @@ const MappingScreen: React.FC = () => {
       [selectedWidget]: {
         ...prev[selectedWidget],
         targetReport: {
-          ...prev[selectedWidget].targetReport,
+          ...prev[selectedWidget]?.targetReport,
           [field]: value,
         },
       },
@@ -2672,7 +2510,7 @@ const MappingScreen: React.FC = () => {
             };
           }
           updateWidgetConfiguration(selectedWidget, previewProps);
-        } else if (widgetCategory === 'stacked-bar' || widgetCategory === 'stacked-column') {
+        } else if (widgetCategory === 'stacked-bar' || widgetCategory === 'column-chart') {
           const { xAxis, yAxis } = config.chartConfig;
           // Make sure to initialize with default empty arrays to prevent undefined errors
           previewProps = {

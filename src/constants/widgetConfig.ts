@@ -1,11 +1,4 @@
 import { lazy } from 'react';
-import {
-    DocumentTextIcon,
-    ClipboardDocumentListIcon,
-    CubeIcon,
-    ChartBarIcon,
-} from '@heroicons/react/24/outline';
-import PieChartComponent from '@/components/widgets/PieChart';
 
 // Lazy load all widget components
 const MultiMetrics = lazy(() => import('@/components/widgets/MultiMetrics'));
@@ -24,7 +17,7 @@ const LoansAppTray = lazy(() => import('@/components/widgets/LoansAppTray'));
 const NewsFeed = lazy(() => import('@/components/widgets/NewsFeed'));
 const Announcement = lazy(() => import('@/components/widgets/Announcement1'));
 const pieChart = lazy(() => import('@/components/widgets/PieChart'));
-const StackedColumnChart = lazy(() => import('@/components/widgets/StackedColumnChart'));
+const ColumnChart = lazy(() => import('@/components/widgets/ColumnChart'));
 const PredictionChart = lazy(() => import('@/components/widgets/Prediction'));
 const RadarChartComponent = lazy(() => import('@/components/widgets/RadarChart'));
 
@@ -46,7 +39,7 @@ export const widgetMapping: Record<string, React.ComponentType<any>> = {
     'news-feed': NewsFeed,
     announcement: Announcement,
     'pie-chart': pieChart,
-    'stacked-column-chart': StackedColumnChart,
+    'column-chart': ColumnChart,
     'prediction-chart': PredictionChart,
     'radar-chart': RadarChartComponent
 };

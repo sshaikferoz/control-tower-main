@@ -25,7 +25,7 @@ import { WidgetDetailsDialog } from '@/components/dialogs/WidgetDetailsDialog';
 import { DataManager } from '@/services/DataManager';
 import { processWidgetMappings } from '@/helpers/transformHelpers';
 import { defaultPropsMapping, widgetMapping } from '@/constants/widgetConfig';
-import { Announcement } from '@mui/icons-material';
+
 import { sapODataService } from '@/services/sapODataService';
 
 const GridLayout = WidthProvider(RGL);

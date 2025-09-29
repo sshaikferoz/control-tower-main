@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
-interface StackedColumnProps {
+interface ColumnChartProps {
   data: {
     name: string;
     [key: string]: string | number;
@@ -17,14 +17,14 @@ interface StackedColumnProps {
   setChangeColor?: (color: string) => void;
 }
 
-const StackedColumn = ({
+const ColumnChart = ({
   data = [],
   title = 'Chart',
   totalValue = '',
   series = [],
   color,
   setChangeColor,
-}: StackedColumnProps) => {
+}: ColumnChartProps) => {
   const [userColor, setUserColor] = useState<string | null>(null);
   const colorInputRef = useRef<HTMLInputElement>(null);
 
@@ -159,4 +159,4 @@ const StackedColumn = ({
   );
 };
 
-export default StackedColumn;
+export default ColumnChart;
