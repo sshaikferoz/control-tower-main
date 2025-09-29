@@ -113,7 +113,8 @@ export type WidgetTypes =
     | 'loans-app-tray'
     | 'announcement'
     | 'pie-chart'
-    | 'stacked-column-chart';
+    | 'stacked-column-chart'
+    | 'prediction-chart';
 
 // Mapping configurations for each widget type
 export const widgetConfigFields: Record<
@@ -216,6 +217,12 @@ export const widgetConfigFields: Record<
         { field: 'title', type: 'string', path: 'title' },
     ],
     'stacked-column-chart': [
+        { field: 'data', type: 'array', path: 'data' },
+        { field: 'title', type: 'string', path: 'title' },
+        { field: 'totalValue', type: 'string', path: 'totalValue' },
+        { field: 'series', type: 'array', path: 'series' },
+    ],
+    'prediction-chart': [
         { field: 'data', type: 'array', path: 'data' },
         { field: 'title', type: 'string', path: 'title' },
         { field: 'totalValue', type: 'string', path: 'totalValue' },

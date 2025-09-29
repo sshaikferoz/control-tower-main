@@ -91,6 +91,7 @@ import { useURLParams } from '@/hooks/useURLParams';
 import * as MUIIcons from '@mui/icons-material';
 import PieChartComponent from '@/components/widgets/PieChart';
 import StackedColumn from '@/components/widgets/StackedColumnChart';
+import PredictionChart from '@/components/widgets/Prediction';
 
 // Setup GridLayout with width provider
 const GridLayout = WidthProvider(RGL);
@@ -150,6 +151,7 @@ const widgetMapping: Record<string, React.ComponentType<any>> = {
   announcement: AnnouncementWidget, // Placeholder for map component
   'pie-chart': PieChartComponent, // Reusing PieChartWithTotal for pie-chart
   'stacked-column-chart': StackedColumn, // New Stacked Column Chart component
+  'prediction-chart': PredictionChart,
 };
 
 // Widget size configurations
@@ -172,6 +174,7 @@ const widgetSizes: Record<string, { w: number; h: number }> = {
   announcement: { w: 12, h: 3 }, // Placeholder for announcement widget
   'pie-chart': { w: 2.5, h: 3 },
   'stacked-column-chart': { w: 6, h: 3 },
+  'prediction-chart': { w: 6, h: 3 },
 };
 
 // Report type options
@@ -199,7 +202,8 @@ const getWidgetMappingType = (
     widgetName.includes('stacked-bar') ||
     widgetName.includes('stacked-column') ||
     widgetName.includes('line-chart') ||
-    widgetName.includes('pie-chart')
+    widgetName.includes('pie-chart') ||
+    widgetName.includes('prediction')
   ) {
     return 'chart';
   } else {
@@ -214,6 +218,8 @@ const getWidgetCategory = (widgetName: string): string => {
   } else if (widgetName === 'stacked-bar-chart') {
     return 'stacked-bar';
   } else if (widgetName === 'stacked-column-chart') {
+    return 'stacked-bar';
+  } else if (widgetName === 'prediction-chart') {
     return 'stacked-bar';
   } else if (widgetName === 'orders-line-chart') {
     return 'single-line';
