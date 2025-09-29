@@ -59,7 +59,7 @@ const GridLayout: React.FC = () => {
           <SimpleMetric name="Active Contracts" value={45} />
           <SimpleMetricDate name="Open PO Orders" value={18} date="13-08-2024" />
         </div>
-        <SingleLineChart data={SingleLineChartData} />
+        <SingleLineChart data={SingleLineChartData} widget_name="" />
         <div className="flex flex-col gap-3">
           {/* <MultiMetrics/> */}
           <PieMetric data={pieData?.data} metrics={pieData?.metrics} />
