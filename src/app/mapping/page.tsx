@@ -2916,9 +2916,11 @@ const MappingScreen: React.FC = () => {
 
         // Calculate total value
         const totalSum = chartData.reduce((sum, item) => sum + item.value, 0);
-        const totalValue = totalSum.toLocaleString();
+        // const totalValue = totalSum.toLocaleString();
 
-        const title = transformedData.FormMetadata[yAxis.field]?.label || 'Pie Chart';
+        // const title = transformedData.FormMetadata[yAxis.field]?.label || 'Pie Chart';
+        const title = widgetConfigurations[selectedWidget]?.title;
+        const totalValue = widgetConfigurations[selectedWidget]?.totalValue;
 
         previewProps = {
           data: chartData,
@@ -3084,6 +3086,7 @@ const MappingScreen: React.FC = () => {
               rowHeight={80}
               width={80}
               isResizable={true}
+              resizeHandles={['se']}
               isDraggable={true}
               onLayoutChange={(newLayout) => setLayout(newLayout as LayoutItem[])}
             >
