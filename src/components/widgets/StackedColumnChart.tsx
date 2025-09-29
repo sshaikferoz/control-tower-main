@@ -79,10 +79,10 @@ const StackedColumn = ({
   const displaySeries = safeSeries.length > 0 ? safeSeries : sampleSeries;
 
   return (
-    <div className="h-full w-full overflow-hidden">
-      <div className="flex h-full flex-col rounded-xl p-4 text-white" style={backgroundStyle}>
+    <div className="h-full w-full">
+      <div className="h-full overflow-auto rounded-xl p-4 text-white" style={backgroundStyle}>
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex justify-between">
           <div className="flex flex-col items-start gap-[5px]">
             <h3 className="[font-family:'Ghawar-Hefty',Helvetica] text-base font-normal text-white">
               {title}
@@ -102,11 +102,11 @@ const StackedColumn = ({
         </div>
 
         {/* Chart */}
-        <div className="mt-1 w-full flex-1">
-          <ResponsiveContainer width="100%" height="100%" minHeight={150}>
+        <div className="mt-4 h-[150px] w-full">
+          <ResponsiveContainer width="100%" height="100%">
             <BarChart
               data={displayData}
-              margin={{ top: 10, right: 30, left: 0, bottom: 40 }}
+              margin={{ top: 20, right: 30, left: 0, bottom: 5 }}
               barSize={40}
             >
               <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#ffffff30" />
@@ -115,7 +115,6 @@ const StackedColumn = ({
                 axisLine={{ stroke: '#ffffff50' }}
                 tick={{ fill: '#ffffff', fontSize: 12 }}
                 tickLine={{ stroke: '#ffffff50' }}
-                height={40}
               />
               <YAxis axisLine={false} tickLine={false} tick={{ fill: '#ffffff', fontSize: 12 }} />
               <Tooltip
@@ -134,7 +133,7 @@ const StackedColumn = ({
         </div>
 
         {/* Legend */}
-        <div className="mt-1 flex flex-wrap items-center justify-center gap-4">
+        <div className="mt-2 flex flex-wrap items-center justify-center gap-4">
           {displaySeries.map((item, index) => (
             <div key={index} className="flex items-center gap-[5px]">
               <div
@@ -148,6 +147,14 @@ const StackedColumn = ({
           ))}
         </div>
       </div>
+
+      {/* 🎨 Hidden color picker */}
+      <input
+        type="color"
+        ref={colorInputRef}
+        onChange={handleColorChange}
+        style={{ display: 'none' }}
+      />
     </div>
   );
 };
