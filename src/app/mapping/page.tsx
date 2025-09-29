@@ -92,6 +92,7 @@ import * as MUIIcons from '@mui/icons-material';
 import PieChartComponent from '@/components/widgets/PieChart';
 import StackedColumn from '@/components/widgets/StackedColumnChart';
 import PredictionChart from '@/components/widgets/Prediction';
+import RadarChartComponent from '@/components/widgets/RadarChart';
 
 // Setup GridLayout with width provider
 const GridLayout = WidthProvider(RGL);
@@ -152,6 +153,7 @@ const widgetMapping: Record<string, React.ComponentType<any>> = {
   'pie-chart': PieChartComponent, // Reusing PieChartWithTotal for pie-chart
   'stacked-column-chart': StackedColumn, // New Stacked Column Chart component
   'prediction-chart': PredictionChart,
+  'radar-chart': RadarChartComponent,
 };
 
 // Widget size configurations
@@ -175,6 +177,7 @@ const widgetSizes: Record<string, { w: number; h: number }> = {
   'pie-chart': { w: 4, h: 3 },
   'stacked-column-chart': { w: 6, h: 3 },
   'prediction-chart': { w: 6, h: 3 },
+  'radar-chart': { w: 6, h: 3 },
 };
 
 // Report type options
@@ -239,17 +242,78 @@ const getWidgetCategory = (widgetName: string): string => {
     return 'line';
   } else if (widgetName.includes('table')) {
     return 'table';
+  } else if (widgetName === 'radar-chart') {
+    // ADD THIS
+    return 'stacked-bar'; // or create a new 'radar' category if different behavior needed
   } else {
     return 'simple';
   }
 };
 
 // Get all available MUI icons
+// Get all available MUI icons
+// const getAllMUIIcons = () => {
+//   const iconNames = Object.keys(MUIIcons).filter(
+//     (key) =>
+//       key !== 'createSvgIcon' &&
+//       key !== 'default' &&
+//       !key.startsWith('_') && // Filter out private properties
+//       typeof (MUIIcons as any)[key] === 'object' && // Icons are objects (React components)
+//       (MUIIcons as any)[key].render // Check if it's a React component
+//   );
+
+//   console.log('Total icons found:', iconNames.length);
+//   console.log('Sample icons:', iconNames.slice(0, 10));
+
+//   return iconNames;
+// };
+
+// Get all available MUI icons - simplified version
 const getAllMUIIcons = () => {
-  return Object.keys(MUIIcons).filter(
-    (key) =>
-      key !== 'createSvgIcon' && key !== 'default' && typeof (MUIIcons as any)[key] === 'function'
-  );
+  return [
+    'Assignment',
+    'Schedule',
+    'Pending',
+    'TrendingUp',
+    'Dashboard',
+    'Settings',
+    'AccountCircle',
+    'ShoppingCart',
+    'Favorite',
+    'Star',
+    'Work',
+    'LocalShipping',
+    'AttachMoney',
+    'Assessment',
+    'Description',
+    'Event',
+    'ExitToApp',
+    'Folder',
+    'Help',
+    'Home',
+    'Info',
+    'Language',
+    'Lock',
+    'Mail',
+    'Notifications',
+    'People',
+    'Phone',
+    'Search',
+    'Security',
+    'ThumbUp',
+    'Visibility',
+    'Warning',
+    'AddCircle',
+    'Delete',
+    'Edit',
+    'Check',
+    'Close',
+    'ArrowBack',
+    'ArrowForward',
+    'ExpandMore',
+    'Menu',
+    'MoreVert',
+  ];
 };
 
 // Default widget props for preview
@@ -441,6 +505,21 @@ const defaultPropsMapping: Record<string, any> = {
     ],
     title: 'Distribution Chart',
   },
+  'radar-chart': {
+    data: [
+      { name: 'Speed', actual: 80, predicted: 75 },
+      { name: 'Quality', actual: 95, predicted: 90 },
+      { name: 'Efficiency', actual: 70, predicted: 85 },
+      { name: 'Innovation', actual: 85, predicted: 80 },
+      { name: 'Reliability', actual: 90, predicted: 88 },
+      { name: 'Cost', actual: 75, predicted: 82 },
+    ],
+    title: 'Performance Metrics',
+    series: [
+      { name: 'Actual', dataKey: 'actual', color: '#8884d8' },
+      { name: 'Predicted', dataKey: 'predicted', color: '#82ca9d' },
+    ],
+  },
 };
 
 interface TabPanelProps {
@@ -592,8 +671,21 @@ const LoansAppTrayConfig: React.FC<LoansAppTrayConfigProps> = ({
   };
 
   const renderIconDialog = () => (
-    <Dialog open={iconDialogOpen} onClose={() => setIconDialogOpen(false)} maxWidth="md" fullWidth>
-      <DialogTitle>Select Icon</DialogTitle>
+    <Dialog
+      open={iconDialogOpen}
+      onClose={() => setIconDialogOpen(false)}
+      maxWidth="md"
+      fullWidth
+      PaperProps={{
+        sx: {
+          background: 'linear-gradient(to bottom, #00214E, #0164B0)',
+          color: 'white',
+        },
+      }}
+    >
+      <DialogTitle sx={{ color: 'white', borderBottom: '1px solid rgba(255,255,255,0.2)' }}>
+        Select Icon
+      </DialogTitle>
       <DialogContent>
         <TextField
           fullWidth
@@ -602,13 +694,32 @@ const LoansAppTrayConfig: React.FC<LoansAppTrayConfigProps> = ({
           onChange={(e) => setIconSearchQuery(e.target.value)}
           margin="normal"
           InputProps={{
-            startAdornment: <SearchIcon />,
+            startAdornment: <SearchIcon sx={{ color: 'white', mr: 1 }} />,
+          }}
+          sx={{
+            input: { color: 'white' },
+            '& .MuiOutlinedInput-root': {
+              '& fieldset': { borderColor: 'white' },
+              '&:hover fieldset': { borderColor: 'white' },
+              '&.Mui-focused fieldset': { borderColor: 'white' },
+            },
+            '& .MuiInputBase-input::placeholder': {
+              color: 'rgba(255,255,255,0.7)',
+              opacity: 1,
+            },
           }}
         />
-        <Box sx={{ maxHeight: 400, overflow: 'auto' }}>
+        <Box sx={{ maxHeight: 400, overflow: 'auto', mt: 2 }}>
           <Grid container spacing={1}>
             {filteredIcons.slice(0, 100).map((iconName) => {
               const IconComponent = (MUIIcons as any)[iconName];
+
+              // Debug: log if icon is not found
+              if (!IconComponent) {
+                console.log('Icon not found:', iconName);
+                return null;
+              }
+
               return (
                 <Grid item xs={3} sm={2} key={iconName}>
                   <Paper
@@ -616,12 +727,27 @@ const LoansAppTrayConfig: React.FC<LoansAppTrayConfigProps> = ({
                       p: 1,
                       textAlign: 'center',
                       cursor: 'pointer',
-                      '&:hover': { bgcolor: 'primary.light' },
+                      backgroundColor: '#ffffff20',
+                      color: 'white',
+                      '&:hover': {
+                        bgcolor: '#ffffff40',
+                        transform: 'scale(1.05)',
+                        transition: 'all 0.2s',
+                      },
                     }}
                     onClick={() => handleIconSelect(iconName)}
                   >
-                    <IconComponent sx={{ fontSize: 24 }} />
-                    <Typography variant="caption" display="block">
+                    <IconComponent sx={{ fontSize: 24, color: 'white' }} />
+                    <Typography
+                      variant="caption"
+                      display="block"
+                      sx={{
+                        fontSize: '0.65rem',
+                        color: 'white',
+                        mt: 0.5,
+                        wordBreak: 'break-word',
+                      }}
+                    >
                       {iconName}
                     </Typography>
                   </Paper>
@@ -631,9 +757,11 @@ const LoansAppTrayConfig: React.FC<LoansAppTrayConfigProps> = ({
           </Grid>
         </Box>
       </DialogContent>
+      <DialogActions sx={{ borderTop: '1px solid rgba(255,255,255,0.2)', p: 2 }}>
+        <Button label="Close" onClick={() => setIconDialogOpen(false)} outlined />
+      </DialogActions>
     </Dialog>
   );
-
   return (
     <Box>
       <Typography variant="h6" gutterBottom sx={{ color: 'white' }}>
@@ -682,23 +810,29 @@ const LoansAppTrayConfig: React.FC<LoansAppTrayConfigProps> = ({
               </Grid>
 
               {/* Icon Selection */}
+              {/* Icon Selection */}
               <Grid item xs={12} sm={6}>
                 <Box display="flex" alignItems="center" gap={2}>
                   <Typography sx={{ color: 'white' }}>Icon:</Typography>
-                  {item.iconName && (
-                    <Chip
-                      icon={React.createElement((MUIIcons as any)[item.iconName])}
-                      label={item.iconName}
-                      sx={{ bgcolor: '#ffffff20', color: 'white' }}
+                  {item.iconName &&
+                    (() => {
+                      const IconComponent = (MUIIcons as any)[item.iconName];
+                      return IconComponent ? (
+                        <Chip icon={<IconComponent />} label={item.iconName} />
+                      ) : (
+                        <Chip label={item.iconName} sx={{ bgcolor: '#ffff', color: 'white' }} />
+                      );
+                    })()}
+
+                  <Box mt={0} pt={1} borderColor="rgba(255,255,255,0.2)">
+                    <Button
+                      label="Select Icon"
+                      onClick={() => {
+                        setSelectedMenuItemForIcon(item.id);
+                        setIconDialogOpen(true);
+                      }}
                     />
-                  )}
-                  <Button
-                    label="Select Icon"
-                    onClick={() => {
-                      setSelectedMenuItemForIcon(item.id);
-                      setIconDialogOpen(true);
-                    }}
-                  />
+                  </Box>
                 </Box>
               </Grid>
 

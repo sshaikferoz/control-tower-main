@@ -114,7 +114,8 @@ export type WidgetTypes =
     | 'announcement'
     | 'pie-chart'
     | 'stacked-column-chart'
-    | 'prediction-chart';
+    | 'prediction-chart'
+    | 'radar-chart';
 
 // Mapping configurations for each widget type
 export const widgetConfigFields: Record<
@@ -223,6 +224,12 @@ export const widgetConfigFields: Record<
         { field: 'series', type: 'array', path: 'series' },
     ],
     'prediction-chart': [
+        { field: 'data', type: 'array', path: 'data' },
+        { field: 'title', type: 'string', path: 'title' },
+        { field: 'totalValue', type: 'string', path: 'totalValue' },
+        { field: 'series', type: 'array', path: 'series' },
+    ],
+    'radar-chart': [
         { field: 'data', type: 'array', path: 'data' },
         { field: 'title', type: 'string', path: 'title' },
         { field: 'totalValue', type: 'string', path: 'totalValue' },

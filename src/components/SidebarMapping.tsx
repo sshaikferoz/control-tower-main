@@ -23,6 +23,7 @@ const menuItems = [
   { name: 'pie-chart', imageURL: '' },
   { name: 'stacked-column-chart', imageURL: '' },
   { name: 'prediction-chart', imageURL: '' },
+  { name: 'radar-chart', imageURL: '' },
   //   { name: 'announcement', imageURL: '' },
 ];
 
