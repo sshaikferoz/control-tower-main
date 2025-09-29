@@ -24,6 +24,7 @@ const LoansAppTray = lazy(() => import('@/components/widgets/LoansAppTray'));
 const NewsFeed = lazy(() => import('@/components/widgets/NewsFeed'));
 const Announcement = lazy(() => import('@/components/widgets/Announcement1'));
 const pieChart = lazy(() => import('@/components/widgets/PieChart'));
+const StackedColumnChart = lazy(() => import('@/components/widgets/StackedColumnChart'));
 
 // Component mappings with lazy loading
 export const widgetMapping: Record<string, React.ComponentType<any>> = {
@@ -43,6 +44,7 @@ export const widgetMapping: Record<string, React.ComponentType<any>> = {
     'news-feed': NewsFeed,
     announcement: Announcement,
     'pie-chart': pieChart,
+    'stacked-column-chart': StackedColumnChart,
 };
 
 // Default widget props for when data isn't available

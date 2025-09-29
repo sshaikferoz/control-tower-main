@@ -90,6 +90,7 @@ import { useAdminCheck } from '@/hooks/useAdminCheck';
 import { useURLParams } from '@/hooks/useURLParams';
 import * as MUIIcons from '@mui/icons-material';
 import PieChartComponent from '@/components/widgets/PieChart';
+import StackedColumn from '@/components/widgets/StackedColumnChart';
 
 // Setup GridLayout with width provider
 const GridLayout = WidthProvider(RGL);
@@ -148,6 +149,7 @@ const widgetMapping: Record<string, React.ComponentType<any>> = {
   'news-feed': NewsFeed, // Placeholder for news feed
   announcement: AnnouncementWidget, // Placeholder for map component
   'pie-chart': PieChartComponent, // Reusing PieChartWithTotal for pie-chart
+  'stacked-column-chart': StackedColumn, // New Stacked Column Chart component
 };
 
 // Widget size configurations
@@ -169,6 +171,7 @@ const widgetSizes: Record<string, { w: number; h: number }> = {
   'news-feed': { w: 12, h: 3 }, // Placeholder for news feed: { w: 12, h: 12 }, // Map component
   announcement: { w: 12, h: 3 }, // Placeholder for announcement widget
   'pie-chart': { w: 2.5, h: 3 },
+  'stacked-column-chart': { w: 6, h: 3 },
 };
 
 // Report type options
@@ -194,6 +197,7 @@ const getWidgetMappingType = (
     widgetName.includes('piechart') ||
     widgetName.includes('bar-chart') ||
     widgetName.includes('stacked-bar') ||
+    widgetName.includes('stacked-column') ||
     widgetName.includes('line-chart') ||
     widgetName.includes('pie-chart')
   ) {
@@ -208,6 +212,8 @@ const getWidgetCategory = (widgetName: string): string => {
   if (widgetName === 'bar-chart') {
     return 'bar';
   } else if (widgetName === 'stacked-bar-chart') {
+    return 'stacked-bar';
+  } else if (widgetName === 'stacked-column-chart') {
     return 'stacked-bar';
   } else if (widgetName === 'orders-line-chart') {
     return 'single-line';
@@ -296,6 +302,22 @@ const defaultPropsMapping: Record<string, any> = {
     variance: '+5.40%',
   },
   'stacked-bar-chart': {
+    data: [
+      { name: 'Jan', Supplier1: 400, Supplier2: 240, Supplier3: 100 },
+      { name: 'Feb', Supplier1: 300, Supplier2: 200, Supplier3: 150 },
+      { name: 'Mar', Supplier1: 450, Supplier2: 220, Supplier3: 180 },
+      { name: 'Apr', Supplier1: 470, Supplier2: 260, Supplier3: 120 },
+      { name: 'May', Supplier1: 390, Supplier2: 210, Supplier3: 160 },
+      { name: 'Jun', Supplier1: 520, Supplier2: 280, Supplier3: 220 },
+    ],
+    title: 'Top Spend Supplier',
+    series: [
+      { name: 'Supplier A', dataKey: 'Supplier1', color: '#84BD00' },
+      { name: 'Supplier B', dataKey: 'Supplier2', color: '#FFC846' },
+      { name: 'Supplier C', dataKey: 'Supplier3', color: '#8979FF' },
+    ],
+  },
+  'stacked-column-chart': {
     data: [
       { name: 'Jan', Supplier1: 400, Supplier2: 240, Supplier3: 100 },
       { name: 'Feb', Supplier1: 300, Supplier2: 200, Supplier3: 150 },
@@ -1688,7 +1710,10 @@ const MappingScreen: React.FC = () => {
         if (widgetCategory === 'dual-line' && Array.isArray(config.chartConfig.yAxis)) {
           setChartYAxis(config.chartConfig.yAxis[0]?.field || '');
           setChartYAxis2(config.chartConfig.yAxis[1]?.field || '');
-        } else if (widgetCategory === 'stacked-bar' && config.chartConfig.yAxis?.fields) {
+        } else if (
+          (widgetCategory === 'stacked-bar' || 'stacked-column') &&
+          config.chartConfig.yAxis?.fields
+        ) {
           if (config.seriesConfig?.series) {
             setStackedSeries([...config.seriesConfig.series]);
           }
@@ -2499,9 +2524,7 @@ const MappingScreen: React.FC = () => {
                 };
               });
 
-            // Get title & ensure it has a default
-            const title = transformedData.FormMetadata[yAxis.field]?.label || 'Chart';
-
+            const title = widgetConfigurations[selectedWidget]?.title;
             previewProps = {
               data: chartData || [],
               title: title,
@@ -2509,7 +2532,7 @@ const MappingScreen: React.FC = () => {
             };
           }
           updateWidgetConfiguration(selectedWidget, previewProps);
-        } else if (widgetCategory === 'stacked-bar') {
+        } else if (widgetCategory === 'stacked-bar' || widgetCategory === 'stacked-column') {
           const { xAxis, yAxis } = config.chartConfig;
           // Make sure to initialize with default empty arrays to prevent undefined errors
           previewProps = {
@@ -2539,8 +2562,8 @@ const MappingScreen: React.FC = () => {
             });
 
             // Get title & ensure it has a default
-            const title = transformedData.FormMetadata[xAxis.field]?.label || 'Stacked Chart';
-
+            // const title = transformedData.FormMetadata[xAxis.field]?.label || 'Stacked Chart';
+            const title = widgetConfigurations[selectedWidget]?.title;
             // Always use the series from the config to ensure dataKey matches what's in the data
             const series = config.seriesConfig?.series || [];
 
@@ -2625,10 +2648,11 @@ const MappingScreen: React.FC = () => {
             ];
 
             // Get title from metadata
-            const title = `${
-              transformedData.FormMetadata[yAxis[0].field]?.label || yAxis[0].field
-            } vs ${transformedData.FormMetadata[yAxis[1].field]?.label || yAxis[1].field}`;
+            // const title = `${
+            //   transformedData.FormMetadata[yAxis[0].field]?.label || yAxis[0].field
+            // } vs ${transformedData.FormMetadata[yAxis[1].field]?.label || yAxis[1].field}`;
 
+            const title = widgetConfigurations[selectedWidget]?.title;
             previewProps = {
               data: data,
               series: series,

@@ -1,13 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-} from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { TrendingUp } from 'lucide-react';
 
 interface BarMetricProps {
@@ -24,13 +16,7 @@ interface BarMetricProps {
   setChangeColor?: (color: string) => void;
 }
 
-const BarMetric = ({
-  data,
-  title,
-  variance = '+0.00%',
-  color,
-  setChangeColor,
-}: BarMetricProps) => {
+const BarMetric = ({ data, title, variance = '+0.00%', color, setChangeColor }: BarMetricProps) => {
   const [userColor, setUserColor] = useState<string | null>(null);
   const colorInputRef = useRef<HTMLInputElement>(null);
 
@@ -54,8 +40,7 @@ const BarMetric = ({
   };
 
   const baseColor = userColor || color || defaultBaseColor;
-  const lighterColor =
-    baseColor === defaultBaseColor ? defaultLighterColor : `${baseColor}80`;
+  const lighterColor = baseColor === defaultBaseColor ? defaultLighterColor : `${baseColor}80`;
 
   const backgroundStyle = {
     backgroundImage: `linear-gradient(to bottom, ${baseColor}, ${lighterColor})`,
@@ -71,34 +56,21 @@ const BarMetric = ({
       <div
         className="h-full rounded-xl p-4 text-white"
         style={backgroundStyle}
-        onClick={handleDivClick}
+        // onClick={handleDivClick}
       >
         <div className="p-3">
           <div className="flex h-full w-full flex-col items-center gap-2.5">
             {/* Header */}
             <div className="flex h-8 w-full items-center justify-between px-2">
               <h3 className="font-sans text-base font-normal text-white">{title}</h3>
-              <div className="flex items-center gap-2">
-                <div className="flex items-center">
-                  <TrendingUp className="h-4 w-4 text-white" />
-                  <div className="font-sans text-sm leading-4">
-                    <span className="tracking-wide text-white">{variance}</span>
-                  </div>
-                </div>
-              </div>
+              <div className="flex items-center gap-2"></div>
             </div>
 
             {/* Chart */}
             <div className="flex h-48 w-full flex-col items-start">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart
-                  data={data}
-                  margin={{ top: 20, right: 20, left: 0, bottom: 0 }}
-                >
-                  <CartesianGrid
-                    strokeDasharray="3 3"
-                    stroke="rgba(255,255,255,0.1)"
-                  />
+                <BarChart data={data} margin={{ top: 20, right: 20, left: 0, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
                   <XAxis
                     dataKey="name"
                     tick={{ fill: 'white', fontSize: 12 }}
