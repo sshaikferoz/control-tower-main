@@ -52,7 +52,7 @@ const BarMetric = ({ data, title, variance = '+0.00%', color, setChangeColor }: 
   const maxValue = Math.max(...data.map((item) => item.value)) * 1.2;
 
   return (
-    <div className="h-full w-full max-w-sm">
+    <div className="h-full w-full">
       <div
         className="h-full rounded-xl p-4 text-white"
         style={backgroundStyle}

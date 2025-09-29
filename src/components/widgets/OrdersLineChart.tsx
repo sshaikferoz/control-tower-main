@@ -20,12 +20,9 @@ interface OrdersLineChartProps {
   setChangeColor?: (color: string) => void;
 }
 
-const OrdersLineChart = ({
-  data,
-  title,
-}: OrdersLineChartProps) => {
-  const [bgColor, setBgColor] = useState('#00214E');       // background color
-  const [lineColor, setLineColor] = useState('#00a3e0');   // line color
+const OrdersLineChart = ({ data, title }: OrdersLineChartProps) => {
+  const [bgColor, setBgColor] = useState('#00214E'); // background color
+  const [lineColor, setLineColor] = useState('#0164B0'); // line color
   const [showBgPicker, setShowBgPicker] = useState(false);
   const [showLinePicker, setShowLinePicker] = useState(false);
   const bgPickerRef = useRef<HTMLDivElement>(null);
@@ -60,7 +57,7 @@ const OrdersLineChart = ({
           <h3 className="text-base font-normal text-white">{title}</h3>
 
           {/* Buttons to open color pickers */}
-          <div className="flex gap-2">
+          {/* <div className="flex gap-2">
             <button
               className="text-sm px-2 py-1 bg-white text-black rounded"
               onClick={() => setShowBgPicker(true)}
@@ -73,7 +70,7 @@ const OrdersLineChart = ({
             >
               Line
             </button>
-          </div>
+          </div> */}
         </div>
 
         <div className="mt-4 h-[180px]">
@@ -115,22 +112,27 @@ const OrdersLineChart = ({
 
       {/* Background Color Picker */}
       {showBgPicker && (
-        <div ref={bgPickerRef} className="absolute left-[10%] top-full mt-2 z-50 bg-white p-2 rounded shadow-lg">
+        <div
+          ref={bgPickerRef}
+          className="absolute top-full left-[10%] z-50 mt-2 rounded bg-white p-2 shadow-lg"
+        >
           <HexColorPicker color={bgColor} onChange={setBgColor} />
-          <div className="text-sm text-black mt-2 text-center">{bgColor}</div>
+          <div className="mt-2 text-center text-sm text-black">{bgColor}</div>
         </div>
       )}
 
       {/* Line Color Picker */}
       {showLinePicker && (
-        <div ref={linePickerRef} className="absolute left-[70%] top-full mt-2 z-50 bg-white p-2 rounded shadow-lg">
+        <div
+          ref={linePickerRef}
+          className="absolute top-full left-[70%] z-50 mt-2 rounded bg-white p-2 shadow-lg"
+        >
           <HexColorPicker color={lineColor} onChange={setLineColor} />
-          <div className="text-sm text-black mt-2 text-center">{lineColor}</div>
+          <div className="mt-2 text-center text-sm text-black">{lineColor}</div>
         </div>
       )}
     </div>
   );
 };
-
 
 export default OrdersLineChart;

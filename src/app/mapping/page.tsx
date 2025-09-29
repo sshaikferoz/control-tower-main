@@ -172,7 +172,7 @@ const widgetSizes: Record<string, { w: number; h: number }> = {
   'loans-app-tray': { w: 6, h: 3 }, // Wide component to fit menu + chart
   'news-feed': { w: 12, h: 3 }, // Placeholder for news feed: { w: 12, h: 12 }, // Map component
   announcement: { w: 12, h: 3 }, // Placeholder for announcement widget
-  'pie-chart': { w: 2.5, h: 3 },
+  'pie-chart': { w: 4, h: 3 },
   'stacked-column-chart': { w: 6, h: 3 },
   'prediction-chart': { w: 6, h: 3 },
 };
@@ -3083,7 +3083,7 @@ const MappingScreen: React.FC = () => {
               cols={12}
               rowHeight={80}
               width={80}
-              isResizable={false}
+              isResizable={true}
               isDraggable={true}
               onLayoutChange={(newLayout) => setLayout(newLayout as LayoutItem[])}
             >

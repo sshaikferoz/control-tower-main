@@ -86,7 +86,7 @@ const PieChartComponent = ({
   };
 
   return (
-    <div className="h-full">
+    <div className="h-full w-full">
       <div
         className="h-full overflow-auto rounded-xl p-4 text-white"
         style={backgroundStyle}
