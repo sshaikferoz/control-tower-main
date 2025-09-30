@@ -3040,6 +3040,9 @@ const MappingScreen: React.FC = () => {
         className="h-100vh w-full overflow-y-auto"
         style={{
           backgroundImage: `url('${process.env.NEXT_PUBLIC_BSP_NAME}/background/bg.png')`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          backgroundRepeat: 'no-repeat',
         }}
         layout="vertical"
       >
