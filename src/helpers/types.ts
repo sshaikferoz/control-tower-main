@@ -71,7 +71,7 @@ export interface TableColumnMapping {
     columns: {
         field: string;
         header: string;
-        path: ObjectPath;
+        formatConfig?: FormatConfig; // NEW
     }[];
 }
 

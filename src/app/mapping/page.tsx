@@ -124,6 +124,12 @@ interface TargetReportConfig {
   description: string;
 }
 
+interface TableColumn {
+  field: string;
+  header: string;
+  formatConfig?: FormatConfig;
+}
+
 if (process.env.NODE_ENV === 'development') mirageServer();
 
 const widgetMapping: Record<string, React.ComponentType<any>> = {
@@ -1084,7 +1090,8 @@ const MappingScreen: React.FC = () => {
   const [chartYAxis, setChartYAxis] = useState<string>('');
   const [chartYAxis2, setChartYAxis2] = useState<string>('');
   const [selectedMetrics, setSelectedMetrics] = useState<string[]>([]);
-  const [tableColumns, setTableColumns] = useState<Array<{ field: string; header: string }>>([]);
+  //   const [tableColumns, setTableColumns] = useState<Array<{ field: string; header: string }>>([]);
+  const [tableColumns, setTableColumns] = useState<TableColumn[]>([]);
   const [stackedSeries, setStackedSeries] = useState<
     Array<{ name: string; dataKey: string; color: string }>
   >([]);
@@ -1991,7 +1998,7 @@ const MappingScreen: React.FC = () => {
     const headerLabel =
       parsedResponse.header.find((h: any) => h.fieldName === field)?.label || field;
 
-    const newColumn = { field, header: headerLabel };
+    const newColumn = { field, header: headerLabel, formatConfig: undefined };
 
     setTableColumns((prev) => [...prev, newColumn]);
 
@@ -2012,6 +2019,25 @@ const MappingScreen: React.FC = () => {
 
     const newColumns = [...tableColumns];
     newColumns.splice(index, 1);
+    setTableColumns(newColumns);
+
+    setFieldMappings((prev: any) => ({
+      ...prev,
+      [selectedWidget]: {
+        ...prev[selectedWidget],
+        tableConfig: {
+          ...prev[selectedWidget].tableConfig,
+          columns: newColumns,
+        },
+      },
+    }));
+  };
+
+  const handleTableColumnFormatChange = (index: number, formatConfig: FormatConfig) => {
+    if (!selectedWidget) return;
+
+    const newColumns = [...tableColumns];
+    newColumns[index] = { ...newColumns[index], formatConfig };
     setTableColumns(newColumns);
 
     setFieldMappings((prev: any) => ({
@@ -2665,9 +2691,20 @@ const MappingScreen: React.FC = () => {
                   if (column.field === chaField) {
                     row[column.field] = chaValue;
                   } else {
-                    const value = getKFValue(chaField, chaValue, column.field);
-                    row[column.field] =
-                      column.field.toLowerCase().includes('value') && Number(value || 0);
+                    const rawValue = getKFValue(chaField, chaValue, column.field);
+
+                    // APPLY FORMATTING if configured for this column
+                    if (column.formatConfig && rawValue !== null && rawValue !== undefined) {
+                      const numValue = parseFloat(rawValue);
+                      if (!isNaN(numValue)) {
+                        row[column.field] = applyValueFormat(numValue, column.formatConfig);
+                      } else {
+                        row[column.field] = rawValue;
+                      }
+                    } else {
+                      // No formatting - use raw value
+                      row[column.field] = rawValue;
+                    }
                   }
                 });
 
@@ -2691,7 +2728,7 @@ const MappingScreen: React.FC = () => {
         previewProps = {
           title: tableTitle,
           data: tableData,
-          columns: columns.map((col) => {
+          columns: columns.map((col: any) => {
             const headerLabel =
               parsedResponse.header.find((h: any) => h.fieldName === col.field)?.label ||
               col.header ||
@@ -2699,6 +2736,7 @@ const MappingScreen: React.FC = () => {
             return {
               field: col.field,
               header: headerLabel,
+              formatConfig: col.formatConfig, // Include format config in preview
             };
           }),
         };
@@ -4088,9 +4126,9 @@ const MappingScreen: React.FC = () => {
                             <Grid container spacing={2} alignItems="flex-end">
                               <Grid item xs={12}>
                                 <FormControl fullWidth size="small">
-                                  <InputLabel sx={{ color: 'white' }}>Select Field</InputLabel>
+                                  <InputLabel sx={{ color: 'white' }}>Add Column</InputLabel>
                                   <Select
-                                    label="Select Field"
+                                    label="Add Column"
                                     value=""
                                     onChange={(e) => {
                                       const field = e.target.value as string;
@@ -4128,7 +4166,7 @@ const MappingScreen: React.FC = () => {
 
                             <Box mt={3}>
                               <Typography variant="subtitle2" gutterBottom sx={{ color: 'white' }}>
-                                Current Columns
+                                Configured Columns
                               </Typography>
 
                               {tableColumns.length === 0 ? (
@@ -4138,17 +4176,93 @@ const MappingScreen: React.FC = () => {
                               ) : (
                                 <Box>
                                   {tableColumns.map((column, idx) => (
-                                    <Chip
+                                    <Accordion
                                       key={idx}
-                                      label={`${column.header} (${column.field})`}
-                                      onDelete={() => handleTableColumnRemove(idx)}
-                                      className="m-1"
                                       sx={{
                                         backgroundColor: '#ffffff20',
                                         color: 'white',
-                                        '& .MuiChip-deleteIcon': { color: 'white' },
+                                        mb: 1,
+                                        '&:before': { display: 'none' },
                                       }}
-                                    />
+                                    >
+                                      <AccordionSummary
+                                        expandIcon={<ExpandMoreIcon sx={{ color: 'white' }} />}
+                                      >
+                                        <Box
+                                          display="flex"
+                                          justifyContent="space-between"
+                                          alignItems="center"
+                                          width="100%"
+                                        >
+                                          <Typography sx={{ color: 'white' }}>
+                                            {column.header} ({column.field})
+                                          </Typography>
+                                          <IconButton
+                                            size="small"
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              handleTableColumnRemove(idx);
+                                            }}
+                                            sx={{ color: 'white' }}
+                                          >
+                                            <DeleteIcon fontSize="small" />
+                                          </IconButton>
+                                        </Box>
+                                      </AccordionSummary>
+                                      <AccordionDetails>
+                                        <Box>
+                                          <Typography
+                                            variant="subtitle2"
+                                            gutterBottom
+                                            sx={{ color: 'white' }}
+                                          >
+                                            Column Formatting
+                                          </Typography>
+
+                                          {/* Get sample value for this column */}
+                                          {(() => {
+                                            let sampleValue = 1234567.89;
+
+                                            // Try to get a real sample value from the data
+                                            if (transformedData && tableColumns.length > 0) {
+                                              try {
+                                                const chaField = tableColumns[0].field;
+                                                const chaValues = getCHAValues(chaField).filter(
+                                                  (val) => val !== 'Overall Result'
+                                                );
+
+                                                if (
+                                                  chaValues.length > 0 &&
+                                                  column.field !== chaField
+                                                ) {
+                                                  const value = getKFValue(
+                                                    chaField,
+                                                    chaValues[0],
+                                                    column.field
+                                                  );
+                                                  if (value && !isNaN(parseFloat(value))) {
+                                                    sampleValue = parseFloat(value);
+                                                  }
+                                                }
+                                              } catch (e) {
+                                                console.log('Could not get sample value:', e);
+                                              }
+                                            }
+
+                                            return (
+                                              <FormatConfigUI
+                                                value={column.formatConfig}
+                                                onChange={(config) =>
+                                                  handleTableColumnFormatChange(idx, config)
+                                                }
+                                                sampleValue={sampleValue}
+                                                label={`Format for ${column.header}`}
+                                              />
+                                            );
+                                          })()}
+                                        </Box>
+                                      </AccordionDetails>
+                                    </Accordion>
                                   ))}
                                 </Box>
                               )}
