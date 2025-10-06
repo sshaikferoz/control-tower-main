@@ -11,8 +11,6 @@ import SimpleMetric from '@/components/widgets/SimpleMetric';
 import SimpleMetricDate from '@/components/widgets/SimpleMetricDate';
 import SingleLineChart from '@/components/widgets/SingleLineChart';
 import TableMetric from '@/components/widgets/TableMetric';
-// Import new components
-
 import BarMetric from '@/components/widgets/BarMetric';
 import StackedBarChart from '@/components/widgets/StackedBarChart';
 import OrdersLineChart from '@/components/widgets/OrdersLineChart';
@@ -77,13 +75,11 @@ import {
 } from '@/helpers/types';
 import LoansAppTray from '@/components/widgets/LoansAppTray';
 import mirageServer from '@/lib/mirage/mirageServer';
-// Import the SAP OData service
 import { sapODataService, LayoutData } from '@/services/sapODataService';
 import GeoSpendMapWidget from '@/components/widgets/GeoSpendMapWidget';
 import NewsFeed from '@/components/widgets/NewsFeed';
 import { get } from 'http';
 import { title } from 'process';
-// Add these imports after the existing imports
 import { LoadingScreen } from '@/components/ui/LoadingScreen';
 import { ErrorScreen } from '@/components/ui/ErrorScreen';
 import { useAdminCheck } from '@/hooks/useAdminCheck';
@@ -93,8 +89,10 @@ import PieChartComponent from '@/components/widgets/PieChart';
 import StackedColumn from '@/components/widgets/ColumnChart';
 import PredictionChart from '@/components/widgets/Prediction';
 import RadarChartComponent from '@/components/widgets/RadarChart';
+import { FormatConfigUI } from '@/components/FormatConfigUI';
+import { applyValueFormat } from '@/helpers/formatConfig';
+import type { FormatConfig } from '@/helpers/formatConfig';
 
-// Setup GridLayout with width provider
 const GridLayout = WidthProvider(RGL);
 
 interface Widget {
@@ -119,7 +117,6 @@ interface ApiEndpoint {
   url: string;
 }
 
-// Detailed Report Configuration Interface
 interface TargetReportConfig {
   type: 'Bex Query' | 'Lumira' | 'WAD Template' | 'Web Link';
   technicalId: string;
@@ -127,12 +124,8 @@ interface TargetReportConfig {
   description: string;
 }
 
-// Mock data for API endpoints and entities
-
-// MirageJS mock API server setup
 if (process.env.NODE_ENV === 'development') mirageServer();
 
-// Component mapping
 const widgetMapping: Record<string, React.ComponentType<any>> = {
   'two-metrics': MultiMetrics,
   'two-metrics-piechart': PieMetric,
@@ -140,7 +133,6 @@ const widgetMapping: Record<string, React.ComponentType<any>> = {
   'one-metric-date': SimpleMetricDate,
   'two-metrics-linechart': SingleLineChart,
   'one-metric-table': TableMetric,
-  // New components
   'bar-chart': BarMetric,
   'stacked-bar-chart': StackedBarChart,
   'orders-line-chart': OrdersLineChart,
@@ -148,15 +140,14 @@ const widgetMapping: Record<string, React.ComponentType<any>> = {
   'pie-chart-total': PieChartWithTotal,
   'quadrant-metrics': QuadrantMetrics,
   'loans-app-tray': LoansAppTray,
-  'news-feed': NewsFeed, // Placeholder for news feed
-  announcement: AnnouncementWidget, // Placeholder for map component
-  'pie-chart': PieChartComponent, // Reusing PieChartWithTotal for pie-chart
-  'column-chart': StackedColumn, // New Stacked Column Chart component
+  'news-feed': NewsFeed,
+  announcement: AnnouncementWidget,
+  'pie-chart': PieChartComponent,
+  'column-chart': StackedColumn,
   'prediction-chart': PredictionChart,
   'radar-chart': RadarChartComponent,
 };
 
-// Widget size configurations
 const widgetSizes: Record<string, { w: number; h: number }> = {
   'one-metric': { w: 2, h: 1.5 },
   'one-metric-date': { w: 2, h: 1.5 },
@@ -164,23 +155,21 @@ const widgetSizes: Record<string, { w: number; h: number }> = {
   'two-metrics': { w: 2.5, h: 1.5 },
   'two-metrics-piechart': { w: 2.5, h: 1.5 },
   'one-metric-table': { w: 3, h: 3 },
-  // New components
   'bar-chart': { w: 2.5, h: 3 },
   'stacked-bar-chart': { w: 6, h: 3 },
   'orders-line-chart': { w: 4, h: 3 },
   'dual-line-chart': { w: 4, h: 3 },
   'pie-chart-total': { w: 2.5, h: 3 },
   'quadrant-metrics': { w: 4, h: 3 },
-  'loans-app-tray': { w: 6, h: 3 }, // Wide component to fit menu + chart
-  'news-feed': { w: 12, h: 3 }, // Placeholder for news feed: { w: 12, h: 12 }, // Map component
-  announcement: { w: 12, h: 3 }, // Placeholder for announcement widget
+  'loans-app-tray': { w: 6, h: 3 },
+  'news-feed': { w: 12, h: 3 },
+  announcement: { w: 12, h: 3 },
   'pie-chart': { w: 4, h: 3 },
   'column-chart': { w: 6, h: 3 },
   'prediction-chart': { w: 6, h: 3 },
   'radar-chart': { w: 6, h: 3 },
 };
 
-// Report type options
 const REPORT_TYPE_OPTIONS = [
   { value: 'Bex Query', label: 'Bex Query' },
   { value: 'Lumira', label: 'Lumira' },
@@ -188,7 +177,6 @@ const REPORT_TYPE_OPTIONS = [
   { value: 'Web Link', label: 'Web Link' },
 ];
 
-// Determine the widget mapping type based on widget name
 const getWidgetMappingType = (
   widgetName: string
 ): 'simple' | 'chart' | 'table' | 'quadrant' | 'loans-app-tray' => {
@@ -214,7 +202,6 @@ const getWidgetMappingType = (
   }
 };
 
-// Categorize widgets to determine configuration needs
 const getWidgetCategory = (widgetName: string): string => {
   if (widgetName === 'bar-chart') {
     return 'bar';
@@ -243,32 +230,12 @@ const getWidgetCategory = (widgetName: string): string => {
   } else if (widgetName.includes('table')) {
     return 'table';
   } else if (widgetName === 'radar-chart') {
-    // ADD THIS
-    return 'stacked-bar'; // or create a new 'radar' category if different behavior needed
+    return 'stacked-bar';
   } else {
     return 'simple';
   }
 };
 
-// Get all available MUI icons
-// Get all available MUI icons
-// const getAllMUIIcons = () => {
-//   const iconNames = Object.keys(MUIIcons).filter(
-//     (key) =>
-//       key !== 'createSvgIcon' &&
-//       key !== 'default' &&
-//       !key.startsWith('_') && // Filter out private properties
-//       typeof (MUIIcons as any)[key] === 'object' && // Icons are objects (React components)
-//       (MUIIcons as any)[key].render // Check if it's a React component
-//   );
-
-//   console.log('Total icons found:', iconNames.length);
-//   console.log('Sample icons:', iconNames.slice(0, 10));
-
-//   return iconNames;
-// };
-
-// Get all available MUI icons - simplified version
 const getAllMUIIcons = () => {
   return [
     'Assignment',
@@ -316,7 +283,6 @@ const getAllMUIIcons = () => {
   ];
 };
 
-// Default widget props for preview
 const defaultPropsMapping: Record<string, any> = {
   'one-metric': { name: 'Active Contracts', value: 45 },
   'one-metric-date': {
@@ -362,7 +328,6 @@ const defaultPropsMapping: Record<string, any> = {
       { supplier_name: 'Supply Solutions', contracts: 5, value: '42,345' },
     ],
   },
-  // New components default props
   'bar-chart': {
     data: [
       { name: '2024', value: 163000, fill: '#83bd01' },
@@ -543,7 +508,6 @@ function TabPanel(props: TabPanelProps) {
   );
 }
 
-// LoansAppTray Configuration Component
 interface LoansAppTrayConfigProps {
   selectedWidget: string;
   fieldMappings: any;
@@ -592,7 +556,6 @@ const LoansAppTrayConfig: React.FC<LoansAppTrayConfigProps> = ({
     iconName.toLowerCase().includes(iconSearchQuery.toLowerCase())
   );
 
-  // Initialize menu item configurations
   useEffect(() => {
     if (selectedWidget && !fieldMappings[selectedWidget]?.menuItemConfigs) {
       const defaultMenuItemConfigs = menuItems.reduce((acc, item) => {
@@ -631,7 +594,6 @@ const LoansAppTrayConfig: React.FC<LoansAppTrayConfigProps> = ({
       prev.map((item) => (item.id === itemId ? { ...item, [field]: value } : item))
     );
 
-    // Update widget configuration
     setWidgetConfigurations((prev: any) => ({
       ...prev,
       [selectedWidget]: {
@@ -714,7 +676,6 @@ const LoansAppTrayConfig: React.FC<LoansAppTrayConfigProps> = ({
             {filteredIcons.slice(0, 100).map((iconName) => {
               const IconComponent = (MUIIcons as any)[iconName];
 
-              // Debug: log if icon is not found
               if (!IconComponent) {
                 console.log('Icon not found:', iconName);
                 return null;
@@ -762,13 +723,13 @@ const LoansAppTrayConfig: React.FC<LoansAppTrayConfigProps> = ({
       </DialogActions>
     </Dialog>
   );
+
   return (
     <Box>
       <Typography variant="h6" gutterBottom sx={{ color: 'white' }}>
         LoansAppTray Configuration
       </Typography>
 
-      {/* Menu Items Configuration */}
       <Typography variant="subtitle1" gutterBottom sx={{ color: 'white', mt: 2 }}>
         Menu Items Configuration
       </Typography>
@@ -790,7 +751,6 @@ const LoansAppTrayConfig: React.FC<LoansAppTrayConfigProps> = ({
           </AccordionSummary>
           <AccordionDetails>
             <Grid container spacing={2}>
-              {/* Label */}
               <Grid item xs={12}>
                 <TextField
                   label="Label"
@@ -809,8 +769,6 @@ const LoansAppTrayConfig: React.FC<LoansAppTrayConfigProps> = ({
                 />
               </Grid>
 
-              {/* Icon Selection */}
-              {/* Icon Selection */}
               <Grid item xs={12} sm={6}>
                 <Box display="flex" alignItems="center" gap={2}>
                   <Typography sx={{ color: 'white' }}>Icon:</Typography>
@@ -836,7 +794,6 @@ const LoansAppTrayConfig: React.FC<LoansAppTrayConfigProps> = ({
                 </Box>
               </Grid>
 
-              {/* Count Configuration */}
               <Grid item xs={12}>
                 <Typography variant="subtitle2" sx={{ color: 'white', mb: 1 }}>
                   Count Configuration
@@ -897,7 +854,6 @@ const LoansAppTrayConfig: React.FC<LoansAppTrayConfigProps> = ({
                       Query Mapping for Menu Item {item.id}
                     </Typography>
 
-                    {/* Individual Report Name */}
                     <TextField
                       label={`Report Name for ${item.label}`}
                       fullWidth
@@ -1041,7 +997,6 @@ const LoansAppTrayConfig: React.FC<LoansAppTrayConfigProps> = ({
                                       kfField: kfField,
                                     });
 
-                                    // Update the count value with mapped data
                                     if (chaField && chaValue && kfField) {
                                       const mappedValue = getKFValue(chaField, chaValue, kfField);
                                       if (mappedValue !== null) {
@@ -1091,11 +1046,9 @@ const LoansAppTrayConfig: React.FC<LoansAppTrayConfigProps> = ({
 };
 
 const MappingScreen: React.FC = () => {
-  // Add admin check hooks
   const urlParams = useURLParams();
   const { isAdmin, adminCheckLoading, adminCheckError } = useAdminCheck();
 
-  // Check if edit mode is allowed based on admin status and URL parameter
   const isEditModeAllowed = useMemo(() => {
     if (!isAdmin) return false;
     return urlParams?.get('state') === 'edit';
@@ -1115,7 +1068,6 @@ const MappingScreen: React.FC = () => {
   const [layout, setLayout] = useState<LayoutItem[]>([]);
   const [selectedWidget, setSelectedWidget] = useState<string | null>(null);
   const [selectedWidgetName, setSelectedWidgetName] = useState<string | null>(null);
-
   const [apiEndpoints, setApiEndpoints] = useState<ApiEndpoint[]>([]);
   const [fieldMappings, setFieldMappings] = useState<FieldMappings>({});
   const [loading, setLoading] = useState<boolean>(false);
@@ -1126,80 +1078,56 @@ const MappingScreen: React.FC = () => {
   const [currentMappingField, setCurrentMappingField] = useState<string>('');
   const [tabValue, setTabValue] = useState(0);
   const [previewData, setPreviewData] = useState<any>(null);
-
-  // New state for roles
   const [newRole, setNewRole] = useState<string>('');
-
-  // State for widget configurations including roles and description
   const [widgetConfigurations, setWidgetConfigurations] = useState<Record<string, any>>({});
-
-  // For chart configuration
   const [chartXAxis, setChartXAxis] = useState<string>('');
   const [chartYAxis, setChartYAxis] = useState<string>('');
-  const [chartYAxis2, setChartYAxis2] = useState<string>(''); // For dual-line charts
-  const [selectedMetrics, setSelectedMetrics] = useState<string[]>([]); // For quadrant metrics
-
-  // For table configuration
+  const [chartYAxis2, setChartYAxis2] = useState<string>('');
+  const [selectedMetrics, setSelectedMetrics] = useState<string[]>([]);
   const [tableColumns, setTableColumns] = useState<Array<{ field: string; header: string }>>([]);
-
-  // For stacked bar chart series
   const [stackedSeries, setStackedSeries] = useState<
     Array<{ name: string; dataKey: string; color: string }>
   >([]);
-
-  // New state for save operation
   const [isSaving, setIsSaving] = useState<boolean>(false);
   const [saveMessage, setSaveMessage] = useState<string>('');
   const [showSaveAlert, setShowSaveAlert] = useState<boolean>(false);
   const [saveAlertSeverity, setSaveAlertSeverity] = useState<'success' | 'error'>('success');
-
   const [announcementCount, setAnnouncementCount] = useState(0);
   const [announcementValues, setAnnouncementValues] = useState<string[]>([]);
   const [changeColor, setChangeColorOneMetric] = useState<string>('');
   const [currentLoadedReport, setCurrentLoadedReport] = useState<string>('');
 
   useEffect(() => {
-    // Only proceed if admin check is complete and user is authorized
     if (!adminCheckLoading && isAdmin) {
       fetch('/api/endpoints')
         .then((res) => res.json())
         .then((data) => setApiEndpoints(data.endpoints))
         .catch((err) => console.error('Failed to fetch endpoints:', err));
 
-      // For test data, automatically fetch on load
       fetchReportData();
     }
   }, [adminCheckLoading, isAdmin]);
 
-  // Add this after the existing useEffect that fetches endpoints
   useEffect(() => {
     const loadExistingWidgets = async () => {
       if (sectionId && sectionId !== 'undefined') {
         try {
           setLoading(true);
-          //   console.log('Loading existing widgets for section:', sectionId);
 
-          // Fetch widgets data from SAP using your specific method
           const widgets = await sapODataService.fetchWidgetsBySectionId(sectionId);
 
           if (widgets && widgets.length > 0) {
-            // Filter out deleted and inactive widgets
             const activeWidgets = widgets.filter((widget: any) => widget.active && !widget.deleted);
 
             if (activeWidgets.length > 0) {
-              //   console.log('Found existing widgets:', activeWidgets);
-
-              // Transform widgets to the format expected by MappingScreen
               const transformedWidgets: Widget[] = activeWidgets.map((widget: any) => ({
                 id: widget.id,
                 name: widget.type,
                 props: widget.properties || {},
               }));
 
-              // Set widgets state
               setWidgets(transformedWidgets);
 
-              // Transform and set layout
               const transformedLayout: LayoutItem[] = activeWidgets.map(
                 (widget: any, index: number) => {
                   const layoutConfig = widget.layoutConfig || {};
@@ -1219,16 +1147,13 @@ const MappingScreen: React.FC = () => {
 
               setLayout(transformedLayout);
 
-              // Set field mappings and widget configurations
               const transformedFieldMappings: any = {};
               const transformedWidgetConfigs: Record<string, any> = {};
 
               activeWidgets.forEach((widget: any) => {
-                // Set field mappings
                 if (widget.fieldMappings) {
                   transformedFieldMappings[widget.id] = widget.fieldMappings;
                 } else {
-                  // Initialize empty field mappings if none exist
                   transformedFieldMappings[widget.id] = {
                     reportName: reportName,
                     mappingType: getWidgetMappingType(widget.type),
@@ -1242,13 +1167,12 @@ const MappingScreen: React.FC = () => {
                   };
                 }
 
-                // Set widget configurations
                 transformedWidgetConfigs[widget.id] = {
                   ...widget.properties,
                   widgetType: widget.type,
                   configType: getWidgetMappingType(widget.type),
                   widgetCategory: getWidgetCategory(widget.type),
-                  roles: widget.roles ? widget.roles.map((role: any) => role.Name || role) : [], // Extract just the names
+                  roles: widget.roles ? widget.roles.map((role: any) => role.Name || role) : [],
                   description: widget.description || '',
                 };
               });
@@ -1256,29 +1180,17 @@ const MappingScreen: React.FC = () => {
               setFieldMappings(transformedFieldMappings);
               setWidgetConfigurations(transformedWidgetConfigs);
 
-              console.log('Loaded existing widgets configuration:', {
-                widgets: transformedWidgets,
-                layout: transformedLayout,
-                fieldMappings: transformedFieldMappings,
-                widgetConfigs: transformedWidgetConfigs,
-              });
               const firstWidgetMapping = activeWidgets[0]?.fieldMappings;
               if (firstWidgetMapping?.reportName) {
                 setReportName(firstWidgetMapping.reportName);
               }
-
-              setFieldMappings(transformedFieldMappings);
-              setWidgetConfigurations(transformedWidgetConfigs);
             }
-          } else {
-            console.log('No widgets found for section:', sectionId);
           }
 
           setLoading(false);
         } catch (error) {
           console.error('Error loading existing widgets:', error);
           setLoading(false);
-          // Set default empty states on error
           setWidgets([]);
           setLayout([]);
           setFieldMappings({});
@@ -1287,15 +1199,13 @@ const MappingScreen: React.FC = () => {
       }
     };
 
-    // Only load existing widgets if we have a valid sectionId
     if (sectionId && sectionId !== 'undefined' && sectionId !== '') {
       loadExistingWidgets();
     }
-  }, [sectionId, sectionName]); // Added dependencies for proper re-loading
+  }, [sectionId, sectionName]);
 
   useEffect(() => {
     if (reportName && reportName !== currentLoadedReport && isAdmin) {
-      console.log('Fetching new report:', reportName, 'Previous:', currentLoadedReport);
       fetchReportData();
     }
   }, [reportName, currentLoadedReport, isAdmin]);
@@ -1309,26 +1219,19 @@ const MappingScreen: React.FC = () => {
   };
 
   const initializeWidgetMappingConfig = (widgetId: string, widgetName: string) => {
-    // Determine mapping type based on widget type
     const mappingType = getWidgetMappingType(widgetName);
     const widgetCategory = getWidgetCategory(widgetName);
-
-    // Create empty field mappings based on widget config fields
     const fields: Record<string, WidgetFieldMapping> = {};
-
-    // Get the fields from widget config
     const configFields = widgetConfigFields[widgetName as keyof typeof widgetConfigFields] || [];
 
-    // Initialize each field with default mapping
     configFields.forEach(({ field, path }) => {
       fields[field] = {
         fieldPath: path,
-        inputType: 'manual', // Default to manual
-        manualValue: getValueByPath(defaultPropsMapping[widgetName], path), // Get default value from default props
+        inputType: 'manual',
+        manualValue: getValueByPath(defaultPropsMapping[widgetName], path),
       };
     });
 
-    // Initialize Detailed Report configuration
     const targetReportConfig: TargetReportConfig = {
       type: 'Bex Query',
       technicalId: '',
@@ -1336,19 +1239,16 @@ const MappingScreen: React.FC = () => {
       description: '',
     };
 
-    // Create the widget mapping config with appropriate type-specific settings
     const baseConfig = {
       reportName: reportName,
       mappingType: mappingType,
       fields: fields,
-      targetReport: targetReportConfig, // Add Detailed Report configuration
+      targetReport: targetReportConfig,
     };
 
-    // Add specific configurations based on widget type
     let configToSave;
 
     if (widgetName === 'loans-app-tray') {
-      // Initialize with separate query configs for each menu item
       const defaultMenuItemConfigs = {
         1: {
           reportName: reportName,
@@ -1397,9 +1297,7 @@ const MappingScreen: React.FC = () => {
         menuItemConfigs: defaultMenuItemConfigs,
         chartDataConfig: chartDataConfig,
       };
-    }
-    // Add chart-specific configuration
-    else if (mappingType === 'chart') {
+    } else if (mappingType === 'chart') {
       if (widgetCategory === 'dual-line') {
         configToSave = {
           ...baseConfig,
@@ -1412,16 +1310,15 @@ const MappingScreen: React.FC = () => {
           },
         };
       } else if (widgetCategory === 'stacked-bar') {
-        // For stacked bar charts, initialize with empty fields array and series config
         const defaultSeries = defaultPropsMapping[widgetName]?.series || [];
         configToSave = {
           ...baseConfig,
           chartConfig: {
             xAxis: { field: '', type: 'CHA' },
-            yAxis: { fields: [], type: 'KF' }, // Empty fields array
+            yAxis: { fields: [], type: 'KF' },
           },
           seriesConfig: {
-            series: [...defaultSeries], // Initialize with default series from props (use spread to create a copy)
+            series: [...defaultSeries],
           },
         };
       } else {
@@ -1433,18 +1330,14 @@ const MappingScreen: React.FC = () => {
           },
         };
       }
-    }
-    // Add table-specific configuration
-    else if (mappingType === 'table') {
+    } else if (mappingType === 'table') {
       configToSave = {
         ...baseConfig,
         tableConfig: {
           columns: [],
         },
       };
-    }
-    // Add quadrant-specific configuration
-    else if (mappingType === 'quadrant') {
+    } else if (mappingType === 'quadrant') {
       configToSave = {
         ...baseConfig,
         quadrantConfig: {
@@ -1452,19 +1345,15 @@ const MappingScreen: React.FC = () => {
           metrics: [],
         },
       };
-    }
-    // Simple metrics
-    else {
+    } else {
       configToSave = baseConfig;
     }
 
-    // Update fieldMappings state
     setFieldMappings((prev: any) => ({
       ...prev,
       [widgetId]: configToSave,
     }));
 
-    // Store the default widget props in widgetConfigurations with roles and description
     setWidgetConfigurations((prev) => ({
       ...prev,
       [widgetId]: {
@@ -1472,8 +1361,8 @@ const MappingScreen: React.FC = () => {
         widgetType: widgetName,
         configType: mappingType,
         widgetCategory: widgetCategory,
-        roles: [], // Initialize with empty roles array
-        description: '', // Initialize with empty description
+        roles: [],
+        description: '',
       },
     }));
   };
@@ -1481,37 +1370,29 @@ const MappingScreen: React.FC = () => {
   const addWidget = (name: string, existingWidgetId?: string) => {
     if (!widgetMapping[name]) return;
 
-    // Use existing ID if provided, otherwise generate new one
     const widgetId = existingWidgetId || `widget-${Date.now()}`;
     const { w, h } = widgetSizes[name] || { w: 2, h: 2 };
 
-    // Only add to widgets array if it's a new widget
     if (!existingWidgetId) {
       setWidgets((prev) => [...prev, { id: widgetId, name, props: {} }]);
-
-      // Add to layout only for new widgets
       setLayout((prev: any) => [
         ...prev,
         { i: widgetId, x: 0, y: Infinity, w, h, static: false, sectionName },
       ]);
     }
 
-    // Initialize widget mapping config (for both new and existing widgets)
     if (!fieldMappings[widgetId]) {
       initializeWidgetMappingConfig(widgetId, name);
     }
   };
 
   const removeWidget = (id: string) => {
-    // Instead of removing, mark as deleted
     setWidgets((prev) =>
       prev.map((widget) => (widget.id === id ? { ...widget, deleted: true } : widget))
     );
 
     setLayout((prev) => prev.filter((item) => item.i !== id));
 
-    // Keep field mappings and configurations for recovery if needed
-    // Or you can mark them as deleted too
     setFieldMappings((prev) => ({
       ...prev,
       [id]: {
@@ -1552,22 +1433,18 @@ const MappingScreen: React.FC = () => {
     setIsSaving(true);
 
     try {
-      // Add sectionName to the layout
       const updatedLayout = layout.map((item) => ({
         ...item,
       }));
 
-      // Create a clean version of fieldMappings for saving
       const cleanedFieldMappings = Object.entries(fieldMappings).reduce(
         (acc, [widgetId, config]) => {
-          // Deep copy to avoid reference issues
           acc[widgetId] = JSON.parse(JSON.stringify(config));
           return acc;
         },
         {} as FieldMappings
       );
 
-      // Include roles, description, and other configurations in the widgets data
       const widgetsWithCompleteData = widgets.map((widget) => {
         const widgetConfig = widgetConfigurations[widget.id] || {};
         const { widgetType, roles, description, ...cleanProps } = widgetConfig;
@@ -1576,15 +1453,14 @@ const MappingScreen: React.FC = () => {
           id: widget.id,
           name: widget.name,
           props: cleanProps,
-          roles: roles || [], // Include roles
-          Description: description || '', // Save description as "Description"
+          roles: roles || [],
+          Description: description || '',
           widgetType: widgetType || widget.name,
-          deleted: widget.deleted || false, // Add deleted flag
-          active: !widget.deleted, // Add active flag (opposite of deleted)
+          deleted: widget.deleted || false,
+          active: !widget.deleted,
         };
       });
 
-      // Prepare layout data for the service
       const layoutData: LayoutData = {
         sectionName: sectionName,
         layout: updatedLayout,
@@ -1593,14 +1469,8 @@ const MappingScreen: React.FC = () => {
         expanded: isExpanded,
       };
 
-      console.log('Saving layout data:', layoutData);
-
-      // Save using the SAP OData service
       const result = await sapODataService.saveWidgetLayout(layoutData, sectionId);
 
-      console.log('Save successful:', result);
-
-      // Also save to sessionStorage for backward compatibility
       let payload = JSON.parse(sessionStorage.getItem('payload') || '[]');
       if (typeof payload === 'string') {
         payload = JSON.parse(payload);
@@ -1618,11 +1488,9 @@ const MappingScreen: React.FC = () => {
       sessionStorage.setItem('payload', JSON.stringify(payload));
 
       setSaveMessage(`Layout saved successfully!`);
-
       setSaveAlertSeverity('success');
       setShowSaveAlert(true);
 
-      // Navigate to the dashboard page after a short delay
       setTimeout(() => {
         window.location.href =
           process.env.NODE_ENV === 'development'
@@ -1640,7 +1508,7 @@ const MappingScreen: React.FC = () => {
       setIsSaving(false);
     }
   };
-  // Update the handleWidgetClick function to better load configurations
+
   const handleWidgetClick = (id: string, event: React.MouseEvent) => {
     event.stopPropagation();
     if (selectedWidget === id) return;
@@ -1650,7 +1518,6 @@ const MappingScreen: React.FC = () => {
       setSelectedWidgetName(widgetInfo.name);
     }
 
-    // Save preview data to widget configurations if it exists
     if (selectedWidget && previewData) {
       setWidgetConfigurations((prev) => ({
         ...prev,
@@ -1661,7 +1528,6 @@ const MappingScreen: React.FC = () => {
       }));
     }
 
-    // Select the new widget
     setSelectedWidget(id);
     setPreviewData(null);
     setTabValue(0);
@@ -1672,13 +1538,11 @@ const MappingScreen: React.FC = () => {
     if (!fieldMappings[id]) {
       initializeWidgetMappingConfig(id, widget.name);
     } else {
-      // ADD THIS: Load the report name from this widget's mapping
       const widgetMapping = fieldMappings[id];
       if (widgetMapping.reportName && widgetMapping.reportName !== reportName) {
         setReportName(widgetMapping.reportName);
       }
 
-      // Load existing chart/table configurations
       const config = fieldMappings[id];
       const widgetCategory = getWidgetCategory(widget.name);
 
@@ -1708,9 +1572,7 @@ const MappingScreen: React.FC = () => {
 
   const setChangeColor = (color: string) => {
     if (!selectedWidget) return;
-    console.log('setChangeColor was called with:', color);
     const field = 'color';
-    console.log(selectedWidget);
     setFieldMappings((prev) => ({
       ...prev,
       [selectedWidget]: {
@@ -1725,12 +1587,9 @@ const MappingScreen: React.FC = () => {
       },
     }));
 
-    // Live update the widget configuration
     handleLiveValueUpdate(field, color);
-    // Optionally update state or perform other actions here
   };
 
-  // Handle roles change
   const handleRolesChange = (roles: string[]) => {
     if (!selectedWidget) return;
 
@@ -1743,7 +1602,6 @@ const MappingScreen: React.FC = () => {
     }));
   };
 
-  // Handle description change
   const handleDescriptionChange = (description: string) => {
     if (!selectedWidget) return;
 
@@ -1756,7 +1614,6 @@ const MappingScreen: React.FC = () => {
     }));
   };
 
-  // Handle Detailed Report configuration changes
   const handleTargetReportChange = (field: keyof TargetReportConfig, value: string) => {
     if (!selectedWidget) return;
 
@@ -1772,7 +1629,6 @@ const MappingScreen: React.FC = () => {
     }));
   };
 
-  // Live value update function
   const handleLiveValueUpdate = (field: string, value: any) => {
     if (!selectedWidget) return;
 
@@ -1787,14 +1643,31 @@ const MappingScreen: React.FC = () => {
       return updated;
     });
 
-    // Also update preview data if it exists
     if (previewData) {
-      console.log(previewData, 'previewwwwww');
       setPreviewData((prev: any) => ({
         ...prev,
         [field]: value,
       }));
     }
+  };
+
+  // NEW: Handler for format config changes
+  const handleFormatConfigChange = (field: string, formatConfig: FormatConfig) => {
+    if (!selectedWidget) return;
+
+    setFieldMappings((prev) => ({
+      ...prev,
+      [selectedWidget]: {
+        ...prev[selectedWidget],
+        fields: {
+          ...prev[selectedWidget].fields,
+          [field]: {
+            ...prev[selectedWidget].fields[field],
+            formatConfig: formatConfig,
+          },
+        },
+      },
+    }));
   };
 
   const handleChartAxisChange = (
@@ -1809,7 +1682,6 @@ const MappingScreen: React.FC = () => {
 
     const widgetCategory = getWidgetCategory(widgetType);
 
-    // Update appropriate state
     if (axisType === 'xAxis') {
       setChartXAxis(field);
     } else if (axisType === 'yAxis') {
@@ -1819,7 +1691,6 @@ const MappingScreen: React.FC = () => {
     }
 
     if (widgetCategory === 'stacked-bar') {
-      // For stacked-bar, we add to the Y axes array
       if (axisType === 'xAxis') {
         setFieldMappings((prev: any) => ({
           ...prev,
@@ -1832,20 +1703,16 @@ const MappingScreen: React.FC = () => {
           },
         }));
       } else if (axisType === 'yAxis') {
-        // For stacked bar, when adding a Y axis, we add it to the fields array
-        // and also update the series config
         setFieldMappings((prev) => {
-          const config = JSON.parse(JSON.stringify(prev[selectedWidget])); // Deep copy to avoid issues
+          const config = JSON.parse(JSON.stringify(prev[selectedWidget]));
           const currentFields = config.chartConfig?.yAxis?.fields || [];
 
           if (!currentFields.includes(field)) {
-            // Generate a color for the new series
             const colors = ['#84BD00', '#FFC846', '#8979FF', '#E1553F', '#5899DA'];
             const newSeriesIndex = stackedSeries.length;
             const seriesName =
               parsedResponse?.header.find((h: any) => h.fieldName === field)?.label || field;
 
-            // Add to fields array
             config.chartConfig = {
               ...config.chartConfig,
               yAxis: {
@@ -1855,18 +1722,15 @@ const MappingScreen: React.FC = () => {
               },
             };
 
-            // Add to series config
             const newSeries = {
               name: seriesName,
               dataKey: field,
               color: colors[newSeriesIndex % colors.length],
             };
 
-            // Update local state
             const updatedSeries = [...stackedSeries, newSeries];
             setStackedSeries(updatedSeries);
 
-            // Update config
             if (!config.seriesConfig) {
               config.seriesConfig = { series: [] };
             }
@@ -1878,7 +1742,6 @@ const MappingScreen: React.FC = () => {
         });
       }
     } else if (widgetCategory === 'dual-line') {
-      // For dual-line charts, handle yAxis as an array with two elements
       setFieldMappings((prev: any) => {
         const config = { ...prev[selectedWidget] };
 
@@ -1889,13 +1752,11 @@ const MappingScreen: React.FC = () => {
         if (axisType === 'xAxis') {
           config.chartConfig.xAxis = { field, type: fieldType };
         } else if (axisType === 'yAxis') {
-          // Initialize yAxis array if it doesn't exist
           if (!Array.isArray(config.chartConfig.yAxis)) {
             config.chartConfig.yAxis = [null, null];
           }
           config.chartConfig.yAxis[0] = { field, type: fieldType };
         } else if (axisType === 'yAxis2') {
-          // Initialize yAxis array if it doesn't exist
           if (!Array.isArray(config.chartConfig.yAxis)) {
             config.chartConfig.yAxis = [null, null];
           }
@@ -1905,7 +1766,6 @@ const MappingScreen: React.FC = () => {
         return { ...prev, [selectedWidget]: config };
       });
     } else {
-      // For regular charts with single x/y axis
       setFieldMappings((prev: any) => ({
         ...prev,
         [selectedWidget]: {
@@ -1920,27 +1780,23 @@ const MappingScreen: React.FC = () => {
         },
       }));
     }
-  }; // Remove a Y-axis from stacked bar chart
+  };
+
   const handleRemoveStackedSeries = (index: number) => {
     if (!selectedWidget) return;
 
-    // Update stackedSeries state
     setStackedSeries((prev) => {
       const newSeries = [...prev];
       const removed = newSeries.splice(index, 1)[0];
 
-      // Also update fieldMappings
       setFieldMappings((prevMappings) => {
-        // Deep copy to avoid reference issues
         const config = JSON.parse(JSON.stringify(prevMappings[selectedWidget]));
 
-        // Remove from fields array
         if (config.chartConfig?.yAxis?.fields) {
           const fields = config.chartConfig.yAxis.fields.filter((f: any) => f !== removed.dataKey);
           config.chartConfig.yAxis.fields = fields;
         }
 
-        // Remove from series config
         if (config.seriesConfig?.series) {
           config.seriesConfig.series = config.seriesConfig.series.filter(
             (_: any, i: any) => i !== index
@@ -1954,7 +1810,6 @@ const MappingScreen: React.FC = () => {
     });
   };
 
-  // Handle selection of metrics for quadrant chart
   const handleQuadrantMetricSelection = (metricField: string, index: number) => {
     if (!selectedWidget) return;
 
@@ -1969,7 +1824,7 @@ const MappingScreen: React.FC = () => {
 
       if (!config.quadrantConfig) {
         config.quadrantConfig = {
-          chaField: chartXAxis, // Using the current CHA field
+          chaField: chartXAxis,
           metrics: [],
         };
       }
@@ -2005,8 +1860,6 @@ const MappingScreen: React.FC = () => {
   const handleManualValueChange = (field: string, value: any) => {
     if (!selectedWidget) return;
 
-    console.log(value, field, '---', '----------');
-
     setFieldMappings((prev) => ({
       ...prev,
       [selectedWidget]: {
@@ -2022,13 +1875,11 @@ const MappingScreen: React.FC = () => {
       },
     }));
 
-    // Live update the widget configuration
     handleLiveValueUpdate(field, value);
   };
 
   const handleAnnouncementValueChange = (field: string, value: any) => {
     if (!selectedWidget) return;
-    console.log(field, value, fieldMappings, '----------ooooooo');
 
     setFieldMappings((prev) => ({
       ...prev,
@@ -2045,9 +1896,6 @@ const MappingScreen: React.FC = () => {
       },
     }));
 
-    console.log(fieldMappings, 'fielddddmapppingss');
-
-    // Live update the widget configuration
     handleLiveValueUpdate(field, value);
   };
 
@@ -2058,19 +1906,15 @@ const MappingScreen: React.FC = () => {
   };
 
   const handleAnnouncementValueChanges = (index: any, value: any) => {
-    console.log('valueee', value);
     if (!selectedWidget) return;
     const updatedValues = [...announcementValues];
     updatedValues[index] = value;
     setAnnouncementValues(updatedValues);
-    console.log(announcementValues, 'annnnnnounccccccccc');
-
     setFieldsForAnnouncement();
   };
 
   const setFieldsForAnnouncement = () => {
     const field = 'announcement';
-
     if (!selectedWidget) return;
 
     setFieldMappings((prev) => ({
@@ -2088,13 +1932,10 @@ const MappingScreen: React.FC = () => {
       },
     }));
 
-    // Live update the widget configuration
-    console.log(announcementValues, 'finalll values');
     handleLiveValueUpdate(field, announcementValues);
   };
 
   const handleDescriptionToggle = (value: boolean) => {
-    console.log(value, 'valueeee');
     if (!selectedWidget) return;
     const field = 'showdescription';
 
@@ -2113,8 +1954,6 @@ const MappingScreen: React.FC = () => {
       },
     }));
 
-    // Live update the widget configuration
-    console.log(value, 'finalll values');
     handleLiveValueUpdate(field, value);
   };
 
@@ -2149,16 +1988,13 @@ const MappingScreen: React.FC = () => {
   const handleTableColumnAdd = (field: any) => {
     if (!selectedWidget) return;
 
-    // Get the label from the parsed response instead of using the field name
     const headerLabel =
       parsedResponse.header.find((h: any) => h.fieldName === field)?.label || field;
 
     const newColumn = { field, header: headerLabel };
 
-    // Add to local state
     setTableColumns((prev) => [...prev, newColumn]);
 
-    // Add to field mappings
     setFieldMappings((prev: any) => ({
       ...prev,
       [selectedWidget]: {
@@ -2174,12 +2010,10 @@ const MappingScreen: React.FC = () => {
   const handleTableColumnRemove = (index: number) => {
     if (!selectedWidget) return;
 
-    // Update local state
     const newColumns = [...tableColumns];
     newColumns.splice(index, 1);
     setTableColumns(newColumns);
 
-    // Update field mappings
     setFieldMappings((prev: any) => ({
       ...prev,
       [selectedWidget]: {
@@ -2205,7 +2039,6 @@ const MappingScreen: React.FC = () => {
 
   const getWidgetConfigFields = () => {
     const widgetType = getSelectedWidgetType();
-    console.log(widgetType, 'typeeee');
     return widgetType
       ? widgetConfigFields[widgetType as keyof typeof widgetConfigFields] || []
       : [];
@@ -2235,20 +2068,14 @@ const MappingScreen: React.FC = () => {
         process.env.NODE_ENV === 'development'
           ? `/api/sap/bc/bsp/sap/zbw_reporting/execute_report_oo.htm?query=${reportName}`
           : `/sap/bc/bsp/sap/zbw_reporting/execute_report_oo.htm?query=${reportName}`
-        //
       );
       const data = await res.text();
       const parsedJSON = parseXMLToJson(data);
       setParsedResponse(parsedJSON);
 
-      // Transform the data for easier access
       const transformed = transformFormMetadata(parsedJSON);
       setTransformedData(transformed);
-
-      // Track which report is currently loaded
       setCurrentLoadedReport(reportName);
-
-      console.log('Transformed data:', transformed);
     } catch (error) {
       console.error('Error fetching report data:', error);
     } finally {
@@ -2269,7 +2096,6 @@ const MappingScreen: React.FC = () => {
   const getCHAValues = (selectedCHA: string) => {
     if (!transformedData || !selectedCHA) return [];
 
-    // Get all CHA values from the transformed data
     if (transformedData.FormStructure[selectedCHA]) {
       return Object.keys(transformedData.FormStructure[selectedCHA]);
     }
@@ -2295,7 +2121,6 @@ const MappingScreen: React.FC = () => {
       },
     }));
 
-    // Also update previewData for the current selected widget
     if (selectedWidget === widgetId) {
       setPreviewData(previewProps);
     }
@@ -2321,7 +2146,6 @@ const MappingScreen: React.FC = () => {
     closeMappingDialog();
   };
 
-  // Check if any fields have mapped input type to show query configuration
   const hasAnyMappedFields = () => {
     if (!selectedWidget || !fieldMappings[selectedWidget]) return false;
 
@@ -2329,7 +2153,6 @@ const MappingScreen: React.FC = () => {
     return Object.values(fields).some((field: any) => field.inputType === 'mapped');
   };
 
-  // Calculate tab indices based on widget type
   const getTabIndices = () => {
     if (!selectedWidget || !fieldMappings[selectedWidget]) return {};
     const mappingType: any = fieldMappings[selectedWidget]?.mappingType;
@@ -2342,7 +2165,6 @@ const MappingScreen: React.FC = () => {
       info: currentIndex++,
     };
 
-    // Add conditional tabs
     if (widgetType === 'loans-app-tray') {
       indices.loansAppTrayConfig = currentIndex++;
     } else if (mappingType === 'chart') {
@@ -2359,7 +2181,6 @@ const MappingScreen: React.FC = () => {
     return indices;
   };
 
-  // LoansAppTray preview generation
   const generateLoansAppTrayPreview = () => {
     if (!selectedWidget || !fieldMappings[selectedWidget]) return;
 
@@ -2371,7 +2192,6 @@ const MappingScreen: React.FC = () => {
       chartDataConfig: config.chartDataConfig || {},
     };
 
-    // Process menu items
     if (config.menuItemConfigs) {
       const processedMenuItems = Object.entries(config.menuItemConfigs).map(
         ([itemId, itemConfig]: [string, any]) => {
@@ -2390,7 +2210,6 @@ const MappingScreen: React.FC = () => {
             }
           }
 
-          // Get the menu item details from widgetConfigurations
           const widgetConfig = widgetConfigurations[selectedWidget];
           const menuItem = widgetConfig?.menuItems?.find(
             (item: any) => item.id === parseInt(itemId)
@@ -2408,7 +2227,6 @@ const MappingScreen: React.FC = () => {
       previewProps.menuItems = processedMenuItems;
     }
 
-    // Process chart data
     if (config.chartDataConfig?.inputType === 'manual') {
       previewProps.chartData = config.chartDataConfig.manualData || [
         { name: 'PR', value: 86, color: '#449ca4' },
@@ -2444,14 +2262,12 @@ const MappingScreen: React.FC = () => {
     updateWidgetConfiguration(selectedWidget, previewProps);
   };
 
-  // Generate preview data based on widget type and mappings
   const generatePreview = () => {
     if (!selectedWidget || !transformedData) return;
 
     const widgetType = getSelectedWidgetType();
     if (!widgetType) return;
 
-    // Handle LoansAppTray first
     if (widgetType === 'loans-app-tray') {
       generateLoansAppTrayPreview();
       return;
@@ -2460,35 +2276,32 @@ const MappingScreen: React.FC = () => {
     const config = fieldMappings[selectedWidget];
     const widgetCategory = getWidgetCategory(widgetType);
 
-    // Generate preview based on widget type and mapping configuration
     let previewProps: any = {};
 
-    // Handle simple metrics
     if (config.mappingType === 'simple') {
-      // For simple metrics, process each field
       Object.entries(config.fields).forEach(([field, fieldMapping]) => {
+        let value: any;
+
         if (fieldMapping.inputType === 'manual') {
-          // Use manual value directly
-          previewProps[field] = fieldMapping.manualValue;
+          value = fieldMapping.manualValue;
         } else if (fieldMapping.inputType === 'mapped' && fieldMapping.mappedConfig) {
-          // Get value from the data
           const { chaField, chaValue, kfField } = fieldMapping.mappedConfig;
-          const value = getKFValue(chaField, chaValue, kfField);
-          if (value !== null) {
-            previewProps[field] = value;
-          }
+          value = getKFValue(chaField, chaValue, kfField);
+        }
+
+        // APPLY FORMATTING HERE
+        if (fieldMapping.formatConfig && value !== null && value !== undefined) {
+          previewProps[field] = applyValueFormat(value, fieldMapping.formatConfig);
+        } else {
+          previewProps[field] = value;
         }
       });
       updateWidgetConfiguration(selectedWidget, previewProps);
-    }
-    // Handle chart-type widgets
-    else if (config.mappingType === 'chart' && config.chartConfig) {
+    } else if (config.mappingType === 'chart' && config.chartConfig) {
       try {
-        // For different chart types
         if (widgetCategory === 'bar') {
           const { xAxis, yAxis } = config.chartConfig;
           if (xAxis?.field && yAxis?.field) {
-            // Build bar chart data from transformed data
             const chartData = Object.entries(transformedData.FormStructure[xAxis.field] || {})
               .filter(([chaValue]) => chaValue !== 'Overall Result')
               .map(([chaValue, values]: [string, any], index) => {
@@ -2512,7 +2325,6 @@ const MappingScreen: React.FC = () => {
           updateWidgetConfiguration(selectedWidget, previewProps);
         } else if (widgetCategory === 'stacked-bar' || widgetCategory === 'column-chart') {
           const { xAxis, yAxis } = config.chartConfig;
-          // Make sure to initialize with default empty arrays to prevent undefined errors
           previewProps = {
             data: [],
             series: [],
@@ -2520,16 +2332,13 @@ const MappingScreen: React.FC = () => {
           };
 
           if (xAxis?.field && yAxis?.fields?.length > 0) {
-            // Get X-axis values (excluding "Overall Result")
             const xValues = Object.keys(transformedData.FormStructure[xAxis.field] || {}).filter(
               (key) => key !== 'Overall Result'
             );
 
-            // Create data array with each X value and corresponding Y values
             const data = xValues.map((xValue) => {
               const entry: Record<string, any> = { name: xValue };
 
-              // Add values for each Y series
               yAxis.fields.forEach((kfField: any) => {
                 entry[kfField] = Number(
                   transformedData.FormStructure[xAxis.field][xValue][kfField] || 0
@@ -2539,10 +2348,7 @@ const MappingScreen: React.FC = () => {
               return entry;
             });
 
-            // Get title & ensure it has a default
-            // const title = transformedData.FormMetadata[xAxis.field]?.label || 'Stacked Chart';
             const title = widgetConfigurations[selectedWidget]?.title;
-            // Always use the series from the config to ensure dataKey matches what's in the data
             const series = config.seriesConfig?.series || [];
 
             previewProps = {
@@ -2555,7 +2361,6 @@ const MappingScreen: React.FC = () => {
         } else if (widgetCategory === 'single-line' || widgetCategory === 'orders-line-chart') {
           const { xAxis, yAxis } = config.chartConfig;
           if (xAxis?.field && yAxis?.field) {
-            // Generate line data
             const data = Object.entries(transformedData.FormStructure[xAxis.field] || {})
               .filter(([chaValue]) => chaValue !== 'Overall Result')
               .map(([chaValue, values]: [string, any]) => {
@@ -2565,16 +2370,21 @@ const MappingScreen: React.FC = () => {
                 };
               });
 
-            // Calculate total value from "Overall Result"
             let totalValue = '0';
             if (transformedData.FormStructure[xAxis.field]['Overall Result']) {
               const total = Number(
                 transformedData.FormStructure[xAxis.field]['Overall Result'][yAxis.field] || 0
               );
-              totalValue = `${total.toLocaleString()}`;
+
+              // APPLY FORMATTING to totalValue if configured
+              const totalValueFieldMapping = config.fields['totalValue'];
+              if (totalValueFieldMapping?.formatConfig) {
+                totalValue = applyValueFormat(total, totalValueFieldMapping.formatConfig);
+              } else {
+                totalValue = `${total.toLocaleString()}`;
+              }
             }
 
-            // Get title from metadata
             const title = transformedData.FormMetadata[yAxis.field]?.label || 'Line Chart';
 
             previewProps = {
@@ -2586,7 +2396,6 @@ const MappingScreen: React.FC = () => {
           updateWidgetConfiguration(selectedWidget, previewProps);
         } else if (widgetCategory === 'dual-line') {
           const { xAxis, yAxis } = config.chartConfig;
-          // Initialize with defaults
           previewProps = {
             data: [],
             series: [],
@@ -2600,7 +2409,6 @@ const MappingScreen: React.FC = () => {
             yAxis[0]?.field &&
             yAxis[1]?.field
           ) {
-            // Generate line data
             const data = Object.entries(transformedData.FormStructure[xAxis.field] || {})
               .filter(([chaValue]) => chaValue !== 'Overall Result')
               .map(([chaValue, values]: [string, any]) => {
@@ -2611,7 +2419,6 @@ const MappingScreen: React.FC = () => {
                 };
               });
 
-            // Create series configuration
             const series = [
               {
                 name: transformedData.FormMetadata[yAxis[0].field]?.label || yAxis[0].field,
@@ -2625,12 +2432,8 @@ const MappingScreen: React.FC = () => {
               },
             ];
 
-            // Get title from metadata
-            // const title = `${
-            //   transformedData.FormMetadata[yAxis[0].field]?.label || yAxis[0].field
-            // } vs ${transformedData.FormMetadata[yAxis[1].field]?.label || yAxis[1].field}`;
-
             const title = widgetConfigurations[selectedWidget]?.title;
+
             previewProps = {
               data: data,
               series: series,
@@ -2640,7 +2443,6 @@ const MappingScreen: React.FC = () => {
           updateWidgetConfiguration(selectedWidget, previewProps);
         } else if (widgetCategory === 'pie-total') {
           const { xAxis, yAxis } = config.chartConfig;
-          // Initialize with defaults
           previewProps = {
             data: [],
             title: 'Pie Chart',
@@ -2650,7 +2452,6 @@ const MappingScreen: React.FC = () => {
           };
 
           if (xAxis?.field && yAxis?.field) {
-            // Generate pie data (exclude "Overall Result")
             const data = Object.entries(transformedData.FormStructure[xAxis.field] || {})
               .filter(([chaValue]) => chaValue !== 'Overall Result')
               .map(([chaValue, values]: [string, any], index) => {
@@ -2664,11 +2465,14 @@ const MappingScreen: React.FC = () => {
                 };
               });
 
-            // Get total value (sum of all segments)
             const totalSum = data.reduce((sum, item) => sum + item.value, 0);
-            const totalValue = `${totalSum.toLocaleString()}`;
 
-            // Get "Overall Result" value if available
+            // APPLY FORMATTING to totalValue if configured
+            const totalValueFieldMapping = config.fields['totalValue'];
+            const totalValue = totalValueFieldMapping?.formatConfig
+              ? applyValueFormat(totalSum, totalValueFieldMapping.formatConfig)
+              : `${totalSum.toLocaleString()}`;
+
             let overallValue = 0;
             if (transformedData.FormStructure[xAxis.field]['Overall Result']) {
               overallValue = Number(
@@ -2677,35 +2481,31 @@ const MappingScreen: React.FC = () => {
             }
             const subValue = `${overallValue.toLocaleString()}`;
 
-            // Calculate variance
             let variance = '+0.00%';
             if (data.length > 0 && totalSum > 0) {
               const diff = ((overallValue - totalSum) / totalSum) * 100;
               variance = `${diff >= 0 ? '+' : ''}${diff.toFixed(2)}%`;
             }
 
-            // Get title from metadata
             const title = transformedData.FormMetadata[yAxis.field]?.label || 'Pie Chart';
 
             previewProps = {
-              data: data,
-              title: title,
-              totalValue: totalValue,
-              subValue: subValue,
-              variance: variance,
+              data,
+              title,
+              totalValue,
+              subValue,
+              variance,
             };
           }
           updateWidgetConfiguration(selectedWidget, previewProps);
         } else if (widgetCategory === 'pie') {
-          // For standard pie charts
-          const { xAxis, yAxis } = config.chartConfig;
+          const { xAxis, yAxis }: any = config.chartConfig;
           if (xAxis?.field && yAxis?.field) {
-            // Generate pie data
             const chartData = Object.entries(transformedData.FormStructure[xAxis.field] || {})
               .filter(([chaValue]) => chaValue !== 'Overall Result')
               .map(([chaValue, values]: [string, any], index) => {
                 const value = Number(values[yAxis.field] || 0);
-                const colors = ['#84BD00', '#E1553F', '#2D7FF9', '#FFA500'];
+                const colors = ['#84BD00', '#E1553F', '#5899DA', '#FFC846', '#8979FF'];
 
                 return {
                   label: chaValue,
@@ -2714,29 +2514,20 @@ const MappingScreen: React.FC = () => {
                 };
               });
 
-            // Get total value from "Overall Result"
-            let totalValue = 0;
-            if (transformedData.FormStructure[xAxis.field]['Overall Result']) {
-              totalValue = Number(
-                transformedData.FormStructure[xAxis.field]['Overall Result'][yAxis.field] || 0
-              );
-            }
+            const totalSum = chartData.reduce((sum, item) => sum + item.value, 0);
+            const title = widgetConfigurations[selectedWidget]?.title;
+            const totalValue = widgetConfigurations[selectedWidget]?.totalValue;
 
             previewProps = {
               data: chartData,
-              metrics: {
-                amount: formatValue(totalValue, 'currency'),
-                percentage: '100%',
-                label: transformedData.FormMetadata[yAxis.field]?.label || yAxis.field,
-              },
+              title: title,
+              totalValue: totalValue,
             };
           }
           updateWidgetConfiguration(selectedWidget, previewProps);
         } else if (widgetCategory === 'line') {
-          // For standard line charts
           const { xAxis, yAxis } = config.chartConfig;
           if (xAxis?.field && yAxis?.field) {
-            // Generate chart data from form data
             const chartData = Object.entries(transformedData.FormStructure[xAxis.field] || {})
               .filter(([chaValue]) => chaValue !== 'Overall Result')
               .map(([chaValue, values]: [string, any]) => {
@@ -2747,7 +2538,6 @@ const MappingScreen: React.FC = () => {
                 };
               });
 
-            // Get "Overall Result" value
             let overallValue = 0;
             if (transformedData.FormStructure[xAxis.field]['Overall Result']) {
               overallValue = Number(
@@ -2767,7 +2557,6 @@ const MappingScreen: React.FC = () => {
         }
       } catch (err) {
         console.error('Error generating chart preview:', err);
-        // Provide default props to avoid errors when displaying
         if (widgetCategory === 'stacked-bar') {
           previewProps = { data: [], series: [], title: 'Chart Preview Error' };
         } else if (widgetCategory === 'dual-line') {
@@ -2798,25 +2587,18 @@ const MappingScreen: React.FC = () => {
         }
         updateWidgetConfiguration(selectedWidget, previewProps);
       }
-    }
-    // Handle quadrant metrics
-    else if (config.mappingType === 'quadrant' && config.quadrantConfig) {
+    } else if (config.mappingType === 'quadrant' && config.quadrantConfig) {
       try {
         const { chaField, metrics } = config.quadrantConfig;
-        // Initialize with empty metrics
         previewProps = { metrics: [] };
 
         if (chaField && metrics && metrics.length > 0) {
-          // Define positions
           const positions = ['top-left', 'top-right', 'bottom-left', 'bottom-right'];
 
-          // Create metrics array with configured values
           const quadrantMetrics = metrics.map((metricName: any, index: number) => {
-            // Find the value for this metric
             let value = '0';
 
             if (metricName) {
-              // For simplicity, just grab the first KF field's value for the given metric CHA value
               const kfFields = Object.keys(
                 transformedData.FormStructure[chaField][metrics[0] || ''] || {}
               );
@@ -2840,7 +2622,6 @@ const MappingScreen: React.FC = () => {
             };
           });
 
-          // Fill in any missing metrics to ensure we have 4
           while (quadrantMetrics.length < 4) {
             quadrantMetrics.push({
               title: 'No Data',
@@ -2858,7 +2639,6 @@ const MappingScreen: React.FC = () => {
         }
       } catch (err) {
         console.error('Error generating quadrant preview:', err);
-        // Provide default metrics
         previewProps = {
           metrics: [
             { title: 'Error', value: '0', position: 'top-left' },
@@ -2869,66 +2649,23 @@ const MappingScreen: React.FC = () => {
         };
         updateWidgetConfiguration(selectedWidget, previewProps);
       }
-    } else if (widgetCategory === 'pie') {
-      const { xAxis, yAxis }: any = config.chartConfig;
-      if (xAxis?.field && yAxis?.field) {
-        // Generate pie data
-        const chartData = Object.entries(transformedData.FormStructure[xAxis.field] || {})
-          .filter(([chaValue]) => chaValue !== 'Overall Result')
-          .map(([chaValue, values]: [string, any], index) => {
-            const value = Number(values[yAxis.field] || 0);
-            const colors = ['#84BD00', '#E1553F', '#5899DA', '#FFC846', '#8979FF'];
-
-            return {
-              label: chaValue,
-              value: value,
-              fill: colors[index % colors.length],
-            };
-          });
-
-        // Calculate total value
-        const totalSum = chartData.reduce((sum, item) => sum + item.value, 0);
-        // const totalValue = totalSum.toLocaleString();
-
-        // const title = transformedData.FormMetadata[yAxis.field]?.label || 'Pie Chart';
-        const title = widgetConfigurations[selectedWidget]?.title;
-        const totalValue = widgetConfigurations[selectedWidget]?.totalValue;
-
-        previewProps = {
-          data: chartData,
-          title: title,
-          totalValue: totalValue,
-        };
-      }
-      updateWidgetConfiguration(selectedWidget, previewProps);
-    }
-    // Handle table widgets
-    else if (config.mappingType === 'table' && config.tableConfig) {
-      // For tables, generate table data
+    } else if (config.mappingType === 'table' && config.tableConfig) {
       const { columns } = config.tableConfig;
 
       if (columns && columns.length > 0) {
-        // Get the CHA field (assuming first field is CHA)
         const chaField = columns[0].field;
-
-        // Get all CHA values except "Overall Result"
         const chaValues = getCHAValues(chaField).filter((val) => val !== 'Overall Result');
 
-        // Generate table rows
         const tableData =
           chaValues.length > 0
             ? chaValues.map((chaValue) => {
                 const row: any = {};
 
-                // Process each column
                 columns.forEach((column: any) => {
-                  // For the first column (CHA field), use the CHA value as the cell value
                   if (column.field === chaField) {
                     row[column.field] = chaValue;
                   } else {
-                    // For KF fields, get the value from the data
                     const value = getKFValue(chaField, chaValue, column.field);
-                    // Store the value with the column's field as key
                     row[column.field] =
                       column.field.toLowerCase().includes('value') && Number(value || 0);
                   }
@@ -2938,10 +2675,8 @@ const MappingScreen: React.FC = () => {
               })
             : [];
 
-        // Get total from "Overall Result" (using the second column if available, or the first non-CHA column)
         let totalColumn = columns.length > 1 ? columns[1].field : null;
         if (!totalColumn) {
-          // Find the first KF column if the second column isn't available
           for (let i = 0; i < columns.length; i++) {
             if (columns[i].field !== chaField) {
               totalColumn = columns[i].field;
@@ -2951,15 +2686,12 @@ const MappingScreen: React.FC = () => {
         }
 
         const total = totalColumn ? getKFValue(chaField, 'Overall Result', totalColumn) : 0;
-        console.log('Total value for table:', total);
-        // Get the title from the metadata if available
         const tableTitle = transformedData.FormMetadata[chaField]?.label || 'Top Items';
 
         previewProps = {
           title: tableTitle,
           data: tableData,
           columns: columns.map((col) => {
-            // Use the label from the original metadata for the header
             const headerLabel =
               parsedResponse.header.find((h: any) => h.fieldName === col.field)?.label ||
               col.header ||
@@ -2981,12 +2713,10 @@ const MappingScreen: React.FC = () => {
     setShowSaveAlert(false);
   };
 
-  // Show loading screen while checking admin status
   if (adminCheckLoading) {
     return <LoadingScreen title="Loading..." message="Checking user permissions..." />;
   }
 
-  // Show error message if there's an admin check error
   if (adminCheckError) {
     return (
       <ErrorScreen
@@ -2997,7 +2727,6 @@ const MappingScreen: React.FC = () => {
     );
   }
 
-  // Restrict access to admin users only
   if (!isAdmin) {
     return (
       <ErrorScreen
@@ -3013,7 +2742,6 @@ const MappingScreen: React.FC = () => {
     );
   }
 
-  // Additional check for edit mode if you want to be more restrictive
   if (!isEditModeAllowed) {
     return (
       <ErrorScreen
@@ -3030,12 +2758,10 @@ const MappingScreen: React.FC = () => {
 
   return (
     <div className="relative flex h-screen w-full">
-      {/* Sidebar with widget options */}
       <div className="h-full bg-white">
         <SidebarMapping onItemClick={addWidget} />
       </div>
 
-      {/* Main content area with splitter */}
       <Splitter
         className="h-100vh w-full overflow-y-auto"
         style={{
@@ -3046,14 +2772,12 @@ const MappingScreen: React.FC = () => {
         }}
         layout="vertical"
       >
-        {/* Top panel: Grid layout preview */}
         <SplitterPanel>
           <div className="max-xl flex flex-1 flex-col p-4 text-white">
             <Typography variant="h5" component="h1" gutterBottom>
               {sectionName}
             </Typography>
 
-            {/* Grid layout for widgets */}
             <GridLayout
               className="layout h-52 w-full"
               layout={layout}
@@ -3066,10 +2790,9 @@ const MappingScreen: React.FC = () => {
               onLayoutChange={(newLayout) => setLayout(newLayout as LayoutItem[])}
             >
               {widgets
-                .filter((widget) => !widget.deleted) // Add this filter
+                .filter((widget) => !widget.deleted)
                 .map(({ id, name }) => {
                   const Component = widgetMapping[name];
-                  // Use widgetConfigurations if available, otherwise use default props
                   const widgetProps =
                     previewData && selectedWidget === id
                       ? previewData
@@ -3110,7 +2833,6 @@ const MappingScreen: React.FC = () => {
         </SplitterPanel>
       </Splitter>
 
-      {/* Bottom panel: Configuration panel */}
       <div className="flex h-screen w-1/3 flex-col overflow-auto bg-gradient-to-b from-[#00214E] to-[#0164B0] p-4 text-white">
         <div className="h-full overflow-y-auto">
           <Typography variant="h6" component="h2" gutterBottom>
@@ -3123,7 +2845,6 @@ const MappingScreen: React.FC = () => {
                 Configure {getSelectedWidgetType()} Widget
               </Typography>
 
-              {/* Configuration tabs - reordered */}
               <Tabs
                 value={tabValue}
                 onChange={handleTabChange}
@@ -3206,11 +2927,7 @@ const MappingScreen: React.FC = () => {
                 const tabIndices = getTabIndices();
                 return (
                   <>
-                    {/* Data Mapping Tab - First tab */}
-                    {console.log(getWidgetConfigFields())}
-
                     <TabPanel value={tabValue} index={tabIndices.dataMapping}>
-                      {/* Show query configuration if any fields are mapped */}
                       {hasAnyMappedFields() && (
                         <Paper elevation={2} sx={{ p: 2, mb: 2, backgroundColor: '#ffffff20' }}>
                           <Typography variant="h6" gutterBottom sx={{ color: 'white' }}>
@@ -3252,9 +2969,7 @@ const MappingScreen: React.FC = () => {
                         </Paper>
                       )}
 
-                      {/* Field mapping configuration */}
                       {getWidgetConfigFields().map(({ field }) => {
-                        console.log(field, 'fielddd');
                         const fieldMapping = fieldMappings[selectedWidget]?.fields[field];
                         const isManualInput = fieldMapping?.inputType === 'manual';
                         const mappedConfig = fieldMapping?.mappedConfig;
@@ -3276,7 +2991,6 @@ const MappingScreen: React.FC = () => {
                                 : field?.toUpperCase()}
                             </Typography>
 
-                            {/* Input Type Selection */}
                             <FormControl fullWidth variant="outlined" margin="normal" size="small">
                               <InputLabel sx={{ color: 'white' }}>Input Type</InputLabel>
                               <Select
@@ -3307,7 +3021,6 @@ const MappingScreen: React.FC = () => {
                               </Select>
                             </FormControl>
 
-                            {/* Manual Input Field */}
                             {isManualInput ? (
                               <TextField
                                 label={`Value for ${field}`}
@@ -3329,7 +3042,6 @@ const MappingScreen: React.FC = () => {
                                 }}
                               />
                             ) : (
-                              /* Mapped Input Field Configuration */
                               <Box
                                 mt={2}
                                 p={2}
@@ -3508,13 +3220,42 @@ const MappingScreen: React.FC = () => {
                                 )}
                               </Box>
                             )}
+
+                            {/* ADD FORMATTING UI HERE */}
+                            {(field === 'value' ||
+                              field === 'value1' ||
+                              field === 'value2' ||
+                              field === 'totalValue' ||
+                              field === 'amount' ||
+                              field.toLowerCase().includes('value')) && (
+                              <FormatConfigUI
+                                value={fieldMapping?.formatConfig}
+                                onChange={(config) => handleFormatConfigChange(field, config)}
+                                sampleValue={
+                                  isManualInput
+                                    ? parseFloat(fieldMapping?.manualValue) || 1234567.89
+                                    : mappedConfig?.chaField &&
+                                        mappedConfig?.chaValue &&
+                                        mappedConfig?.kfField
+                                      ? parseFloat(
+                                          getKFValue(
+                                            mappedConfig.chaField,
+                                            mappedConfig.chaValue,
+                                            mappedConfig.kfField
+                                          )
+                                        ) || 1234567.89
+                                      : 1234567.89
+                                }
+                                label={`Format ${field}`}
+                              />
+                            )}
                           </FormControl>
                         ) : null;
                       })}
+
                       {selectedWidgetName === 'announcement'
                         ? (() => {
                             const fieldMapping = fieldMappings[selectedWidget]?.fields['title'];
-                            console.log(fieldMapping);
                             return (
                               <>
                                 <Box sx={{ color: 'white' }}>
@@ -3546,7 +3287,7 @@ const MappingScreen: React.FC = () => {
                                       }}
                                     />
                                   </FormControl>
-                                  {/* Dropdown to choose number of announcements */}
+
                                   <FormControl fullWidth variant="outlined" margin="normal">
                                     <InputLabel sx={{ color: 'white' }}>
                                       Number of Announcements
@@ -3577,7 +3318,6 @@ const MappingScreen: React.FC = () => {
                                     </Select>
                                   </FormControl>
 
-                                  {/* Dynamic Announcement Fields */}
                                   {announcementValues.map((value, index) => (
                                     <FormControl
                                       fullWidth
@@ -3597,8 +3337,8 @@ const MappingScreen: React.FC = () => {
                                         InputProps={{
                                           style: {
                                             color: 'white',
-                                            fontSize: '1.1rem', // <-- Bigger font
-                                            fontWeight: '500', // <-- Slightly bolder
+                                            fontSize: '1.1rem',
+                                            fontWeight: '500',
                                           },
                                         }}
                                         InputLabelProps={{
@@ -3623,15 +3363,12 @@ const MappingScreen: React.FC = () => {
                                     </FormControl>
                                   ))}
                                 </Box>
-
-                                {console.log(fieldMappings)}
                               </>
                             );
                           })()
                         : null}
                     </TabPanel>
 
-                    {/* Authorization/Roles Tab - Second tab */}
                     <TabPanel value={tabValue} index={tabIndices.authorization}>
                       <Box>
                         <Typography variant="h6" gutterBottom sx={{ color: 'white' }}>
@@ -3696,10 +3433,7 @@ const MappingScreen: React.FC = () => {
 
                         <List>
                           {(widgetConfigurations[selectedWidget]?.roles || []).map(
-                            (
-                              role: any,
-                              index: number // Change from string to any/object type
-                            ) => (
+                            (role: any, index: number) => (
                               <ListItem key={index} sx={{ px: 0 }}>
                                 <Box
                                   width="100%"
@@ -3714,8 +3448,7 @@ const MappingScreen: React.FC = () => {
                                   }}
                                 >
                                   <Typography sx={{ color: 'white' }}>
-                                    {role.Name || role}{' '}
-                                    {/* Access the Name property, fallback to role if it's a string */}
+                                    {role.Name || role}
                                   </Typography>
                                   <IconButton
                                     edge="end"
@@ -3746,7 +3479,6 @@ const MappingScreen: React.FC = () => {
                       </Box>
                     </TabPanel>
 
-                    {/* Info Tab - Third tab */}
                     <TabPanel value={tabValue} index={tabIndices.info}>
                       <Box>
                         <Typography variant="h6" gutterBottom sx={{ color: 'white' }}>
@@ -3786,7 +3518,6 @@ const MappingScreen: React.FC = () => {
                           helperText="This description will be saved with the widget configuration."
                         />
 
-                        {/* Detailed Report Configuration Section */}
                         <Box mt={4}>
                           <Typography
                             variant="h6"
@@ -3955,7 +3686,6 @@ const MappingScreen: React.FC = () => {
                       </Box>
                     </TabPanel>
 
-                    {/* LoansAppTray Configuration Tab */}
                     {getSelectedWidgetType() === 'loans-app-tray' && (
                       <TabPanel value={tabValue} index={tabIndices.loansAppTrayConfig!}>
                         <LoansAppTrayConfig
@@ -3977,7 +3707,6 @@ const MappingScreen: React.FC = () => {
                       </TabPanel>
                     )}
 
-                    {/* Chart Configuration Tab */}
                     {fieldMappings[selectedWidget]?.mappingType === 'chart' && (
                       <TabPanel value={tabValue} index={tabIndices.chartConfig!}>
                         <Box className="chart-config">
@@ -4033,7 +3762,6 @@ const MappingScreen: React.FC = () => {
                           )}
                           {parsedResponse && (
                             <>
-                              {/* Common X-Axis selection for all chart types */}
                               <Box mt={3}>
                                 <FormControl fullWidth margin="normal">
                                   <InputLabel sx={{ color: 'white' }}>
@@ -4075,10 +3803,8 @@ const MappingScreen: React.FC = () => {
                                 </FormControl>
                               </Box>
 
-                              {/* Y-Axis configuration based on chart type */}
                               {getWidgetCategory(getSelectedWidgetType() || '') ===
                               'stacked-bar' ? (
-                                // Stacked bar chart - multiple Y axes with series
                                 <Box mt={3} className="stacked-series-config">
                                   <Typography
                                     variant="subtitle1"
@@ -4088,7 +3814,6 @@ const MappingScreen: React.FC = () => {
                                     Series Configuration
                                   </Typography>
 
-                                  {/* Display current series */}
                                   <Box mb={2}>
                                     {stackedSeries.length > 0 ? (
                                       <Grid container spacing={2}>
@@ -4142,7 +3867,6 @@ const MappingScreen: React.FC = () => {
                                     )}
                                   </Box>
 
-                                  {/* Add new series */}
                                   <FormControl fullWidth margin="normal">
                                     <InputLabel sx={{ color: 'white' }}>Add Data Series</InputLabel>
                                     <Select
@@ -4171,7 +3895,6 @@ const MappingScreen: React.FC = () => {
                                     >
                                       {getKFFields()
                                         .filter((field: any) => {
-                                          // Filter out fields already used in series
                                           return !stackedSeries.some(
                                             (s) => s.dataKey === field.fieldName
                                           );
@@ -4189,7 +3912,6 @@ const MappingScreen: React.FC = () => {
                                 </Box>
                               ) : getWidgetCategory(getSelectedWidgetType() || '') ===
                                 'dual-line' ? (
-                                // Dual line chart - two Y axes
                                 <Box mt={3}>
                                   <FormControl fullWidth margin="normal">
                                     <InputLabel sx={{ color: 'white' }}>
@@ -4270,7 +3992,6 @@ const MappingScreen: React.FC = () => {
                                   </FormControl>
                                 </Box>
                               ) : (
-                                // Standard charts with single Y-axis
                                 <FormControl fullWidth margin="normal">
                                   <InputLabel sx={{ color: 'white' }}>Y-Axis (Values)</InputLabel>
                                   <Select
@@ -4310,7 +4031,6 @@ const MappingScreen: React.FC = () => {
                       </TabPanel>
                     )}
 
-                    {/* Table Configuration Tab */}
                     {fieldMappings[selectedWidget]?.mappingType === 'table' && (
                       <TabPanel value={tabValue} index={tabIndices.tableConfig!}>
                         <Typography variant="h6" gutterBottom sx={{ color: 'white' }}>
@@ -4438,7 +4158,6 @@ const MappingScreen: React.FC = () => {
                       </TabPanel>
                     )}
 
-                    {/* Quadrant Metrics Configuration Tab */}
                     {fieldMappings[selectedWidget]?.mappingType === 'quadrant' && (
                       <TabPanel value={tabValue} index={tabIndices.quadrantConfig!}>
                         <Typography variant="h6" gutterBottom sx={{ color: 'white' }}>
@@ -4455,7 +4174,6 @@ const MappingScreen: React.FC = () => {
 
                         {parsedResponse && (
                           <Box mt={3}>
-                            {/* CHA Field Selection for Categories */}
                             <FormControl fullWidth margin="normal">
                               <InputLabel sx={{ color: 'white' }}>Category Field</InputLabel>
                               <Select
@@ -4489,7 +4207,6 @@ const MappingScreen: React.FC = () => {
                               </FormHelperText>
                             </FormControl>
 
-                            {/* Metric Selection for each Quadrant */}
                             {chartXAxis && (
                               <Box mt={3}>
                                 <Typography
@@ -4550,7 +4267,6 @@ const MappingScreen: React.FC = () => {
                                                 },
                                               }}
                                             >
-                                              {/* Allow selection from both CHA values and KF fields */}
                                               <MenuItem value="" disabled>
                                                 -- CHA Values --
                                               </MenuItem>
@@ -4575,7 +4291,6 @@ const MappingScreen: React.FC = () => {
                       </TabPanel>
                     )}
 
-                    {/* Data Preview Tab */}
                     <TabPanel value={tabValue} index={tabIndices.dataPreview}>
                       <Typography variant="h6" gutterBottom sx={{ color: 'white' }}>
                         Raw Data Preview
@@ -4670,7 +4385,6 @@ const MappingScreen: React.FC = () => {
                       )}
                     </TabPanel>
 
-                    {/* Widget Preview Tab */}
                     <TabPanel value={tabValue} index={tabIndices.widgetPreview}>
                       <Box textAlign="center" mb={3}>
                         <Button label="Generate Preview" onClick={generatePreview} />
@@ -4752,7 +4466,6 @@ const MappingScreen: React.FC = () => {
         </div>
       </div>
 
-      {/* Mapping Dialog */}
       <Dialog open={isMappingDialogOpen} onClose={closeMappingDialog} maxWidth="md" fullWidth>
         <DialogTitle>Map Field: {currentMappingField}</DialogTitle>
         <DialogContent>
@@ -4769,8 +4482,8 @@ const MappingScreen: React.FC = () => {
                       [selectedWidget || '']: {
                         ...prev[selectedWidget || ''],
                         chaField: chaField,
-                        chaValue: '', // Reset chaValue when chaField changes
-                        kfField: '', // Reset kfField when chaField changes
+                        chaValue: '',
+                        kfField: '',
                       },
                     }));
                   }}
@@ -4797,7 +4510,7 @@ const MappingScreen: React.FC = () => {
                         [selectedWidget || '']: {
                           ...prev[selectedWidget || ''],
                           chaValue: chaValue,
-                          kfField: '', // Reset kfField when chaValue changes
+                          kfField: '',
                         },
                       }));
                     }}
@@ -4873,7 +4586,6 @@ const MappingScreen: React.FC = () => {
         </DialogActions>
       </Dialog>
 
-      {/* Save Status Snackbar */}
       <Snackbar
         open={showSaveAlert}
         autoHideDuration={6000}

@@ -1,3 +1,6 @@
+import { FormatConfig } from './formatConfig';
+
+
 export type FormTransformHeaders = {
     type: string;
     label: string;
@@ -31,6 +34,7 @@ export interface WidgetFieldMapping {
         kfField: string; // Numeric/key figure field (e.g., VALUE002)
     };
     manualValue?: any; // For manually entered values
+    formatConfig?: FormatConfig;
 }
 
 export interface Field {
