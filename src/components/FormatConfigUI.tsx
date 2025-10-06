@@ -99,8 +99,8 @@ export const FormatConfigUI: React.FC<FormatConfigUIProps> = ({
               }}
             >
               <MenuItem value="none">None (1)</MenuItem>
-              <MenuItem value="thousand">Thousand (K)</MenuItem>
-              <MenuItem value="million">Million (M)</MenuItem>
+              <MenuItem value="thousand">Thousand (M)</MenuItem>
+              <MenuItem value="million">Million (MM)</MenuItem>
               <MenuItem value="billion">Billion (B)</MenuItem>
             </Select>
           </FormControl>

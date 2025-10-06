@@ -1,4 +1,10 @@
-// types/configuration.ts - Updated with announcement support
+// types/configuration.ts - Updated with multiple announcements support
+
+export interface AnnouncementItem {
+    id: string;
+    title: string;
+    description: string;
+}
 
 export interface UIConfiguration {
     background: {
@@ -26,8 +32,10 @@ export interface UIConfiguration {
     };
     announcement: {
         enabled: boolean;
-        title: string;
-        description: string;
+        items: AnnouncementItem[];
+        autoScroll: boolean;
+        scrollDelay: number; // in milliseconds
+        scrollDirection: 'left' | 'right';
     };
     // Metadata for tracking server state
     _metadata?: {
@@ -63,8 +71,16 @@ export const defaultConfiguration: UIConfiguration = {
     },
     announcement: {
         enabled: false,
-        title: 'Welcome to mySCAI Dashboard',
-        description: 'Stay updated with the latest announcements and important information.',
+        items: [
+            {
+                id: '1',
+                title: 'Welcome to mySCAI Dashboard',
+                description: 'Stay updated with the latest announcements and important information.',
+            }
+        ],
+        autoScroll: true,
+        scrollDelay: 5000,
+        scrollDirection: 'left',
     },
 };
 
@@ -95,6 +111,23 @@ export class ConfigurationManager {
             const serverConfig = await sapODataService.fetchSettingsByTabId(tabId);
 
             if (serverConfig) {
+                // Ensure the announcement config has the new structure
+                if (serverConfig.announcement && !('items' in serverConfig.announcement)) {
+                    // Migrate old format to new format
+                    const oldConfig = serverConfig.announcement as any;
+                    serverConfig.announcement = {
+                        enabled: oldConfig.enabled || false,
+                        items: oldConfig.enabled ? [{
+                            id: '1',
+                            title: oldConfig.title || 'Welcome to mySCAI Dashboard',
+                            description: oldConfig.description || 'Stay updated with the latest announcements and important information.',
+                        }] : [],
+                        autoScroll: true,
+                        scrollDelay: 5000,
+                        scrollDirection: 'left',
+                    };
+                }
+
                 // Cache and return server configuration
                 this.cache.set(tabId, serverConfig);
                 return serverConfig;

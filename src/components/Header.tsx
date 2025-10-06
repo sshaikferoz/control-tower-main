@@ -7,6 +7,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Dialog } from 'primereact/dialog';
 import { InputText } from 'primereact/inputtext';
 import { Checkbox } from 'primereact/checkbox';
+import { ChevronLeft, ChevronRight, Play, Pause } from 'lucide-react';
 import { UIConfiguration } from '../types/configuration';
 
 interface SearchResult {
@@ -52,6 +53,8 @@ const Header: React.FC<HeaderProps> = ({ configuration, tabId, onSearchSelect })
   const searchRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const debounceRef = useRef<NodeJS.Timeout>(null);
+  const [announcementIndex, setAnnouncementIndex] = useState(0);
+  const [announcementPaused, setAnnouncementPaused] = useState(false);
 
   const searchConfig = configuration?.search || {
     enabled: true,
@@ -68,10 +71,11 @@ const Header: React.FC<HeaderProps> = ({ configuration, tabId, onSearchSelect })
 
   const announcementConfig = configuration?.announcement || {
     enabled: false,
-    title: 'Welcome to mySCAI Dashboard',
-    description: 'Stay updated with the latest announcements and important information.',
+    items: [],
+    autoScroll: true,
+    scrollDelay: 5000,
+    scrollDirection: 'left' as const,
   };
-
   const getLogoSrc = () => {
     if (brandingConfig.useLogoBase64 && brandingConfig.logoBase64) {
       return brandingConfig.logoBase64;
@@ -92,6 +96,30 @@ const Header: React.FC<HeaderProps> = ({ configuration, tabId, onSearchSelect })
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  // Auto-scroll effect
+  useEffect(() => {
+    if (
+      !announcementConfig.autoScroll ||
+      announcementPaused ||
+      !announcementConfig.items ||
+      announcementConfig.items.length <= 1
+    ) {
+      return;
+    }
+
+    const interval = setInterval(() => {
+      setAnnouncementIndex((prev) => {
+        if (announcementConfig.scrollDirection === 'left') {
+          return (prev + 1) % announcementConfig.items.length;
+        } else {
+          return prev === 0 ? announcementConfig.items.length - 1 : prev - 1;
+        }
+      });
+    }, announcementConfig.scrollDelay);
+
+    return () => clearInterval(interval);
+  }, [announcementConfig, announcementPaused]);
 
   const performSearch = async (query: string) => {
     if (!query.trim() || query.length < 2 || !searchConfig.enabled) {
@@ -233,42 +261,69 @@ const Header: React.FC<HeaderProps> = ({ configuration, tabId, onSearchSelect })
       </div>
 
       {/* Center - Announcement */}
-      {announcementConfig.enabled && (
-        <div className="flex flex-1 items-center justify-center px-8">
-          <div className="flex max-w-2xl items-center gap-4">
-            <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full">
-              <img
-                src={`${process.env.NEXT_PUBLIC_BSP_NAME}/background/announcement.png`}
-                alt="announcement"
-                className="h-10 w-10 object-contain"
-                onError={(e) => {
-                  const target = e.target as HTMLImageElement;
-                  target.style.display = 'none';
-                  const parent = target.parentElement;
-                  if (parent) {
-                    parent.innerHTML = `
-                      <svg class="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z" />
-                      </svg>
-                    `;
-                  }
-                }}
-              />
+      {/* Center - Announcement Carousel */}
+      {announcementConfig.enabled &&
+        announcementConfig.items &&
+        announcementConfig.items.length > 0 && (
+          <div className="relative flex w-1/3 min-w-[360px] items-center justify-between rounded-md px-6 py-3">
+            {/* Left Section - Icon + Text */}
+            <div className="flex items-center gap-4">
+              {/* Announcement Icon */}
+              <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full">
+                <img
+                  src={`${process.env.NEXT_PUBLIC_BSP_NAME}/background/announcement.png`}
+                  alt="announcement"
+                  className="h-7 w-7 object-contain"
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement;
+                    target.style.display = 'none';
+                    const parent = target.parentElement;
+                    if (parent) {
+                      parent.innerHTML = `
+                  <svg class="h-6 w-6 text-[#83bd01]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832
+                      c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z" />
+                  </svg>
+                `;
+                    }
+                  }}
+                />
+              </div>
+
+              {/* Announcement Text */}
+              <div className="min-w-0 flex-1">
+                <h3 className="mb-1 text-base leading-tight font-semibold text-[#00A3E0]">
+                  {announcementConfig.items[announcementIndex]?.title}
+                </h3>
+                <p className="line-clamp-2 text-xs leading-snug text-white/90">
+                  {announcementConfig.items[announcementIndex]?.description}
+                </p>
+              </div>
             </div>
-            <div className="min-w-0 flex-1">
-              <h3 className="mb-1 text-base leading-tight font-semibold text-white">
-                {announcementConfig.title}
-              </h3>
-              <p className="line-clamp-2 text-sm leading-tight text-white/90">
-                {announcementConfig.description}
-              </p>
-            </div>
+
+            {/* Pagination Dots */}
+            {announcementConfig.items.length > 1 && (
+              <div className="absolute right-4 bottom-2 flex gap-2">
+                {announcementConfig.items.map((_, index) => (
+                  <button
+                    key={index}
+                    onClick={() => setAnnouncementIndex(index)}
+                    className={`h-2.5 rounded-full transition-all duration-300 ${
+                      index === announcementIndex
+                        ? 'w-6 bg-[#83bd01]'
+                        : 'w-2.5 bg-white/40 hover:bg-white/60'
+                    }`}
+                    aria-label={`Go to announcement ${index + 1}`}
+                  />
+                ))}
+              </div>
+            )}
           </div>
-        </div>
-      )}
+        )}
 
       {/* Right - Search and Actions */}
-      <div className="flex items-center gap-4   ">
+      <div className="flex items-center gap-4">
         {searchConfig.enabled && (
           <div className="relative w-[350px]" ref={searchRef}>
             <div className="relative">

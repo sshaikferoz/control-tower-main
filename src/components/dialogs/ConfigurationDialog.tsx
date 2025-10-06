@@ -30,6 +30,8 @@ export const ConfigurationDialog: React.FC<ConfigurationDialogProps> = ({
 
   const backgroundFileRef = useRef<HTMLInputElement>(null);
   const logoFileRef = useRef<HTMLInputElement>(null);
+  const [newAnnouncement, setNewAnnouncement] = useState({ title: '', description: '' });
+  const [editingAnnouncementId, setEditingAnnouncementId] = useState<string | null>(null);
 
   // Update form data when configuration changes
   useEffect(() => {
@@ -199,7 +201,67 @@ export const ConfigurationDialog: React.FC<ConfigurationDialogProps> = ({
     { label: 'Branding', icon: 'pi pi-palette', id: 'branding' },
     { label: 'Announcement', icon: 'pi pi-megaphone', id: 'announcement' },
   ];
+  const addAnnouncement = () => {
+    if (!newAnnouncement.title.trim() || !newAnnouncement.description.trim()) {
+      return;
+    }
 
+    const announcement = {
+      id: Date.now().toString(),
+      title: newAnnouncement.title.trim(),
+      description: newAnnouncement.description.trim(),
+    };
+
+    setFormData({
+      ...formData,
+      announcement: {
+        ...formData.announcement,
+        items: [...(formData.announcement?.items || []), announcement],
+      },
+    });
+
+    setNewAnnouncement({ title: '', description: '' });
+  };
+
+  const updateAnnouncement = (id: string, updates: { title?: string; description?: string }) => {
+    setFormData({
+      ...formData,
+      announcement: {
+        ...formData.announcement,
+        items:
+          formData.announcement?.items?.map((item) =>
+            item.id === id ? { ...item, ...updates } : item
+          ) || [],
+      },
+    });
+  };
+
+  const deleteAnnouncement = (id: string) => {
+    setFormData({
+      ...formData,
+      announcement: {
+        ...formData.announcement,
+        items: formData.announcement?.items?.filter((item) => item.id !== id) || [],
+      },
+    });
+  };
+
+  const moveAnnouncement = (index: number, direction: 'up' | 'down') => {
+    const items = [...(formData.announcement?.items || [])];
+    const targetIndex = direction === 'up' ? index - 1 : index + 1;
+
+    if (targetIndex < 0 || targetIndex >= items.length) return;
+
+    [items[index], items[targetIndex]] = [items[targetIndex], items[index]];
+
+    setFormData({
+      ...formData,
+      announcement: {
+        ...formData.announcement,
+        items,
+      },
+    });
+  };
   if (!visible) return null;
 
   return (
@@ -695,6 +757,7 @@ export const ConfigurationDialog: React.FC<ConfigurationDialogProps> = ({
           {/* Announcement Settings */}
           {activeTab === 4 && (
             <div className="space-y-6">
+              {/* Enable/Disable */}
               <div className="flex items-center justify-between">
                 <label className="block text-sm font-medium text-gray-300">
                   Enable Announcement
@@ -718,71 +781,273 @@ export const ConfigurationDialog: React.FC<ConfigurationDialogProps> = ({
 
               {formData.announcement?.enabled && (
                 <>
-                  <div>
-                    <label className="mb-2 block text-sm font-medium text-gray-300">
-                      Announcement Title
-                    </label>
-                    <input
-                      type="text"
-                      value={formData.announcement.title}
-                      disabled={isSaving || isResetting}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          announcement: { ...formData.announcement, title: e.target.value },
-                        })
-                      }
-                      placeholder="Enter announcement title"
-                      className="w-full rounded border border-[#3a5a8b] bg-[#2a4a7b] p-3 text-white outline-none focus:border-blue-500 disabled:opacity-50"
-                    />
-                    <small className="text-gray-400">
-                      This will be displayed as the main announcement heading
-                    </small>
-                  </div>
+                  {/* Auto Scroll Settings */}
+                  <div className="grid grid-cols-3 gap-4">
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        id="auto-scroll-check"
+                        checked={formData.announcement.autoScroll}
+                        disabled={isSaving || isResetting}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            announcement: {
+                              ...formData.announcement,
+                              autoScroll: e.target.checked,
+                            },
+                          })
+                        }
+                        className="h-4 w-4 rounded border-gray-600 bg-gray-700 text-blue-600 focus:ring-blue-500 disabled:opacity-50"
+                      />
+                      <label htmlFor="auto-scroll-check" className="text-gray-300">
+                        Auto Scroll
+                      </label>
+                    </div>
 
-                  <div>
-                    <label className="mb-2 block text-sm font-medium text-gray-300">
-                      Announcement Description
-                    </label>
-                    <textarea
-                      value={formData.announcement.description}
-                      disabled={isSaving || isResetting}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          announcement: { ...formData.announcement, description: e.target.value },
-                        })
-                      }
-                      placeholder="Enter announcement description or message"
-                      rows={4}
-                      className="resize-vertical w-full rounded border border-[#3a5a8b] bg-[#2a4a7b] p-3 text-white outline-none focus:border-blue-500 disabled:opacity-50"
-                    />
-                    <small className="text-gray-400">
-                      Provide detailed information about the announcement
-                    </small>
-                  </div>
+                    <div>
+                      <label className="mb-1 block text-sm text-gray-300">Delay (ms)</label>
+                      <input
+                        type="number"
+                        min="1000"
+                        step="1000"
+                        value={formData.announcement.scrollDelay}
+                        disabled={isSaving || isResetting || !formData.announcement.autoScroll}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            announcement: {
+                              ...formData.announcement,
+                              scrollDelay: parseInt(e.target.value) || 5000,
+                            },
+                          })
+                        }
+                        className="w-full rounded border border-[#3a5a8b] bg-[#2a4a7b] p-2 text-white outline-none focus:border-blue-500 disabled:opacity-50"
+                      />
+                    </div>
 
-                  {/* Announcement Preview */}
-                  <div>
-                    <label className="mb-2 block text-sm font-medium text-gray-300">Preview</label>
-                    <div className="w-full rounded-xl border border-solid border-[#00a3e0] bg-gradient-to-b from-[#1e3a71] via-[#0080bd] to-[#0d366f] shadow-[3px_8px_30px_1px_#a8afb84c]">
-                      <div className="p-[13px]">
-                        <div className="mb-4 flex items-center gap-3">
-                          <div className="flex h-[23px] w-[23px] items-center justify-center rounded bg-[#83bd01]">
-                            <div className="h-3 w-3 rounded-sm bg-white"></div>
-                          </div>
-                          <h3 className="text-lg font-bold text-[#83bd01]">
-                            {formData.announcement.title || 'Announcement Title'}
-                          </h3>
-                          <div className="h-px flex-grow bg-gradient-to-r from-[#83bd01] to-transparent"></div>
-                        </div>
-                        <p className="leading-relaxed text-white/90">
-                          {formData.announcement.description ||
-                            'Announcement description will appear here...'}
-                        </p>
-                      </div>
+                    <div>
+                      <label className="mb-1 block text-sm text-gray-300">Direction</label>
+                      <select
+                        value={formData.announcement.scrollDirection}
+                        disabled={isSaving || isResetting || !formData.announcement.autoScroll}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            announcement: {
+                              ...formData.announcement,
+                              scrollDirection: e.target.value as 'left' | 'right',
+                            },
+                          })
+                        }
+                        className="w-full rounded border border-[#3a5a8b] bg-[#2a4a7b] p-2 text-white outline-none focus:border-blue-500 disabled:opacity-50"
+                      >
+                        <option value="left">Left to Right</option>
+                        <option value="right">Right to Left</option>
+                      </select>
                     </div>
                   </div>
+
+                  {/* Add New Announcement */}
+                  <div className="rounded border border-[#3a5a8b] bg-[#2a4a7b] p-4">
+                    <h3 className="mb-3 font-medium text-white">Add New Announcement</h3>
+                    <div className="space-y-3">
+                      <div>
+                        <label className="mb-1 block text-sm text-gray-300">Title</label>
+                        <input
+                          type="text"
+                          value={newAnnouncement.title}
+                          disabled={isSaving || isResetting}
+                          onChange={(e) =>
+                            setNewAnnouncement({ ...newAnnouncement, title: e.target.value })
+                          }
+                          placeholder="Enter announcement title"
+                          className="w-full rounded border border-[#3a5a8b] bg-[#1a2a4b] p-2 text-white outline-none focus:border-blue-500 disabled:opacity-50"
+                        />
+                      </div>
+                      <div>
+                        <label className="mb-1 block text-sm text-gray-300">Description</label>
+                        <textarea
+                          value={newAnnouncement.description}
+                          disabled={isSaving || isResetting}
+                          onChange={(e) =>
+                            setNewAnnouncement({ ...newAnnouncement, description: e.target.value })
+                          }
+                          placeholder="Enter announcement description"
+                          rows={3}
+                          className="w-full resize-none rounded border border-[#3a5a8b] bg-[#1a2a4b] p-2 text-white outline-none focus:border-blue-500 disabled:opacity-50"
+                        />
+                      </div>
+                      <button
+                        onClick={addAnnouncement}
+                        disabled={
+                          isSaving ||
+                          isResetting ||
+                          !newAnnouncement.title.trim() ||
+                          !newAnnouncement.description.trim()
+                        }
+                        className="w-full rounded bg-blue-600 px-4 py-2 text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        <i className="pi pi-plus mr-2" />
+                        Add Announcement
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* List of Announcements */}
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <h3 className="font-medium text-white">
+                        Announcements ({formData.announcement?.items?.length || 0})
+                      </h3>
+                    </div>
+
+                    {formData.announcement?.items && formData.announcement.items.length > 0 ? (
+                      <div className="space-y-2">
+                        {formData.announcement.items.map((item, index) => (
+                          <div
+                            key={item.id}
+                            className="rounded border border-[#3a5a8b] bg-[#2a4a7b] p-3"
+                          >
+                            {editingAnnouncementId === item.id ? (
+                              // Edit Mode
+                              <div className="space-y-3">
+                                <div>
+                                  <label className="mb-1 block text-xs text-gray-400">Title</label>
+                                  <input
+                                    type="text"
+                                    value={item.title}
+                                    disabled={isSaving || isResetting}
+                                    onChange={(e) =>
+                                      updateAnnouncement(item.id, { title: e.target.value })
+                                    }
+                                    className="w-full rounded border border-[#3a5a8b] bg-[#1a2a4b] p-2 text-white outline-none focus:border-blue-500 disabled:opacity-50"
+                                  />
+                                </div>
+                                <div>
+                                  <label className="mb-1 block text-xs text-gray-400">
+                                    Description
+                                  </label>
+                                  <textarea
+                                    value={item.description}
+                                    disabled={isSaving || isResetting}
+                                    onChange={(e) =>
+                                      updateAnnouncement(item.id, { description: e.target.value })
+                                    }
+                                    rows={3}
+                                    className="w-full resize-none rounded border border-[#3a5a8b] bg-[#1a2a4b] p-2 text-white outline-none focus:border-blue-500 disabled:opacity-50"
+                                  />
+                                </div>
+                                <div className="flex gap-2">
+                                  <button
+                                    onClick={() => setEditingAnnouncementId(null)}
+                                    disabled={isSaving || isResetting}
+                                    className="rounded bg-green-600 px-3 py-1 text-sm text-white transition-colors hover:bg-green-700 disabled:opacity-50"
+                                  >
+                                    <i className="pi pi-check mr-1" />
+                                    Done
+                                  </button>
+                                  <button
+                                    onClick={() => {
+                                      setEditingAnnouncementId(null);
+                                      // Reset to original values if needed
+                                    }}
+                                    disabled={isSaving || isResetting}
+                                    className="rounded bg-gray-600 px-3 py-1 text-sm text-white transition-colors hover:bg-gray-700 disabled:opacity-50"
+                                  >
+                                    Cancel
+                                  </button>
+                                </div>
+                              </div>
+                            ) : (
+                              // View Mode
+                              <div>
+                                <div className="mb-2 flex items-start justify-between">
+                                  <div className="flex-1">
+                                    <h4 className="mb-1 font-semibold text-white">{item.title}</h4>
+                                    <p className="text-sm text-gray-300">{item.description}</p>
+                                  </div>
+                                  <span className="ml-2 rounded bg-blue-600/20 px-2 py-1 text-xs text-blue-300">
+                                    #{index + 1}
+                                  </span>
+                                </div>
+
+                                <div className="flex flex-wrap gap-2">
+                                  <button
+                                    onClick={() => setEditingAnnouncementId(item.id)}
+                                    disabled={isSaving || isResetting}
+                                    className="rounded bg-blue-600 px-3 py-1 text-xs text-white transition-colors hover:bg-blue-700 disabled:opacity-50"
+                                  >
+                                    <i className="pi pi-pencil mr-1" />
+                                    Edit
+                                  </button>
+                                  <button
+                                    onClick={() => deleteAnnouncement(item.id)}
+                                    disabled={isSaving || isResetting}
+                                    className="rounded bg-red-600 px-3 py-1 text-xs text-white transition-colors hover:bg-red-700 disabled:opacity-50"
+                                  >
+                                    <i className="pi pi-trash mr-1" />
+                                    Delete
+                                  </button>
+                                  <div className="flex gap-1">
+                                    <button
+                                      onClick={() => moveAnnouncement(index, 'up')}
+                                      disabled={index === 0 || isSaving || isResetting}
+                                      className="flex items-center justify-center rounded bg-gray-600 px-2.5 py-1.5 text-sm text-white transition-colors hover:bg-gray-500 disabled:cursor-not-allowed disabled:opacity-50"
+                                      title="Move up"
+                                    >
+                                      ↑
+                                    </button>
+                                    <button
+                                      onClick={() => moveAnnouncement(index, 'down')}
+                                      disabled={
+                                        index === formData.announcement.items.length - 1 ||
+                                        isSaving ||
+                                        isResetting
+                                      }
+                                      className="flex items-center justify-center rounded bg-gray-600 px-2.5 py-1.5 text-sm text-white transition-colors hover:bg-gray-500 disabled:cursor-not-allowed disabled:opacity-50"
+                                      title="Move down"
+                                    >
+                                      ↓
+                                    </button>
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="rounded border border-dashed border-[#3a5a8b] bg-[#2a4a7b] p-8 text-center">
+                        <i className="pi pi-megaphone mb-2 text-3xl text-gray-500" />
+                        <p className="text-gray-400">No announcements yet. Add one above!</p>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Preview */}
+                  {formData.announcement?.items && formData.announcement.items.length > 0 && (
+                    <div>
+                      <label className="mb-2 block text-sm font-medium text-gray-300">
+                        Preview (First Announcement)
+                      </label>
+                      <div className="overflow-hidden rounded-lg bg-gradient-to-r from-[#00214E] to-[#0164B0] p-4">
+                        <div className="flex items-center gap-3">
+                          <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-[#83bd01]">
+                            <div className="h-5 w-5 rounded-sm bg-white"></div>
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <h3 className="mb-1 text-base leading-tight font-semibold text-white">
+                              {formData.announcement.items[0].title}
+                            </h3>
+                            <p className="line-clamp-2 text-sm leading-tight text-white/90">
+                              {formData.announcement.items[0].description}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </>
               )}
             </div>

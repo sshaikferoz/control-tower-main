@@ -23,14 +23,14 @@ export const FORMAT_PRESETS: Record<string, FormatConfig> = {
         scale: 'thousand',
         decimals: 1,
         prefix: '$',
-        suffix: 'K',
+        suffix: 'M',
         rounding: 'round',
     },
     'currency-m': {
         scale: 'million',
         decimals: 1,
         prefix: '$',
-        suffix: 'M',
+        suffix: 'MM',
         rounding: 'round',
     },
     'currency-b': {
