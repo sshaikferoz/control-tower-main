@@ -1,0 +1,16 @@
+{
+  "cwd": "./out",
+  "files": "**/*.*",
+  "server": "https://dvb.aramco.com.sa:44303",
+  "client": "142",
+  "useStrictSSL": false,
+  "package": "ZBW",
+  "bspContainer": "ZSCM_SCCT_MYSCM",
+  "bspContainerText": "PSSCT-3.0",
+  "transportNo": "DVBK9A23LA",
+  "createTransport": false,
+  "transportUseLocked": false,
+  "calculateApplicationIndex": true,
+  "user": "MOHATA0J",
+  "pwd": "Bihana@99"
+}

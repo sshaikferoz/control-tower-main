@@ -65,6 +65,7 @@
     "prettier": "^3.6.2",
     "prettier-plugin-tailwindcss": "^0.6.14",
     "tailwindcss": "^4.0.13",
-    "typescript": "^5.8.3"
+    "typescript": "^5.8.3",
+    "ui5-nwabap-deployer-cli": "^1.0.4"
   }
 }

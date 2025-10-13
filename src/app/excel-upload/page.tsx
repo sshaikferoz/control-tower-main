@@ -10,10 +10,6 @@ import {
   InputLabel,
   Alert,
   Snackbar,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
   Table,
   TableBody,
   TableCell,
@@ -24,42 +20,32 @@ import {
   LinearProgress,
   Box,
   IconButton,
-  Tooltip,
   Card,
   CardContent,
-  Grid,
-  Fade,
-  Slide,
   ThemeProvider,
   createTheme,
   styled,
   keyframes,
-  Divider,
+  Fade,
+  Slide,
 } from '@mui/material';
 import {
   CloudUpload as UploadIcon,
-  Visibility as PreviewIcon,
   Send as SendIcon,
   Error as ErrorIcon,
-  CheckCircle as SuccessIcon,
   Clear as ClearIcon,
-  Download as DownloadIcon,
-  TableChart as TableIcon,
-  Assessment as AssessmentIcon,
-  Security as SecurityIcon,
-  Speed as SpeedIcon,
   GetApp as GetAppIcon,
   InsertDriveFile as FileIcon,
   CloudDone as CloudDoneIcon,
+  TableChart as TableIcon,
 } from '@mui/icons-material';
 import * as XLSX from 'xlsx';
-// Add these imports after the existing imports
 import { useAdminCheck } from '@/hooks/useAdminCheck';
 import { useURLParams } from '@/hooks/useURLParams';
 import { LoadingScreen } from '@/components/ui/LoadingScreen';
 import { ErrorScreen } from '@/components/ui/ErrorScreen';
 
-// Corporate dark theme matching your existing dashboard
+// Corporate dark theme
 const corporateTheme = createTheme({
   palette: {
     mode: 'dark',
@@ -92,16 +78,6 @@ const corporateTheme = createTheme({
       main: '#ef4444',
       light: '#f87171',
       dark: '#dc2626',
-    },
-    warning: {
-      main: '#f59e0b',
-      light: '#fbbf24',
-      dark: '#d97706',
-    },
-    info: {
-      main: '#00d4ff',
-      light: '#4de3ff',
-      dark: '#0095cc',
     },
   },
   typography: {
@@ -280,32 +256,6 @@ const corporateTheme = createTheme({
         },
       },
     },
-    MuiDialog: {
-      styleOverrides: {
-        paper: {
-          backgroundImage:
-            'linear-gradient(135deg, rgba(30, 41, 59, 0.98) 0%, rgba(51, 65, 85, 0.98) 100%)',
-          backdropFilter: 'blur(20px)',
-          border: '1px solid rgba(255, 255, 255, 0.1)',
-          borderRadius: '20px',
-        },
-      },
-    },
-    MuiDialogTitle: {
-      styleOverrides: {
-        root: {
-          color: '#ffffff',
-          fontWeight: 700,
-        },
-      },
-    },
-    MuiDialogContent: {
-      styleOverrides: {
-        root: {
-          color: '#e2e8f0',
-        },
-      },
-    },
     MuiLinearProgress: {
       styleOverrides: {
         root: {
@@ -338,18 +288,13 @@ const corporateTheme = createTheme({
   },
 });
 
-// Corporate animations
+// Animations
 const floatAnimation = keyframes`
   0%, 100% { transform: translateY(0px); }
   50% { transform: translateY(-8px); }
 `;
 
-const glowAnimation = keyframes`
-  0%, 100% { box-shadow: 0 0 20px rgba(0, 212, 255, 0.3); }
-  50% { box-shadow: 0 0 40px rgba(0, 212, 255, 0.6); }
-`;
-
-// Corporate styled components
+// Styled components
 const CorporateCard = styled(Card)(({ theme }) => ({
   position: 'relative',
   overflow: 'hidden',
@@ -367,17 +312,6 @@ const CorporateCard = styled(Card)(({ theme }) => ({
     height: '3px',
     background: 'linear-gradient(90deg, #00d4ff, #10b981)',
     zIndex: 1,
-  },
-}));
-
-const StatsCard = styled(Card)(({ theme }) => ({
-  background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.9) 0%, rgba(30, 41, 59, 0.9) 100%)',
-  border: '1px solid rgba(0, 212, 255, 0.2)',
-  transition: 'all 0.3s ease',
-  '&:hover': {
-    transform: 'scale(1.02)',
-    boxShadow: '0 20px 40px rgba(0, 212, 255, 0.2)',
-    border: '1px solid rgba(0, 212, 255, 0.4)',
   },
 }));
 
@@ -405,7 +339,7 @@ const FloatingIcon = styled(Box)(() => ({
   display: 'inline-block',
 }));
 
-// Table Schemas and interfaces
+// Interfaces
 interface TableSchema {
   tableName: string;
   displayName: string;
@@ -422,19 +356,9 @@ interface TableField {
   constraints?: string[];
 }
 
-interface ValidationError {
-  row: number;
-  field: string;
-  value: any;
-  error: string;
-}
-
 interface UploadedData {
-  headers: string[];
-  data: any[][];
-  validationErrors: ValidationError[];
-  validRowCount: number;
-  totalRowCount: number;
+  fileName: string;
+  fileSize: number;
 }
 
 const TABLE_SCHEMAS: TableSchema[] = [
@@ -513,16 +437,10 @@ const TABLE_SCHEMAS: TableSchema[] = [
 export default function ExcelUploadComponent() {
   const { isAdmin, adminCheckLoading, adminCheckError } = useAdminCheck();
 
-  // Check if edit mode is allowed based on admin status and URL parameter
-  const isEditModeAllowed = useMemo(() => {
-    if (!isAdmin) return false;
-  }, [isAdmin]);
-
   const [selectedTable, setSelectedTable] = useState('');
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [uploadedData, setUploadedData] = useState<UploadedData | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [showPreview, setShowPreview] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [showError, setShowError] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
@@ -544,32 +462,17 @@ export default function ExcelUploadComponent() {
       setUploadProgress(20);
 
       try {
-        const arrayBuffer = await file.arrayBuffer();
-        setUploadProgress(40);
-
-        const workbook = XLSX.read(arrayBuffer, { type: 'array' });
-        const sheetName = workbook.SheetNames[0];
-        const worksheet = workbook.Sheets[sheetName];
-
-        setUploadProgress(60);
-
-        const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
-        const headers = jsonData[0] as string[];
-        const dataRows = jsonData.slice(1) as any[][];
-
+        // Just store file info without processing
         setUploadedData({
-          headers,
-          data: dataRows,
-          validationErrors: [], // clear validation errors here, no local validation
-          validRowCount: dataRows.length,
-          totalRowCount: dataRows.length,
+          fileName: file.name,
+          fileSize: file.size,
         });
 
         setUploadProgress(100);
         setIsProcessing(false);
       } catch (error) {
         console.error('Error processing file:', error);
-        setErrorMessage('Error processing Excel file. Please check the file format.');
+        setErrorMessage('Error processing file. Please try again.');
         setShowError(true);
         setIsProcessing(false);
         setUploadProgress(0);
@@ -626,22 +529,17 @@ export default function ExcelUploadComponent() {
     },
     [handleFileUpload]
   );
+
   const handleUploadToAPI = async () => {
-    if (!uploadedData || !selectedSchema) return;
+    if (!uploadedData || !selectedSchema || !uploadedFile) return;
 
     setIsProcessing(true);
 
     try {
       const formData = new FormData();
-      if (uploadedFile) {
-        formData.append('file', uploadedFile);
-      }
+      formData.append('file', uploadedFile);
       formData.append('tableName', selectedTable);
-      // formData.append('validRowCount', uploadedData.validRowCount.toString());
-      // formData.append('totalRowCount', uploadedData.totalRowCount.toString());
-      // formData.append('hasErrors', (uploadedData.validationErrors.length > 0).toString());
 
-      // Simulate API call
       const res = await fetch(
         `https://scic-chatbot.cml.apps.cdp-ds-prod.aramco.com/api/uploadExcel`,
         {
@@ -649,18 +547,7 @@ export default function ExcelUploadComponent() {
           body: formData,
         }
       );
-      //   setShowSuccess(true);
-      //   setIsProcessing(false);
 
-      //   setTimeout(() => {
-      //     handleClearAll();
-      //   }, 3000);
-      // } catch (error) {
-      //   console.error('Upload error:', error);
-      //   setErrorMessage('Failed to upload data to server');
-      //   setShowError(true);
-      //   setIsProcessing(false);
-      // }
       const response = await res.json();
 
       if (response.status === 'error') {
@@ -696,7 +583,6 @@ export default function ExcelUploadComponent() {
 
     const headers = selectedSchema.fields.map((field) => field.displayName);
     const sampleRow = selectedSchema.fields.map((field) => {
-      // Provide specific sample data for News Classifier table
       if (selectedSchema.tableName === 'Supply_Chain.PSCCT_Al::SCIC_CURRENT_REPORTS') {
         switch (field.fieldName) {
           case 'CATEGORY':
@@ -721,7 +607,6 @@ export default function ExcelUploadComponent() {
             return '';
         }
       }
-      // Default sample data for other tables
       switch (field.dataType) {
         case 'STRING':
           return field.maxLength && field.maxLength > 1000
@@ -746,12 +631,10 @@ export default function ExcelUploadComponent() {
     XLSX.writeFile(wb, `${selectedSchema.displayName}_Template.xlsx`);
   };
 
-  // Show loading screen while checking admin status
   if (adminCheckLoading) {
     return <LoadingScreen title="Loading..." message="Checking user permissions..." />;
   }
 
-  // Show error message if there's an admin check error
   if (adminCheckError) {
     return (
       <ErrorScreen
@@ -762,7 +645,6 @@ export default function ExcelUploadComponent() {
     );
   }
 
-  // Restrict access to admin users only
   if (!isAdmin) {
     return (
       <ErrorScreen
@@ -782,7 +664,6 @@ export default function ExcelUploadComponent() {
     <ThemeProvider theme={corporateTheme}>
       <div className="flex w-full">
         <div className="relative min-h-screen w-full">
-          {/* Corporate background */}
           <div
             className="absolute inset-0 bg-cover bg-center"
             style={{
@@ -792,18 +673,15 @@ export default function ExcelUploadComponent() {
 
           <div className="relative z-10 flex max-h-screen flex-col overflow-y-auto p-6 text-white">
             <div className="mx-auto w-full max-w-6xl">
-              {/* Corporate Header */}
               <Fade in timeout={800}>
                 <Box className="mb-8 text-center">
                   <Typography variant="h4" className="mb-4 font-bold text-white">
                     Excel Data Upload
                   </Typography>
-
-                  {/* Corporate Features */}
                 </Box>
               </Fade>
 
-              {/* Table Selection Section */}
+              {/* Table Selection */}
               <Slide in timeout={1000}>
                 <CorporateCard className="mb-6">
                   <CardContent className="p-6">
@@ -915,7 +793,7 @@ export default function ExcelUploadComponent() {
                 </CorporateCard>
               </Slide>
 
-              {/* File Upload Section */}
+              {/* File Upload */}
               <Slide in timeout={1200}>
                 <CorporateCard className="mb-6">
                   <CardContent className="p-6">
@@ -1008,199 +886,29 @@ export default function ExcelUploadComponent() {
                         </Box>
                       </Fade>
                     )}
-                  </CardContent>
-                </CorporateCard>
-              </Slide>
 
-              {/* Validation Results */}
-              {uploadedData && (
-                <Slide in timeout={1400}>
-                  <CorporateCard>
-                    <CardContent className="p-6">
-                      <Box className="mb-6 flex items-center justify-between">
-                        <Box className="flex items-center">
-                          <AssessmentIcon sx={{ color: '#00d4ff', mr: 2, fontSize: 28 }} />
-                          <Typography variant="h5" className="font-semibold text-white">
-                            Validation Results
-                          </Typography>
-                        </Box>
-                        <Box className="flex gap-3">
-                          <Button
-                            startIcon={<PreviewIcon />}
-                            onClick={() => setShowPreview(true)}
-                            variant="outlined"
-                          >
-                            Preview Data
-                          </Button>
+                    {uploadedData && (
+                      <Fade in timeout={500}>
+                        <Box className="mt-6 flex justify-end">
                           <Button
                             startIcon={<SendIcon />}
                             onClick={handleUploadToAPI}
                             variant="contained"
-                            // disabled={isProcessing || uploadedData.validationErrors.length > 0}
+                            disabled={isProcessing}
+                            size="large"
                           >
                             {isProcessing ? 'Uploading...' : 'Upload to Database'}
                           </Button>
                         </Box>
-                      </Box>
-
-                      <Grid container spacing={4} className="mb-6">
-                        <Grid item xs={12} md={4}>
-                          <StatsCard>
-                            <CardContent className="text-center">
-                              <Typography variant="h3" className="mb-2 font-bold text-blue-400">
-                                {uploadedData.totalRowCount}
-                              </Typography>
-                              <Typography className="text-gray-300">Total Rows</Typography>
-                            </CardContent>
-                          </StatsCard>
-                        </Grid>
-                        <Grid item xs={12} md={4}>
-                          <StatsCard sx={{ borderColor: 'rgba(16, 185, 129, 0.2)' }}>
-                            <CardContent className="text-center">
-                              <Typography variant="h3" className="mb-2 font-bold text-green-400">
-                                {uploadedData.validRowCount}
-                              </Typography>
-                              <Typography className="text-gray-300">Valid Rows</Typography>
-                            </CardContent>
-                          </StatsCard>
-                        </Grid>
-                        <Grid item xs={12} md={4}>
-                          <StatsCard sx={{ borderColor: 'rgba(239, 68, 68, 0.2)' }}>
-                            <CardContent className="text-center">
-                              <Typography variant="h3" className="mb-2 font-bold text-red-400">
-                                {uploadedData.validationErrors.length}
-                              </Typography>
-                              <Typography className="text-gray-300">Errors</Typography>
-                            </CardContent>
-                          </StatsCard>
-                        </Grid>
-                      </Grid>
-
-                      {uploadedData.validationErrors.length > 0 && (
-                        <Fade in timeout={500}>
-                          <Box className="rounded-lg border border-red-500/20 bg-gradient-to-r from-red-500/10 to-orange-500/10 p-4">
-                            <Typography
-                              variant="h6"
-                              className="mb-3 flex items-center font-semibold text-red-400"
-                            >
-                              <ErrorIcon sx={{ mr: 2 }} />
-                              Validation Errors (First 10 shown)
-                            </Typography>
-                            <TableContainer sx={{ maxHeight: 300 }}>
-                              <Table size="small">
-                                <TableHead>
-                                  <TableRow>
-                                    <TableCell>Row</TableCell>
-                                    <TableCell>Field</TableCell>
-                                    <TableCell>Value</TableCell>
-                                    <TableCell>Error</TableCell>
-                                  </TableRow>
-                                </TableHead>
-                                <TableBody>
-                                  {uploadedData.validationErrors
-                                    .slice(0, 10)
-                                    .map((error, index) => (
-                                      <TableRow key={index}>
-                                        <TableCell>
-                                          <Chip label={error.row} size="small" color="error" />
-                                        </TableCell>
-                                        <TableCell className="font-medium text-white">
-                                          {error.field}
-                                        </TableCell>
-                                        <TableCell>
-                                          <Typography variant="body2" className="text-gray-300">
-                                            {String(error.value).substring(0, 30)}
-                                            {String(error.value).length > 30 ? '...' : ''}
-                                          </Typography>
-                                        </TableCell>
-                                        <TableCell>
-                                          <Typography variant="body2" className="text-red-400">
-                                            {error.error}
-                                          </Typography>
-                                        </TableCell>
-                                      </TableRow>
-                                    ))}
-                                </TableBody>
-                              </Table>
-                            </TableContainer>
-                          </Box>
-                        </Fade>
-                      )}
-                    </CardContent>
-                  </CorporateCard>
-                </Slide>
-              )}
+                      </Fade>
+                    )}
+                  </CardContent>
+                </CorporateCard>
+              </Slide>
             </div>
           </div>
 
-          {/* Preview Dialog */}
-          <Dialog open={showPreview} onClose={() => setShowPreview(false)} maxWidth="lg" fullWidth>
-            <DialogTitle className="flex items-center">
-              <PreviewIcon sx={{ mr: 2, color: '#00d4ff' }} />
-              Data Preview
-            </DialogTitle>
-            <DialogContent>
-              {uploadedData && (
-                <TableContainer sx={{ maxHeight: 400 }}>
-                  <Table size="small">
-                    <TableHead>
-                      <TableRow>
-                        <TableCell>
-                          <strong>Row #</strong>
-                        </TableCell>
-                        {uploadedData.headers.map((header, index) => (
-                          <TableCell key={index}>
-                            <strong>{header}</strong>
-                          </TableCell>
-                        ))}
-                      </TableRow>
-                    </TableHead>
-                    <TableBody>
-                      {uploadedData.data.slice(0, 50).map((row, rowIndex) => {
-                        const hasError = uploadedData.validationErrors.some(
-                          (error) => error.row === rowIndex + 1
-                        );
-                        return (
-                          <TableRow
-                            key={rowIndex}
-                            sx={{
-                              backgroundColor: hasError ? 'rgba(239, 68, 68, 0.1)' : 'inherit',
-                            }}
-                          >
-                            <TableCell>
-                              <Chip
-                                label={rowIndex + 1}
-                                size="small"
-                                color={hasError ? 'error' : 'primary'}
-                              />
-                            </TableCell>
-                            {row.map((cell, cellIndex) => (
-                              <TableCell key={cellIndex} className="text-white">
-                                {String(cell).substring(0, 30)}
-                                {String(cell).length > 30 ? '...' : ''}
-                              </TableCell>
-                            ))}
-                          </TableRow>
-                        );
-                      })}
-                    </TableBody>
-                  </Table>
-                </TableContainer>
-              )}
-              {uploadedData && uploadedData.data.length > 50 && (
-                <Typography variant="body2" className="mt-3 text-center text-gray-400">
-                  Showing first 50 rows of {uploadedData.data.length} total rows
-                </Typography>
-              )}
-            </DialogContent>
-            <DialogActions>
-              <Button onClick={() => setShowPreview(false)} variant="outlined">
-                Close
-              </Button>
-            </DialogActions>
-          </Dialog>
-
-          {/* Corporate Notifications */}
+          {/* Notifications */}
           <Snackbar
             open={showSuccess}
             autoHideDuration={6000}
@@ -1214,9 +922,7 @@ export default function ExcelUploadComponent() {
                   <Typography variant="body1" className="font-semibold">
                     Upload Successful
                   </Typography>
-                  <Typography variant="body2">
-                    {uploadedData?.validRowCount} rows processed successfully
-                  </Typography>
+                  <Typography variant="body2">Data uploaded successfully</Typography>
                 </Box>
               </Box>
             </Alert>

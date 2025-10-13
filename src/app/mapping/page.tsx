@@ -216,7 +216,7 @@ const getWidgetCategory = (widgetName: string): string => {
   } else if (widgetName === 'column-chart') {
     return 'stacked-bar';
   } else if (widgetName === 'prediction-chart') {
-    return 'stacked-bar';
+    return 'prediction-chart';
   } else if (widgetName === 'orders-line-chart') {
     return 'single-line';
   } else if (widgetName === 'dual-line-chart') {
@@ -491,6 +491,272 @@ const defaultPropsMapping: Record<string, any> = {
       { name: 'Predicted', dataKey: 'predicted', color: '#82ca9d' },
     ],
   },
+
+  //   'prediction-chart': {
+  //     data: {
+  //       header: [
+  //         {
+  //           type: 'CHA',
+  //           fieldName: 'CALMONTH',
+  //           label: 'Calendar Year/Month',
+  //         },
+  //         {
+  //           type: 'CHA',
+  //           fieldName: 'O2TFPLNEXF0ML95F2Z32W3L',
+  //           label: 'Structure',
+  //         },
+  //         {
+  //           type: 'KF',
+  //           fieldName: 'VALUE001',
+  //           label: 'Actual Inventory',
+  //         },
+  //         {
+  //           type: 'KF',
+  //           fieldName: 'VALUE002',
+  //           label: 'Predicted Inventory',
+  //         },
+  //         {
+  //           type: 'KF',
+  //           fieldName: 'VALUE003',
+  //           label: 'Forecast Upper',
+  //         },
+  //         {
+  //           type: 'KF',
+  //           fieldName: 'VALUE004',
+  //           label: 'Forecast Lower',
+  //         },
+  //       ],
+  //       chartData: [
+  //         // PROJECTS - Actual data (Jan-Jun)
+  //         {
+  //           CALMONTH: 'JAN 2024',
+  //           O2TFPLNEXF0ML95F2Z32W3L: 'PROJECTS',
+  //           VALUE001: 1200000000,
+  //           VALUE002: '',
+  //           VALUE003: '',
+  //           VALUE004: '',
+  //         },
+  //         {
+  //           CALMONTH: 'FEB 2024',
+  //           O2TFPLNEXF0ML95F2Z32W3L: 'PROJECTS',
+  //           VALUE001: 1250000000,
+  //           VALUE002: '',
+  //           VALUE003: '',
+  //           VALUE004: '',
+  //         },
+  //         {
+  //           CALMONTH: 'MAR 2024',
+  //           O2TFPLNEXF0ML95F2Z32W3L: 'PROJECTS',
+  //           VALUE001: 1300000000,
+  //           VALUE002: '',
+  //           VALUE003: '',
+  //           VALUE004: '',
+  //         },
+  //         {
+  //           CALMONTH: 'APR 2024',
+  //           O2TFPLNEXF0ML95F2Z32W3L: 'PROJECTS',
+  //           VALUE001: 1280000000,
+  //           VALUE002: '',
+  //           VALUE003: '',
+  //           VALUE004: '',
+  //         },
+  //         {
+  //           CALMONTH: 'MAY 2024',
+  //           O2TFPLNEXF0ML95F2Z32W3L: 'PROJECTS',
+  //           VALUE001: 1320000000,
+  //           VALUE002: '',
+  //           VALUE003: '',
+  //           VALUE004: '',
+  //         },
+  //         {
+  //           CALMONTH: 'JUN 2024',
+  //           O2TFPLNEXF0ML95F2Z32W3L: 'PROJECTS',
+  //           VALUE001: 1350000000,
+  //           VALUE002: '',
+  //           VALUE003: '',
+  //           VALUE004: '',
+  //         },
+  //         // PROJECTS - Predicted data (Jul-Sep)
+  //         {
+  //           CALMONTH: 'JUL 2024',
+  //           O2TFPLNEXF0ML95F2Z32W3L: 'PROJECTS',
+  //           VALUE001: '',
+  //           VALUE002: 1400000000,
+  //           VALUE003: 1480000000,
+  //           VALUE004: 1320000000,
+  //         },
+  //         {
+  //           CALMONTH: 'AUG 2024',
+  //           O2TFPLNEXF0ML95F2Z32W3L: 'PROJECTS',
+  //           VALUE001: '',
+  //           VALUE002: 1450000000,
+  //           VALUE003: 1550000000,
+  //           VALUE004: 1350000000,
+  //         },
+  //         {
+  //           CALMONTH: 'SEP 2024',
+  //           O2TFPLNEXF0ML95F2Z32W3L: 'PROJECTS',
+  //           VALUE001: '',
+  //           VALUE002: 1500000000,
+  //           VALUE003: 1620000000,
+  //           VALUE004: 1380000000,
+  //         },
+
+  //         // DRILLING - Actual data (Jan-Jun)
+  //         {
+  //           CALMONTH: 'JAN 2024',
+  //           O2TFPLNEXF0ML95F2Z32W3L: 'DRILLING',
+  //           VALUE001: 1800000000,
+  //           VALUE002: '',
+  //           VALUE003: '',
+  //           VALUE004: '',
+  //         },
+  //         {
+  //           CALMONTH: 'FEB 2024',
+  //           O2TFPLNEXF0ML95F2Z32W3L: 'DRILLING',
+  //           VALUE001: 1850000000,
+  //           VALUE002: '',
+  //           VALUE003: '',
+  //           VALUE004: '',
+  //         },
+  //         {
+  //           CALMONTH: 'MAR 2024',
+  //           O2TFPLNEXF0ML95F2Z32W3L: 'DRILLING',
+  //           VALUE001: 1900000000,
+  //           VALUE002: '',
+  //           VALUE003: '',
+  //           VALUE004: '',
+  //         },
+  //         {
+  //           CALMONTH: 'APR 2024',
+  //           O2TFPLNEXF0ML95F2Z32W3L: 'DRILLING',
+  //           VALUE001: 1920000000,
+  //           VALUE002: '',
+  //           VALUE003: '',
+  //           VALUE004: '',
+  //         },
+  //         {
+  //           CALMONTH: 'MAY 2024',
+  //           O2TFPLNEXF0ML95F2Z32W3L: 'DRILLING',
+  //           VALUE001: 1950000000,
+  //           VALUE002: '',
+  //           VALUE003: '',
+  //           VALUE004: '',
+  //         },
+  //         {
+  //           CALMONTH: 'JUN 2024',
+  //           O2TFPLNEXF0ML95F2Z32W3L: 'DRILLING',
+  //           VALUE001: 2000000000,
+  //           VALUE002: '',
+  //           VALUE003: '',
+  //           VALUE004: '',
+  //         },
+  //         // DRILLING - Predicted data (Jul-Sep)
+  //         {
+  //           CALMONTH: 'JUL 2024',
+  //           O2TFPLNEXF0ML95F2Z32W3L: 'DRILLING',
+  //           VALUE001: '',
+  //           VALUE002: 2050000000,
+  //           VALUE003: 2150000000,
+  //           VALUE004: 1950000000,
+  //         },
+  //         {
+  //           CALMONTH: 'AUG 2024',
+  //           O2TFPLNEXF0ML95F2Z32W3L: 'DRILLING',
+  //           VALUE001: '',
+  //           VALUE002: 2100000000,
+  //           VALUE003: 2220000000,
+  //           VALUE004: 1980000000,
+  //         },
+  //         {
+  //           CALMONTH: 'SEP 2024',
+  //           O2TFPLNEXF0ML95F2Z32W3L: 'DRILLING',
+  //           VALUE001: '',
+  //           VALUE002: 2150000000,
+  //           VALUE003: 2280000000,
+  //           VALUE004: 2020000000,
+  //         },
+
+  //         // MRO - Actual data (Jan-Jun)
+  //         {
+  //           CALMONTH: 'JAN 2024',
+  //           O2TFPLNEXF0ML95F2Z32W3L: 'MRO',
+  //           VALUE001: 1050000000,
+  //           VALUE002: '',
+  //           VALUE003: '',
+  //           VALUE004: '',
+  //         },
+  //         {
+  //           CALMONTH: 'FEB 2024',
+  //           O2TFPLNEXF0ML95F2Z32W3L: 'MRO',
+  //           VALUE001: 1080000000,
+  //           VALUE002: '',
+  //           VALUE003: '',
+  //           VALUE004: '',
+  //         },
+  //         {
+  //           CALMONTH: 'MAR 2024',
+  //           O2TFPLNEXF0ML95F2Z32W3L: 'MRO',
+  //           VALUE001: 1100000000,
+  //           VALUE002: '',
+  //           VALUE003: '',
+  //           VALUE004: '',
+  //         },
+  //         {
+  //           CALMONTH: 'APR 2024',
+  //           O2TFPLNEXF0ML95F2Z32W3L: 'MRO',
+  //           VALUE001: 1090000000,
+  //           VALUE002: '',
+  //           VALUE003: '',
+  //           VALUE004: '',
+  //         },
+  //         {
+  //           CALMONTH: 'MAY 2024',
+  //           O2TFPLNEXF0ML95F2Z32W3L: 'MRO',
+  //           VALUE001: 1110000000,
+  //           VALUE002: '',
+  //           VALUE003: '',
+  //           VALUE004: '',
+  //         },
+  //         {
+  //           CALMONTH: 'JUN 2024',
+  //           O2TFPLNEXF0ML95F2Z32W3L: 'MRO',
+  //           VALUE001: 1130000000,
+  //           VALUE002: '',
+  //           VALUE003: '',
+  //           VALUE004: '',
+  //         },
+  //         // MRO - Predicted data (Jul-Sep)
+  //         {
+  //           CALMONTH: 'JUL 2024',
+  //           O2TFPLNEXF0ML95F2Z32W3L: 'MRO',
+  //           VALUE001: '',
+  //           VALUE002: 1150000000,
+  //           VALUE003: 1210000000,
+  //           VALUE004: 1090000000,
+  //         },
+  //         {
+  //           CALMONTH: 'AUG 2024',
+  //           O2TFPLNEXF0ML95F2Z32W3L: 'MRO',
+  //           VALUE001: '',
+  //           VALUE002: 1170000000,
+  //           VALUE003: 1240000000,
+  //           VALUE004: 1100000000,
+  //         },
+  //         {
+  //           CALMONTH: 'SEP 2024',
+  //           O2TFPLNEXF0ML95F2Z32W3L: 'MRO',
+  //           VALUE001: '',
+  //           VALUE002: 1190000000,
+  //           VALUE003: 1270000000,
+  //           VALUE004: 1110000000,
+  //         },
+  //       ],
+  //     },
+  //     title: 'Inventory Forecast by Department',
+  //     totalValue: '$4.5B',
+  //     color: '#001F3F',
+  //   },
 };
 
 interface TabPanelProps {
@@ -1104,16 +1370,16 @@ const MappingScreen: React.FC = () => {
   const [changeColor, setChangeColorOneMetric] = useState<string>('');
   const [currentLoadedReport, setCurrentLoadedReport] = useState<string>('');
 
-  useEffect(() => {
-    if (!adminCheckLoading && isAdmin) {
-      fetch('/api/endpoints')
-        .then((res) => res.json())
-        .then((data) => setApiEndpoints(data.endpoints))
-        .catch((err) => console.error('Failed to fetch endpoints:', err));
+  // useEffect(() => {
+  //   if (!adminCheckLoading && isAdmin) {
+  //     fetch('/api/endpoints')
+  //       .then((res) => res.json())
+  //       .then((data) => setApiEndpoints(data.endpoints))
+  //       .catch((err) => console.error('Failed to fetch endpoints:', err));
 
-      fetchReportData();
-    }
-  }, [adminCheckLoading, isAdmin]);
+  //     fetchReportData();
+  //   }
+  // }, [adminCheckLoading, isAdmin]);
 
   useEffect(() => {
     const loadExistingWidgets = async () => {
@@ -2289,7 +2555,7 @@ const MappingScreen: React.FC = () => {
   };
 
   const generatePreview = () => {
-    if (!selectedWidget || !transformedData) return;
+    if (!selectedWidget) return;
 
     const widgetType = getSelectedWidgetType();
     if (!widgetType) return;
@@ -2324,6 +2590,10 @@ const MappingScreen: React.FC = () => {
       });
       updateWidgetConfiguration(selectedWidget, previewProps);
     } else if (config.mappingType === 'chart' && config.chartConfig) {
+      if (!transformedData) {
+        console.error('transformedData is required for chart mapping');
+        return;
+      }
       try {
         if (widgetCategory === 'bar') {
           const { xAxis, yAxis } = config.chartConfig;
@@ -2580,6 +2850,110 @@ const MappingScreen: React.FC = () => {
             };
           }
           updateWidgetConfiguration(selectedWidget, previewProps);
+        } else if (widgetCategory === 'prediction-chart') {
+          const { xAxis, yAxis } = config.chartConfig;
+
+          if (!xAxis?.field || !parsedResponse) {
+            console.error('xAxis field and parsedResponse required for prediction chart');
+            return;
+          }
+
+          // Get the category field (O2TFPLNEXF0ML95F2Z32W3L equivalent)
+          const categoryField = parsedResponse.header.find(
+            (h: any) => h.type === 'CHA' && h.fieldName !== xAxis.field
+          )?.fieldName;
+
+          if (!categoryField) {
+            console.error('Category field not found');
+            return;
+          }
+
+          // Transform the data into prediction chart format
+          const chartData: any[] = [];
+          const categories = Object.keys(transformedData.FormStructure[xAxis.field] || {}).filter(
+            (key) => key !== 'Overall Result'
+          );
+
+          // Get all unique category values
+          const uniqueCategories = new Set<string>();
+          categories.forEach((timePeriod) => {
+            const data = transformedData.FormStructure[xAxis.field][timePeriod];
+            if (data && data[categoryField]) {
+              // If the category field has subcategories
+              const subCategories = Object.keys(data).filter(
+                (key) => key !== categoryField && typeof data[key] === 'object'
+              );
+              if (subCategories.length > 0) {
+                subCategories.forEach((cat) => uniqueCategories.add(cat));
+              }
+            }
+          });
+
+          // If we have parsedResponse.chartData, use it directly
+          if (parsedResponse.chartData && Array.isArray(parsedResponse.chartData)) {
+            // Group by category
+            const categoriesFromData = [
+              ...new Set(
+                parsedResponse.chartData
+                  .map((item: any) => {
+                    // Find the category field value
+                    const categoryFieldName = Object.keys(item).find(
+                      (key) =>
+                        key !== 'CALMONTH' &&
+                        typeof item[key] === 'string' &&
+                        !key.startsWith('VALUE')
+                    );
+                    return categoryFieldName ? item[categoryFieldName] : null;
+                  })
+                  .filter(Boolean)
+              ),
+            ];
+
+            previewProps = {
+              data: {
+                header: parsedResponse.header,
+                chartData: parsedResponse.chartData,
+              },
+              title:
+                widgetConfigurations[selectedWidget]?.title ||
+                transformedData.FormMetadata[xAxis.field]?.label ||
+                'Prediction Chart',
+            };
+          } else {
+            // Fallback: construct from transformedData
+            categories.forEach((timePeriod) => {
+              const data = transformedData.FormStructure[xAxis.field][timePeriod];
+
+              // Try to find category subdivisions
+              Object.keys(data).forEach((key) => {
+                if (typeof data[key] === 'object' && key !== 'Overall Result') {
+                  const categoryData = data[key];
+                  chartData.push({
+                    CALMONTH: timePeriod,
+                    O2TFPLNEXF0ML95F2Z32W3L: key,
+                    VALUE001:
+                      categoryData.VALUE001 || categoryData[Object.keys(categoryData)[0]] || '',
+                    VALUE002:
+                      categoryData.VALUE002 || categoryData[Object.keys(categoryData)[1]] || '',
+                    VALUE003:
+                      categoryData.VALUE003 || categoryData[Object.keys(categoryData)[2]] || '',
+                    VALUE004:
+                      categoryData.VALUE004 || categoryData[Object.keys(categoryData)[3]] || '',
+                  });
+                }
+              });
+            });
+
+            previewProps = {
+              data: {
+                header: parsedResponse.header,
+                chartData: chartData.length > 0 ? chartData : parsedResponse.chartData,
+              },
+              title: widgetConfigurations[selectedWidget]?.title || 'Prediction Chart',
+            };
+          }
+
+          updateWidgetConfiguration(selectedWidget, previewProps);
         }
       } catch (err) {
         console.error('Error generating chart preview:', err);
@@ -2615,6 +2989,10 @@ const MappingScreen: React.FC = () => {
       }
     } else if (config.mappingType === 'quadrant' && config.quadrantConfig) {
       try {
+        if (!transformedData) {
+          console.error('transformedData is required for chart mapping');
+          return;
+        }
         const { chaField, metrics } = config.quadrantConfig;
         previewProps = { metrics: [] };
 
@@ -2676,6 +3054,10 @@ const MappingScreen: React.FC = () => {
         updateWidgetConfiguration(selectedWidget, previewProps);
       }
     } else if (config.mappingType === 'table' && config.tableConfig) {
+      if (!transformedData) {
+        console.error('transformedData is required for chart mapping');
+        return;
+      }
       const { columns } = config.tableConfig;
 
       if (columns && columns.length > 0) {
@@ -2817,7 +3199,7 @@ const MappingScreen: React.FC = () => {
             </Typography>
 
             <GridLayout
-              className="layout h-52 w-full"
+              className="layout h-full w-full"
               layout={layout}
               cols={12}
               rowHeight={80}
@@ -4028,6 +4410,54 @@ const MappingScreen: React.FC = () => {
                                       Select the second line to display
                                     </FormHelperText>
                                   </FormControl>
+                                </Box>
+                              ) : getWidgetCategory(getSelectedWidgetType() || '') ===
+                                'prediction-chart' ? (
+                                <Box mt={3}>
+                                  <Alert
+                                    severity="info"
+                                    sx={{ mb: 2, backgroundColor: '#2196f320' }}
+                                  >
+                                    <Typography sx={{ color: 'white' }}>
+                                      Prediction charts automatically detect categories and display:
+                                    </Typography>
+                                    <ul
+                                      style={{
+                                        color: 'white',
+                                        paddingLeft: '20px',
+                                        marginTop: '8px',
+                                      }}
+                                    >
+                                      <li>Actual values (solid lines)</li>
+                                      <li>Predicted values (dashed lines)</li>
+                                      <li>Forecast range (shaded area with boundaries)</li>
+                                    </ul>
+                                  </Alert>
+
+                                  <Typography variant="subtitle2" sx={{ color: 'white', mb: 1 }}>
+                                    Expected Data Fields:
+                                  </Typography>
+                                  <Box sx={{ backgroundColor: '#ffffff10', p: 2, borderRadius: 1 }}>
+                                    <Typography variant="body2" sx={{ color: 'white', mb: 1 }}>
+                                      • <strong>Time Period:</strong> Selected X-Axis field
+                                    </Typography>
+                                    <Typography variant="body2" sx={{ color: 'white', mb: 1 }}>
+                                      • <strong>Categories:</strong> Automatically detected from
+                                      data structure
+                                    </Typography>
+                                    <Typography variant="body2" sx={{ color: 'white', mb: 1 }}>
+                                      • <strong>VALUE001:</strong> Actual values
+                                    </Typography>
+                                    <Typography variant="body2" sx={{ color: 'white', mb: 1 }}>
+                                      • <strong>VALUE002:</strong> Predicted values
+                                    </Typography>
+                                    <Typography variant="body2" sx={{ color: 'white', mb: 1 }}>
+                                      • <strong>VALUE003:</strong> Forecast upper bound
+                                    </Typography>
+                                    <Typography variant="body2" sx={{ color: 'white' }}>
+                                      • <strong>VALUE004:</strong> Forecast lower bound
+                                    </Typography>
+                                  </Box>
                                 </Box>
                               ) : (
                                 <FormControl fullWidth margin="normal">

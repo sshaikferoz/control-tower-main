@@ -163,24 +163,25 @@ const TableMetric = ({
             </div>
 
             {/* Table */}
-            <div className="flex-grow overflow-auto px-7 pb-4">
-              <div className="metric-table">
-                <DataTable
-                  value={data}
-                  className="max-h-[175px] overflow-auto border-[0.6px] border-solid border-[#d1d1d1]"
-                  showGridlines={false}
-                >
-                  {tableColumns.map((col, index) => (
-                    <Column
-                      key={col.field}
-                      field={col.field}
-                      header={col.header}
-                      style={{
-                        width: getColumnWidth(index, tableColumns.length),
-                      }}
-                    />
-                  ))}
-                </DataTable>
+            <div className="h-[90%] overflow-hidden px-7 pb-4">
+              <div className="metric-table flex h-full flex-col">
+                <div className="flex-grow overflow-x-hidden overflow-y-auto rounded-md border border-[#d1d1d1]">
+                  <DataTable value={data} className="h-full w-full" showGridlines={false}>
+                    {tableColumns.map((col, index) => (
+                      <Column
+                        key={col.field}
+                        field={col.field}
+                        header={col.header}
+                        style={{
+                          width: getColumnWidth(index, tableColumns.length),
+                        }}
+                      />
+                    ))}
+                  </DataTable>
+                </div>
+
+                {/* 👇 Small bottom spacing */}
+                <div className="h-3" />
               </div>
             </div>
           </div>

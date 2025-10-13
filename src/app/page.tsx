@@ -93,6 +93,14 @@ const Dashboard: React.FC = () => {
     }
   }, [isStandaloneAllowed, urlParams, menuItems]);
 
+  useEffect(() => {
+    if (appState.selectedMenuItem) {
+      const tabName =
+        appState.selectedMenuItem.name || appState.selectedMenuItem.tabname || 'Dashboard';
+      document.title = tabName;
+    }
+  }, [appState.selectedMenuItem]);
+
   // Handle menu item selection (restrict for non-admin users)
   const handleMenuItemSelect = (item: any) => {
     if (!isAdmin && item.type !== 'Section') {
