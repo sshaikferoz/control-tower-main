@@ -3105,7 +3105,9 @@ const MappingScreen: React.FC = () => {
         }
 
         const total = totalColumn ? getKFValue(chaField, 'Overall Result', totalColumn) : 0;
-        const tableTitle = transformedData.FormMetadata[chaField]?.label || 'Top Items';
+        // const tableTitle = transformedData.FormMetadata[chaField]?.label || 'Top Items';
+
+        const tableTitle = widgetConfigurations[selectedWidget]?.title;
 
         previewProps = {
           title: tableTitle,
