@@ -461,8 +461,35 @@ export default function Home({
     setIsEditMode(!isEditMode);
   };
 
-  const handleSaveDashboard = () => {
+  const handleSaveDashboard = async () => {
+    if (!isEditModeAllowed) return;
+
     setIsEditMode(false);
+
+    try {
+      setLoading(true);
+
+      // Prepare reordered sections with updated order
+      const updatedSections = sapSections.map((section, index) => ({
+        ...section,
+        order: index + 1,
+        hasChanges: true,
+      }));
+
+      // Save updated order to SAP
+      const savedSections = await sapODataService.batchUpdateSections(updatedSections);
+
+      // Update UI state
+      updateDashboardData(savedSections);
+      setSapSections(savedSections);
+
+      setShowSaveSuccess(true);
+    } catch (err) {
+      console.error('Error saving dashboard layout:', err);
+      setError('Failed to save dashboard layout');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleAddSection = () => {
