@@ -1477,11 +1477,11 @@ const MappingScreen: React.FC = () => {
     }
   }, [sectionId, sectionName]);
 
-  useEffect(() => {
-    if (reportName && reportName !== currentLoadedReport && isAdmin) {
-      fetchReportData();
-    }
-  }, [reportName, currentLoadedReport, isAdmin]);
+  // useEffect(() => {
+  //   if (reportName && reportName !== currentLoadedReport && isAdmin) {
+  //     fetchReportData();
+  //   }
+  // }, [reportName, currentLoadedReport, isAdmin]);
 
   useEffect(() => {
     setFieldsForAnnouncement();

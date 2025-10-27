@@ -38,7 +38,7 @@ const PieChartWithTotal = ({
     <div className="h-full w-full">
       <div className="h-full rounded-xl bg-gradient-to-b from-[#00214E] to-[#0164B0] p-4 text-white">
         <div className="flex w-full items-center gap-2.5">
-          <h3 className="text-center [font-family:'Ghawar-Hefty',Helvetica] text-base font-normal whitespace-nowrap text-white">
+          <h3 className="text-center [font-family:'Ghawar-Hefty',Helvetica] text-base font-bold whitespace-nowrap text-white">
             {title}
           </h3>
 

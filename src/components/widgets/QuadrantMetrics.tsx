@@ -29,7 +29,7 @@ const QuadrantMetrics = ({ metrics }: QuadrantMetricsProps) => {
             key={index}
             className={`absolute flex flex-col items-start justify-center gap-4 ${metric.position === 'top-left' ? 'top-[41px] left-14 sm:top-4 sm:left-4 md:top-6 md:left-6' : ''} ${metric.position === 'top-right' ? 'top-[41px] right-14 sm:top-4 sm:right-4 md:top-6 md:right-6' : ''} ${metric.position === 'bottom-left' ? 'bottom-[41px] left-14 sm:bottom-4 sm:left-4 md:bottom-6 md:left-6' : ''} ${metric.position === 'bottom-right' ? 'right-14 bottom-[41px] sm:right-4 sm:bottom-4 md:right-6 md:bottom-6' : ''}`}
           >
-            <h3 className="w-[169px] [font-family:'Ghawar-Hefty',Helvetica] text-[17px] font-normal text-white sm:w-auto sm:text-[15px]">
+            <h3 className="w-[169px] [font-family:'Ghawar-Hefty',Helvetica] text-[17px] font-bold text-white sm:w-auto sm:text-[15px]">
               {metric.title}
             </h3>
             <span className="[font-family:'Ghawar-SmeiBold',Helvetica] text-[28px] leading-8 font-bold whitespace-nowrap text-[#83bd01] sm:text-[24px]">

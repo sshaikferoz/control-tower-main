@@ -94,7 +94,7 @@ const PieChartComponent = ({
       >
         {/* Title */}
         <div className="mb-4">
-          <h3 className="[font-family:'Ghawar-Hefty',Helvetica] text-base font-normal text-white">
+          <h3 className="[font-family:'Ghawar-Hefty',Helvetica] text-base font-bold text-white">
             {title}
           </h3>
         </div>

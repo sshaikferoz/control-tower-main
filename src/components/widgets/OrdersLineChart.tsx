@@ -54,7 +54,7 @@ const OrdersLineChart = ({ data, title }: OrdersLineChartProps) => {
     <div className="relative h-full w-full">
       <div className="h-full rounded-xl p-4" style={backgroundStyle}>
         <div className="flex w-full items-start justify-between">
-          <h3 className="text-base font-normal text-white">{title}</h3>
+          <h3 className="text-base font-bold text-white">{title}</h3>
 
           {/* Buttons to open color pickers */}
           {/* <div className="flex gap-2">

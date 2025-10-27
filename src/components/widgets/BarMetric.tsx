@@ -62,7 +62,7 @@ const BarMetric = ({ data, title, variance = '+0.00%', color, setChangeColor }: 
           <div className="flex h-full w-full flex-col items-center gap-2.5">
             {/* Header */}
             <div className="flex h-8 w-full items-center justify-between px-2">
-              <h3 className="font-sans text-base font-normal text-white">{title}</h3>
+              <h3 className="font-sans text-base font-bold text-white">{title}</h3>
               <div className="flex items-center gap-2"></div>
             </div>
 

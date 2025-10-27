@@ -114,7 +114,7 @@ const PredictionChart = ({
         {/* Header */}
         <div className="flex justify-between">
           <div className="flex flex-col items-start gap-[5px]">
-            <h3 className="text-base font-normal text-white">{title}</h3>
+            <h3 className="text-base font-bold text-white">{title}</h3>
           </div>
 
           {totalValue && (

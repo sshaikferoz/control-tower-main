@@ -26,7 +26,7 @@
     "devextreme-react": "^25.1.3",
     "fast-xml-parser": "^5.0.9",
     "file-saver": "^2.0.5",
-    "gridstack": "^11.4.0",
+    "gridstack": "^11.5.1",
     "lucide-react": "^0.479.0",
     "miragejs": "^0.1.48",
     "next": "15.2.1",

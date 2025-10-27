@@ -154,7 +154,7 @@ const TableMetric = ({
             <div className="flex items-center justify-between px-7 pt-1.5 pb-3">
               <div className="flex items-center gap-2">
                 <div
-                  className="text-base leading-4 font-normal tracking-[-0.16px] text-white"
+                  className="text-base leading-4 font-bold tracking-[-0.16px] text-white"
                   style={{ fontFamily: 'Ghawar-Hefty, Helvetica' }}
                 >
                   {title}

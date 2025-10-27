@@ -108,7 +108,7 @@ const MultiMetricComparsionChart: React.FC<MultiMetricComparsionChartProps> = ({
           <div className="flex items-start gap-[17px]">
             {iconSrc && <img className="h-[18.67px] w-[21px]" alt="Chart Icon" src={iconSrc} />}
             <div className="flex flex-col gap-[5px]">
-              <div className="text-base font-normal text-[#ffffff]">{title}</div>
+              <div className="text-base font-bold text-[#ffffff]">{title}</div>
               <div className="text-[11px] font-normal whitespace-nowrap text-[#ffffff]">
                 {subtitle}
               </div>

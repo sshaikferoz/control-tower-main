@@ -63,7 +63,7 @@ const SingleLineChart = ({ widget_name, data, color, setChangeColor }: ChartProp
         // onClick={handleDivClick}
       >
         <div className="flex justify-between">
-          <h3 className="flex items-center text-lg font-semibold">{widget_name}</h3>
+          <h3 className="flex items-center text-lg font-bold">{widget_name}</h3>
         </div>
 
         <div className="flex items-center justify-center rounded pt-8">
