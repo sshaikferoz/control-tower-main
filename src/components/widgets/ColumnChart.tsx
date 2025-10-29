@@ -79,22 +79,10 @@ const ColumnChart = ({
   const displaySeries = safeSeries.length > 0 ? safeSeries : sampleSeries;
 
   const formatNumber = (num: number) => {
-    const abs = Math.abs(num);
-    const round = (val: number, decimals = 1) =>
-      Number(Math.round(Number(val + 'e' + decimals)) + 'e-' + decimals);
-
-    if (abs >= 1_000_000_000) {
-      // Billion
-      return `${round(num / 1_000_000_000, 2)}B`;
-    } else if (abs >= 1_000_000) {
-      // Million
-      return `${round(num / 1_000_000, 1)}MM`;
-    } else if (abs >= 1_000) {
-      // Thousand
-      return `${round(num / 1_000, 1)}M`;
-    }
-    // Less than thousand
-    return `${round(num, 2)}`;
+    if (num >= 1_000_000_000) return `${(num / 1_000_000_000).toFixed(1)}B`;
+    if (num >= 1_000_000) return `${(num / 1_000_000).toFixed(1)}M`;
+    if (num >= 1_000) return `${(num / 1_000).toFixed(1)}K`;
+    return num.toString();
   };
 
   return (

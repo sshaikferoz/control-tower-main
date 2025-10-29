@@ -20,6 +20,7 @@ const pieChart = lazy(() => import('@/components/widgets/PieChart'));
 const ColumnChart = lazy(() => import('@/components/widgets/ColumnChart'));
 const PredictionChart = lazy(() => import('@/components/widgets/Prediction'));
 const RadarChartComponent = lazy(() => import('@/components/widgets/RadarChart'));
+const MultiChart = lazy(() => import('@/components/widgets/MultiChart'));
 
 // Component mappings with lazy loading
 export const widgetMapping: Record<string, React.ComponentType<any>> = {
@@ -41,7 +42,8 @@ export const widgetMapping: Record<string, React.ComponentType<any>> = {
     'pie-chart': pieChart,
     'column-chart': ColumnChart,
     'prediction-chart': PredictionChart,
-    'radar-chart': RadarChartComponent
+    'radar-chart': RadarChartComponent,
+    'multi-chart': MultiChart,
 };
 
 // Default widget props for when data isn't available
@@ -228,4 +230,5 @@ export const defaultPropsMapping: Record<string, any> = {
         ],
         title: 'Distribution Chart',
     },
+    
 };

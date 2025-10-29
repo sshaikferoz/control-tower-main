@@ -39,53 +39,34 @@ function extractMetadata(xmlString: string): any[] {
         /<ZBW_QUERY_OUTPUT_METADATA[^>]*>([\s\S]*?)<\/ZBW_QUERY_OUTPUT_METADATA>/g
     );
 
-    if (!metadataMatches) {
-        return [];
-    }
+    if (!metadataMatches) return [];
 
     return metadataMatches.map((metadataBlock) => {
-        // Extract field type
         const typeMatch = metadataBlock.match(/type\s*=\s*"([^"]+)"/);
-        const type = typeMatch ? typeMatch[1] : '';
+        const type = typeMatch ? typeMatch[1] : "";
 
-        // Extract field name
+        // Extract and clean field name
         const fieldNameMatch = metadataBlock.match(/<FIELDNAME>([^<]+)<\/FIELDNAME>/);
-        const fieldName = fieldNameMatch
-            ? fieldNameMatch[1]
-                .replace(/&lt;/g, '<')
-                .replace(/&gt;/g, '>')
-                .replace(/&amp;/g, '&')
-                .replace(/&quot;/g, '"')
-                .replace(/&#39;/g, "'")
-            : '';
+        let fieldName = fieldNameMatch ? decodeXmlEntities(fieldNameMatch[1]) : "";
+
+        // remove XSLT_ prefix if present
+        if (fieldName.startsWith("XSLT_")) {
+            fieldName = fieldName.replace(/^XSLT_/, "");
+        }
 
         // Extract label
         const labelMatch = metadataBlock.match(/<SCRTEXT_L>([^<]+)<\/SCRTEXT_L>/);
-        const label = labelMatch
-            ? labelMatch[1]
-                .replace(/&lt;/g, '<')
-                .replace(/&gt;/g, '>')
-                .replace(/&amp;/g, '&')
-                .replace(/&quot;/g, '"')
-                .replace(/&#39;/g, "'")
-            : '';
+        const label = labelMatch ? decodeXmlEntities(labelMatch[1]) : "";
 
-        // Extract axis type
         const axisTypeMatch = metadataBlock.match(/<AXIS_TYPE>([^<]+)<\/AXIS_TYPE>/);
-        const axisType = axisTypeMatch ? axisTypeMatch[1] : '';
+        const axisType = axisTypeMatch ? axisTypeMatch[1] : "";
 
-        // Extract display style
         const displayStyleMatch = metadataBlock.match(/<DISPLAY_STYLE>([^<]+)<\/DISPLAY_STYLE>/);
-        const displayStyle = displayStyleMatch ? displayStyleMatch[1] : '';
-        console.log('Field Name', label);
+        const displayStyle = displayStyleMatch ? displayStyleMatch[1] : "";
 
-        return {
-            type,
-            fieldName,
-            label,
-            axisType,
-            displayStyle,
-        };
+        console.log("Field Name:", fieldName);
+
+        return { type, fieldName, label, axisType, displayStyle };
     });
 }
 
@@ -96,33 +77,29 @@ function extractMetadata(xmlString: string): any[] {
  * @returns Array of data objects
  */
 function extractChartData(xmlString: string): any[] {
-    // Find the data items section
     const outputSectionMatch = xmlString.match(/<(OUTPUT|o)>([\s\S]*?)<\/(OUTPUT|o)>/);
-
-    if (!outputSectionMatch) {
-        return [];
-    }
+    if (!outputSectionMatch) return [];
 
     const outputSection = outputSectionMatch[0];
     const itemMatches = outputSection.match(/<item>([\s\S]*?)<\/item>/g);
-
-    if (!itemMatches) {
-        return [];
-    }
+    if (!itemMatches) return [];
 
     return itemMatches.map((itemBlock) => {
         const dataObject: any = {};
-
-        // Extract all field values
         const fieldPattern = /<([^>]+)>([^<]*)<\/\1>/g;
         let match;
 
         while ((match = fieldPattern.exec(itemBlock)) !== null) {
-            const fieldName = match[1];
+            let fieldName = match[1];
             let fieldValue: any = match[2];
 
+            // remove XSLT_ prefix if present in output data
+            if (fieldName.startsWith("XSLT_")) {
+                fieldName = fieldName.replace(/^XSLT_/, "");
+            }
+
             // Try to convert numeric values
-            if (!isNaN(Number(fieldValue)) && fieldValue.trim() !== '') {
+            if (!isNaN(Number(fieldValue)) && fieldValue.trim() !== "") {
                 fieldValue = Number(fieldValue);
             }
 
@@ -132,7 +109,6 @@ function extractChartData(xmlString: string): any[] {
         return dataObject;
     });
 }
-
 /**
  * Utility to render XML entities
  *

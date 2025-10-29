@@ -87,6 +87,7 @@ export function getTypographyElementsForWidget(widgetType: string): string[] {
     'prediction-chart': ['title', 'label', 'legend'],
     'radar-chart': ['title', 'label', 'legend'],
     announcement: ['title', 'description'],
+    'multi-chart': ['title', 'value', 'legend'],
   };
 
   return widgetElementMap[widgetType] || ['title', 'value', 'label'];

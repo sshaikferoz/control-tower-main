@@ -149,7 +149,8 @@ export type WidgetTypes =
     | 'pie-chart'
     | 'column-chart'
     | 'prediction-chart'
-    | 'radar-chart';
+    | 'radar-chart'
+    | 'multi-chart';
 
 // Mapping configurations for each widget type
 export const widgetConfigFields: Record<
@@ -268,6 +269,16 @@ export const widgetConfigFields: Record<
         { field: 'title', type: 'string', path: 'title' },
         { field: 'totalValue', type: 'string', path: 'totalValue' },
         { field: 'series', type: 'array', path: 'series' },
+    ],
+    'multi-chart': [
+        { field: 'data', type: 'array', path: 'data' },
+        { field: 'title', type: 'string', path: 'title' },
+        { field: 'totalValue', type: 'string', path: 'totalValue' },
+        { field: 'series', type: 'array', path: 'series' },
+        { field: 'chartType', type: 'string', path: 'chartType' },
+        { field: 'showLegend', type: 'boolean', path: 'showLegend' },
+        { field: 'stacked', type: 'boolean', path: 'stacked' },
+        { field: 'selectedLabels', type: 'array', path: 'selectedLabels' },
     ],
 };
 

@@ -24,6 +24,7 @@ const menuItems = [
   { name: 'column-chart', imageURL: '' },
   { name: 'prediction-chart', imageURL: '' },
   { name: 'radar-chart', imageURL: '' },
+  { name: 'multi-chart', imageURL: '' },
   //   { name: 'announcement', imageURL: '' },
 ];
 

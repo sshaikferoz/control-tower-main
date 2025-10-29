@@ -18,6 +18,7 @@ import AnnouncementWidget from '@/components/widgets/Announcement1';
 import DualLineChart from '@/components/widgets/DualLineChart';
 import PieChartWithTotal from '@/components/widgets/PieChartWithTotal';
 import QuadrantMetrics from '@/components/widgets/QuadrantMetrics';
+import MultiChart from '@/components/widgets/MultiChart';
 import { Button } from 'primereact/button';
 import { Splitter, SplitterPanel } from 'primereact/splitter';
 import { parseXMLToJson } from '@/lib/bexQueryXmlToJson';
@@ -156,6 +157,7 @@ const widgetMapping: Record<string, React.ComponentType<any>> = {
   'column-chart': StackedColumn,
   'prediction-chart': PredictionChart,
   'radar-chart': RadarChartComponent,
+  'multi-chart': MultiChart,
 };
 
 const widgetSizes: Record<string, { w: number; h: number }> = {
@@ -178,6 +180,7 @@ const widgetSizes: Record<string, { w: number; h: number }> = {
   'column-chart': { w: 6, h: 3 },
   'prediction-chart': { w: 6, h: 3 },
   'radar-chart': { w: 6, h: 3 },
+  'multi-chart': { w: 6, h: 3 },
 };
 
 const REPORT_TYPE_OPTIONS = [
@@ -204,7 +207,8 @@ const getWidgetMappingType = (
     widgetName.includes('column-chart') ||
     widgetName.includes('line-chart') ||
     widgetName.includes('pie-chart') ||
-    widgetName.includes('prediction')
+    widgetName.includes('prediction') ||
+    widgetName === 'multi-chart'
   ) {
     return 'chart';
   } else {
@@ -241,6 +245,8 @@ const getWidgetCategory = (widgetName: string): string => {
     return 'table';
   } else if (widgetName === 'radar-chart') {
     return 'stacked-bar';
+  } else if (widgetName === 'multi-chart') {
+    return 'multi-chart';
   } else {
     return 'simple';
   }
@@ -496,271 +502,26 @@ const defaultPropsMapping: Record<string, any> = {
     ],
   },
 
-  //   'prediction-chart': {
-  //     data: {
-  //       header: [
-  //         {
-  //           type: 'CHA',
-  //           fieldName: 'CALMONTH',
-  //           label: 'Calendar Year/Month',
-  //         },
-  //         {
-  //           type: 'CHA',
-  //           fieldName: 'O2TFPLNEXF0ML95F2Z32W3L',
-  //           label: 'Structure',
-  //         },
-  //         {
-  //           type: 'KF',
-  //           fieldName: 'VALUE001',
-  //           label: 'Actual Inventory',
-  //         },
-  //         {
-  //           type: 'KF',
-  //           fieldName: 'VALUE002',
-  //           label: 'Predicted Inventory',
-  //         },
-  //         {
-  //           type: 'KF',
-  //           fieldName: 'VALUE003',
-  //           label: 'Forecast Upper',
-  //         },
-  //         {
-  //           type: 'KF',
-  //           fieldName: 'VALUE004',
-  //           label: 'Forecast Lower',
-  //         },
-  //       ],
-  //       chartData: [
-  //         // PROJECTS - Actual data (Jan-Jun)
-  //         {
-  //           CALMONTH: 'JAN 2024',
-  //           O2TFPLNEXF0ML95F2Z32W3L: 'PROJECTS',
-  //           VALUE001: 1200000000,
-  //           VALUE002: '',
-  //           VALUE003: '',
-  //           VALUE004: '',
-  //         },
-  //         {
-  //           CALMONTH: 'FEB 2024',
-  //           O2TFPLNEXF0ML95F2Z32W3L: 'PROJECTS',
-  //           VALUE001: 1250000000,
-  //           VALUE002: '',
-  //           VALUE003: '',
-  //           VALUE004: '',
-  //         },
-  //         {
-  //           CALMONTH: 'MAR 2024',
-  //           O2TFPLNEXF0ML95F2Z32W3L: 'PROJECTS',
-  //           VALUE001: 1300000000,
-  //           VALUE002: '',
-  //           VALUE003: '',
-  //           VALUE004: '',
-  //         },
-  //         {
-  //           CALMONTH: 'APR 2024',
-  //           O2TFPLNEXF0ML95F2Z32W3L: 'PROJECTS',
-  //           VALUE001: 1280000000,
-  //           VALUE002: '',
-  //           VALUE003: '',
-  //           VALUE004: '',
-  //         },
-  //         {
-  //           CALMONTH: 'MAY 2024',
-  //           O2TFPLNEXF0ML95F2Z32W3L: 'PROJECTS',
-  //           VALUE001: 1320000000,
-  //           VALUE002: '',
-  //           VALUE003: '',
-  //           VALUE004: '',
-  //         },
-  //         {
-  //           CALMONTH: 'JUN 2024',
-  //           O2TFPLNEXF0ML95F2Z32W3L: 'PROJECTS',
-  //           VALUE001: 1350000000,
-  //           VALUE002: '',
-  //           VALUE003: '',
-  //           VALUE004: '',
-  //         },
-  //         // PROJECTS - Predicted data (Jul-Sep)
-  //         {
-  //           CALMONTH: 'JUL 2024',
-  //           O2TFPLNEXF0ML95F2Z32W3L: 'PROJECTS',
-  //           VALUE001: '',
-  //           VALUE002: 1400000000,
-  //           VALUE003: 1480000000,
-  //           VALUE004: 1320000000,
-  //         },
-  //         {
-  //           CALMONTH: 'AUG 2024',
-  //           O2TFPLNEXF0ML95F2Z32W3L: 'PROJECTS',
-  //           VALUE001: '',
-  //           VALUE002: 1450000000,
-  //           VALUE003: 1550000000,
-  //           VALUE004: 1350000000,
-  //         },
-  //         {
-  //           CALMONTH: 'SEP 2024',
-  //           O2TFPLNEXF0ML95F2Z32W3L: 'PROJECTS',
-  //           VALUE001: '',
-  //           VALUE002: 1500000000,
-  //           VALUE003: 1620000000,
-  //           VALUE004: 1380000000,
-  //         },
-
-  //         // DRILLING - Actual data (Jan-Jun)
-  //         {
-  //           CALMONTH: 'JAN 2024',
-  //           O2TFPLNEXF0ML95F2Z32W3L: 'DRILLING',
-  //           VALUE001: 1800000000,
-  //           VALUE002: '',
-  //           VALUE003: '',
-  //           VALUE004: '',
-  //         },
-  //         {
-  //           CALMONTH: 'FEB 2024',
-  //           O2TFPLNEXF0ML95F2Z32W3L: 'DRILLING',
-  //           VALUE001: 1850000000,
-  //           VALUE002: '',
-  //           VALUE003: '',
-  //           VALUE004: '',
-  //         },
-  //         {
-  //           CALMONTH: 'MAR 2024',
-  //           O2TFPLNEXF0ML95F2Z32W3L: 'DRILLING',
-  //           VALUE001: 1900000000,
-  //           VALUE002: '',
-  //           VALUE003: '',
-  //           VALUE004: '',
-  //         },
-  //         {
-  //           CALMONTH: 'APR 2024',
-  //           O2TFPLNEXF0ML95F2Z32W3L: 'DRILLING',
-  //           VALUE001: 1920000000,
-  //           VALUE002: '',
-  //           VALUE003: '',
-  //           VALUE004: '',
-  //         },
-  //         {
-  //           CALMONTH: 'MAY 2024',
-  //           O2TFPLNEXF0ML95F2Z32W3L: 'DRILLING',
-  //           VALUE001: 1950000000,
-  //           VALUE002: '',
-  //           VALUE003: '',
-  //           VALUE004: '',
-  //         },
-  //         {
-  //           CALMONTH: 'JUN 2024',
-  //           O2TFPLNEXF0ML95F2Z32W3L: 'DRILLING',
-  //           VALUE001: 2000000000,
-  //           VALUE002: '',
-  //           VALUE003: '',
-  //           VALUE004: '',
-  //         },
-  //         // DRILLING - Predicted data (Jul-Sep)
-  //         {
-  //           CALMONTH: 'JUL 2024',
-  //           O2TFPLNEXF0ML95F2Z32W3L: 'DRILLING',
-  //           VALUE001: '',
-  //           VALUE002: 2050000000,
-  //           VALUE003: 2150000000,
-  //           VALUE004: 1950000000,
-  //         },
-  //         {
-  //           CALMONTH: 'AUG 2024',
-  //           O2TFPLNEXF0ML95F2Z32W3L: 'DRILLING',
-  //           VALUE001: '',
-  //           VALUE002: 2100000000,
-  //           VALUE003: 2220000000,
-  //           VALUE004: 1980000000,
-  //         },
-  //         {
-  //           CALMONTH: 'SEP 2024',
-  //           O2TFPLNEXF0ML95F2Z32W3L: 'DRILLING',
-  //           VALUE001: '',
-  //           VALUE002: 2150000000,
-  //           VALUE003: 2280000000,
-  //           VALUE004: 2020000000,
-  //         },
-
-  //         // MRO - Actual data (Jan-Jun)
-  //         {
-  //           CALMONTH: 'JAN 2024',
-  //           O2TFPLNEXF0ML95F2Z32W3L: 'MRO',
-  //           VALUE001: 1050000000,
-  //           VALUE002: '',
-  //           VALUE003: '',
-  //           VALUE004: '',
-  //         },
-  //         {
-  //           CALMONTH: 'FEB 2024',
-  //           O2TFPLNEXF0ML95F2Z32W3L: 'MRO',
-  //           VALUE001: 1080000000,
-  //           VALUE002: '',
-  //           VALUE003: '',
-  //           VALUE004: '',
-  //         },
-  //         {
-  //           CALMONTH: 'MAR 2024',
-  //           O2TFPLNEXF0ML95F2Z32W3L: 'MRO',
-  //           VALUE001: 1100000000,
-  //           VALUE002: '',
-  //           VALUE003: '',
-  //           VALUE004: '',
-  //         },
-  //         {
-  //           CALMONTH: 'APR 2024',
-  //           O2TFPLNEXF0ML95F2Z32W3L: 'MRO',
-  //           VALUE001: 1090000000,
-  //           VALUE002: '',
-  //           VALUE003: '',
-  //           VALUE004: '',
-  //         },
-  //         {
-  //           CALMONTH: 'MAY 2024',
-  //           O2TFPLNEXF0ML95F2Z32W3L: 'MRO',
-  //           VALUE001: 1110000000,
-  //           VALUE002: '',
-  //           VALUE003: '',
-  //           VALUE004: '',
-  //         },
-  //         {
-  //           CALMONTH: 'JUN 2024',
-  //           O2TFPLNEXF0ML95F2Z32W3L: 'MRO',
-  //           VALUE001: 1130000000,
-  //           VALUE002: '',
-  //           VALUE003: '',
-  //           VALUE004: '',
-  //         },
-  //         // MRO - Predicted data (Jul-Sep)
-  //         {
-  //           CALMONTH: 'JUL 2024',
-  //           O2TFPLNEXF0ML95F2Z32W3L: 'MRO',
-  //           VALUE001: '',
-  //           VALUE002: 1150000000,
-  //           VALUE003: 1210000000,
-  //           VALUE004: 1090000000,
-  //         },
-  //         {
-  //           CALMONTH: 'AUG 2024',
-  //           O2TFPLNEXF0ML95F2Z32W3L: 'MRO',
-  //           VALUE001: '',
-  //           VALUE002: 1170000000,
-  //           VALUE003: 1240000000,
-  //           VALUE004: 1100000000,
-  //         },
-  //         {
-  //           CALMONTH: 'SEP 2024',
-  //           O2TFPLNEXF0ML95F2Z32W3L: 'MRO',
-  //           VALUE001: '',
-  //           VALUE002: 1190000000,
-  //           VALUE003: 1270000000,
-  //           VALUE004: 1110000000,
-  //         },
-  //       ],
-  //     },
-  //     title: 'Inventory Forecast by Department',
-  //     totalValue: '$4.5B',
-  //     color: '#001F3F',
-  //   },
+  'multi-chart': {
+    data: [
+      { name: 'Jan', sales: 1200000, marketing: 800000, operations: 650000 },
+      { name: 'Feb', sales: 950000, marketing: 720000, operations: 500000 },
+      { name: 'Mar', sales: 2100000, marketing: 1600000, operations: 900000 },
+      { name: 'Apr', sales: 1780000, marketing: 1200000, operations: 870000 },
+      { name: 'May', sales: 2500000, marketing: 1900000, operations: 1100000 },
+    ],
+    title: 'Multi Chart Widget',
+    series: [
+      { name: 'Sales', dataKey: 'sales', color: '#8884d8', type: 'line' },
+      { name: 'Marketing', dataKey: 'marketing', color: '#82ca9d', type: 'line' },
+      { name: 'Operations', dataKey: 'operations', color: '#ffc658', type: 'line' },
+    ],
+    chartType: 'line',
+    showLegend: true,
+    stacked: false,
+    selectedLabels: [],
+    valueFormat: 'non-currency', // NEW
+  },
 };
 
 interface TabPanelProps {
@@ -1611,6 +1372,18 @@ const MappingScreen: React.FC = () => {
           },
         };
       } else if (widgetCategory === 'stacked-bar') {
+        const defaultSeries = defaultPropsMapping[widgetName]?.series || [];
+        configToSave = {
+          ...baseConfig,
+          chartConfig: {
+            xAxis: { field: '', type: 'CHA' },
+            yAxis: { fields: [], type: 'KF' },
+          },
+          seriesConfig: {
+            series: [...defaultSeries],
+          },
+        };
+      } else if (widgetCategory === 'multi-chart') {
         const defaultSeries = defaultPropsMapping[widgetName]?.series || [];
         configToSave = {
           ...baseConfig,
@@ -2928,6 +2701,77 @@ const MappingScreen: React.FC = () => {
               totalValue: totalValue,
             };
           }
+          updateWidgetConfiguration(selectedWidget, previewProps);
+        } else if (widgetCategory === 'multi-chart') {
+          const { xAxis, yAxis } = config.chartConfig;
+          if (!xAxis?.field || !yAxis?.fields || yAxis.fields.length === 0) {
+            console.error('Multi-chart requires xAxis and yAxis fields');
+            return;
+          }
+
+          // Get unique x-axis values
+          const xValues = Object.keys(transformedData.FormStructure[xAxis.field] || {}).filter(
+            (key) => key !== 'Overall Result'
+          );
+
+          // Build chart data
+          const data = xValues.map((xValue) => {
+            const entry: Record<string, any> = { name: xValue };
+
+            // Check if there's a label field for grouping
+            const labelField = parsedResponse.header.find(
+              (h: any) => h.fieldName.toLowerCase().includes('label') && h.type === 'CHA'
+            );
+
+            if (labelField) {
+              // Add label to data entry
+              entry.label =
+                transformedData.FormStructure[xAxis.field][xValue][labelField.fieldName] || '';
+            }
+
+            // Add all y-axis values
+            yAxis.fields.forEach((kfField: any) => {
+              entry[kfField] = Number(
+                transformedData.FormStructure[xAxis.field][xValue][kfField] || 0
+              );
+            });
+
+            return entry;
+          });
+
+          // Build series configuration
+          const series = config.seriesConfig?.series || [];
+
+          // Calculate total value if needed
+          let totalValue = '';
+          if (transformedData.FormStructure[xAxis.field]['Overall Result']) {
+            const total = yAxis.fields.reduce((sum: number, kfField: any) => {
+              return (
+                sum +
+                Number(transformedData.FormStructure[xAxis.field]['Overall Result'][kfField] || 0)
+              );
+            }, 0);
+            totalValue = `${total.toLocaleString()}`;
+          }
+
+          const title = widgetConfigurations[selectedWidget]?.title || 'Multi Chart';
+          const chartType = widgetConfigurations[selectedWidget]?.chartType || 'line';
+          const showLegend = widgetConfigurations[selectedWidget]?.showLegend !== false;
+          const stacked = widgetConfigurations[selectedWidget]?.stacked || false;
+          const selectedLabels = widgetConfigurations[selectedWidget]?.selectedLabels || [];
+          const valueFormat = widgetConfigurations[selectedWidget]?.valueFormat || 'non-currency'; // NEW
+          previewProps = {
+            data,
+            series,
+            title,
+            totalValue,
+            chartType,
+            showLegend,
+            stacked,
+            selectedLabels,
+            valueFormat,
+          };
+
           updateWidgetConfiguration(selectedWidget, previewProps);
         } else if (widgetCategory === 'line') {
           const { xAxis, yAxis } = config.chartConfig;
@@ -4686,6 +4530,491 @@ const MappingScreen: React.FC = () => {
                                 </FormControl>
                               )}
                             </>
+                          )}
+                          {/* Add Multi-Chart Specific Config */}
+                          {getWidgetCategory(getSelectedWidgetType() || '') === 'multi-chart' && (
+                            <Box mt={3} className="multi-chart-config">
+                              {/* Chart Type Selection */}
+                              <FormControl fullWidth margin="normal">
+                                <InputLabel sx={{ color: 'white' }}>Chart Type</InputLabel>
+                                <Select
+                                  value={widgetConfigurations[selectedWidget]?.chartType || 'line'}
+                                  onChange={(e) => {
+                                    setWidgetConfigurations((prev) => ({
+                                      ...prev,
+                                      [selectedWidget]: {
+                                        ...prev[selectedWidget],
+                                        chartType: e.target.value,
+                                      },
+                                    }));
+                                  }}
+                                  label="Chart Type"
+                                  sx={{
+                                    color: 'white',
+                                    '& .MuiOutlinedInput-notchedOutline': { borderColor: 'white' },
+                                    '&:hover .MuiOutlinedInput-notchedOutline': {
+                                      borderColor: 'white',
+                                    },
+                                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                                      borderColor: 'white',
+                                    },
+                                    '& .MuiSvgIcon-root': { color: 'white' },
+                                  }}
+                                >
+                                  <MenuItem value="line">Line Chart</MenuItem>
+                                  <MenuItem value="bar">Bar Chart (Vertical)</MenuItem>
+                                  <MenuItem value="horizontal-bar">Bar Chart (Horizontal)</MenuItem>
+                                  <MenuItem value="area">Area Chart</MenuItem>
+                                  <MenuItem value="composed">Composed Chart (Mixed)</MenuItem>
+                                  <MenuItem value="scatter">Scatter Plot</MenuItem>
+                                  <MenuItem value="pie">Pie Chart</MenuItem>
+                                  <MenuItem value="radar">Radar Chart</MenuItem>
+                                </Select>
+                                <FormHelperText sx={{ color: 'white' }}>
+                                  Select the visualization type for this widget
+                                </FormHelperText>
+                              </FormControl>
+
+                              {/* VALUE FORMAT CONFIGURATION*/}
+                              <FormControl fullWidth margin="normal">
+                                <InputLabel sx={{ color: 'white' }}>Value Format</InputLabel>
+                                <Select
+                                  value={
+                                    widgetConfigurations[selectedWidget]?.valueFormat ||
+                                    'non-currency'
+                                  }
+                                  onChange={(e) => {
+                                    setWidgetConfigurations((prev) => ({
+                                      ...prev,
+                                      [selectedWidget]: {
+                                        ...prev[selectedWidget],
+                                        valueFormat: e.target.value,
+                                      },
+                                    }));
+                                  }}
+                                  label="Value Format"
+                                  sx={{
+                                    color: 'white',
+                                    '& .MuiOutlinedInput-notchedOutline': { borderColor: 'white' },
+                                    '&:hover .MuiOutlinedInput-notchedOutline': {
+                                      borderColor: 'white',
+                                    },
+                                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                                      borderColor: 'white',
+                                    },
+                                    '& .MuiSvgIcon-root': { color: 'white' },
+                                  }}
+                                >
+                                  <MenuItem value="currency">
+                                    Currency (Thousand → M, Million → MM, Billion → B)
+                                  </MenuItem>
+                                  <MenuItem value="non-currency">
+                                    Non-Currency (Thousand → K, Million → M, Billion → B)
+                                  </MenuItem>
+                                </Select>
+                                <FormHelperText sx={{ color: 'white' }}>
+                                  Select how numbers should be abbreviated in the chart
+                                </FormHelperText>
+                              </FormControl>
+
+                              {/* Show Legend Toggle */}
+                              <FormControl fullWidth margin="normal">
+                                <FormControlLabel
+                                  control={
+                                    <Checkbox
+                                      checked={
+                                        widgetConfigurations[selectedWidget]?.showLegend !== false
+                                      }
+                                      onChange={(e) => {
+                                        setWidgetConfigurations((prev) => ({
+                                          ...prev,
+                                          [selectedWidget]: {
+                                            ...prev[selectedWidget],
+                                            showLegend: e.target.checked,
+                                          },
+                                        }));
+                                      }}
+                                      sx={{
+                                        color: 'white',
+                                        '&.Mui-checked': { color: 'white' },
+                                      }}
+                                    />
+                                  }
+                                  label={
+                                    <Typography variant="body2" sx={{ color: 'white' }}>
+                                      Show Legend
+                                    </Typography>
+                                  }
+                                />
+                                <FormHelperText sx={{ color: 'white', ml: 0 }}>
+                                  Display legend below the chart
+                                </FormHelperText>
+                              </FormControl>
+
+                              {/* Stacked Toggle (for applicable chart types) */}
+                              {['bar', 'horizontal-bar', 'area'].includes(
+                                widgetConfigurations[selectedWidget]?.chartType || 'line'
+                              ) && (
+                                <FormControl fullWidth margin="normal">
+                                  <FormControlLabel
+                                    control={
+                                      <Checkbox
+                                        checked={
+                                          widgetConfigurations[selectedWidget]?.stacked || false
+                                        }
+                                        onChange={(e) => {
+                                          setWidgetConfigurations((prev) => ({
+                                            ...prev,
+                                            [selectedWidget]: {
+                                              ...prev[selectedWidget],
+                                              stacked: e.target.checked,
+                                            },
+                                          }));
+                                        }}
+                                        sx={{
+                                          color: 'white',
+                                          '&.Mui-checked': { color: 'white' },
+                                        }}
+                                      />
+                                    }
+                                    label={
+                                      <Typography variant="body2" sx={{ color: 'white' }}>
+                                        Stacked
+                                      </Typography>
+                                    }
+                                  />
+                                  <FormHelperText sx={{ color: 'white', ml: 0 }}>
+                                    Stack series on top of each other
+                                  </FormHelperText>
+                                </FormControl>
+                              )}
+
+                              {/* Selected Labels Multi-Select */}
+                              {parsedResponse &&
+                                (() => {
+                                  // Check if data has label field
+                                  const labelField = parsedResponse.header.find(
+                                    (h: any) =>
+                                      h.fieldName.toLowerCase().includes('label') &&
+                                      h.type === 'CHA'
+                                  );
+
+                                  if (labelField && chartXAxis) {
+                                    const labelValues = getCHAValues(labelField.fieldName).filter(
+                                      (val) => val !== 'Overall Result'
+                                    );
+
+                                    return (
+                                      <FormControl fullWidth margin="normal">
+                                        <InputLabel sx={{ color: 'white' }}>
+                                          Filter by Labels
+                                        </InputLabel>
+                                        <Select
+                                          multiple
+                                          value={
+                                            widgetConfigurations[selectedWidget]?.selectedLabels ||
+                                            []
+                                          }
+                                          onChange={(e) => {
+                                            setWidgetConfigurations((prev) => ({
+                                              ...prev,
+                                              [selectedWidget]: {
+                                                ...prev[selectedWidget],
+                                                selectedLabels: e.target.value as string[],
+                                              },
+                                            }));
+                                          }}
+                                          label="Filter by Labels"
+                                          renderValue={(selected) => (
+                                            <Box
+                                              sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}
+                                            >
+                                              {(selected as string[]).map((value) => (
+                                                <Chip
+                                                  key={value}
+                                                  label={value}
+                                                  size="small"
+                                                  sx={{
+                                                    backgroundColor: '#ffffff20',
+                                                    color: 'white',
+                                                  }}
+                                                />
+                                              ))}
+                                            </Box>
+                                          )}
+                                          sx={{
+                                            color: 'white',
+                                            '& .MuiOutlinedInput-notchedOutline': {
+                                              borderColor: 'white',
+                                            },
+                                            '&:hover .MuiOutlinedInput-notchedOutline': {
+                                              borderColor: 'white',
+                                            },
+                                            '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                                              borderColor: 'white',
+                                            },
+                                            '& .MuiSvgIcon-root': { color: 'white' },
+                                          }}
+                                        >
+                                          {labelValues.map((label) => (
+                                            <MenuItem key={label} value={label}>
+                                              <Checkbox
+                                                checked={
+                                                  (
+                                                    widgetConfigurations[selectedWidget]
+                                                      ?.selectedLabels || []
+                                                  ).indexOf(label) > -1
+                                                }
+                                              />
+                                              {label}
+                                            </MenuItem>
+                                          ))}
+                                        </Select>
+                                        <FormHelperText sx={{ color: 'white' }}>
+                                          Select specific labels to display (leave empty for all)
+                                        </FormHelperText>
+                                      </FormControl>
+                                    );
+                                  }
+                                  return null;
+                                })()}
+
+                              <Divider sx={{ my: 3, borderColor: 'rgba(255,255,255,0.2)' }} />
+
+                              {/* DATA SERIES CONFIGURATION */}
+                              <Typography
+                                variant="subtitle1"
+                                gutterBottom
+                                sx={{ color: 'white', fontWeight: 'bold' }}
+                              >
+                                Data Series Configuration
+                              </Typography>
+
+                              <Box mb={2}>
+                                {stackedSeries.length > 0 ? (
+                                  <Grid container spacing={2}>
+                                    {stackedSeries.map((series: any, index) => (
+                                      <Grid item xs={12} key={index}>
+                                        <Card
+                                          variant="outlined"
+                                          sx={{ backgroundColor: '#ffffff20' }}
+                                        >
+                                          <CardContent className="py-2">
+                                            <Grid container spacing={2} alignItems="center">
+                                              <Grid item xs={1}>
+                                                <Box
+                                                  sx={{
+                                                    width: 20,
+                                                    height: 20,
+                                                    backgroundColor: series.color,
+                                                    borderRadius: '4px',
+                                                  }}
+                                                />
+                                              </Grid>
+                                              <Grid item xs={4}>
+                                                <Typography variant="body2" sx={{ color: 'white' }}>
+                                                  {series.name}
+                                                </Typography>
+                                                <Typography
+                                                  variant="caption"
+                                                  sx={{ color: 'rgba(255,255,255,0.7)' }}
+                                                >
+                                                  {series.dataKey}
+                                                </Typography>
+                                              </Grid>
+                                              <Grid item xs={3}>
+                                                <FormControl fullWidth size="small">
+                                                  <Select
+                                                    value={series.type || 'line'}
+                                                    onChange={(e) => {
+                                                      const newSeries: any = [...stackedSeries];
+                                                      newSeries[index] = {
+                                                        ...newSeries[index],
+                                                        type: e.target.value as
+                                                          | 'line'
+                                                          | 'bar'
+                                                          | 'area',
+                                                      };
+                                                      setStackedSeries(newSeries);
+
+                                                      setFieldMappings((prev) => ({
+                                                        ...prev,
+                                                        [selectedWidget]: {
+                                                          ...prev[selectedWidget],
+                                                          seriesConfig: {
+                                                            ...prev[selectedWidget].seriesConfig,
+                                                            series: newSeries,
+                                                          },
+                                                        },
+                                                      }));
+                                                    }}
+                                                    sx={{
+                                                      color: 'white',
+                                                      '& .MuiOutlinedInput-notchedOutline': {
+                                                        borderColor: 'white',
+                                                      },
+                                                      '&:hover .MuiOutlinedInput-notchedOutline': {
+                                                        borderColor: 'white',
+                                                      },
+                                                      '&.Mui-focused .MuiOutlinedInput-notchedOutline':
+                                                        {
+                                                          borderColor: 'white',
+                                                        },
+                                                      '& .MuiSvgIcon-root': { color: 'white' },
+                                                    }}
+                                                  >
+                                                    <MenuItem value="line">Line</MenuItem>
+                                                    <MenuItem value="bar">Bar</MenuItem>
+                                                    <MenuItem value="area">Area</MenuItem>
+                                                  </Select>
+                                                </FormControl>
+                                              </Grid>
+                                              <Grid item xs={3}>
+                                                <TextField
+                                                  size="small"
+                                                  type="color"
+                                                  value={series.color}
+                                                  onChange={(e) => {
+                                                    const newSeries = [...stackedSeries];
+                                                    newSeries[index] = {
+                                                      ...newSeries[index],
+                                                      color: e.target.value,
+                                                    };
+                                                    setStackedSeries(newSeries);
+
+                                                    setFieldMappings((prev) => ({
+                                                      ...prev,
+                                                      [selectedWidget]: {
+                                                        ...prev[selectedWidget],
+                                                        seriesConfig: {
+                                                          ...prev[selectedWidget].seriesConfig,
+                                                          series: newSeries,
+                                                        },
+                                                      },
+                                                    }));
+                                                  }}
+                                                  sx={{
+                                                    '& input': {
+                                                      height: '30px',
+                                                      cursor: 'pointer',
+                                                    },
+                                                  }}
+                                                />
+                                              </Grid>
+                                              <Grid item xs={1}>
+                                                <IconButton
+                                                  size="small"
+                                                  color="error"
+                                                  onClick={() => handleRemoveStackedSeries(index)}
+                                                >
+                                                  <DeleteIcon fontSize="small" />
+                                                </IconButton>
+                                              </Grid>
+                                            </Grid>
+                                          </CardContent>
+                                        </Card>
+                                      </Grid>
+                                    ))}
+                                  </Grid>
+                                ) : (
+                                  <Alert severity="info" sx={{ backgroundColor: '#2196f320' }}>
+                                    <Typography sx={{ color: 'white' }}>
+                                      No data series configured yet. Add a series below.
+                                    </Typography>
+                                  </Alert>
+                                )}
+                              </Box>
+
+                              {/* Add New Series */}
+                              <FormControl fullWidth margin="normal">
+                                <InputLabel sx={{ color: 'white' }}>Add Data Series</InputLabel>
+                                <Select
+                                  value=""
+                                  onChange={(e) => {
+                                    const field = e.target.value as string;
+                                    const fieldLabel =
+                                      parsedResponse?.header.find((h: any) => h.fieldName === field)
+                                        ?.label || field;
+
+                                    const colors = [
+                                      '#84BD00',
+                                      '#FFC846',
+                                      '#8979FF',
+                                      '#E1553F',
+                                      '#5899DA',
+                                      '#4DD0E1',
+                                      '#FF6F61',
+                                    ];
+                                    const newSeriesIndex = stackedSeries.length;
+
+                                    const newSeries = {
+                                      name: fieldLabel,
+                                      dataKey: field,
+                                      color: colors[newSeriesIndex % colors.length],
+                                      type: 'line' as 'line' | 'bar' | 'area',
+                                    };
+
+                                    const updatedSeries = [...stackedSeries, newSeries];
+                                    setStackedSeries(updatedSeries);
+
+                                    setFieldMappings((prev) => {
+                                      const config = JSON.parse(
+                                        JSON.stringify(prev[selectedWidget])
+                                      );
+
+                                      // Initialize yAxis.fields array if it doesn't exist
+                                      if (!config.chartConfig) config.chartConfig = {};
+                                      if (!config.chartConfig.yAxis) config.chartConfig.yAxis = {};
+                                      if (!config.chartConfig.yAxis.fields)
+                                        config.chartConfig.yAxis.fields = [];
+
+                                      // Add the field to yAxis.fields
+                                      config.chartConfig.yAxis.fields = [
+                                        ...config.chartConfig.yAxis.fields,
+                                        field,
+                                      ];
+                                      config.chartConfig.yAxis.type = 'KF';
+
+                                      // Update seriesConfig
+                                      if (!config.seriesConfig)
+                                        config.seriesConfig = { series: [] };
+                                      config.seriesConfig.series = updatedSeries;
+
+                                      return { ...prev, [selectedWidget]: config };
+                                    });
+                                  }}
+                                  label="Add Data Series"
+                                  sx={{
+                                    color: 'white',
+                                    '& .MuiOutlinedInput-notchedOutline': {
+                                      borderColor: 'white',
+                                    },
+                                    '&:hover .MuiOutlinedInput-notchedOutline': {
+                                      borderColor: 'white',
+                                    },
+                                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                                      borderColor: 'white',
+                                    },
+                                    '& .MuiSvgIcon-root': { color: 'white' },
+                                  }}
+                                >
+                                  {getKFFields()
+                                    .filter((field: any) => {
+                                      return !stackedSeries.some(
+                                        (s) => s.dataKey === field.fieldName
+                                      );
+                                    })
+                                    .map((field: any) => (
+                                      <MenuItem key={field.fieldName} value={field.fieldName}>
+                                        {field.label} ({field.fieldName})
+                                      </MenuItem>
+                                    ))}
+                                </Select>
+                                <FormHelperText sx={{ color: 'white' }}>
+                                  Select key figure fields to include as data series in the chart
+                                </FormHelperText>
+                              </FormControl>
+                            </Box>
                           )}
                         </Box>
                       </TabPanel>
