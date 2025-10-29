@@ -1,6 +1,35 @@
 import { FormatConfig } from './formatConfig';
 
 
+export interface TypographyConfig {
+    fontFamily?: string;
+    fontSize?: string;
+    fontWeight?: string;
+    color?: string;
+    textAlign?: 'left' | 'center' | 'right';
+    textTransform?: 'none' | 'uppercase' | 'lowercase' | 'capitalize';
+    letterSpacing?: string;
+    lineHeight?: string;
+}
+
+export interface WidgetTypographyConfig {
+    title?: TypographyConfig;
+    value?: TypographyConfig;
+    label?: TypographyConfig;
+    description?: TypographyConfig;
+    name?: TypographyConfig;
+    metric1?: TypographyConfig;
+    metric2?: TypographyConfig;
+    value1?: TypographyConfig;
+    value2?: TypographyConfig;
+    date?: TypographyConfig;
+    header?: TypographyConfig;
+    cell?: TypographyConfig;
+    legend?: TypographyConfig;
+    [key: string]: TypographyConfig | undefined;
+}
+
+
 export type FormTransformHeaders = {
     type: string;
     label: string;
@@ -98,6 +127,7 @@ export interface WidgetMappingConfig {
     kfField?: string;
     endpoint?: string;
     entity?: string;
+    typography?: WidgetTypographyConfig;
 }
 
 // Widget types for specific configurations
@@ -607,4 +637,5 @@ export interface LoansAppTrayMappingConfig {
     fields: Record<string, WidgetFieldMapping>;
     targetReport?: TargetReportConfig;
 }
+
 

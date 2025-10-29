@@ -131,7 +131,7 @@ const Header: React.FC<HeaderProps> = ({ configuration, tabId, onSearchSelect })
     setIsSearching(true);
     try {
       const res = await fetch(
-        `https://scic-search.cml.apps.cdp-ds-prod.aramco.com/api/search?query=${encodeURIComponent(query)}`
+        `https://scic-search.cml.apps.cdp-ds-test.aramco.com/api/search?query=${encodeURIComponent(query)}`
       );
       const response = await res.json();
 

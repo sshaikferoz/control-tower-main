@@ -738,7 +738,7 @@ class SAPODataService {
 
                 // Prepare the widget item
                 const widgetItem: WidgetHeadItem = {
-                    Id: widget.id.replace('widget-', ''), // Empty for new widgets
+                    Id: widget.id.replace('widget-', ''),
                     SectionId: sectionId,
                     Name: widget.name || widget.widgetType,
                     Type: widget.widgetType,
@@ -748,21 +748,37 @@ class SAPODataService {
                     Properties: JSON.stringify(widget.props || {}),
                     IsActive: widget.active ? 'X' : '',
                     SortOrder: i + 1,
-                    DelFlag: widget.deleted ? 'X' : '',
-                    CrudFlag: 'C',
+                    DelFlag: widget.deleted ? 'X' : '', // Set DelFlag based on deleted status
+                    CrudFlag: widget.deleted ? 'D' : 'C', // Use 'D' for delete operation
                 };
 
                 // Add widget to the collection
                 allWidgets.push(widgetItem);
-
+                console.log('widgetItem', widget);
                 // Prepare roles for this widget and add to all roles collection
-                const widgetRoles: WidgetHeadRole[] = (widget.roles || []).map((roleName) => ({
-                    RoleId: '', // Leave empty as per requirement
-                    Id: widget.id.replace('widget-', ''), // associated_widget_id
-                    Name: roleName,
-                    Description: `${roleName} role`,
-                    Type: 'Custom',
-                }));
+                const widgetRoles: WidgetHeadRole[] = (widget.roles || [])
+                    .map((role: any) => {
+                        // Handle both string and object formats
+                        const isRoleObject = typeof role === 'object';
+                        const roleName = isRoleObject ? role.Name : role;
+                        const existingRoleId = isRoleObject ? (role.RoleId || '') : '';
+                        const isDeleted = isRoleObject ? (role.DelFlag === 'X') : false;
+
+                        // Skip deleted roles that are new (no RoleId)
+                        if (isDeleted && !existingRoleId) {
+                            return null;
+                        }
+
+                        return {
+                            RoleId: existingRoleId, // Keep existing RoleId if present, empty for new roles
+                            Id: widget.id.replace('widget-', ''), // associated_widget_id
+                            Name: roleName,
+                            Description: isRoleObject ? (role.Description || `${roleName} role`) : `${roleName} role`,
+                            Type: isRoleObject ? (role.Type || 'Custom') : 'Custom',
+                            DelFlag: isDeleted ? 'X' : '', // Set DelFlag for deleted roles
+                        };
+                    })
+                    .filter(Boolean) as WidgetHeadRole[]; // Remove null entries
 
                 // Add all roles from this widget to the collection
                 allRoles.push(...widgetRoles);

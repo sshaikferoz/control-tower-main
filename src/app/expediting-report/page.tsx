@@ -37,7 +37,7 @@ import mirageServer from '@/lib/mirage/mirageServer';
 import { Document, Page, Text, View, StyleSheet, pdf, Image, Font } from '@react-pdf/renderer';
 import { saveAs } from 'file-saver';
 
-mirageServer();
+// mirageServer();
 
 // Types
 interface VendorData {

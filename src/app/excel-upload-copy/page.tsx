@@ -735,7 +735,7 @@ export default function ExcelUploadComponent() {
 
       // Simulate API call
       const response = await fetch(
-        `https://scic-chatbot.cml.apps.cdp-ds-prod.aramco.com/api/uploadExcel`,
+        `https://scic-chatbot.cml.apps.cdp-ds-test.aramco.com/api/uploadExcel`,
         {
           method: 'POST',
           body: formData,

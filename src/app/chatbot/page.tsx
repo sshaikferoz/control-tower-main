@@ -130,24 +130,43 @@ const ChatbotInterface: React.FC = () => {
 
     try {
       // Get response from service with user info
-      const response = await generateResponse(message, userInfo);
-      setAiResponse(response);
+      const botMessageId = generateMessageId();
 
-      // Add bot response
+      // Add empty placeholder for bot response
       const botMessage: Message = {
-        id: generateMessageId(),
-        content: response.content,
+        id: botMessageId,
+        content: '',
         isUser: false,
-        timestamp: response.metadata?.timestamp,
+        timestamp: new Date().toISOString(),
         originalPrompt: message,
         userMessageId: userMessageId,
       };
-
       setMessages((prev) => [...prev, botMessage]);
+
+      // Stream chunks
+      let accumulated = '';
+      const response = await generateResponse(message, userInfo, (chunk) => {
+        accumulated += chunk;
+
+        // Update bot message progressively
+        setMessages((prev) =>
+          prev.map((m) => (m.id === botMessageId ? { ...m, content: accumulated } : m))
+        );
+      });
+
+      setAiResponse(response);
+
+      // Final update with metadata timestamp
+      setMessages((prev) =>
+        prev.map((m) =>
+          m.id === botMessageId
+            ? { ...m, content: response.content, timestamp: response.metadata?.timestamp }
+            : m
+        )
+      );
     } catch (error) {
       console.error('Error generating response:', error);
 
-      // Add error message
       const errorMessage: Message = {
         id: generateMessageId(),
         content: 'Sorry, I encountered an error processing your request.',
@@ -155,7 +174,6 @@ const ChatbotInterface: React.FC = () => {
         originalPrompt: message,
         userMessageId: userMessageId,
       };
-
       setMessages((prev) => [...prev, errorMessage]);
     } finally {
       setLoading(false);
@@ -256,7 +274,7 @@ const ChatbotInterface: React.FC = () => {
                   onRegenerate={!msg.isUser ? handleRegenerateResponse : undefined}
                 />
               ))}
-              {loading && <ChatbotTyping />}
+              {loading && messages[messages.length - 1]?.isUser && <ChatbotTyping />}
               <div ref={messagesEndRef} />
             </div>
           ) : (

@@ -92,6 +92,10 @@ import RadarChartComponent from '@/components/widgets/RadarChart';
 import { FormatConfigUI } from '@/components/FormatConfigUI';
 import { applyValueFormat } from '@/helpers/formatConfig';
 import type { FormatConfig } from '@/helpers/formatConfig';
+import { TypographyConfig, WidgetTypographyConfig } from '@/helpers/types';
+import { getTypographyElementsForWidget } from '@/helpers/typographyHelper';
+import FormatPaintIcon from '@mui/icons-material/FormatPaint';
+import { TypographyConfigUI } from '@/components/TypographyConfigUI';
 
 const GridLayout = WidthProvider(RGL);
 
@@ -100,8 +104,8 @@ interface Widget {
   name: string;
   props: Record<string, any>;
   deleted?: boolean;
+  isNew?: boolean; // Add this property
 }
-
 interface FieldMappings {
   [key: string]: WidgetMappingConfig;
 }
@@ -1369,7 +1373,15 @@ const MappingScreen: React.FC = () => {
   const [announcementValues, setAnnouncementValues] = useState<string[]>([]);
   const [changeColor, setChangeColorOneMetric] = useState<string>('');
   const [currentLoadedReport, setCurrentLoadedReport] = useState<string>('');
-
+  const [deleteRoleConfirmDialog, setDeleteRoleConfirmDialog] = useState<{
+    open: boolean;
+    roleIndex: number | null;
+    roleName: string | null;
+  }>({
+    open: false,
+    roleIndex: null,
+    roleName: null,
+  });
   // useEffect(() => {
   //   if (!adminCheckLoading && isAdmin) {
   //     fetch('/api/endpoints')
@@ -1397,6 +1409,7 @@ const MappingScreen: React.FC = () => {
                 id: widget.id,
                 name: widget.type,
                 props: widget.properties || {},
+                isNew: false, // Mark as existing widget
               }));
 
               setWidgets(transformedWidgets);
@@ -1439,13 +1452,28 @@ const MappingScreen: React.FC = () => {
                     },
                   };
                 }
-
                 transformedWidgetConfigs[widget.id] = {
                   ...widget.properties,
                   widgetType: widget.type,
                   configType: getWidgetMappingType(widget.type),
                   widgetCategory: getWidgetCategory(widget.type),
-                  roles: widget.roles ? widget.roles.map((role: any) => role.Name || role) : [],
+                  // Preserve the full role object to keep RoleId
+                  roles: widget.roles
+                    ? widget.roles.map((role: any) => {
+                        // If role is already an object with RoleId, keep it
+                        if (typeof role === 'object' && role.RoleId !== undefined) {
+                          return role;
+                        }
+                        // If role is just a string or object without RoleId, convert it
+                        return {
+                          Name: role.Name || role,
+                          RoleId: role.RoleId || '', // Empty for new roles
+                          Description: role.Description || '',
+                          Type: role.Type || 'Custom',
+                          DelFlag: role.DelFlag || '',
+                        };
+                      })
+                    : [],
                   description: widget.description || '',
                 };
               });
@@ -1647,7 +1675,15 @@ const MappingScreen: React.FC = () => {
     const { w, h } = widgetSizes[name] || { w: 2, h: 2 };
 
     if (!existingWidgetId) {
-      setWidgets((prev) => [...prev, { id: widgetId, name, props: {} }]);
+      setWidgets((prev) => [
+        ...prev,
+        {
+          id: widgetId,
+          name,
+          props: {},
+          isNew: true, // Mark as new widget
+        },
+      ]);
       setLayout((prev: any) => [
         ...prev,
         { i: widgetId, x: 0, y: Infinity, w, h, static: false, sectionName },
@@ -1659,29 +1695,94 @@ const MappingScreen: React.FC = () => {
     }
   };
 
+  const handleDeleteRoleClick = (role: any, index: number) => {
+    const roleName = typeof role === 'object' ? role.Name : role;
+    setDeleteRoleConfirmDialog({
+      open: true,
+      roleIndex: index,
+      roleName: roleName,
+    });
+  };
+
+  const handleConfirmRoleDelete = () => {
+    if (!selectedWidget || deleteRoleConfirmDialog.roleIndex === null) return;
+
+    const currentRoles = widgetConfigurations[selectedWidget]?.roles || [];
+    const roleToDelete = currentRoles[deleteRoleConfirmDialog.roleIndex];
+
+    // Check if it's an existing role with RoleId
+    const isExistingRole = typeof roleToDelete === 'object' && roleToDelete.RoleId;
+
+    if (isExistingRole) {
+      // Mark existing role as deleted instead of removing it
+      const updatedRoles = currentRoles.map((role: any, i: number) => {
+        if (i === deleteRoleConfirmDialog.roleIndex) {
+          return {
+            ...role,
+            DelFlag: 'X', // Mark as deleted
+          };
+        }
+        return role;
+      });
+      handleRolesChange(updatedRoles);
+    } else {
+      // Completely remove new role
+      const updatedRoles = currentRoles.filter(
+        (_: any, i: number) => i !== deleteRoleConfirmDialog.roleIndex
+      );
+      handleRolesChange(updatedRoles);
+    }
+
+    setDeleteRoleConfirmDialog({ open: false, roleIndex: null, roleName: null });
+  };
+
+  const handleCancelRoleDelete = () => {
+    setDeleteRoleConfirmDialog({ open: false, roleIndex: null, roleName: null });
+  };
+
   const removeWidget = (id: string) => {
-    setWidgets((prev) =>
-      prev.map((widget) => (widget.id === id ? { ...widget, deleted: true } : widget))
-    );
+    const widget = widgets.find((w) => w.id === id);
+    if (!widget) return;
 
-    setLayout((prev) => prev.filter((item) => item.i !== id));
+    // If it's an existing widget (already saved), mark as deleted
+    if (!widget.isNew) {
+      setWidgets((prev) => prev.map((w) => (w.id === id ? { ...w, deleted: true } : w)));
 
-    setFieldMappings((prev) => ({
-      ...prev,
-      [id]: {
-        ...prev[id],
-        deleted: true,
-      },
-    }));
+      // Remove from layout but keep in widgets array for save operation
+      setLayout((prev) => prev.filter((item) => item.i !== id));
 
-    setWidgetConfigurations((prev) => ({
-      ...prev,
-      [id]: {
-        ...prev[id],
-        deleted: true,
-      },
-    }));
+      // Mark as deleted in field mappings
+      setFieldMappings((prev) => ({
+        ...prev,
+        [id]: {
+          ...prev[id],
+          deleted: true,
+        },
+      }));
 
+      // Mark as deleted in widget configurations
+      setWidgetConfigurations((prev) => ({
+        ...prev,
+        [id]: {
+          ...prev[id],
+          deleted: true,
+        },
+      }));
+    } else {
+      // If it's a new widget (not saved yet), completely remove it
+      setWidgets((prev) => prev.filter((w) => w.id !== id));
+      setLayout((prev) => prev.filter((item) => item.i !== id));
+
+      // Remove from field mappings
+      const { [id]: removed, ...rest } = fieldMappings;
+      setFieldMappings(rest);
+
+      // Remove from widget configurations
+      const { [id]: removedConfig, ...restConfig } = widgetConfigurations;
+      setWidgetConfigurations(restConfig);
+    }
+
+    // Clear selection if deleted widget was selected
     if (selectedWidget === id) {
       setSelectedWidget(null);
       setPreviewData(null);
@@ -1696,6 +1797,7 @@ const MappingScreen: React.FC = () => {
       return;
     }
 
+    // Include both active and deleted widgets
     if (widgets.length === 0) {
       setSaveMessage('No widgets to save.');
       setSaveAlertSeverity('error');
@@ -1718,19 +1820,23 @@ const MappingScreen: React.FC = () => {
         {} as FieldMappings
       );
 
+      // Include all widgets (both active and deleted)
       const widgetsWithCompleteData = widgets.map((widget) => {
         const widgetConfig = widgetConfigurations[widget.id] || {};
-        const { widgetType, roles, description, ...cleanProps } = widgetConfig;
+        const { widgetType, roles, description, typography, ...cleanProps } = widgetConfig;
 
         return {
           id: widget.id,
           name: widget.name,
-          props: cleanProps,
+          props: {
+            ...cleanProps,
+            typography,
+          },
           roles: roles || [],
           Description: description || '',
           widgetType: widgetType || widget.name,
-          deleted: widget.deleted || false,
-          active: !widget.deleted,
+          deleted: widget.deleted || false, // Include deleted flag
+          active: !widget.deleted, // Set active based on deleted status
         };
       });
 
@@ -1764,6 +1870,8 @@ const MappingScreen: React.FC = () => {
       setSaveAlertSeverity('success');
       setShowSaveAlert(true);
 
+      // After successful save, remove deleted widgets from the widgets array
+      setWidgets((prev) => prev.filter((w) => !w.deleted));
       setTimeout(() => {
         window.location.href =
           process.env.NODE_ENV === 'development'
@@ -2444,7 +2552,6 @@ const MappingScreen: React.FC = () => {
     const fields = fieldMappings[selectedWidget].fields || {};
     return Object.values(fields).some((field: any) => field.inputType === 'mapped');
   };
-
   const getTabIndices = () => {
     if (!selectedWidget || !fieldMappings[selectedWidget]) return {};
     const mappingType: any = fieldMappings[selectedWidget]?.mappingType;
@@ -2467,6 +2574,7 @@ const MappingScreen: React.FC = () => {
       indices.quadrantConfig = currentIndex++;
     }
 
+    indices.typography = currentIndex++; // ADD THIS LINE
     indices.dataPreview = currentIndex++;
     indices.widgetPreview = currentIndex++;
 
@@ -3164,6 +3272,26 @@ const MappingScreen: React.FC = () => {
     );
   }
 
+  const handleTypographyChange = (config: WidgetTypographyConfig) => {
+    if (!selectedWidget) return;
+
+    setWidgetConfigurations((prev: any) => ({
+      ...prev,
+      [selectedWidget]: {
+        ...prev[selectedWidget],
+        typography: config,
+      },
+    }));
+
+    // Update preview if active
+    if (previewData) {
+      setPreviewData((prev: any) => ({
+        ...prev,
+        typography: config,
+      }));
+    }
+  };
+
   if (!isEditModeAllowed) {
     return (
       <ErrorScreen
@@ -3207,7 +3335,7 @@ const MappingScreen: React.FC = () => {
               rowHeight={80}
               width={80}
               isResizable={true}
-              resizeHandles={['se']}
+              resizeHandles={['s', 'w', 'e', 'n', 'sw', 'nw', 'se', 'ne']}
               isDraggable={true}
               onLayoutChange={(newLayout) => setLayout(newLayout as LayoutItem[])}
             >
@@ -3219,6 +3347,12 @@ const MappingScreen: React.FC = () => {
                     previewData && selectedWidget === id
                       ? previewData
                       : widgetConfigurations[id] || defaultPropsMapping[name];
+
+                  // Add typography to widget props
+                  const propsWithTypography = {
+                    ...widgetProps,
+                    typography: widgetConfigurations[id]?.typography,
+                  };
 
                   const hasRoles = widgetConfigurations[id]?.roles?.length > 0;
                   const hasDescription = widgetConfigurations[id]?.description?.trim();
@@ -3246,7 +3380,7 @@ const MappingScreen: React.FC = () => {
                       >
                         ✕
                       </button>
-                      <Component {...widgetProps} setChangeColor={setChangeColor} />
+                      <Component {...propsWithTypography} setChangeColor={setChangeColor} />
                     </div>
                   );
                 })}
@@ -3330,6 +3464,12 @@ const MappingScreen: React.FC = () => {
                           className="!text-white"
                         />
                       ),
+                      <Tab
+                        key="typography"
+                        icon={<FormatPaintIcon />}
+                        label="Typography"
+                        className="!text-white"
+                      />, // ADD THIS
                       <Tab
                         key="data-preview"
                         icon={<PreviewIcon />}
@@ -3815,7 +3955,15 @@ const MappingScreen: React.FC = () => {
                               if (e.key === 'Enter' && newRole.trim()) {
                                 const currentRoles =
                                   widgetConfigurations[selectedWidget]?.roles || [];
-                                const updatedRoles = [...currentRoles, newRole.trim()];
+                                // Add new role as an object with empty RoleId
+                                const newRoleObj = {
+                                  Name: newRole.trim(),
+                                  RoleId: '', // Empty for new roles
+                                  Description: '',
+                                  Type: 'Custom',
+                                  DelFlag: '',
+                                };
+                                const updatedRoles = [...currentRoles, newRoleObj];
                                 handleRolesChange(updatedRoles);
                                 setNewRole('');
                               }
@@ -3839,7 +3987,15 @@ const MappingScreen: React.FC = () => {
                                 if (newRole.trim()) {
                                   const currentRoles =
                                     widgetConfigurations[selectedWidget]?.roles || [];
-                                  const updatedRoles = [...currentRoles, newRole.trim()];
+                                  // Add new role as an object with empty RoleId
+                                  const newRoleObj = {
+                                    Name: newRole.trim(),
+                                    RoleId: '', // Empty for new roles
+                                    Description: '',
+                                    Type: 'Custom',
+                                    DelFlag: '',
+                                  };
+                                  const updatedRoles = [...currentRoles, newRoleObj];
                                   handleRolesChange(updatedRoles);
                                   setNewRole('');
                                 }
@@ -3854,42 +4010,76 @@ const MappingScreen: React.FC = () => {
                         </Typography>
 
                         <List>
-                          {(widgetConfigurations[selectedWidget]?.roles || []).map(
-                            (role: any, index: number) => (
-                              <ListItem key={index} sx={{ px: 0 }}>
-                                <Box
-                                  width="100%"
-                                  sx={{
-                                    display: 'flex',
-                                    justifyContent: 'space-between',
-                                    alignItems: 'center',
-                                    backgroundColor: '#ffffff10',
-                                    borderRadius: 1,
-                                    px: 2,
-                                    py: 1,
-                                  }}
-                                >
-                                  <Typography sx={{ color: 'white' }}>
-                                    {role.Name || role}
-                                  </Typography>
-                                  <IconButton
-                                    edge="end"
-                                    onClick={() => {
-                                      const currentRoles =
-                                        widgetConfigurations[selectedWidget]?.roles || [];
-                                      const updatedRoles = currentRoles.filter(
-                                        (_: any, i: number) => i !== index
-                                      );
-                                      handleRolesChange(updatedRoles);
+                          {(widgetConfigurations[selectedWidget]?.roles || [])
+                            .filter((role: any) => {
+                              // Filter out deleted roles from display
+                              if (typeof role === 'object' && role.DelFlag === 'X') {
+                                return false;
+                              }
+                              return true;
+                            })
+                            .map((role: any, index: number) => {
+                              // Get the actual index in the original array
+                              const actualIndex = (
+                                widgetConfigurations[selectedWidget]?.roles || []
+                              ).findIndex((r: any, i: number) => {
+                                if (typeof role === 'object' && typeof r === 'object') {
+                                  return r.Name === role.Name && r.RoleId === role.RoleId;
+                                }
+                                return r === role;
+                              });
+
+                              return (
+                                <ListItem key={actualIndex} sx={{ px: 0 }}>
+                                  <Box
+                                    width="100%"
+                                    sx={{
+                                      display: 'flex',
+                                      justifyContent: 'space-between',
+                                      alignItems: 'center',
+                                      backgroundColor: '#ffffff10',
+                                      borderRadius: 1,
+                                      px: 2,
+                                      py: 1,
                                     }}
                                   >
-                                    <DeleteIcon sx={{ color: 'white' }} />
-                                  </IconButton>
-                                </Box>
-                              </ListItem>
-                            )
-                          )}
-                          {(widgetConfigurations[selectedWidget]?.roles || []).length === 0 && (
+                                    <Box display="flex" alignItems="center" gap={1}>
+                                      <Typography sx={{ color: 'white' }}>
+                                        {typeof role === 'object' ? role.Name : role}
+                                      </Typography>
+                                      {typeof role === 'object' && role.RoleId && (
+                                        <Chip
+                                          size="small"
+                                          label="Existing"
+                                          sx={{
+                                            backgroundColor: '#4caf50',
+                                            color: 'white',
+                                            fontSize: '0.7rem',
+                                            height: '20px',
+                                          }}
+                                        />
+                                      )}
+                                    </Box>
+                                    <IconButton
+                                      edge="end"
+                                      onClick={() => handleDeleteRoleClick(role, actualIndex)}
+                                      sx={{ color: 'white' }}
+                                    >
+                                      <DeleteIcon />
+                                    </IconButton>
+                                  </Box>
+                                </ListItem>
+                              );
+                            })}
+                          {(widgetConfigurations[selectedWidget]?.roles || []).filter(
+                            (role: any) => {
+                              // Count non-deleted roles
+                              if (typeof role === 'object' && role.DelFlag === 'X') {
+                                return false;
+                              }
+                              return true;
+                            }
+                          ).length === 0 && (
                             <Typography
                               variant="body2"
                               sx={{ color: 'white', fontStyle: 'italic' }}
@@ -4836,7 +5026,13 @@ const MappingScreen: React.FC = () => {
                         )}
                       </TabPanel>
                     )}
-
+                    <TabPanel value={tabValue} index={tabIndices.typography!}>
+                      <TypographyConfigUI
+                        value={widgetConfigurations[selectedWidget]?.typography}
+                        onChange={handleTypographyChange}
+                        elementTypes={getTypographyElementsForWidget(getSelectedWidgetType() || '')}
+                      />
+                    </TabPanel>
                     <TabPanel value={tabValue} index={tabIndices.dataPreview}>
                       <Typography variant="h6" gutterBottom sx={{ color: 'white' }}>
                         Raw Data Preview
@@ -5142,6 +5338,73 @@ const MappingScreen: React.FC = () => {
           {saveMessage}
         </Alert>
       </Snackbar>
+      {/* Role Delete Confirmation Dialog */}
+      <Dialog
+        open={deleteRoleConfirmDialog.open}
+        onClose={handleCancelRoleDelete}
+        PaperProps={{
+          sx: {
+            background: 'linear-gradient(to bottom, #00214E, #0164B0)',
+            color: 'white',
+          },
+        }}
+      >
+        <DialogTitle sx={{ color: 'white', borderBottom: '1px solid rgba(255,255,255,0.2)' }}>
+          <Box display="flex" alignItems="center">
+            <SecurityIcon sx={{ mr: 1, color: '#ff5252' }} />
+            Confirm Role Deletion
+          </Box>
+        </DialogTitle>
+        <DialogContent sx={{ mt: 2 }}>
+          <Alert severity="warning" sx={{ mb: 2, backgroundColor: '#ff980020' }}>
+            <Typography sx={{ color: 'white' }}>
+              {(() => {
+                if (
+                  selectedWidget &&
+                  deleteRoleConfirmDialog.roleIndex !== null &&
+                  widgetConfigurations[selectedWidget]?.roles
+                ) {
+                  const role =
+                    widgetConfigurations[selectedWidget].roles[deleteRoleConfirmDialog.roleIndex];
+                  const isExistingRole = typeof role === 'object' && role.RoleId;
+
+                  if (isExistingRole) {
+                    return 'This role is already saved. It will be marked as deleted and removed from the widget authorization.';
+                  }
+                  return 'This role has not been saved yet. It will be permanently removed from the widget.';
+                }
+                return 'This role will be removed from the widget authorization.';
+              })()}
+            </Typography>
+          </Alert>
+          <Typography sx={{ color: 'white' }}>
+            Are you sure you want to remove the role{' '}
+            <strong>{deleteRoleConfirmDialog.roleName}</strong> from this widget?
+          </Typography>
+          {selectedWidget && (
+            <Box mt={2} p={2} sx={{ backgroundColor: '#ffffff10', borderRadius: 1 }}>
+              <Typography variant="body2" sx={{ color: 'white' }}>
+                <strong>Note:</strong> After removing this role, users with this role will{' '}
+                {(widgetConfigurations[selectedWidget]?.roles || []).filter((r: any) => {
+                  if (typeof r === 'object' && r.DelFlag === 'X') return false;
+                  return true;
+                }).length === 1
+                  ? 'make the widget visible to all users (no role restrictions).'
+                  : 'no longer have access to this widget.'}
+              </Typography>
+            </Box>
+          )}
+        </DialogContent>
+        <DialogActions sx={{ borderTop: '1px solid rgba(255,255,255,0.2)', p: 2 }}>
+          <Button label="Cancel" onClick={handleCancelRoleDelete} outlined />
+          <Button
+            label="Remove Role"
+            onClick={handleConfirmRoleDelete}
+            severity="danger"
+            icon={<DeleteIcon />}
+          />
+        </DialogActions>
+      </Dialog>
     </div>
   );
 };

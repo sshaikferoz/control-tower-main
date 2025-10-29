@@ -1,3 +1,5 @@
+import { WidgetTypographyConfig } from '@/helpers/types';
+import { getCleanTypographyStyles } from '@/helpers/typographyHelper';
 import React, { useEffect, useRef, useState } from 'react';
 import { HexColorPicker } from 'react-colorful';
 
@@ -6,9 +8,10 @@ interface SimpleMetricProps {
   value: number;
   color?: string;
   setChangeColor?: (color: string) => void;
+  typography?: WidgetTypographyConfig;
 }
 
-const SimpleMetric = ({ name, value, color, setChangeColor }: SimpleMetricProps) => {
+const SimpleMetric = ({ name, value, color, setChangeColor, typography }: SimpleMetricProps) => {
   const [userColor, setUserColor] = useState<string>(color || '#00214E');
   const [showPicker, setShowPicker] = useState(false);
   const pickerRef = useRef<HTMLDivElement>(null);
@@ -64,8 +67,13 @@ const SimpleMetric = ({ name, value, color, setChangeColor }: SimpleMetricProps)
         style={backgroundStyle}
         onClick={() => setShowPicker(false)}
       >
-        <h2 className="text-4xl font-bold">{value}</h2>
-        <p>{name}</p>
+        <h2
+          className="text-4xl font-bold"
+          style={{ ...getCleanTypographyStyles('value', typography) }}
+        >
+          {value}
+        </h2>
+        <p style={{ ...getCleanTypographyStyles('name', typography) }}>{name}</p>
       </div>
 
       {/* Color Picker */}

@@ -19,7 +19,7 @@ interface NewsArticle {
   date: string;
   category: string;
   link: string;
-  region:string;
+  region: string;
 }
 
 export interface NewsFeedResponse {
@@ -55,7 +55,7 @@ const categories: Category[] = [
     label: 'Innovation',
     description: 'New technologies and methods',
     color: 'text-[#6bcf7f]',
-  }
+  },
   // {
   //   id: "travel",
   //   label: "Travel",
@@ -79,7 +79,7 @@ const mapNewsItemToArticle = (item: NewsItem): NewsArticle => ({
   date: item.DATEPUBLISHED,
   category: item.LABEL.toLowerCase(),
   link: item.LINK,
-  region:item.REGION
+  region: item.REGION,
 });
 
 // Helper function to categorize news data
@@ -224,18 +224,20 @@ const NewsFeed: React.FC = () => {
     window.location.reload(); // Simple retry by reloading
   };
   const backgroundStyle = {
-  backgroundImage: `url('${process.env.NEXT_PUBLIC_BSP_NAME}/background/bg.png')`,
-  backgroundSize: 'cover',
-  backgroundPosition: 'center center',
-  backgroundRepeat: 'no-repeat',
-  opacity: 1,
-};
-
+    backgroundImage: `url('${process.env.NEXT_PUBLIC_BSP_NAME}/background/bg.png')`,
+    backgroundSize: 'cover',
+    backgroundPosition: 'center center',
+    backgroundRepeat: 'no-repeat',
+    opacity: 1,
+  };
 
   // Loading state
   if (loading) {
     return (
-      <section className="relative flex h-[100vh] w-full flex-[0_0_auto] flex-col items-center gap-[27px] p-20" style={backgroundStyle}>
+      <section
+        className="relative flex h-[100vh] w-full flex-[0_0_auto] flex-col items-center gap-[27px] p-20"
+        style={backgroundStyle}
+      >
         <header className="relative flex w-full items-center">
           <div className="flex h-[23px] w-[23px] items-center justify-center rounded bg-[#83bd01]">
             <div className="h-3 w-3 rounded-sm bg-white"></div>
@@ -263,7 +265,10 @@ const NewsFeed: React.FC = () => {
   // Error state
   if (error) {
     return (
-      <section className="relative flex w-full flex-[0_0_auto] flex-col items-center gap-[27px] p-20"  style={backgroundStyle}>
+      <section
+        className="relative flex w-full flex-[0_0_auto] flex-col items-center gap-[27px] p-20"
+        style={backgroundStyle}
+      >
         {/* <header className="relative flex w-full items-center">
           <div className="flex h-[23px] w-[23px] items-center justify-center rounded bg-[#83bd01]">
             <div className="h-3 w-3 rounded-sm bg-white"></div>
@@ -298,7 +303,10 @@ const NewsFeed: React.FC = () => {
   // Detail View Component
   if (selectedNews) {
     return (
-      <section className="relative flex w-full flex-[0_0_auto] flex-col items-center gap-[27px]  p-20"  style={backgroundStyle}>
+      <section
+        className="relative flex w-full flex-[0_0_auto] flex-col items-center gap-[27px] p-20"
+        style={backgroundStyle}
+      >
         <header className="relative flex w-full items-center">
           <div className="flex h-[23px] w-[23px] items-center justify-center rounded bg-[#83bd01]">
             <div className="h-3 w-3 rounded-sm bg-white"></div>
@@ -341,7 +349,9 @@ const NewsFeed: React.FC = () => {
                     {categories.find((c: Category) => c.id === activeCategory)?.label ||
                       selectedNews.category}
                   </span>
-                  <span className="text-white/60">{selectedNews.date} &nbsp;&nbsp; Region : {selectedNews.region}</span>
+                  <span className="text-white/60">
+                    {selectedNews.date} &nbsp;&nbsp; Region : {selectedNews.region}
+                  </span>
                 </div>
 
                 <h1
@@ -382,7 +392,10 @@ const NewsFeed: React.FC = () => {
   }
 
   return (
-    <section className="relative mx-auto flex h-[100vh] w-full flex-[0_0_auto] flex-col items-center gap-[27px]p-20 p-20"  style={backgroundStyle}>
+    <section
+      className="gap-[27px]p-20 relative mx-auto flex h-[100vh] w-full flex-[0_0_auto] flex-col items-center p-20"
+      style={backgroundStyle}
+    >
       {/* <header className="relative flex w-full items-center">
         <div className="flex h-[23px] w-[23px] items-center justify-center rounded bg-[#83bd01]">
           <div className="h-3 w-3 rounded-sm bg-white"></div>
