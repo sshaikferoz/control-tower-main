@@ -224,7 +224,7 @@ const NewsFeed: React.FC = () => {
     window.location.reload(); // Simple retry by reloading
   };
   const backgroundStyle = {
-    backgroundImage: `url('${process.env.NEXT_PUBLIC_BSP_NAME}/background/bg.png')`,
+    backgroundImage: `url('${process.env.NEXT_PUBLIC_BSP_NAME}/background/bg-low.png')`,
     backgroundSize: 'cover',
     backgroundPosition: 'center center',
     backgroundRepeat: 'no-repeat',

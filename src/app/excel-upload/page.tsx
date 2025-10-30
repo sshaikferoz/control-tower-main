@@ -667,7 +667,7 @@ export default function ExcelUploadComponent() {
           <div
             className="absolute inset-0 bg-cover bg-center"
             style={{
-              backgroundImage: `url('${process.env.NEXT_PUBLIC_BSP_NAME}/background/bg.png')`,
+              backgroundImage: `url('${process.env.NEXT_PUBLIC_BSP_NAME}/background/bg-low.png')`,
             }}
           />
 

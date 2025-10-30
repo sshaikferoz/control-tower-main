@@ -13,6 +13,8 @@ export interface UIConfiguration {
         imageBase64: string;
         useBase64: boolean;
         opacity: number;
+        fallbackColor: string; // NEW
+        thumbnailBase64?: string; // NEW
     };
     chatbot: {
         enabled: boolean;
@@ -52,6 +54,8 @@ export const defaultConfiguration: UIConfiguration = {
         imageBase64: '',
         useBase64: false,
         opacity: 100,
+        fallbackColor: '#1a1a2e', // NEW
+        thumbnailBase64: `url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAUCAYAAACNiR0NAAACSUlEQVR4AZ3Ba45VRRQG0PXVqXNfDXSbyHSc/0j4o9Ag9OOeR20BEyImRnGtzK9/Kd/EjwvxTfdV/C+Jv+vED0v8k+5HJP5N9/RR0tQYKEmYuppmRFpX2yqJSmSKWq7SJsZOFWNTVSg9mVCSqD7TZzVKTjdKkSY+21ZRmGldjUGRKtJE0aLXvpDGPEuL9K4qrJvcvGAM1RZfRBjF4STbSkXtVxkrU5dp0qTJ8SyXl9y+VkUOZy438uqOPssg8+yrGrJtTJ2UtE7riBq7nsstxyPzSdsXYzrIi1v2Xb17y9gZg4T5pBKpwdQQOUxqW6nieNBz97MaG+tiX64yn9S2sg+en1QVbWLq2umoBS3GNrSXZ+PTR25eShrXR/00x9Yu1r20aVej+HBP76bLyZ5J9l0dz2pbOR4Zpd2cpHeHu580u23Z7Peb9nx/b9qu5vPB8cUL9k0uFxmb7eFBLVdjntXTI9Mkh5Pc3mk3L9XDo+XNG2Mftnf3RpU+9sXTb78yBjW0y43x/Mi+M8/UYLkyBsW4Xk0txsMntW9yPlvfvWd5NvXolitCQuvGupCJ05kqCuvK1GnU8mxczjKGcX2WFrUujF07vdJSgyrGoM9ojJ1tJSHoE31S28q+qt/fy7FLb1SJz2qzfXirlc8S+oGxI7TQQgsh88wUpjDPcjgY12dpMV1OJKSpGrrWqGJsCG0winmmBi00hEyT1ruB2lGllpXDgSqqdPPZ90LDumHzRflTYfe9Et+0SfdXif8uvhNfdV+F+AHxTXznD8cPLyVbAg4NAAAAAElFTkSuQmCC)`
     },
     chatbot: {
         enabled: false,
@@ -180,20 +184,37 @@ export class ConfigurationManager {
      * Apply background styling based on configuration
      */
     getBackgroundStyle(configuration: UIConfiguration): React.CSSProperties {
+        const baseStyle: React.CSSProperties = {
+            backgroundColor: configuration.background.fallbackColor, // Always shows immediately
+        };
+
         if (!configuration.background.enabled) {
-            return {};
+            return baseStyle;
         }
 
-        const imageSource = configuration.background.useBase64
+        const fullImage = configuration.background.useBase64
             ? configuration.background.imageBase64
             : configuration.background.imageUrl;
 
-        if (!imageSource) {
-            return {};
+        if (!fullImage) {
+            return baseStyle;
         }
 
+        // If thumbnail exists, show both (CSS loads them automatically)
+        if (configuration.background.thumbnailBase64) {
+            return {
+                ...baseStyle,
+                backgroundImage: `url('${fullImage}'), url('${configuration.background.thumbnailBase64}')`,
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+                opacity: configuration.background.opacity / 100,
+            };
+        }
+
+        // No thumbnail - just full image
         return {
-            backgroundImage: `url('${imageSource}')`,
+            ...baseStyle,
+            backgroundImage: `url('${fullImage}')`,
             backgroundSize: 'cover',
             backgroundPosition: 'center',
             opacity: configuration.background.opacity / 100,

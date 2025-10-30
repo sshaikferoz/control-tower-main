@@ -3159,7 +3159,7 @@ const MappingScreen: React.FC = () => {
       <Splitter
         className="h-100vh w-full overflow-y-auto"
         style={{
-          backgroundImage: `url('${process.env.NEXT_PUBLIC_BSP_NAME}/background/bg.png')`,
+          backgroundImage: `url('${process.env.NEXT_PUBLIC_BSP_NAME}/background/bg-low.png')`,
           backgroundSize: 'cover',
           backgroundPosition: 'center',
           backgroundRepeat: 'no-repeat',
