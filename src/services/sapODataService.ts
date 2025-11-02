@@ -787,7 +787,7 @@ class SAPODataService {
             // Create single payload with all widgets and all roles
             const payload: WidgetHeadPayload = {
                 Id: '',
-                CrudFlag: 'C',
+                CrudFlag: 'U',
                 // headtowidget: allWidgets,
                 // HeadtoRoles: allRoles,
                 WidgetHeadToConf: allWidgets,

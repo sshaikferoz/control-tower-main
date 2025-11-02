@@ -24,7 +24,7 @@ export const RoleManagement: React.FC<RoleManagementProps> = ({ roles, onRolesCh
 
     const roleToAdd = {
       ...newRole,
-      RoleId: Date.now().toString(),
+      RoleId: '',
       Id: Date.now().toString(),
     };
 
@@ -39,8 +39,16 @@ export const RoleManagement: React.FC<RoleManagementProps> = ({ roles, onRolesCh
     });
   };
 
-  const removeRole = (roleId: string) => {
-    onRolesChange(roles.filter((role) => role.RoleId !== roleId));
+  const removeRole = (roleId: string, id: string) => {
+    // If role has a RoleId (exists in database), mark it as deleted
+    if (roleId) {
+      onRolesChange(
+        roles.map((role) => (role.RoleId === roleId ? { ...role, DelFlag: 'X' } : role))
+      );
+    } else {
+      // If role doesn't have a RoleId (newly added), remove it completely
+      onRolesChange(roles.filter((role) => role.Id !== id));
+    }
   };
 
   return (
@@ -52,23 +60,25 @@ export const RoleManagement: React.FC<RoleManagementProps> = ({ roles, onRolesCh
 
       {/* Existing roles */}
       <div className="max-h-32 space-y-2 overflow-y-auto">
-        {roles.map((role, index) => (
-          <div
-            key={role.RoleId || index}
-            className="flex items-center justify-between rounded bg-[#3a5a8b] p-2"
-          >
-            <div className="flex-1">
-              <p className="text-sm font-medium text-white">{role.Name}</p>
-              {role.Description && <p className="text-xs text-gray-300">{role.Description}</p>}
-            </div>
-            <button
-              onClick={() => removeRole(role.RoleId)}
-              className="ml-2 text-red-400 hover:text-red-300"
+        {roles
+          .filter((role) => role.DelFlag !== 'X') // Hide deleted roles
+          .map((role, index) => (
+            <div
+              key={role.RoleId || role.Id || index}
+              className="flex items-center justify-between rounded bg-[#3a5a8b] p-2"
             >
-              <XMarkIcon className="h-4 w-4" />
-            </button>
-          </div>
-        ))}
+              <div className="flex-1">
+                <p className="text-sm font-medium text-white">{role.Name}</p>
+                {role.Description && <p className="text-xs text-gray-300">{role.Description}</p>}
+              </div>
+              <button
+                onClick={() => removeRole(role.RoleId, role.Id)}
+                className="ml-2 text-red-400 hover:text-red-300"
+              >
+                <XMarkIcon className="h-4 w-4" />
+              </button>
+            </div>
+          ))}
       </div>
 
       {/* Add new role */}
