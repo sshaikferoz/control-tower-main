@@ -552,13 +552,14 @@ interface LoansAppTrayConfigProps {
     widgetConfigurations: any;
     setWidgetConfigurations: (configs: any) => void;
     parsedResponse: any;
+    transformedData: TransformedData | null;
     getCHAFields: () => any[];
     getKFFields: () => any[];
     getCHAValues: (chaField: string) => string[];
     getKFValue: (chaField: string, chaValue: string, kfField: string) => any;
     reportName: string;
     handleReportNameChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
-    fetchReportData: () => void;
+    fetchReportData: (reportNameParam?: string) => Promise<void>;
     loading: boolean;
 }
 
@@ -569,6 +570,7 @@ const LoansAppTrayConfig: React.FC<LoansAppTrayConfigProps> = ({
     widgetConfigurations,
     setWidgetConfigurations,
     parsedResponse,
+    transformedData,
     getCHAFields,
     getKFFields,
     getCHAValues,
@@ -581,21 +583,39 @@ const LoansAppTrayConfig: React.FC<LoansAppTrayConfigProps> = ({
     const [iconDialogOpen, setIconDialogOpen] = useState(false);
     const [selectedMenuItemForIcon, setSelectedMenuItemForIcon] = useState<number | null>(null);
     const [iconSearchQuery, setIconSearchQuery] = useState('');
-    const [menuItems, setMenuItems] = useState([
-        { id: 1, label: 'Open PR', iconName: 'Assignment', count: 13 },
-        { id: 2, label: 'Contract Expiring', iconName: 'Schedule', count: 85 },
-        { id: 3, label: 'Pending SES', iconName: 'Pending', count: 32 },
-        { id: 4, label: 'Contract with 80% Consumed Values', iconName: 'TrendingUp', count: 24 },
-    ]);
+
+    // Initialize menuItems from widgetConfigurations or use defaults
+    const [menuItems, setMenuItems] = useState(() => {
+        const savedItems = widgetConfigurations[selectedWidget]?.menuItems;
+        if (savedItems && savedItems.length > 0) {
+            return savedItems;
+        }
+        return [
+            { id: 1, label: 'Pending Purchase Requisitions', iconName: 'Assignment', count: 0, color: '#449ca4' },
+            { id: 2, label: 'Expiring Contracts', iconName: 'Schedule', count: 0, color: '#5899da' },
+            { id: 3, label: 'Pending Supplier Evaluations', iconName: 'Pending', count: 0, color: '#ffaa04' },
+            { id: 4, label: 'High Consumption Contracts', iconName: 'TrendingUp', count: 0, color: '#ff0000' },
+        ];
+    });
 
     const allIcons = getAllMUIIcons();
     const filteredIcons = allIcons.filter((iconName) =>
         iconName.toLowerCase().includes(iconSearchQuery.toLowerCase())
     );
 
+    // Sync menuItems with widgetConfigurations when selectedWidget changes
+    useEffect(() => {
+        if (selectedWidget) {
+            const savedItems = widgetConfigurations[selectedWidget]?.menuItems;
+            if (savedItems && savedItems.length > 0) {
+                setMenuItems(savedItems);
+            }
+        }
+    }, [selectedWidget, widgetConfigurations]);
+
     useEffect(() => {
         if (selectedWidget && !fieldMappings[selectedWidget]?.menuItemConfigs) {
-            const defaultMenuItemConfigs = menuItems.reduce((acc, item) => {
+            const defaultMenuItemConfigs = menuItems.reduce((acc: any, item: any) => {
                 acc[item.id] = {
                     reportName: reportName,
                     queryConfig: {
@@ -611,35 +631,99 @@ const LoansAppTrayConfig: React.FC<LoansAppTrayConfigProps> = ({
                 [selectedWidget]: {
                     ...prev[selectedWidget],
                     menuItemConfigs: defaultMenuItemConfigs,
-                    chartDataConfig: {
-                        reportName: reportName,
-                        inputType: 'manual',
-                        manualData: [
-                            { name: 'PR', value: 86, color: '#449ca4' },
-                            { name: 'CE', value: 156, color: '#5899da' },
-                            { name: 'SES', value: 114, color: '#ffaa04' },
-                            { name: 'CV', value: 126, color: '#ff0000' },
-                        ],
-                    },
                 },
             }));
         }
-    }, [selectedWidget]);
+    }, [selectedWidget, menuItems]);
 
     const handleMenuItemChange = (itemId: number, field: string, value: any) => {
-        setMenuItems((prev) =>
-            prev.map((item) => (item.id === itemId ? { ...item, [field]: value } : item))
+        const updatedItems = menuItems.map((item: any) =>
+            item.id === itemId ? { ...item, [field]: value } : item
         );
+        setMenuItems(updatedItems);
 
+        // Update widget configuration
         setWidgetConfigurations((prev: any) => ({
             ...prev,
             [selectedWidget]: {
                 ...prev[selectedWidget],
-                menuItems: menuItems.map((item) =>
-                    item.id === itemId ? { ...item, [field]: value } : item
-                ),
+                menuItems: updatedItems,
             },
         }));
+    };
+
+    const addAlert = () => {
+        const newId = Math.max(...menuItems.map((item: any) => item.id), 0) + 1;
+        const defaultColors = ['#449ca4', '#5899da', '#ffaa04', '#ff0000', '#8979FF', '#00C9FF', '#FF6B9D'];
+        const newItem = {
+            id: newId,
+            label: `Alert ${newId}`,
+            iconName: 'Warning',
+            count: 0,
+            color: defaultColors[(newId - 1) % defaultColors.length],
+        };
+
+        const updatedItems = [...menuItems, newItem];
+        setMenuItems(updatedItems);
+
+        // Add to widget configuration
+        setWidgetConfigurations((prev: any) => ({
+            ...prev,
+            [selectedWidget]: {
+                ...prev[selectedWidget],
+                menuItems: updatedItems,
+            },
+        }));
+
+        // Add to field mappings
+        setFieldMappings((prev: any) => ({
+            ...prev,
+            [selectedWidget]: {
+                ...prev[selectedWidget],
+                menuItemConfigs: {
+                    ...prev[selectedWidget]?.menuItemConfigs,
+                    [newId]: {
+                        reportName: reportName,
+                        queryConfig: {
+                            inputType: 'manual',
+                            manualValue: 0,
+                        },
+                    },
+                },
+            },
+        }));
+    };
+
+    const removeAlert = (itemId: number) => {
+        if (menuItems.length <= 1) {
+            alert('At least one alert is required');
+            return;
+        }
+
+        const updatedItems = menuItems.filter((item: any) => item.id !== itemId);
+        setMenuItems(updatedItems);
+
+        // Update widget configuration
+        setWidgetConfigurations((prev: any) => ({
+            ...prev,
+            [selectedWidget]: {
+                ...prev[selectedWidget],
+                menuItems: updatedItems,
+            },
+        }));
+
+        // Remove from field mappings
+        setFieldMappings((prev: any) => {
+            const newConfigs = { ...prev[selectedWidget]?.menuItemConfigs };
+            delete newConfigs[itemId];
+            return {
+                ...prev,
+                [selectedWidget]: {
+                    ...prev[selectedWidget],
+                    menuItemConfigs: newConfigs,
+                },
+            };
+        });
     };
 
     const handleMenuItemQueryConfigChange = (itemId: number, configField: string, value: any) => {
@@ -659,6 +743,30 @@ const LoansAppTrayConfig: React.FC<LoansAppTrayConfigProps> = ({
                 },
             },
         }));
+
+        // If inputType changed to mapped, ensure mappedConfig exists
+        if (configField === 'inputType' && value === 'mapped') {
+            setFieldMappings((prev: any) => ({
+                ...prev,
+                [selectedWidget]: {
+                    ...prev[selectedWidget],
+                    menuItemConfigs: {
+                        ...prev[selectedWidget]?.menuItemConfigs,
+                        [itemId]: {
+                            ...prev[selectedWidget]?.menuItemConfigs?.[itemId],
+                            queryConfig: {
+                                ...prev[selectedWidget]?.menuItemConfigs?.[itemId]?.queryConfig,
+                                mappedConfig: prev[selectedWidget]?.menuItemConfigs?.[itemId]?.queryConfig?.mappedConfig || {
+                                    chaField: '',
+                                    chaValue: '',
+                                    kfField: '',
+                                },
+                            },
+                        },
+                    },
+                },
+            }));
+        }
     };
 
     const handleIconSelect = (iconName: string) => {
@@ -667,6 +775,33 @@ const LoansAppTrayConfig: React.FC<LoansAppTrayConfigProps> = ({
             setIconDialogOpen(false);
             setSelectedMenuItemForIcon(null);
         }
+    };
+
+    const fetchAlertReportData = async (itemId: number) => {
+        const alertReportName = fieldMappings[selectedWidget]?.menuItemConfigs?.[itemId]?.reportName || reportName;
+        if (!alertReportName) {
+            alert('Please enter a report name first');
+            return;
+        }
+
+        // Call the parent's fetch function with the alert's report name directly
+        await fetchReportData(alertReportName);
+
+        // After fetch completes, update count if mapping exists
+        setTimeout(() => {
+            const itemConfig = fieldMappings[selectedWidget]?.menuItemConfigs?.[itemId]?.queryConfig;
+            if (itemConfig?.inputType === 'mapped' && itemConfig?.mappedConfig && transformedData) {
+                const { chaField, chaValue, kfField } = itemConfig.mappedConfig;
+                if (chaField && chaValue && kfField) {
+                    const mappedValue = getKFValue(chaField, chaValue, kfField);
+                    if (mappedValue !== null && mappedValue !== undefined) {
+                        const countValue = typeof mappedValue === 'number' ? mappedValue : parseInt(mappedValue) || 0;
+                        handleMenuItemChange(itemId, 'count', countValue);
+                        handleMenuItemQueryConfigChange(itemId, 'manualValue', countValue);
+                    }
+                }
+            }
+        }, 1000);
     };
 
     const renderIconDialog = () => (
@@ -767,11 +902,20 @@ const LoansAppTrayConfig: React.FC<LoansAppTrayConfigProps> = ({
                 LoansAppTray Configuration
             </Typography>
 
-            <Typography variant="subtitle1" gutterBottom sx={{ color: 'white', mt: 2 }}>
-                Menu Items Configuration
-            </Typography>
+            <Box display="flex" justifyContent="space-between" alignItems="center" sx={{ mt: 2, mb: 2 }}>
+                <Typography variant="subtitle1" sx={{ color: 'white' }}>
+                    Alerts Configuration
+                </Typography>
+                <Button
+                    label="Add Alert"
+                    icon="pi pi-plus"
+                    onClick={addAlert}
+                    size="small"
+                    outlined
+                />
+            </Box>
 
-            {menuItems.map((item, index) => (
+            {menuItems.map((item: any, index: number) => (
                 <Accordion
                     key={item.id}
                     sx={{
@@ -782,9 +926,21 @@ const LoansAppTrayConfig: React.FC<LoansAppTrayConfigProps> = ({
                     }}
                 >
                     <AccordionSummary expandIcon={<ExpandMoreIcon sx={{ color: 'white' }} />}>
-                        <Typography sx={{ color: 'white' }}>
-                            Menu Item {item.id}: {item.label}
-                        </Typography>
+                        <Box display="flex" alignItems="center" justifyContent="space-between" width="100%" sx={{ pr: 2 }}>
+                            <Typography sx={{ color: 'white' }}>
+                                Alert {item.id}: {item.label}
+                            </Typography>
+                            <IconButton
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    removeAlert(item.id);
+                                }}
+                                sx={{ color: 'white' }}
+                                size="small"
+                            >
+                                <DeleteIcon />
+                            </IconButton>
+                        </Box>
                     </AccordionSummary>
                     <AccordionDetails>
                         <Grid container spacing={2}>
@@ -891,42 +1047,62 @@ const LoansAppTrayConfig: React.FC<LoansAppTrayConfigProps> = ({
                                             Query Mapping for Menu Item {item.id}
                                         </Typography>
 
-                                        <TextField
-                                            label={`Report Name for ${item.label}`}
-                                            fullWidth
-                                            margin="normal"
-                                            value={
-                                                fieldMappings[selectedWidget]?.menuItemConfigs?.[item.id]?.reportName ||
-                                                reportName
-                                            }
-                                            onChange={(e) => {
-                                                setFieldMappings((prev: any) => ({
-                                                    ...prev,
-                                                    [selectedWidget]: {
-                                                        ...prev[selectedWidget],
-                                                        menuItemConfigs: {
-                                                            ...prev[selectedWidget]?.menuItemConfigs,
-                                                            [item.id]: {
-                                                                ...prev[selectedWidget]?.menuItemConfigs?.[item.id],
-                                                                reportName: e.target.value,
+                                        <Box display="flex" gap={2} alignItems="flex-start">
+                                            <TextField
+                                                label={`Report Name for ${item.label}`}
+                                                fullWidth
+                                                margin="normal"
+                                                value={
+                                                    fieldMappings[selectedWidget]?.menuItemConfigs?.[item.id]?.reportName ||
+                                                    reportName
+                                                }
+                                                onChange={(e) => {
+                                                    setFieldMappings((prev: any) => ({
+                                                        ...prev,
+                                                        [selectedWidget]: {
+                                                            ...prev[selectedWidget],
+                                                            menuItemConfigs: {
+                                                                ...prev[selectedWidget]?.menuItemConfigs,
+                                                                [item.id]: {
+                                                                    ...prev[selectedWidget]?.menuItemConfigs?.[item.id],
+                                                                    reportName: e.target.value,
+                                                                },
                                                             },
                                                         },
+                                                    }));
+                                                }}
+                                                sx={{
+                                                    input: { color: 'white' },
+                                                    label: { color: 'white' },
+                                                    '& .MuiOutlinedInput-root': {
+                                                        '& fieldset': { borderColor: 'white' },
+                                                        '&:hover fieldset': { borderColor: 'white' },
+                                                        '&.Mui-focused fieldset': { borderColor: 'white' },
                                                     },
-                                                }));
-                                            }}
-                                            sx={{
-                                                input: { color: 'white' },
-                                                label: { color: 'white' },
-                                                '& .MuiOutlinedInput-root': {
-                                                    '& fieldset': { borderColor: 'white' },
-                                                    '&:hover fieldset': { borderColor: 'white' },
-                                                    '&.Mui-focused fieldset': { borderColor: 'white' },
-                                                },
-                                            }}
-                                        />
+                                                }}
+                                            />
+                                            <Box mt={2}>
+                                                <Button
+                                                    label="Fetch"
+                                                    onClick={() => fetchAlertReportData(item.id)}
+                                                    disabled={loading}
+                                                    size="small"
+                                                    outlined
+                                                />
+                                                {loading && <CircularProgress size={20} sx={{ ml: 1, color: 'white' }} />}
+                                            </Box>
+                                        </Box>
+
+                                        {!parsedResponse && (
+                                            <Alert severity="info" sx={{ mt: 2, backgroundColor: '#2196f320' }}>
+                                                <Typography sx={{ color: 'white' }}>
+                                                    Please load a report first to configure query mapping.
+                                                </Typography>
+                                            </Alert>
+                                        )}
 
                                         {parsedResponse && (
-                                            <Grid container spacing={2}>
+                                            <Grid container spacing={2} sx={{ mt: 1 }}>
                                                 <Grid item xs={12}>
                                                     <FormControl fullWidth size="small">
                                                         <InputLabel sx={{ color: 'white' }}>CHA Field</InputLabel>
@@ -975,11 +1151,25 @@ const LoansAppTrayConfig: React.FC<LoansAppTrayConfigProps> = ({
                                                                             ?.queryConfig?.mappedConfig?.chaValue || ''
                                                                     }
                                                                     onChange={(e) => {
+                                                                        const chaValue = e.target.value;
+                                                                        const currentConfig = fieldMappings[selectedWidget]?.menuItemConfigs?.[item.id]?.queryConfig?.mappedConfig;
+                                                                        const chaField = currentConfig?.chaField;
+                                                                        const kfField = currentConfig?.kfField;
+
                                                                         handleMenuItemQueryConfigChange(item.id, 'mappedConfig', {
-                                                                            ...fieldMappings[selectedWidget]?.menuItemConfigs?.[item.id]
-                                                                                ?.queryConfig?.mappedConfig,
-                                                                            chaValue: e.target.value,
+                                                                            ...currentConfig,
+                                                                            chaValue: chaValue,
                                                                         });
+
+                                                                        // Update count if all fields are available
+                                                                        if (chaField && chaValue && kfField) {
+                                                                            const mappedValue = getKFValue(chaField, chaValue, kfField);
+                                                                            if (mappedValue !== null && mappedValue !== undefined) {
+                                                                                const countValue = typeof mappedValue === 'number' ? mappedValue : parseInt(mappedValue) || 0;
+                                                                                handleMenuItemChange(item.id, 'count', countValue);
+                                                                                handleMenuItemQueryConfigChange(item.id, 'manualValue', countValue);
+                                                                            }
+                                                                        }
                                                                     }}
                                                                     label="CHA Value"
                                                                     sx={{
@@ -1021,27 +1211,23 @@ const LoansAppTrayConfig: React.FC<LoansAppTrayConfigProps> = ({
                                                                     }
                                                                     onChange={(e) => {
                                                                         const kfField = e.target.value;
-                                                                        const chaField =
-                                                                            fieldMappings[selectedWidget]?.menuItemConfigs?.[item.id]
-                                                                                ?.queryConfig?.mappedConfig?.chaField;
-                                                                        const chaValue =
-                                                                            fieldMappings[selectedWidget]?.menuItemConfigs?.[item.id]
-                                                                                ?.queryConfig?.mappedConfig?.chaValue;
+                                                                        const currentConfig = fieldMappings[selectedWidget]?.menuItemConfigs?.[item.id]?.queryConfig?.mappedConfig;
+                                                                        const chaField = currentConfig?.chaField;
+                                                                        const chaValue = currentConfig?.chaValue;
 
                                                                         handleMenuItemQueryConfigChange(item.id, 'mappedConfig', {
-                                                                            ...fieldMappings[selectedWidget]?.menuItemConfigs?.[item.id]
-                                                                                ?.queryConfig?.mappedConfig,
+                                                                            ...currentConfig,
                                                                             kfField: kfField,
                                                                         });
 
+                                                                        // Update count value when KF field is selected
                                                                         if (chaField && chaValue && kfField) {
                                                                             const mappedValue = getKFValue(chaField, chaValue, kfField);
-                                                                            if (mappedValue !== null) {
-                                                                                handleMenuItemChange(
-                                                                                    item.id,
-                                                                                    'count',
-                                                                                    parseInt(mappedValue) || 0
-                                                                                );
+                                                                            if (mappedValue !== null && mappedValue !== undefined) {
+                                                                                const countValue = typeof mappedValue === 'number' ? mappedValue : parseInt(mappedValue) || 0;
+                                                                                handleMenuItemChange(item.id, 'count', countValue);
+                                                                                // Also update the manual value for consistency
+                                                                                handleMenuItemQueryConfigChange(item.id, 'manualValue', countValue);
                                                                             }
                                                                         }
                                                                     }}
@@ -1316,48 +1502,36 @@ const MappingScreen: React.FC = () => {
                     reportName: reportName,
                     queryConfig: {
                         inputType: 'manual',
-                        manualValue: 13,
+                        manualValue: 0,
                     },
                 },
                 2: {
                     reportName: reportName,
                     queryConfig: {
                         inputType: 'manual',
-                        manualValue: 85,
+                        manualValue: 0,
                     },
                 },
                 3: {
                     reportName: reportName,
                     queryConfig: {
                         inputType: 'manual',
-                        manualValue: 32,
+                        manualValue: 0,
                     },
                 },
                 4: {
                     reportName: reportName,
                     queryConfig: {
                         inputType: 'manual',
-                        manualValue: 24,
+                        manualValue: 0,
                     },
                 },
-            };
-
-            const chartDataConfig = {
-                reportName: reportName,
-                inputType: 'manual',
-                manualData: [
-                    { name: 'PR', value: 86, color: '#449ca4' },
-                    { name: 'CE', value: 156, color: '#5899da' },
-                    { name: 'SES', value: 114, color: '#ffaa04' },
-                    { name: 'CV', value: 126, color: '#ff0000' },
-                ],
             };
 
             configToSave = {
                 ...baseConfig,
                 mappingType: 'loans-app-tray',
                 menuItemConfigs: defaultMenuItemConfigs,
-                chartDataConfig: chartDataConfig,
             };
         } else if (mappingType === 'chart') {
             if (widgetCategory === 'dual-line') {
@@ -2232,15 +2406,16 @@ const MappingScreen: React.FC = () => {
         }
     };
 
-    const fetchReportData = async () => {
-        if (!reportName) return;
+    const fetchReportData = async (reportNameParam?: string) => {
+        const reportToFetch = reportNameParam || reportName;
+        if (!reportToFetch) return;
 
         setLoading(true);
         try {
             const res = await fetch(
                 process.env.NODE_ENV === 'development'
-                    ? `/api/sap/bc/bsp/sap/zbw_reporting/execute_report_oo.htm?query=${reportName}`
-                    : `/sap/bc/bsp/sap/zbw_reporting/execute_report_oo.htm?query=${reportName}`
+                    ? `/api/sap/bc/bsp/sap/zbw_reporting/execute_report_oo.htm?query=${reportToFetch}`
+                    : `/sap/bc/bsp/sap/zbw_reporting/execute_report_oo.htm?query=${reportToFetch}`
             );
             const data = await res.text();
             const parsedJSON = parseXMLToJson(data);
@@ -2248,12 +2423,18 @@ const MappingScreen: React.FC = () => {
 
             const transformed = transformFormMetadata(parsedJSON);
             setTransformedData(transformed);
-            setCurrentLoadedReport(reportName);
+            setCurrentLoadedReport(reportToFetch);
         } catch (error) {
             console.error('Error fetching report data:', error);
         } finally {
             setLoading(false);
         }
+    };
+
+    // Wrapper function for onClick handlers
+    const handleFetchReportData = (e?: React.MouseEvent<HTMLButtonElement>) => {
+        e?.preventDefault();
+        fetchReportData();
     };
 
     const getCHAFields = () => {
@@ -2391,45 +2572,26 @@ const MappingScreen: React.FC = () => {
                     return {
                         id: parseInt(itemId),
                         iconName: menuItem?.iconName || 'Assignment',
-                        label: menuItem?.label || `Menu Item ${itemId}`,
+                        label: menuItem?.label || `Alert ${itemId}`,
                         count: count,
+                        color: menuItem?.color || '#449ca4',
                     };
                 }
             );
 
             previewProps.menuItems = processedMenuItems;
-        }
 
-        if (config.chartDataConfig?.inputType === 'manual') {
-            previewProps.chartData = config.chartDataConfig.manualData || [
-                { name: 'PR', value: 86, color: '#449ca4' },
-                { name: 'CE', value: 156, color: '#5899da' },
-                { name: 'SES', value: 114, color: '#ffaa04' },
-                { name: 'CV', value: 126, color: '#ff0000' },
-            ];
-        } else if (
-            config.chartDataConfig?.inputType === 'mapped' &&
-            config.chartDataConfig?.chartConfig &&
-            transformedData
-        ) {
-            const { xAxis, yAxis } = config.chartDataConfig.chartConfig;
-
-            if (xAxis?.field && yAxis?.field) {
-                const chartData = Object.entries(transformedData.FormStructure[xAxis.field] || {})
-                    .filter(([chaValue]) => chaValue !== 'Overall Result')
-                    .map(([chaValue, values]: [string, any], index) => {
-                        const value = values[yAxis.field] ? Number(values[yAxis.field]) : 0;
-                        const colors = ['#449ca4', '#5899da', '#ffaa04', '#ff0000', '#8979FF'];
-
-                        return {
-                            name: chaValue,
-                            value: value,
-                            color: colors[index % colors.length],
-                        };
-                    });
-
-                previewProps.chartData = chartData;
-            }
+            // Generate chart data from menu items (alerts)
+            // Chart uses the same data as the alerts - each alert's count becomes a bar
+            previewProps.chartData = processedMenuItems.map((item: any, index: number) => {
+                const defaultColors = ['#449ca4', '#5899da', '#ffaa04', '#ff0000', '#8979FF', '#00C9FF', '#FF6B9D'];
+                return {
+                    name: item.label,
+                    value: item.count,
+                    color: item.color || defaultColors[index % defaultColors.length],
+                    iconName: item.iconName,
+                };
+            });
         }
 
         updateWidgetConfiguration(selectedWidget, previewProps);
@@ -3523,7 +3685,7 @@ const MappingScreen: React.FC = () => {
                                                         <Box mt={2} display="flex" alignItems="center" gap={2}>
                                                             <Button
                                                                 label="Fetch Report Data"
-                                                                onClick={fetchReportData}
+                                                                onClick={handleFetchReportData}
                                                                 disabled={loading}
                                                             />
                                                             {loading && <CircularProgress size={20} />}
@@ -4308,6 +4470,7 @@ const MappingScreen: React.FC = () => {
                                                     widgetConfigurations={widgetConfigurations}
                                                     setWidgetConfigurations={setWidgetConfigurations}
                                                     parsedResponse={parsedResponse}
+                                                    transformedData={transformedData}
                                                     getCHAFields={getCHAFields}
                                                     getKFFields={getKFFields}
                                                     getCHAValues={getCHAValues}
@@ -4358,7 +4521,7 @@ const MappingScreen: React.FC = () => {
                                                             <Box mt={2} display="flex" alignItems="center" gap={2}>
                                                                 <Button
                                                                     label="Fetch Report Data"
-                                                                    onClick={fetchReportData}
+                                                                    onClick={handleFetchReportData}
                                                                     disabled={loading}
                                                                 />
                                                                 {loading && <CircularProgress size={20} />}
@@ -5234,7 +5397,7 @@ const MappingScreen: React.FC = () => {
                                                         <Box mt={2} display="flex" alignItems="center" gap={2}>
                                                             <Button
                                                                 label="Fetch Report Data"
-                                                                onClick={fetchReportData}
+                                                                onClick={handleFetchReportData}
                                                                 disabled={loading}
                                                             />
                                                             {loading && <CircularProgress size={20} />}

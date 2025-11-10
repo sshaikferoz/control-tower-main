@@ -52,7 +52,7 @@ interface LoansAppTrayConfigProps {
   getKFValue: (chaField: string, chaValue: string, kfField: string) => any;
   reportName: string;
   handleReportNameChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
-  fetchReportData: () => void;
+  fetchReportData: (reportNameParam?: string) => Promise<void>;
   loading: boolean;
 }
 
