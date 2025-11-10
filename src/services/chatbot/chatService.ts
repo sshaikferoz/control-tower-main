@@ -17,7 +17,7 @@ interface FeedbackResponse {
     message: string;
     status: string;
 }
-const BASE_URL = 'https://scic-chatbot.cml.apps.cdp-ds-test.aramco.com';
+const BASE_URL = 'https://scic-chatbot.cml.apps.cdp-ds-prod.aramco.com';
 
 
 export const generateResponse = async (
@@ -31,7 +31,7 @@ export const generateResponse = async (
     // Call API with user info in headers
     try {
         const apiResponse = await fetch(
-            `https://scic-chatbot.cml.apps.cdp-ds-test.aramco.com/api/chat?query=${encodeURIComponent(message)}`,
+            `https://scic-chatbot.cml.apps.cdp-ds-prod.aramco.com/api/chat?query=${encodeURIComponent(message)}`,
             {
                 method: 'GET',
                 headers: {
@@ -97,7 +97,7 @@ export const fetchMatchingFAQs = async (userInfo?: UserInfo): Promise<any[]> => 
             headers['user_id'] = userInfo.user_id;
         }
 
-        const response = await fetch(`https://scic-chatbot.cml.apps.cdp-ds-test.aramco.com/api/faq`, {
+        const response = await fetch(`https://scic-chatbot.cml.apps.cdp-ds-prod.aramco.com/api/faq`, {
             method: 'GET',
             headers,
         });

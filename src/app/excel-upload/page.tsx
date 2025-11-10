@@ -541,7 +541,7 @@ export default function ExcelUploadComponent() {
       formData.append('tableName', selectedTable);
 
       const res = await fetch(
-        `https://scic-chatbot.cml.apps.cdp-ds-test.aramco.com/api/uploadExcel`,
+        `https://scic-chatbot.cml.apps.cdp-ds-prod.aramco.com/api/uploadExcel`,
         {
           method: 'POST',
           body: formData,

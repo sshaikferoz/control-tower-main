@@ -59,6 +59,13 @@ export const DashboardSection: React.FC<ExtendedDashboardSectionProps> = ({
   const [errorReports, setErrorReports] = useState<Set<string>>(new Set());
   const [visibleWidgets, setVisibleWidgets] = useState<Set<string>>(new Set());
   const [isExpanded, setIsExpanded] = useState<boolean>(() => {
+    // Use visible property to control expanded/collapsed state
+    // If visible is false, section should be collapsed
+    const originalSection = section.originalSection;
+    if (originalSection?.visible !== undefined) {
+      return originalSection.visible;
+    }
+    // Fallback to expanded property if visible is not set
     return section.expanded !== undefined ? section.expanded.toLowerCase() === 'true' : true;
   });
 
@@ -99,6 +106,14 @@ export const DashboardSection: React.FC<ExtendedDashboardSectionProps> = ({
     const isHighlightingActive = highlightSectionId || highlightWidgetIds.length > 0;
     return isHighlightingActive && !isSectionHighlighted && !hasHighlightedWidgets;
   };
+
+  // Sync expanded state with section's visible property
+  useEffect(() => {
+    const originalSection = section.originalSection;
+    if (originalSection?.visible !== undefined) {
+      setIsExpanded(originalSection.visible);
+    }
+  }, [section.originalSection?.visible]);
 
   // Initialize widget props with saved or default values
   useEffect(() => {
