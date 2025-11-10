@@ -365,21 +365,36 @@ class SAPODataService {
             const data = await response.json();
 
             const sections = data.d.results.map(
-                (item: any): Section => ({
-                    id: item.Id,
-                    tabId: item.TabId,
-                    name: item.Name,
-                    visible: true,
-                    order: item.SortOrder,
-                    description: item.Description,
-                    type: item.Type,
-                    deleted: item.DelInd === 'X',
-                    roles: item.RolesSecItem?.result || [],
-                    widgets: [], // Will be populated separately
-                    isNew: false,
-                    hasChanges: false,
-                    expanded: item.IsVisible === 'X',
-                })
+                (item: any): Section => {
+                    // Extract roles from RolesSecItem.results (plural)
+                    const roles = item.RolesSecItem?.results || [];
+
+                    // Map roles to the expected format
+                    const formattedRoles = roles.map((role: any) => ({
+                        RoleId: role.RoleId || '',
+                        Id: role.Id || item.Id || '',
+                        Name: role.Name || '',
+                        Description: role.Description || '',
+                        Type: role.Type || 'Custom',
+                        DelFlag: role.DelFlag || '',
+                    }));
+
+                    return {
+                        id: item.Id,
+                        tabId: item.TabId,
+                        name: item.Name,
+                        visible: item.IsVisible === 'X',
+                        order: item.SortOrder,
+                        description: item.Description,
+                        type: item.Type,
+                        deleted: item.DelInd === 'X',
+                        roles: formattedRoles,
+                        widgets: [], // Will be populated separately
+                        isNew: false,
+                        hasChanges: false,
+                        expanded: item.IsVisible === 'X',
+                    };
+                }
             );
 
             // Fetch widgets for each section

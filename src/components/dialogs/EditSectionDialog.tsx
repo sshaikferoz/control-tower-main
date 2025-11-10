@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X } from 'lucide-react';
+import { X, Edit2, Save, XCircle } from 'lucide-react';
 import { Section } from '@/services/sapODataService';
 
 interface EditSectionDialogProps {
@@ -29,16 +29,46 @@ export const EditSectionDialog: React.FC<EditSectionDialogProps> = ({
     type: 'Custom',
   });
 
+  const [editingRoleKey, setEditingRoleKey] = useState<string | null>(null);
+  const [editingRole, setEditingRole] = useState<any>(null);
   const [showAddRole, setShowAddRole] = useState(false);
 
   useEffect(() => {
-    if (section) {
+      if (section) {
+    console.log('section', section);
+      // Ensure roles are properly formatted
+      const formattedRoles = (section.roles || []).map((role: any) => {
+        // If role is already an object with proper structure, keep it
+        if (typeof role === 'object' && role.Name !== undefined) {
+          return {
+            RoleId: role.RoleId || '',
+            Id: role.Id || section.id || '',
+            Name: role.Name || '',
+            Description: role.Description || '',
+            Type: role.Type || 'Custom',
+            DelFlag: role.DelFlag || '',
+          };
+        }
+        // If role is a string, convert it to object
+        if (typeof role === 'string') {
+          return {
+            RoleId: '',
+            Id: section.id || '',
+            Name: role,
+            Description: '',
+            Type: 'Custom',
+            DelFlag: '',
+          };
+        }
+        return role;
+      });
+
       setFormData({
         name: section.name,
         description: section.description,
         type: section.type,
         visible: section.visible,
-        roles: section.roles || [],
+        roles: formattedRoles,
       });
     }
   }, [section]);
@@ -48,8 +78,8 @@ export const EditSectionDialog: React.FC<EditSectionDialogProps> = ({
       const role = {
         RoleId: '', // Will be assigned by backend for new roles
         Id: section?.id || '',
-        Name: newRole.name,
-        Description: newRole.description,
+        Name: newRole.name.trim(),
+        Description: newRole.description.trim(),
         Type: newRole.type,
         DelFlag: '',
       };
@@ -69,23 +99,73 @@ export const EditSectionDialog: React.FC<EditSectionDialogProps> = ({
   };
 
   const handleRemoveRole = (index: number) => {
-    const updatedRoles = formData.roles.filter((_, i) => i !== index);
-    setFormData({
-      ...formData,
-      roles: updatedRoles,
-    });
+    const role = formData.roles[index];
+    
+    // If role has a RoleId (exists in database), mark it as deleted
+    if (role.RoleId) {
+      const updatedRoles = formData.roles.map((r, i) => 
+        i === index ? { ...r, DelFlag: 'X' } : r
+      );
+      setFormData({
+        ...formData,
+        roles: updatedRoles,
+      });
+    } else {
+      // If role doesn't have a RoleId (newly added), remove it completely
+      const updatedRoles = formData.roles.filter((_, i) => i !== index);
+      setFormData({
+        ...formData,
+        roles: updatedRoles,
+      });
+    }
+  };
+
+  const getRoleKey = (role: any, index: number): string => {
+    // Use RoleId if available, otherwise use Name + index as fallback
+    return role.RoleId ? `role-${role.RoleId}` : `role-${role.Name}-${index}`;
+  };
+
+  const handleStartEditRole = (roleKey: string) => {
+    const roleIndex = formData.roles.findIndex((role, index) => getRoleKey(role, index) === roleKey);
+    if (roleIndex !== -1) {
+      setEditingRoleKey(roleKey);
+      setEditingRole({ ...formData.roles[roleIndex] });
+    }
+  };
+
+  const handleSaveEditRole = () => {
+    if (editingRoleKey !== null && editingRole) {
+      const roleIndex = formData.roles.findIndex((role, index) => getRoleKey(role, index) === editingRoleKey);
+      if (roleIndex !== -1) {
+        const updatedRoles = formData.roles.map((role, index) =>
+          index === roleIndex ? editingRole : role
+        );
+        setFormData({
+          ...formData,
+          roles: updatedRoles,
+        });
+      }
+      setEditingRoleKey(null);
+      setEditingRole(null);
+    }
+  };
+
+  const handleCancelEditRole = () => {
+    setEditingRoleKey(null);
+    setEditingRole(null);
   };
 
   const handleSave = () => {
     if (!section) return;
 
+    // Filter out roles that are marked for deletion but keep them for backend processing
     const updatedSection: Section = {
       ...section,
       name: formData.name,
       description: formData.description,
       type: formData.type,
       visible: formData.visible,
-      roles: formData.roles,
+      roles: formData.roles, // Include all roles (with DelFlag) for backend processing
       hasChanges: true,
     };
 
@@ -185,25 +265,108 @@ export const EditSectionDialog: React.FC<EditSectionDialogProps> = ({
             </div>
 
             {/* Role List */}
-            <div className="max-h-40 space-y-2 overflow-y-auto">
-              {formData.roles.map((role, index) => (
-                <div
-                  key={index}
-                  className="flex items-center justify-between rounded border border-[#3a5a8b] bg-[#2a4a7b] p-3"
-                >
-                  <div>
-                    <div className="font-medium text-white">{role.Name}</div>
-                    <div className="text-sm text-gray-400">{role.Description}</div>
-                    <div className="text-xs text-gray-500">{role.Type}</div>
-                  </div>
-                  <button
-                    onClick={() => handleRemoveRole(index)}
-                    className="text-red-400 transition-colors hover:text-red-300"
-                  >
-                    <X className="h-4 w-4" />
-                  </button>
+            <div className="max-h-60 space-y-2 overflow-y-auto">
+              {formData.roles
+                .map((role, index) => ({ role, index }))
+                .filter(({ role }) => role.DelFlag !== 'X') // Hide deleted roles from display
+                .map(({ role, index: actualIndex }) => {
+                  const roleKey = getRoleKey(role, actualIndex);
+                  const isEditing = editingRoleKey === roleKey;
+
+                  return (
+                    <div
+                      key={role.RoleId || role.Name || actualIndex}
+                      className="flex items-center justify-between rounded border border-[#3a5a8b] bg-[#2a4a7b] p-3"
+                    >
+                      {isEditing ? (
+                        <div className="flex-1 space-y-2">
+                          <input
+                            type="text"
+                            value={editingRole?.Name || ''}
+                            onChange={(e) =>
+                              setEditingRole({ ...editingRole, Name: e.target.value })
+                            }
+                            className="w-full rounded border border-[#3a5a8b] bg-[#1a3a6b] p-2 text-white outline-none focus:border-blue-500"
+                            placeholder="Role Name"
+                          />
+                          <input
+                            type="text"
+                            value={editingRole?.Description || ''}
+                            onChange={(e) =>
+                              setEditingRole({ ...editingRole, Description: e.target.value })
+                            }
+                            className="w-full rounded border border-[#3a5a8b] bg-[#1a3a6b] p-2 text-white outline-none focus:border-blue-500"
+                            placeholder="Role Description"
+                          />
+                          <select
+                            value={editingRole?.Type || 'Custom'}
+                            onChange={(e) =>
+                              setEditingRole({ ...editingRole, Type: e.target.value })
+                            }
+                            className="w-full rounded border border-[#3a5a8b] bg-[#1a3a6b] p-2 text-white outline-none focus:border-blue-500"
+                          >
+                            <option value="Custom">Custom</option>
+                            <option value="System">System</option>
+                          </select>
+                          <div className="flex space-x-2">
+                            <button
+                              onClick={handleSaveEditRole}
+                              className="flex items-center space-x-1 rounded bg-blue-600 px-2 py-1 text-sm text-white transition-colors hover:bg-blue-700"
+                            >
+                              <Save className="h-3 w-3" />
+                              <span>Save</span>
+                            </button>
+                            <button
+                              onClick={handleCancelEditRole}
+                              className="flex items-center space-x-1 rounded bg-gray-600 px-2 py-1 text-sm text-white transition-colors hover:bg-gray-700"
+                            >
+                              <XCircle className="h-3 w-3" />
+                              <span>Cancel</span>
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <>
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2">
+                              <div className="font-medium text-white">{role.Name}</div>
+                              {role.RoleId && (
+                                <span className="rounded bg-green-600 px-2 py-0.5 text-xs text-white">
+                                  Existing
+                                </span>
+                              )}
+                            </div>
+                            {role.Description && (
+                              <div className="mt-1 text-sm text-gray-400">{role.Description}</div>
+                            )}
+                            <div className="mt-1 text-xs text-gray-500">{role.Type}</div>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <button
+                              onClick={() => handleStartEditRole(roleKey)}
+                              className="text-blue-400 transition-colors hover:text-blue-300"
+                              title="Edit role"
+                            >
+                              <Edit2 className="h-4 w-4" />
+                            </button>
+                            <button
+                              onClick={() => handleRemoveRole(actualIndex)}
+                              className="text-red-400 transition-colors hover:text-red-300"
+                              title="Remove role"
+                            >
+                              <X className="h-4 w-4" />
+                            </button>
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  );
+                })}
+              {formData.roles.filter((role) => role.DelFlag !== 'X').length === 0 && (
+                <div className="rounded border border-[#3a5a8b] bg-[#2a4a7b] p-3 text-center text-sm text-gray-400">
+                  No roles assigned. Click "+ Add Role" to add roles.
                 </div>
-              ))}
+              )}
             </div>
 
             {/* Add Role Form */}
@@ -213,16 +376,26 @@ export const EditSectionDialog: React.FC<EditSectionDialogProps> = ({
                 <div className="space-y-3">
                   <input
                     type="text"
-                    placeholder="Role Name"
+                    placeholder="Role Name *"
                     value={newRole.name}
                     onChange={(e) => setNewRole({ ...newRole, name: e.target.value })}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && newRole.name.trim()) {
+                        handleAddRole();
+                      }
+                    }}
                     className="w-full rounded border border-[#3a5a8b] bg-[#1a3a6b] p-2 text-white outline-none focus:border-blue-500"
                   />
                   <input
                     type="text"
-                    placeholder="Role Description"
+                    placeholder="Role Description (Optional)"
                     value={newRole.description}
                     onChange={(e) => setNewRole({ ...newRole, description: e.target.value })}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && newRole.name.trim()) {
+                        handleAddRole();
+                      }
+                    }}
                     className="w-full rounded border border-[#3a5a8b] bg-[#1a3a6b] p-2 text-white outline-none focus:border-blue-500"
                   />
                   <select
@@ -236,12 +409,16 @@ export const EditSectionDialog: React.FC<EditSectionDialogProps> = ({
                   <div className="flex space-x-2">
                     <button
                       onClick={handleAddRole}
-                      className="rounded bg-blue-600 px-3 py-1 text-sm text-white transition-colors hover:bg-blue-700"
+                      disabled={!newRole.name.trim()}
+                      className="rounded bg-blue-600 px-3 py-1 text-sm text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-gray-500"
                     >
                       Add
                     </button>
                     <button
-                      onClick={() => setShowAddRole(false)}
+                      onClick={() => {
+                        setShowAddRole(false);
+                        setNewRole({ name: '', description: '', type: 'Custom' });
+                      }}
                       className="rounded bg-gray-600 px-3 py-1 text-sm text-white transition-colors hover:bg-gray-700"
                     >
                       Cancel
