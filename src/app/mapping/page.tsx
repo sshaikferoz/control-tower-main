@@ -2709,68 +2709,226 @@ const MappingScreen: React.FC = () => {
             return;
           }
 
-          // Get unique x-axis values
-          const xValues = Object.keys(transformedData.FormStructure[xAxis.field] || {}).filter(
-            (key) => key !== 'Overall Result'
+          // Check if there's a Struct field (label contains "Struct" or "struct")
+          const structField = parsedResponse.header.find(
+            (h: any) => 
+              (h.label?.toLowerCase().includes('struct') || h.fieldName?.toLowerCase().includes('struct')) && 
+              h.type === 'CHA' && 
+              h.fieldName !== xAxis.field
           );
 
-          // Build chart data
-          const data = xValues.map((xValue) => {
-            const entry: Record<string, any> = { name: xValue };
+          let data: any[] = [];
+          let groupByField: string | undefined = undefined;
 
-            // Check if there's a label field for grouping
-            const labelField = parsedResponse.header.find(
-              (h: any) => h.fieldName.toLowerCase().includes('label') && h.type === 'CHA'
-            );
-
-            if (labelField) {
-              // Add label to data entry
-              entry.label =
-                transformedData.FormStructure[xAxis.field][xValue][labelField.fieldName] || '';
-            }
-
-            // Add all y-axis values
-            yAxis.fields.forEach((kfField: any) => {
-              entry[kfField] = Number(
-                transformedData.FormStructure[xAxis.field][xValue][kfField] || 0
-              );
+          if (structField && parsedResponse.chartData) {
+            // Group by Struct field - transform data from chartData directly
+            groupByField = structField.fieldName;
+            
+            // Get unique x-axis values and group values
+            const xValues = new Set<string>();
+            const groupValues = new Set<string>();
+            
+            parsedResponse.chartData.forEach((row: any) => {
+              if (row[xAxis.field] && row[structField.fieldName]) {
+                xValues.add(row[xAxis.field]);
+                groupValues.add(row[structField.fieldName]);
+              }
             });
 
-            return entry;
-          });
+            // Build data structure: each x-value has entries for each group
+            data = Array.from(xValues).map((xValue) => {
+              const entry: Record<string, any> = { name: xValue };
+              
+              // For each group value, add the series data
+              Array.from(groupValues).forEach((groupValue) => {
+                const row = parsedResponse.chartData.find(
+                  (r: any) => r[xAxis.field] === xValue && r[structField.fieldName] === groupValue
+                );
+                
+                if (row) {
+                  yAxis.fields.forEach((kfField: any) => {
+                    const value = row[kfField];
+                    entry[`${groupValue}_${kfField}`] = 
+                      value === '' || value === null || value === undefined 
+                        ? null 
+                        : Number(value) || 0;
+                  });
+                }
+              });
+              
+              return entry;
+            });
 
-          // Build series configuration
-          const series = config.seriesConfig?.series || [];
+            // Build series configuration for grouped data
+            const baseSeries = config.seriesConfig?.series || [];
+            const series: any[] = [];
+            
+            Array.from(groupValues).forEach((groupValue) => {
+              baseSeries.forEach((s) => {
+                series.push({
+                  ...s,
+                  name: `${groupValue} - ${s.name}`,
+                  dataKey: `${groupValue}_${s.dataKey}`,
+                });
+              });
+            });
 
-          // Calculate total value if needed
-          let totalValue = '';
-          if (transformedData.FormStructure[xAxis.field]['Overall Result']) {
-            const total = yAxis.fields.reduce((sum: number, kfField: any) => {
-              return (
-                sum +
-                Number(transformedData.FormStructure[xAxis.field]['Overall Result'][kfField] || 0)
+            // Calculate total value
+            const allValues = parsedResponse.chartData
+              .filter((row: any) => row[xAxis.field] && row[structField.fieldName])
+              .reduce((sum: number, row: any) => {
+                return sum + yAxis.fields.reduce((fieldSum: number, kfField: any) => {
+                  const value = row[kfField];
+                  return fieldSum + (value === '' || value === null || value === undefined ? 0 : Number(value) || 0);
+                }, 0);
+              }, 0);
+            const totalValue = `${allValues.toLocaleString()}`;
+
+            const title = widgetConfigurations[selectedWidget]?.title || 'Multi Chart';
+            const chartType = widgetConfigurations[selectedWidget]?.chartType || 'line';
+            const showLegend = widgetConfigurations[selectedWidget]?.showLegend !== false;
+            const stacked = widgetConfigurations[selectedWidget]?.stacked || false;
+            const selectedLabels = widgetConfigurations[selectedWidget]?.selectedLabels || Array.from(groupValues);
+            const valueFormat = widgetConfigurations[selectedWidget]?.valueFormat || 'non-currency';
+            
+            previewProps = {
+              data: parsedResponse.chartData.map((row: any) => ({
+                name: row[xAxis.field],
+                [structField.fieldName]: row[structField.fieldName],
+                groupKey: row[structField.fieldName],
+                ...yAxis.fields.reduce((acc: any, kfField: any) => {
+                  acc[kfField] = row[kfField] === '' || row[kfField] === null || row[kfField] === undefined 
+                    ? null 
+                    : Number(row[kfField]) || 0;
+                  return acc;
+                }, {}),
+              })),
+              series: baseSeries,
+              title,
+              totalValue,
+              chartType,
+              showLegend,
+              stacked,
+              selectedLabels,
+              valueFormat,
+              groupByField: structField.fieldName,
+            };
+          } else {
+            // No Struct field - use original logic (no grouping)
+            // Use chartData directly if available, otherwise use transformedData
+            let data: any[] = [];
+            
+            if (parsedResponse.chartData && Array.isArray(parsedResponse.chartData)) {
+              // Use chartData directly - filter out "Overall Result"
+              data = parsedResponse.chartData
+                .filter((row: any) => row[xAxis.field] && row[xAxis.field] !== 'Overall Result')
+                .map((row: any) => {
+                  const entry: Record<string, any> = { name: row[xAxis.field] };
+                  
+                  // Add all y-axis values
+                  yAxis.fields.forEach((kfField: any) => {
+                    const value = row[kfField];
+                    entry[kfField] = value === '' || value === null || value === undefined 
+                      ? null 
+                      : Number(value) || 0;
+                  });
+                  
+                  return entry;
+                });
+            } else {
+              // Fallback to transformedData structure
+              const xValues = Object.keys(transformedData.FormStructure[xAxis.field] || {}).filter(
+                (key) => key !== 'Overall Result'
               );
-            }, 0);
-            totalValue = `${total.toLocaleString()}`;
-          }
 
-          const title = widgetConfigurations[selectedWidget]?.title || 'Multi Chart';
-          const chartType = widgetConfigurations[selectedWidget]?.chartType || 'line';
-          const showLegend = widgetConfigurations[selectedWidget]?.showLegend !== false;
-          const stacked = widgetConfigurations[selectedWidget]?.stacked || false;
-          const selectedLabels = widgetConfigurations[selectedWidget]?.selectedLabels || [];
-          const valueFormat = widgetConfigurations[selectedWidget]?.valueFormat || 'non-currency'; // NEW
-          previewProps = {
-            data,
-            series,
-            title,
-            totalValue,
-            chartType,
-            showLegend,
-            stacked,
-            selectedLabels,
-            valueFormat,
-          };
+              // Build chart data
+              data = xValues.map((xValue) => {
+                const entry: Record<string, any> = { name: xValue };
+
+                // Check if there's a label field for grouping
+                const labelField = parsedResponse.header.find(
+                  (h: any) => h.fieldName.toLowerCase().includes('label') && h.type === 'CHA'
+                );
+
+                if (labelField) {
+                  // Add label to data entry
+                  entry.label =
+                    transformedData.FormStructure[xAxis.field][xValue][labelField.fieldName] || '';
+                }
+
+                // Add all y-axis values
+                yAxis.fields.forEach((kfField: any) => {
+                  const value = transformedData.FormStructure[xAxis.field][xValue][kfField];
+                  entry[kfField] = value === '' || value === null || value === undefined 
+                    ? null 
+                    : Number(value) || 0;
+                });
+
+                return entry;
+              });
+            }
+
+            // Build series configuration - auto-generate if not present
+            let series = config.seriesConfig?.series || [];
+            
+            // If series is empty, auto-generate from yAxis fields
+            if (series.length === 0 && yAxis.fields.length > 0) {
+              const defaultColors = ['#8884d8', '#82ca9d', '#ffc658', '#ff7c7c', '#8dd1e1', '#d084d0', '#ffb347', '#87ceeb', '#dda0dd', '#98d8c8'];
+              series = yAxis.fields.map((kfField: any, idx: number) => {
+                const fieldHeader = parsedResponse.header.find((h: any) => h.fieldName === kfField);
+                return {
+                  name: fieldHeader?.label || kfField,
+                  dataKey: kfField,
+                  color: defaultColors[idx % defaultColors.length],
+                  type: 'line' as const,
+                };
+              });
+            }
+
+            // Calculate total value if needed
+            let totalValue = '';
+            if (parsedResponse.chartData && Array.isArray(parsedResponse.chartData)) {
+              const overallRow = parsedResponse.chartData.find(
+                (row: any) => row[xAxis.field] === 'Overall Result'
+              );
+              if (overallRow) {
+                const total = yAxis.fields.reduce((sum: number, kfField: any) => {
+                  const value = overallRow[kfField];
+                  return sum + (value === '' || value === null || value === undefined ? 0 : Number(value) || 0);
+                }, 0);
+                totalValue = `${total.toLocaleString()}`;
+              }
+            } else if (transformedData.FormStructure[xAxis.field]?.['Overall Result']) {
+              const total = yAxis.fields.reduce((sum: number, kfField: any) => {
+                return (
+                  sum +
+                  Number(transformedData.FormStructure[xAxis.field]['Overall Result'][kfField] || 0)
+                );
+              }, 0);
+              totalValue = `${total.toLocaleString()}`;
+            }
+
+            const title = widgetConfigurations[selectedWidget]?.title || 'Multi Chart';
+            const chartType = widgetConfigurations[selectedWidget]?.chartType || 'line';
+            const showLegend = widgetConfigurations[selectedWidget]?.showLegend !== false;
+            const stacked = widgetConfigurations[selectedWidget]?.stacked || false;
+            const selectedLabels = widgetConfigurations[selectedWidget]?.selectedLabels || [];
+            const valueFormat = widgetConfigurations[selectedWidget]?.valueFormat || 'non-currency';
+            
+            previewProps = {
+              data,
+              series,
+              title,
+              totalValue,
+              chartType,
+              showLegend,
+              stacked,
+              selectedLabels,
+              valueFormat,
+              // Explicitly set groupByField to undefined for non-grouping case
+              groupByField: undefined,
+            };
+          }
 
           updateWidgetConfiguration(selectedWidget, previewProps);
         } else if (widgetCategory === 'line') {
@@ -4692,89 +4850,109 @@ const MappingScreen: React.FC = () => {
                               {/* Selected Labels Multi-Select */}
                               {parsedResponse &&
                                 (() => {
-                                  // Check if data has label field
+                                  // Check if data has label field or Struct field
                                   const labelField = parsedResponse.header.find(
                                     (h: any) =>
-                                      h.fieldName.toLowerCase().includes('label') &&
-                                      h.type === 'CHA'
+                                      (h.fieldName.toLowerCase().includes('label') ||
+                                        h.label?.toLowerCase().includes('struct') ||
+                                        h.fieldName?.toLowerCase().includes('struct')) &&
+                                      h.type === 'CHA' &&
+                                      h.fieldName !== chartXAxis
                                   );
 
                                   if (labelField && chartXAxis) {
-                                    const labelValues = getCHAValues(labelField.fieldName).filter(
-                                      (val) => val !== 'Overall Result'
-                                    );
+                                    // Get unique values from chartData if available, otherwise use getCHAValues
+                                    let labelValues: string[] = [];
+                                    
+                                    if (parsedResponse.chartData && Array.isArray(parsedResponse.chartData)) {
+                                      const uniqueValues = new Set<string>();
+                                      parsedResponse.chartData.forEach((row: any) => {
+                                        if (row[labelField.fieldName]) {
+                                          uniqueValues.add(row[labelField.fieldName]);
+                                        }
+                                      });
+                                      labelValues = Array.from(uniqueValues).filter(
+                                        (val) => val !== 'Overall Result' && val !== ''
+                                      );
+                                    } else {
+                                      labelValues = getCHAValues(labelField.fieldName).filter(
+                                        (val) => val !== 'Overall Result'
+                                      );
+                                    }
 
-                                    return (
-                                      <FormControl fullWidth margin="normal">
-                                        <InputLabel sx={{ color: 'white' }}>
-                                          Filter by Labels
-                                        </InputLabel>
-                                        <Select
-                                          multiple
-                                          value={
-                                            widgetConfigurations[selectedWidget]?.selectedLabels ||
-                                            []
-                                          }
-                                          onChange={(e) => {
-                                            setWidgetConfigurations((prev) => ({
-                                              ...prev,
-                                              [selectedWidget]: {
-                                                ...prev[selectedWidget],
-                                                selectedLabels: e.target.value as string[],
+                                    if (labelValues.length > 0) {
+                                      return (
+                                        <FormControl fullWidth margin="normal">
+                                          <InputLabel sx={{ color: 'white' }}>
+                                            Filter by {labelField.label || 'Labels'}
+                                          </InputLabel>
+                                          <Select
+                                            multiple
+                                            value={
+                                              widgetConfigurations[selectedWidget]?.selectedLabels ||
+                                              []
+                                            }
+                                            onChange={(e) => {
+                                              setWidgetConfigurations((prev) => ({
+                                                ...prev,
+                                                [selectedWidget]: {
+                                                  ...prev[selectedWidget],
+                                                  selectedLabels: e.target.value as string[],
+                                                },
+                                              }));
+                                            }}
+                                            label={`Filter by ${labelField.label || 'Labels'}`}
+                                            renderValue={(selected) => (
+                                              <Box
+                                                sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}
+                                              >
+                                                {(selected as string[]).map((value) => (
+                                                  <Chip
+                                                    key={value}
+                                                    label={value}
+                                                    size="small"
+                                                    sx={{
+                                                      backgroundColor: '#ffffff20',
+                                                      color: 'white',
+                                                    }}
+                                                  />
+                                                ))}
+                                              </Box>
+                                            )}
+                                            sx={{
+                                              color: 'white',
+                                              '& .MuiOutlinedInput-notchedOutline': {
+                                                borderColor: 'white',
                                               },
-                                            }));
-                                          }}
-                                          label="Filter by Labels"
-                                          renderValue={(selected) => (
-                                            <Box
-                                              sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}
-                                            >
-                                              {(selected as string[]).map((value) => (
-                                                <Chip
-                                                  key={value}
-                                                  label={value}
-                                                  size="small"
-                                                  sx={{
-                                                    backgroundColor: '#ffffff20',
-                                                    color: 'white',
-                                                  }}
+                                              '&:hover .MuiOutlinedInput-notchedOutline': {
+                                                borderColor: 'white',
+                                              },
+                                              '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                                                borderColor: 'white',
+                                              },
+                                              '& .MuiSvgIcon-root': { color: 'white' },
+                                            }}
+                                          >
+                                            {labelValues.map((label) => (
+                                              <MenuItem key={label} value={label}>
+                                                <Checkbox
+                                                  checked={
+                                                    (
+                                                      widgetConfigurations[selectedWidget]
+                                                        ?.selectedLabels || []
+                                                    ).indexOf(label) > -1
+                                                  }
                                                 />
-                                              ))}
-                                            </Box>
-                                          )}
-                                          sx={{
-                                            color: 'white',
-                                            '& .MuiOutlinedInput-notchedOutline': {
-                                              borderColor: 'white',
-                                            },
-                                            '&:hover .MuiOutlinedInput-notchedOutline': {
-                                              borderColor: 'white',
-                                            },
-                                            '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                                              borderColor: 'white',
-                                            },
-                                            '& .MuiSvgIcon-root': { color: 'white' },
-                                          }}
-                                        >
-                                          {labelValues.map((label) => (
-                                            <MenuItem key={label} value={label}>
-                                              <Checkbox
-                                                checked={
-                                                  (
-                                                    widgetConfigurations[selectedWidget]
-                                                      ?.selectedLabels || []
-                                                  ).indexOf(label) > -1
-                                                }
-                                              />
-                                              {label}
-                                            </MenuItem>
-                                          ))}
-                                        </Select>
-                                        <FormHelperText sx={{ color: 'white' }}>
-                                          Select specific labels to display (leave empty for all)
-                                        </FormHelperText>
-                                      </FormControl>
-                                    );
+                                                {label}
+                                              </MenuItem>
+                                            ))}
+                                          </Select>
+                                          <FormHelperText sx={{ color: 'white' }}>
+                                            Select specific {labelField.label?.toLowerCase() || 'labels'} to display (leave empty for all)
+                                          </FormHelperText>
+                                        </FormControl>
+                                      );
+                                    }
                                   }
                                   return null;
                                 })()}
