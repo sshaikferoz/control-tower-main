@@ -546,13 +546,14 @@ class SAPODataService {
     // Create or update menu item
     async saveMenuItem(menuItem: MenuItem, isUpdate: boolean = false): Promise<MenuItem> {
         try {
+            console.log('Saving menu item:', menuItem, 'isUpdate:', isUpdate);
             // Prepare roles with empty IDs for new roles
             const rolesForPayload = menuItem.roles.map((role) => ({
                 Description: role.Description,
                 Type: role.Type,
                 Name: role.Name,
                 DelFlag: role.DelFlag,
-                RoleId: isUpdate && role.RoleId ? role.RoleId : '', // Empty for new roles
+                RoleId: role.RoleId ? role.RoleId : '', // Empty for new roles
                 Id: menuItem.id, // Empty for new roles
             }));
 

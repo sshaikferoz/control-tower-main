@@ -6,6 +6,7 @@ import {
   submitPositiveFeedback,
   UserInfo,
 } from '@/services/chatbot/chatService';
+import MarkdownRenderer from './MarkdownRenderer';
 
 interface ChatMessageProps {
   id: string;
@@ -101,8 +102,10 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
   if (isUser) {
     return (
       <div className="mb-4 flex justify-end">
-        <div className="box-border flex h-[74px] w-[1130px] max-w-[80%] flex-row items-center gap-6 rounded-[24px] border border-[#83BD01] bg-[linear-gradient(0deg,rgba(255,255,255,0.1),rgba(255,255,255,0.1)),rgba(13,54,111,0.7)] p-6 text-white shadow-md">
-          <p>{content}</p>
+        <div className="box-border flex w-[70%] flex-row items-start gap-4 rounded-[24px] border border-[#83BD01] bg-[linear-gradient(0deg,rgba(255,255,255,0.1),rgba(255,255,255,0.1)),rgba(13,54,111,0.7)] p-6 text-white shadow-md">
+          <div className="min-w-0">
+            <p className="leading-relaxed break-words whitespace-pre-wrap">{content}</p>
+          </div>
         </div>
       </div>
     );
@@ -230,12 +233,10 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
       `}</style>
 
       <div className="mb-8 flex flex-col justify-start">
-        <div className="answer-card animate-fade-in isolate flex max-h-screen w-[1130px] max-w-[100%] flex-col items-start gap-[10px] rounded-[24px] bg-[#384F73] p-6 shadow-md">
-          <div
-            ref={contentRef}
-            className="chat-response-content w-full max-w-none"
-            dangerouslySetInnerHTML={{ __html: content }}
-          />
+        <div className="answer-card animate-fade-in isolate flex w-full max-w-[1130px] flex-col items-start gap-[10px] rounded-[24px] bg-[#384F73] p-6 shadow-md">
+          <div ref={contentRef} className="chat-response-content w-full max-w-none">
+            <MarkdownRenderer markdown={content} />
+          </div>
         </div>
 
         <div className="mt-4 flex items-center justify-between">

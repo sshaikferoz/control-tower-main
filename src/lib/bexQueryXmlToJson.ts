@@ -50,7 +50,9 @@ function extractMetadata(xmlString: string): any[] {
         let fieldName = fieldNameMatch ? decodeXmlEntities(fieldNameMatch[1]) : "";
 
         // remove XSLT_ prefix if present
-        if (fieldName.startsWith("XSLT_")) {
+        if (fieldName.startsWith("XSLT_0")) {
+            fieldName = fieldName.replace(/^XSLT_0/, "");
+        } else if (fieldName.startsWith("XSLT_")) {
             fieldName = fieldName.replace(/^XSLT_/, "");
         }
 
@@ -94,7 +96,9 @@ function extractChartData(xmlString: string): any[] {
             let fieldValue: any = match[2];
 
             // remove XSLT_ prefix if present in output data
-            if (fieldName.startsWith("XSLT_")) {
+            if (fieldName.startsWith("XSLT_0")) {
+                fieldName = fieldName.replace(/^XSLT_0/, "");
+            } else if (fieldName.startsWith("XSLT_")) {
                 fieldName = fieldName.replace(/^XSLT_/, "");
             }
 

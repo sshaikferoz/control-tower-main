@@ -14,16 +14,16 @@ const menuItems = [
   // New components
   { name: 'bar-chart', imageURL: '' },
   { name: 'stacked-bar-chart', imageURL: '' },
-  { name: 'orders-line-chart', imageURL: '' },
-  { name: 'dual-line-chart', imageURL: '' },
-  { name: 'pie-chart-total', imageURL: '' },
+  //   { name: 'orders-line-chart', imageURL: '' },
+  //   { name: 'dual-line-chart', imageURL: '' },
+  //   { name: 'pie-chart-total', imageURL: '' },
   { name: 'quadrant-metrics', imageURL: '' },
   { name: 'loans-app-tray', imageURL: '' },
   { name: 'news-feed', imageURL: '' },
   { name: 'pie-chart', imageURL: '' },
   { name: 'column-chart', imageURL: '' },
-  { name: 'prediction-chart', imageURL: '' },
-  { name: 'radar-chart', imageURL: '' },
+  //   { name: 'prediction-chart', imageURL: '' },
+  //   { name: 'radar-chart', imageURL: '' },
   { name: 'multi-chart', imageURL: '' },
   //   { name: 'announcement', imageURL: '' },
 ];
@@ -98,7 +98,11 @@ const SidebarMapping: React.FC<SidebarMappingProps> = ({ onItemClick }) => {
                 {/* Fixed height for text to prevent layout shifts */}
                 <div className="mt-1 flex min-h-[2.5rem] items-center justify-center px-1 text-center text-sm capitalize">
                   <span className="break-words hyphens-auto">
-                    {item.name === 'pie-chart-total' ? 'Donut Chart' : item.name.replace(/-/g, ' ')}
+                    {item.name === 'pie-chart-total'
+                      ? 'Donut Chart'
+                      : item.name === 'loans-app-tray'
+                        ? 'Alert Widget'
+                        : item.name.replace(/-/g, ' ')}
                   </span>
                 </div>
               </div>
