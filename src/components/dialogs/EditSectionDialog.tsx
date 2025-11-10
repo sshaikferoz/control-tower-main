@@ -32,6 +32,7 @@ export const EditSectionDialog: React.FC<EditSectionDialogProps> = ({
   const [editingRoleKey, setEditingRoleKey] = useState<string | null>(null);
   const [editingRole, setEditingRole] = useState<any>(null);
   const [showAddRole, setShowAddRole] = useState(false);
+  const [deleteConfirmRole, setDeleteConfirmRole] = useState<{ index: number; name: string; roleId: string } | null>(null);
 
   useEffect(() => {
       if (section) {
@@ -98,7 +99,15 @@ export const EditSectionDialog: React.FC<EditSectionDialogProps> = ({
     }
   };
 
-  const handleRemoveRole = (index: number) => {
+  const handleRemoveRoleClick = (index: number) => {
+    const role = formData.roles[index];
+    setDeleteConfirmRole({ index, name: role.Name, roleId: role.RoleId || '' });
+  };
+
+  const confirmRemoveRole = () => {
+    if (!deleteConfirmRole) return;
+    
+    const { index } = deleteConfirmRole;
     const role = formData.roles[index];
     
     // If role has a RoleId (exists in database), mark it as deleted
@@ -118,6 +127,11 @@ export const EditSectionDialog: React.FC<EditSectionDialogProps> = ({
         roles: updatedRoles,
       });
     }
+    setDeleteConfirmRole(null);
+  };
+
+  const cancelRemoveRole = () => {
+    setDeleteConfirmRole(null);
   };
 
   const getRoleKey = (role: any, index: number): string => {
@@ -350,7 +364,7 @@ export const EditSectionDialog: React.FC<EditSectionDialogProps> = ({
                               <Edit2 className="h-4 w-4" />
                             </button>
                             <button
-                              onClick={() => handleRemoveRole(actualIndex)}
+                              onClick={() => handleRemoveRoleClick(actualIndex)}
                               className="text-red-400 transition-colors hover:text-red-300"
                               title="Remove role"
                             >
@@ -446,6 +460,47 @@ export const EditSectionDialog: React.FC<EditSectionDialogProps> = ({
           </button>
         </div>
       </div>
+
+      {/* Delete Role Confirmation Dialog */}
+      {deleteConfirmRole && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50">
+          <div className="w-full max-w-md rounded-lg border border-[#2a4a7b] bg-[#1a3a6b] p-6 shadow-xl">
+            <div className="mb-4 flex items-center space-x-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-red-600/20">
+                <X className="h-6 w-6 text-red-400" />
+              </div>
+              <h3 className="text-lg font-semibold text-white">Confirm Role Deletion</h3>
+            </div>
+
+            <div className="mb-4 rounded-lg border border-yellow-600/30 bg-yellow-600/10 p-3">
+              <p className="text-sm text-yellow-200">
+                {deleteConfirmRole.roleId
+                  ? 'This role is already saved. It will be marked as deleted and removed from the section authorization.'
+                  : 'This role has not been saved yet. It will be permanently removed.'}
+              </p>
+            </div>
+
+            <p className="mb-6 text-sm text-gray-300">
+              Are you sure you want to remove the role <strong className="text-white">{deleteConfirmRole.name}</strong>?
+            </p>
+
+            <div className="flex justify-end space-x-3">
+              <button
+                onClick={cancelRemoveRole}
+                className="rounded bg-gray-600 px-4 py-2 text-sm text-white transition-colors hover:bg-gray-700"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmRemoveRole}
+                className="rounded bg-red-600 px-4 py-2 text-sm text-white transition-colors hover:bg-red-700"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

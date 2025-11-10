@@ -67,6 +67,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
     setSidebarModal({
       isOpen: true,
       mode: 'add',
+      item: undefined, // Explicitly clear any previous item
     });
   };
 
@@ -134,17 +135,25 @@ export const Sidebar: React.FC<SidebarProps> = ({
       setIsSaving(true);
 
       if (sidebarModal.mode === 'add') {
+        // Calculate max sort_order and increment by 1
+        const maxOrder = menuItems.length > 0 
+          ? Math.max(...menuItems.map(i => i.order || 0))
+          : -1;
+        const newOrder = maxOrder + 1;
+
         const newItem = {
           ...item,
           id: '',
           appid: item.appid || '',
-          order: menuItems.length,
+          order: newOrder,
           isNew: true,
         };
 
         const savedItem = await sapODataService.saveMenuItem(newItem, false);
         console.log(savedItem, 'saveditem', menuItems);
-        onMenuItemsChange([...menuItems, savedItem]);
+        // Update the menu items list
+        const updatedItems = [...menuItems, savedItem];
+        onMenuItemsChange(updatedItems);
       } else {
         const updatedItem = {
           ...item,
@@ -157,7 +166,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
         onMenuItemsChange(menuItems.map((i) => (i.id === item.id ? savedItem : i)));
       }
 
-      setSidebarModal({ ...sidebarModal, isOpen: false });
+      // Reset modal state to clear form for next add
+      setSidebarModal({ 
+        isOpen: false, 
+        mode: 'add',
+      });
     } catch (error) {
       console.error('Error saving menu item:', error);
       alert('Failed to save menu item. Please try again.');
@@ -448,7 +461,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       {/* Sidebar Item Modal */}
       <SidebarItemModal
         modal={sidebarModal}
-        onClose={() => setSidebarModal({ ...sidebarModal, isOpen: false })}
+        onClose={() => setSidebarModal({ isOpen: false, mode: 'add', item: undefined })}
         onSave={handleSaveItem}
         isSaving={isSaving}
       />

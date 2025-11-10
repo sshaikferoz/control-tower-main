@@ -537,18 +537,19 @@ class SAPODataService {
             }
 
             const data = await response.json();
-            const item = data.d;
+            // Handle both single result and results array
+            const item = data.d.results?.[0] || data.d;
 
             return {
-                id: item.id,
-                appid: item.appid,
-                name: item.name,
-                description: item.description,
-                visible: item.is_visible === 'X',
+                id: item.Id,
+                appid: item.appid || '',
+                name: item.Name,
+                description: item.Description,
+                visible: item.IsVisible === 'X',
                 order: item.sort_order,
-                type: item.type,
+                type: item.Type,
                 deleted: item.del_ind === 'X',
-                roles: item.to_roles.results || [],
+                roles: item.TabRolesItem?.results || item.TabRolesItem || [],
                 isNew: false,
                 hasChanges: false,
             };
@@ -607,15 +608,16 @@ class SAPODataService {
             console.log('odata result after generation', result);
             const generatedId = result.d?.Id || menuItem.id;
 
-            // If we got a new ID, fetch the complete updated item
-            if (generatedId && generatedId !== menuItem.id) {
-                console.log(`Generated new ID: ${generatedId}, fetching updated item...`);
+            // Always fetch the complete updated item to get RoleIds for newly added roles
+            if (generatedId) {
+                console.log(`Fetching updated item with ID: ${generatedId}...`);
 
                 // Wait a bit for the server to process
                 await new Promise((resolve) => setTimeout(resolve, 500));
 
                 try {
                     const updatedItem = await this.fetchMenuItemById(generatedId);
+                    console.log('Fetched updated item with roles:', updatedItem);
                     return {
                         ...updatedItem,
                         isNew: false,
@@ -633,10 +635,10 @@ class SAPODataService {
                 }
             }
 
-            // For updates, return the original item with updated state
+            // Fallback if no ID was generated
             return {
                 ...menuItem,
-                id: generatedId,
+                id: generatedId || menuItem.id,
                 isNew: false,
                 hasChanges: false,
             };

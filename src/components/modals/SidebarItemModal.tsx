@@ -32,23 +32,26 @@ export const SidebarItemModal: React.FC<SidebarItemModalProps> = ({
   });
 
   useEffect(() => {
-    if (modal.item) {
-      setItem(modal.item);
-    } else {
-      setItem({
-        id: '',
-        name: '',
-        appid: '',
-        description: '',
-        visible: true,
-        order: 0,
-        type: 'Section',
-        deleted: false,
-        roles: [],
-        isNew: true,
-      });
+    if (modal.isOpen) {
+      if (modal.item && modal.mode === 'edit') {
+        setItem(modal.item);
+      } else {
+        // Reset form for add mode
+        setItem({
+          id: '',
+          name: '',
+          appid: '',
+          description: '',
+          visible: true,
+          order: 0,
+          type: 'Section',
+          deleted: false,
+          roles: [],
+          isNew: true,
+        });
+      }
     }
-  }, [modal.item]);
+  }, [modal.isOpen, modal.item, modal.mode]);
 
   const handleSave = () => {
     if (!item.name.trim() || isSaving) return;
