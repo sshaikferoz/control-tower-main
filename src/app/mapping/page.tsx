@@ -434,6 +434,7 @@ const defaultPropsMapping: Record<string, any> = {
         ],
     },
     'loans-app-tray': {
+        title: 'Alerts Overview',
         menuItems: [
             {
                 id: 1,
@@ -2467,13 +2468,21 @@ const MappingScreen: React.FC = () => {
     };
 
     const updateWidgetConfiguration = (widgetId: string, previewProps: any) => {
-        setWidgetConfigurations((prev) => ({
-            ...prev,
-            [widgetId]: {
-                ...prev[widgetId],
-                ...previewProps,
-            },
-        }));
+        setWidgetConfigurations((prev) => {
+            const currentConfig = prev[widgetId] || {};
+            const widgetName = widgets.find(w => w.id === widgetId)?.name || '';
+            const defaultProps = defaultPropsMapping[widgetName];
+
+            return {
+                ...prev,
+                [widgetId]: {
+                    ...currentConfig,
+                    ...previewProps,
+                    // Preserve title if it exists in currentConfig, otherwise use from previewProps or default
+                    title: currentConfig.title || previewProps.title || defaultProps?.title || '',
+                },
+            };
+        });
 
         if (selectedWidget === widgetId) {
             setPreviewData(previewProps);
@@ -2539,7 +2548,9 @@ const MappingScreen: React.FC = () => {
         if (!selectedWidget || !fieldMappings[selectedWidget]) return;
 
         const config: any = fieldMappings[selectedWidget];
+        const widgetConfig = widgetConfigurations[selectedWidget];
         const previewProps: any = {
+            title: widgetConfig?.title || defaultPropsMapping['loans-app-tray']?.title || '',
             menuItems: [],
             chartData: [],
             menuItemConfigs: config.menuItemConfigs || {},
@@ -3974,6 +3985,47 @@ const MappingScreen: React.FC = () => {
                                                                     label={`Format ${field}`}
                                                                 />
                                                             )}
+
+                                                        {/* Value Preview */}
+                                                        <Box
+                                                            mt={2}
+                                                            p={1.5}
+                                                            border={1}
+                                                            borderColor="rgba(255,255,255,0.2)"
+                                                            borderRadius={1}
+                                                            sx={{
+                                                                backgroundColor: '#ffffff10',
+                                                                display: 'flex',
+                                                                alignItems: 'center',
+                                                                gap: 1
+                                                            }}
+                                                        >
+                                                            <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.7)' }}>
+                                                                Preview:
+                                                            </Typography>
+                                                            <Typography
+                                                                variant="body2"
+                                                                sx={{
+                                                                    color: 'white',
+                                                                    fontWeight: 'medium',
+                                                                    flex: 1
+                                                                }}
+                                                            >
+                                                                {isManualInput ? (
+                                                                    fieldMapping?.manualValue !== undefined && fieldMapping?.manualValue !== null
+                                                                        ? String(fieldMapping.manualValue)
+                                                                        : 'No value set'
+                                                                ) : (
+                                                                    mappedConfig?.chaField && mappedConfig?.chaValue && mappedConfig?.kfField
+                                                                        ? (getKFValue(
+                                                                            mappedConfig.chaField,
+                                                                            mappedConfig.chaValue,
+                                                                            mappedConfig.kfField
+                                                                        ) || 'No data available')
+                                                                        : 'Configure mapping to see preview'
+                                                                )}
+                                                            </Typography>
+                                                        </Box>
                                                     </FormControl>
                                                 ) : null;
                                             })}

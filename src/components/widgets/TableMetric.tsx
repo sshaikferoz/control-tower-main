@@ -4,15 +4,15 @@ import React, { useEffect, useRef, useState } from 'react';
 import { HexColorPicker } from 'react-colorful';
 
 type DataItem = {
-  [key: string]: string | number;
+    [key: string]: string | number;
 };
 
 type TableMetricProps = {
-  data: DataItem[];
-  columns?: Array<{ field: string; header: string }>;
-  title?: string;
-  color?: string;
-  setChangeColor?: (color: string) => void;
+    data: DataItem[];
+    columns?: Array<{ field: string; header: string }>;
+    title?: string;
+    color?: string;
+    setChangeColor?: (color: string) => void;
 };
 
 const tableStyles = `
@@ -73,133 +73,133 @@ const tableStyles = `
 `;
 
 const TableMetric = ({
-  data,
-  columns,
-  title = 'My Top Items',
-  color,
-  setChangeColor,
+    data,
+    columns,
+    title = 'My Top Items',
+    color,
+    setChangeColor,
 }: TableMetricProps) => {
-  const [userColor, setUserColor] = useState<string>(color || '#00214E');
-  const [showPicker, setShowPicker] = useState(false);
-  const pickerRef = useRef<HTMLDivElement>(null);
+    const [userColor, setUserColor] = useState<string>(color || '#00214E');
+    const [showPicker, setShowPicker] = useState(false);
+    const pickerRef = useRef<HTMLDivElement>(null);
 
-  const defaultBaseColor = '#00214E';
-  const defaultLighterColor = '#0164B0';
+    const defaultBaseColor = '#00214E';
+    const defaultLighterColor = '#0164B0';
 
-  useEffect(() => {
-    if (color && !userColor) {
-      setUserColor(color);
-    }
-  }, [color]);
+    useEffect(() => {
+        if (color && !userColor) {
+            setUserColor(color);
+        }
+    }, [color]);
 
-  const handleColorChange = (selectedColor: string) => {
-    setUserColor(selectedColor);
-    setChangeColor?.(selectedColor);
-  };
-
-  // Handle outside click
-  useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (pickerRef.current && !pickerRef.current.contains(e.target as Node)) {
-        setShowPicker(false);
-      }
+    const handleColorChange = (selectedColor: string) => {
+        setUserColor(selectedColor);
+        setChangeColor?.(selectedColor);
     };
-    if (showPicker) {
-      document.addEventListener('mousedown', handleClickOutside);
-    }
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+
+    // Handle outside click
+    useEffect(() => {
+        const handleClickOutside = (e: MouseEvent) => {
+            if (pickerRef.current && !pickerRef.current.contains(e.target as Node)) {
+                setShowPicker(false);
+            }
+        };
+        if (showPicker) {
+            document.addEventListener('mousedown', handleClickOutside);
+        }
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, [showPicker]);
+
+    const baseColor = userColor || defaultBaseColor;
+    const lighterColor = baseColor === defaultBaseColor ? defaultLighterColor : `${baseColor}80`;
+
+    const backgroundStyle = {
+        backgroundImage: `linear-gradient(to bottom, ${baseColor}, ${lighterColor})`,
+        color: '#ffffff',
+        cursor: 'pointer',
     };
-  }, [showPicker]);
 
-  const baseColor = userColor || defaultBaseColor;
-  const lighterColor = baseColor === defaultBaseColor ? defaultLighterColor : `${baseColor}80`;
+    const tableColumns =
+        columns ||
+        (data?.length > 0
+            ? Object.keys(data[0]).map((key) => ({
+                field: key,
+                header: key.toUpperCase().replace(/_/g, ' '),
+            }))
+            : []);
 
-  const backgroundStyle = {
-    backgroundImage: `linear-gradient(to bottom, ${baseColor}, ${lighterColor})`,
-    color: '#ffffff',
-    cursor: 'pointer',
-  };
+    const getColumnWidth = (index: number, total: number) => {
+        if (total === 3) {
+            if (index === 0) return '160px';
+            if (index === 1) return '90px';
+            if (index === 2) return '95px';
+        }
+        return 'auto';
+    };
 
-  const tableColumns =
-    columns ||
-    (data.length > 0
-      ? Object.keys(data[0]).map((key) => ({
-          field: key,
-          header: key.toUpperCase().replace(/_/g, ' '),
-        }))
-      : []);
+    return (
+        <div className="relative h-full w-full">
+            <style>{tableStyles}</style>
 
-  const getColumnWidth = (index: number, total: number) => {
-    if (total === 3) {
-      if (index === 0) return '160px';
-      if (index === 1) return '90px';
-      if (index === 2) return '95px';
-    }
-    return 'auto';
-  };
+            <div
+                className="h-full w-full overflow-hidden rounded-xl border border-solid border-[#00214E]"
+                onClick={() => setShowPicker(false)}
+            >
+                <div className="h-full p-0">
+                    {/* ✅ Apply gradient only here */}
+                    <div className="relative h-full rounded-xl" style={backgroundStyle}>
+                        {/* Card Header */}
+                        <div className="flex items-center justify-between px-7 pt-1.5 pb-3">
+                            <div className="flex items-center gap-2">
+                                <div
+                                    className="text-base leading-4 font-bold tracking-[-0.16px] text-white"
+                                    style={{ fontFamily: 'Ghawar-Hefty, Helvetica' }}
+                                >
+                                    {title}
+                                </div>
+                            </div>
+                        </div>
 
-  return (
-    <div className="relative h-full w-full">
-      <style>{tableStyles}</style>
+                        {/* Table */}
+                        <div className="h-[90%] overflow-hidden px-7 pb-4">
+                            <div className="metric-table flex h-full flex-col">
+                                <div className="flex-grow overflow-x-hidden overflow-y-auto rounded-md border border-[#d1d1d1]">
+                                    <DataTable value={data} className="h-full w-full" showGridlines={false}>
+                                        {tableColumns.map((col, index) => (
+                                            <Column
+                                                key={col.field}
+                                                field={col.field}
+                                                header={col.header}
+                                                style={{
+                                                    width: getColumnWidth(index, tableColumns.length),
+                                                }}
+                                            />
+                                        ))}
+                                    </DataTable>
+                                </div>
 
-      <div
-        className="h-full w-full overflow-hidden rounded-xl border border-solid border-[#00214E]"
-        onClick={() => setShowPicker(false)}
-      >
-        <div className="h-full p-0">
-          {/* ✅ Apply gradient only here */}
-          <div className="relative h-full rounded-xl" style={backgroundStyle}>
-            {/* Card Header */}
-            <div className="flex items-center justify-between px-7 pt-1.5 pb-3">
-              <div className="flex items-center gap-2">
+                                {/* 👇 Small bottom spacing */}
+                                <div className="h-3" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* Color Picker */}
+            {showPicker && (
                 <div
-                  className="text-base leading-4 font-bold tracking-[-0.16px] text-white"
-                  style={{ fontFamily: 'Ghawar-Hefty, Helvetica' }}
+                    ref={pickerRef}
+                    className="absolute top-full left-[50%] z-50 mt-2 rounded bg-white p-2 shadow-lg"
                 >
-                  {title}
+                    <HexColorPicker color={userColor} onChange={handleColorChange} />
+                    <div className="mt-2 text-center text-sm text-black">{userColor}</div>
                 </div>
-              </div>
-            </div>
-
-            {/* Table */}
-            <div className="h-[90%] overflow-hidden px-7 pb-4">
-              <div className="metric-table flex h-full flex-col">
-                <div className="flex-grow overflow-x-hidden overflow-y-auto rounded-md border border-[#d1d1d1]">
-                  <DataTable value={data} className="h-full w-full" showGridlines={false}>
-                    {tableColumns.map((col, index) => (
-                      <Column
-                        key={col.field}
-                        field={col.field}
-                        header={col.header}
-                        style={{
-                          width: getColumnWidth(index, tableColumns.length),
-                        }}
-                      />
-                    ))}
-                  </DataTable>
-                </div>
-
-                {/* 👇 Small bottom spacing */}
-                <div className="h-3" />
-              </div>
-            </div>
-          </div>
+            )}
         </div>
-      </div>
-
-      {/* Color Picker */}
-      {showPicker && (
-        <div
-          ref={pickerRef}
-          className="absolute top-full left-[50%] z-50 mt-2 rounded bg-white p-2 shadow-lg"
-        >
-          <HexColorPicker color={userColor} onChange={handleColorChange} />
-          <div className="mt-2 text-center text-sm text-black">{userColor}</div>
-        </div>
-      )}
-    </div>
-  );
+    );
 };
 
 export default TableMetric;

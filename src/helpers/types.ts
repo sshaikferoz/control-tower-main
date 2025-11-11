@@ -239,6 +239,7 @@ export const widgetConfigFields: Record<
         },
     ],
     'loans-app-tray': [
+        { field: 'title', type: 'string', path: 'title' },
         { field: 'menuItems', type: 'array', path: 'menuItems' },
         { field: 'chartData', type: 'array', path: 'chartData' },
         { field: 'menuItemConfigs', type: 'object', path: 'menuItemConfigs' }, // New field

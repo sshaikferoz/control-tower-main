@@ -307,8 +307,7 @@ const MultiChart: React.FC<MultiChartProps> = ({
                             <Legend
                                 verticalAlign="bottom"
                                 height={30}
-                                wrapperStyle={{ color: '#ffffff', fontSize: 12, paddingTop: '4px', cursor: 'pointer' }}
-                                onClick={handleLegendClick}
+                                wrapperStyle={{ color: '#ffffff', fontSize: 12, paddingTop: '4px', cursor: 'default' }}
                             />
                         )}
                         {seriesToRender.map((s, idx) => {
@@ -359,8 +358,7 @@ const MultiChart: React.FC<MultiChartProps> = ({
                             <Legend
                                 verticalAlign="bottom"
                                 height={30}
-                                wrapperStyle={{ color: '#ffffff', fontSize: 12, paddingTop: '4px', cursor: 'pointer' }}
-                                onClick={handleLegendClick}
+                                wrapperStyle={{ color: '#ffffff', fontSize: 12, paddingTop: '4px', cursor: 'default' }}
                             />
                         )}
                         {seriesToRender.map((s, idx) => {
@@ -399,8 +397,7 @@ const MultiChart: React.FC<MultiChartProps> = ({
                             <Legend
                                 verticalAlign="bottom"
                                 height={30}
-                                wrapperStyle={{ color: '#ffffff', fontSize: 12, paddingTop: '4px', cursor: 'pointer' }}
-                                onClick={handleLegendClick}
+                                wrapperStyle={{ color: '#ffffff', fontSize: 12, paddingTop: '4px', cursor: 'default' }}
                             />
                         )}
                         {seriesToRender.map((s, idx) => {
@@ -441,8 +438,7 @@ const MultiChart: React.FC<MultiChartProps> = ({
                             <Legend
                                 verticalAlign="bottom"
                                 height={30}
-                                wrapperStyle={{ color: '#ffffff', fontSize: 12, paddingTop: '4px', cursor: 'pointer' }}
-                                onClick={handleLegendClick}
+                                wrapperStyle={{ color: '#ffffff', fontSize: 12, paddingTop: '4px', cursor: 'default' }}
                             />
                         )}
                         {seriesToRender.map((s, idx) => {
@@ -511,8 +507,7 @@ const MultiChart: React.FC<MultiChartProps> = ({
                             <Legend
                                 verticalAlign="bottom"
                                 height={30}
-                                wrapperStyle={{ color: '#ffffff', fontSize: 12, paddingTop: '4px', cursor: 'pointer' }}
-                                onClick={handleLegendClick}
+                                wrapperStyle={{ color: '#ffffff', fontSize: 12, paddingTop: '4px', cursor: 'default' }}
                             />
                         )}
                         {seriesToRender.map((s, idx) => {
@@ -588,8 +583,7 @@ const MultiChart: React.FC<MultiChartProps> = ({
                             <Legend
                                 verticalAlign="bottom"
                                 height={30}
-                                wrapperStyle={{ color: '#ffffff', fontSize: 12, paddingTop: '4px', cursor: 'pointer' }}
-                                onClick={handleLegendClick}
+                                wrapperStyle={{ color: '#ffffff', fontSize: 12, paddingTop: '4px', cursor: 'default' }}
                             />
                         )}
                         {seriesToRender.map((s, idx) => {
@@ -623,7 +617,7 @@ const MultiChart: React.FC<MultiChartProps> = ({
                 {/* Header */}
                 <div className="mb-2 flex shrink-0 items-start justify-between">
                     <div className="flex flex-col items-start gap-[5px]">
-                        <h3 className="text-base font-normal text-white" style={getTitleStyle()}>
+                        <h3 className="text-base font-bold text-white" style={getTitleStyle()}>
                             {title}
                         </h3>
                     </div>
