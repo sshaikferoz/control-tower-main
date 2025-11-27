@@ -1,9 +1,9 @@
 'use client';
 import React, { useState, useRef, useEffect } from 'react';
-import ChatHeader from '../chatbot/components/ChatHeader';
-import ChatMessage from '../chatbot/components/ChatMessage';
-import FAQSection from '../chatbot/components/FAQSection';
-import { generateResponse } from '../../services/chatbot/chatServiceDev';
+import ChatHeader from '@/app/chatbot/components/ChatHeader';
+import ChatMessage from '@/app/chatbot/components/ChatMessage';
+import FAQSection from '@/app/chatbot/components/FAQSection';
+import { generateResponse } from '@/services/chatbot/chatServiceDev';
 import { Dropdown } from 'primereact/dropdown';
 
 interface Message {

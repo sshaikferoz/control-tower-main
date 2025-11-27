@@ -1,6 +1,6 @@
 'use client';
 import React, { useState, useRef, useEffect } from 'react';
-import ChatbotInterface from '@/app/(engagement)/chatbot/page';
+import ChatbotInterface from '@/app/chatbot/page';
 
 interface Message {
     content: string;
