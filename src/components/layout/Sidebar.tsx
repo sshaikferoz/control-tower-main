@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import { MenuItem, SidebarModalState } from '../../types';
 import { useUserInfo } from '../../hooks/useUserInfo';
-import { sapODataService } from '../../services/sapODataService';
+import { sapODataService } from '@/services/sap/client';
 import {
   MagnifyingGlassIcon,
   PencilIcon,
@@ -19,7 +19,7 @@ import { UserProfile } from './UserProfile';
 import { SidebarItemModal } from '../modals/SidebarItemModal';
 import { LoadingSpinner } from '../ui/LoadingSpinner';
 import { Button } from '../ui/Button';
-import PSCLogo from '@/assets/PSCLogo';
+import PSCLogo from '@/components/icons/PSCLogo';
 
 interface SidebarProps {
   selectedItem: string; // This should be the ID of the selected item

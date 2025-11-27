@@ -1,0 +1,46 @@
+import React, { useState, useEffect, Suspense } from 'react';
+import { useIntersectionObserver } from '@/hooks/useIntersectionObserver';
+import { WidgetSkeleton } from '@/components/ui/WidgetSkeleton';
+
+interface LazyWidgetContentProps {
+  widget: any;
+  Component: React.ComponentType<any>;
+  props: any;
+  onVisible: () => void;
+  isLoading: boolean;
+}
+
+export const LazyWidgetContent: React.FC<LazyWidgetContentProps> = ({
+  widget,
+  Component,
+  props,
+  onVisible,
+  isLoading,
+}) => {
+  const { setRef, isVisible, hasBeenVisible } = useIntersectionObserver({
+    threshold: 0.1,
+    rootMargin: '50px',
+  });
+
+  const [hasTriggeredLoad, setHasTriggeredLoad] = useState(false);
+
+  useEffect(() => {
+    if ((isVisible || hasBeenVisible) && !hasTriggeredLoad) {
+      console.log(`Widget ${widget.id} became visible, triggering load`);
+      onVisible();
+      setHasTriggeredLoad(true);
+    }
+  }, [isVisible, hasBeenVisible, hasTriggeredLoad, onVisible, widget.id]);
+
+  return (
+    <div ref={setRef} className="h-full w-full">
+      {isVisible || hasBeenVisible ? (
+        <Suspense fallback={<WidgetSkeleton />}>
+          {isLoading ? <WidgetSkeleton /> : <Component {...props} />}
+        </Suspense>
+      ) : (
+        <WidgetSkeleton />
+      )}
+    </div>
+  );
+};

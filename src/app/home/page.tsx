@@ -5,7 +5,7 @@ import { Suspense } from 'react';
 import { CircularProgress, Typography, Button, Snackbar, Alert } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import { HomeProps } from '@/types/dashboard';
-import { sapODataService, Section } from '@/services/sapODataService';
+import { sapODataService, Section } from '@/services/sap/client';
 import { useDashboardData } from '@/hooks/useDashboardData';
 import { DashboardHeader } from '@/components/layout/DashboardHeader';
 import { DashboardSection } from '@/components/dashboard/DashboardSection';

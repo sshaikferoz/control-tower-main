@@ -1,5 +1,5 @@
 import React from 'react';
-import PSCLogo from '@/assets/PSCLogo';
+import PSCLogo from '@/components/icons/PSCLogo';
 
 const SidebarHeader: React.FC = () => {
   return (

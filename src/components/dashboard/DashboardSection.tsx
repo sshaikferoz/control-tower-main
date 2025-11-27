@@ -18,15 +18,15 @@ import InfoIcon from '@mui/icons-material/Info';
 import SecurityIcon from '@mui/icons-material/Security';
 import LaunchIcon from '@mui/icons-material/Launch';
 import RGL, { WidthProvider } from 'react-grid-layout';
-import MyContractsIcon from '@/assets/MyContractsIcon';
+import MyContractsIcon from '@/components/icons/MyContractsIcon';
 import { DashboardSectionProps } from '@/types/dashboard';
-import { LazyWidgetContent } from '@/components/widgets/LazyWidgetContent';
+import { LazyWidgetContent } from '@/features/widgets/components/LazyWidgetContent';
 import { WidgetDetailsDialog } from '@/components/dialogs/WidgetDetailsDialog';
 import { DataManager } from '@/services/DataManager';
-import { processWidgetMappings } from '@/helpers/transformHelpers';
-import { defaultPropsMapping, widgetMapping } from '@/constants/widgetConfig';
+import { processWidgetMappings } from '@/lib/utils/format/transformHelpers';
+import { defaultPropsMapping, widgetMapping } from '@/features/widgets/data/widgetConfig';
 
-import { sapODataService } from '@/services/sapODataService';
+import { sapODataService } from '@/services/sap/client';
 
 const GridLayout = WidthProvider(RGL);
 

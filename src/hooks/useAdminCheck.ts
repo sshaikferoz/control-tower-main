@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { sapODataService } from '../services/sapODataService';
+import { sapODataService } from '@/services/sap/client';
 
 export const useAdminCheck = () => {
   const [isAdmin, setIsAdmin] = useState<boolean>(false);

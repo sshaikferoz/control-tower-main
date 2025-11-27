@@ -1,10 +1,10 @@
 'use client';
-import MultiMetrics from '@/components/widgets/MultiMetrics';
-import PieMetric from '@/components/widgets/PieMetric';
-import SimpleMetric from '@/components/widgets/SimpleMetric';
-import SimpleMetricDate from '@/components/widgets/SimpleMetricDate';
-import SingleLineChart from '@/components/widgets/SingleLineChart';
-import TableMetric from '@/components/widgets/TableMetric';
+import MultiMetrics from '@/features/widgets/components/MultiMetrics';
+import PieMetric from '@/features/widgets/components/PieMetric';
+import SimpleMetric from '@/features/widgets/components/SimpleMetric';
+import SimpleMetricDate from '@/features/widgets/components/SimpleMetricDate';
+import SingleLineChart from '@/features/widgets/components/SingleLineChart';
+import TableMetric from '@/features/widgets/components/TableMetric';
 import { useEffect, useRef } from 'react';
 
 const GridLayout: React.FC = () => {

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Report, ModalState } from '../../types';
-import { iconOptions } from '../../constants/iconOptions';
+import { iconOptions } from '@/components/icons/iconOptions';
 import { XMarkIcon, ExclamationTriangleIcon } from '@heroicons/react/24/outline';
 import { Button } from '../ui/Button';
 import { Input } from '../ui/Input';

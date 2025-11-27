@@ -1,7 +1,7 @@
 'use client';
 import { useState } from 'react';
 import { MagnifyingGlassIcon } from '@heroicons/react/24/outline';
-import PSCLogo from '@/assets/PSCLogo';
+import PSCLogo from '@/components/icons/PSCLogo';
 import Image from 'next/image';
 
 const menuItems = [

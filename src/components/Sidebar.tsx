@@ -3,7 +3,7 @@ import { useState, useEffect, useRef } from 'react';
 import { MagnifyingGlassIcon } from '@heroicons/react/24/outline';
 import { PencilIcon, TrashIcon, EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
 import Image from 'next/image';
-import PSCLogo from '@/assets/PSCLogo';
+import PSCLogo from '@/components/icons/PSCLogo';
 import {
   Dialog,
   DialogTitle,

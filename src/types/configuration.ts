@@ -111,7 +111,7 @@ export class ConfigurationManager {
 
         try {
             // Try to fetch from server
-            const { sapODataService } = await import('@/services/sapODataService');
+            const { sapODataService } = await import('@/services/sap/client');
             const serverConfig = await sapODataService.fetchSettingsByTabId(tabId);
 
             if (serverConfig) {
@@ -151,7 +151,7 @@ export class ConfigurationManager {
      */
     async saveConfiguration(tabId: string, configuration: UIConfiguration): Promise<UIConfiguration> {
         try {
-            const { sapODataService } = await import('@/services/sapODataService');
+            const { sapODataService } = await import('@/services/sap/client');
 
             // Get existing settings ID if available
             const existingId = configuration._metadata?.id || await sapODataService.getSettingsId(tabId);

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { X, Edit2, Save, XCircle } from 'lucide-react';
-import { Section } from '@/services/sapODataService';
+import { Section } from '@/services/sap/client';
 
 interface EditSectionDialogProps {
   open: boolean;

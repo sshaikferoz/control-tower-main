@@ -21,7 +21,7 @@ import FormatAlignLeftIcon from '@mui/icons-material/FormatAlignLeft';
 import FormatAlignCenterIcon from '@mui/icons-material/FormatAlignCenter';
 import FormatAlignRightIcon from '@mui/icons-material/FormatAlignRight';
 import RestartAltIcon from '@mui/icons-material/RestartAlt';
-import { TypographyConfig, WidgetTypographyConfig } from '@/helpers/types';
+import { TypographyConfig, WidgetTypographyConfig } from '@/types/helpers';
 
 const FONT_FAMILIES = [
   'Poppins, sans-serif',

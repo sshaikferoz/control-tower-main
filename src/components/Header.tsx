@@ -1,7 +1,7 @@
 //Header.tsx
 'use client';
 import { Search, Clock, TrendingUp, Loader2, X } from 'lucide-react';
-import SCMLogo from '@/assets/SCMLogo';
+import SCMLogo from '@/components/icons/SCMLogo';
 import { Button } from 'primereact/button';
 import { useState, useEffect, useRef } from 'react';
 import { Dialog } from 'primereact/dialog';

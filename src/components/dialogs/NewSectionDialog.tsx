@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { X } from 'lucide-react';
-import { Section } from '@/services/sapODataService';
+import { Section } from '@/services/sap/client';
 
 interface NewSectionDialogProps {
   open: boolean;

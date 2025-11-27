@@ -1,4 +1,4 @@
-import { Section } from '@/services/sapODataService';
+import { Section } from '@/services/sap/client';
 import { DashboardSection } from '../types/dashboard';
 
 // Transform SAP sections to UI format

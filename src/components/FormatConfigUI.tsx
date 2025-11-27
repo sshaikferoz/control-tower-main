@@ -19,7 +19,7 @@ import {
   applyValueFormat,
   ScaleType,
   RoundingType,
-} from '@/helpers/formatConfig';
+} from '@/lib/utils/format/formatConfig';
 
 interface FormatConfigUIProps {
   value?: FormatConfig;

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { MenuItem } from '../types';
-import { sapODataService } from '../services/sapODataService';
+import { sapODataService } from '@/services/sap/client';
 
 export const useMenuItems = (isAdmin: boolean, adminCheckLoading: boolean) => {
     const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
