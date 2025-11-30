@@ -97,6 +97,7 @@ import { TypographyConfig, WidgetTypographyConfig } from '@/helpers/types';
 import { getTypographyElementsForWidget } from '@/helpers/typographyHelper';
 import FormatPaintIcon from '@mui/icons-material/FormatPaint';
 import { TypographyConfigUI } from '@/components/TypographyConfigUI';
+import ColorVariantPicker, { COLOR_VARIANTS, type ColorVariant } from '@/components/ColorVariantPicker';
 
 const GridLayout = WidthProvider(RGL);
 
@@ -250,6 +251,20 @@ const getWidgetCategory = (widgetName: string): string => {
     } else {
         return 'simple';
     }
+};
+
+// Helper function to get colors from selected color variant
+const getColorsFromVariant = (variantId?: string): string[] => {
+    if (!variantId) {
+        // Default colors if no variant is selected
+        return ['#8884d8', '#82ca9d', '#ffc658', '#ff7c7c', '#8dd1e1', '#d084d0', '#ffb347', '#87ceeb', '#dda0dd', '#98d8c8'];
+    }
+    const variant = COLOR_VARIANTS.find((v) => v.id === variantId);
+    if (variant) {
+        return variant.colors;
+    }
+    // Fallback to default colors
+    return ['#8884d8', '#82ca9d', '#ffc658', '#ff7c7c', '#8dd1e1', '#d084d0', '#ffb347', '#87ceeb', '#dda0dd', '#98d8c8'];
 };
 
 const getAllMUIIcons = () => {
@@ -655,7 +670,8 @@ const LoansAppTrayConfig: React.FC<LoansAppTrayConfigProps> = ({
 
     const addAlert = () => {
         const newId = Math.max(...menuItems.map((item: any) => item.id), 0) + 1;
-        const defaultColors = ['#449ca4', '#5899da', '#ffaa04', '#ff0000', '#8979FF', '#00C9FF', '#FF6B9D'];
+        const colorVariant = widgetConfigurations[selectedWidget]?.colorVariant;
+        const defaultColors = getColorsFromVariant(colorVariant);
         const newItem = {
             id: newId,
             label: `Alert ${newId}`,
@@ -2037,7 +2053,8 @@ const MappingScreen: React.FC = () => {
                     const currentFields = config.chartConfig?.yAxis?.fields || [];
 
                     if (!currentFields.includes(field)) {
-                        const colors = ['#84BD00', '#FFC846', '#8979FF', '#E1553F', '#5899DA'];
+                        const colorVariant = widgetConfigurations[selectedWidget]?.colorVariant;
+                        const colors = getColorsFromVariant(colorVariant);
                         const newSeriesIndex = stackedSeries.length;
                         const seriesName =
                             parsedResponse?.header.find((h: any) => h.fieldName === field)?.label || field;
@@ -2594,8 +2611,9 @@ const MappingScreen: React.FC = () => {
 
             // Generate chart data from menu items (alerts)
             // Chart uses the same data as the alerts - each alert's count becomes a bar
+            const colorVariant = widgetConfigurations[selectedWidget]?.colorVariant;
+            const defaultColors = getColorsFromVariant(colorVariant);
             previewProps.chartData = processedMenuItems.map((item: any, index: number) => {
-                const defaultColors = ['#449ca4', '#5899da', '#ffaa04', '#ff0000', '#8979FF', '#00C9FF', '#FF6B9D'];
                 return {
                     name: item.label,
                     value: item.count,
@@ -3046,7 +3064,8 @@ const MappingScreen: React.FC = () => {
 
                         // If series is empty, auto-generate from yAxis fields
                         if (series.length === 0 && yAxis.fields.length > 0) {
-                            const defaultColors = ['#8884d8', '#82ca9d', '#ffc658', '#ff7c7c', '#8dd1e1', '#d084d0', '#ffb347', '#87ceeb', '#dda0dd', '#98d8c8'];
+                            const colorVariant = widgetConfigurations[selectedWidget]?.colorVariant;
+                            const defaultColors = getColorsFromVariant(colorVariant);
                             series = yAxis.fields.map((kfField: any, idx: number) => {
                                 const fieldHeader = parsedResponse.header.find((h: any) => h.fieldName === kfField);
                                 return {
@@ -4909,6 +4928,26 @@ const MappingScreen: React.FC = () => {
                                                             )}
                                                         </>
                                                     )}
+
+                                                    {/* Color Variant Picker - Available for all chart types */}
+                                                    {parsedResponse && (
+                                                        <Box mt={3}>
+                                                            <ColorVariantPicker
+                                                                selectedVariant={widgetConfigurations[selectedWidget]?.colorVariant}
+                                                                onVariantSelect={(variant: ColorVariant) => {
+                                                                    setWidgetConfigurations((prev) => ({
+                                                                        ...prev,
+                                                                        [selectedWidget]: {
+                                                                            ...prev[selectedWidget],
+                                                                            colorVariant: variant.id,
+                                                                        },
+                                                                    }));
+                                                                }}
+                                                                compact={true}
+                                                            />
+                                                        </Box>
+                                                    )}
+
                                                     {/* Add Multi-Chart Specific Config */}
                                                     {getWidgetCategory(getSelectedWidgetType() || '') === 'multi-chart' && (
                                                         <Box mt={3} className="multi-chart-config">
@@ -5335,15 +5374,8 @@ const MappingScreen: React.FC = () => {
                                                                             parsedResponse?.header.find((h: any) => h.fieldName === field)
                                                                                 ?.label || field;
 
-                                                                        const colors = [
-                                                                            '#84BD00',
-                                                                            '#FFC846',
-                                                                            '#8979FF',
-                                                                            '#E1553F',
-                                                                            '#5899DA',
-                                                                            '#4DD0E1',
-                                                                            '#FF6F61',
-                                                                        ];
+                                                                        const colorVariant = widgetConfigurations[selectedWidget]?.colorVariant;
+                                                                        const colors = getColorsFromVariant(colorVariant);
                                                                         const newSeriesIndex = stackedSeries.length;
 
                                                                         const newSeries = {

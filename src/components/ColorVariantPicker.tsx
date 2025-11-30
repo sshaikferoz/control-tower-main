@@ -218,7 +218,7 @@ const ColorVariantPicker: React.FC<ColorVariantPickerProps> = ({
     return (
         <Box sx={{ width: '100%' }}>
             <Accordion
-                defaultExpanded={false}
+                defaultExpanded={true}
                 sx={{
                     backgroundColor: 'transparent',
                     boxShadow: 'none',
