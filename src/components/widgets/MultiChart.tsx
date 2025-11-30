@@ -41,9 +41,9 @@ interface MultiChartProps {
         [key: string]: string | number | undefined;
     }[];
     title: string;
-    totalValue?: string;
+    // totalValue?: string;
     series: SeriesConfig[];
-    chartType: 'line' | 'bar' | 'area' | 'composed' | 'scatter' | 'pie' | 'radar' | 'horizontal-bar';
+    chartType: 'line' | 'bar' | 'area' | 'composed' | 'scatter' | 'pie' | 'donut' | 'radar' | 'horizontal-bar';
     color?: string;
     setChangeColor?: (color: string) => void;
     selectedLabels?: string[];
@@ -57,7 +57,7 @@ interface MultiChartProps {
 const MultiChart: React.FC<MultiChartProps> = ({
     data = [],
     title = 'Chart',
-    totalValue = '',
+    // totalValue = '',
     series = [],
     chartType = 'line',
     color,
@@ -275,7 +275,7 @@ const MultiChart: React.FC<MultiChartProps> = ({
     };
 
     // Render different chart types
-    const renderChart = () => {
+    const renderChart = (): React.ReactElement => {
         const commonProps = {
             data: filteredData,
             margin: { top: 10, right: 20, left: 50, bottom: showLegend ? 35 : 25 },
@@ -285,6 +285,71 @@ const MultiChart: React.FC<MultiChartProps> = ({
             axisLine: { stroke: '#ffffff50' },
             tick: { fill: '#ffffff', fontSize: 12 },
             tickLine: { stroke: '#ffffff50' },
+        };
+
+        const renderPieVariant = (isDonut: boolean): React.ReactElement => {
+            const pieSeriesKey = seriesToRender[0]?.dataKey || series[0]?.dataKey || 'value';
+            const pieData = filteredData.map((item, idx) => ({
+                name: item.name,
+                value: Number(item[pieSeriesKey] || 0),
+                fill:
+                    seriesToRender[idx]?.color ||
+                    series[idx]?.color ||
+                    defaultColors[idx % defaultColors.length],
+            }));
+
+            const outerRadius = '80%';
+            const innerRadius: string | number = isDonut ? '55%' : 0;
+
+            const legendPayload = pieData.map((entry) => ({
+                value: entry.name,
+                color: entry.fill,
+                type: 'circle' as const,
+                id: entry.name,
+            }));
+
+            return (
+                <PieChart margin={{ top: 10, right: 10, left: 10, bottom: 10 }}>
+                    <Pie
+                        data={pieData}
+                        cx="50%"
+                        cy="50%"
+                        nameKey="name"
+                        labelLine={false}
+                        label={({ name, percent }: { name: string; percent: number }) =>
+                            `${name}: ${(percent * 100).toFixed(0)}%`
+                        }
+                        outerRadius={outerRadius}
+                        innerRadius={innerRadius}
+                        dataKey="value"
+                        paddingAngle={2}
+                    >
+                        {pieData.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={entry.fill} />
+                        ))}
+                    </Pie>
+                    <Tooltip
+                        contentStyle={{
+                            backgroundColor: '#1E3A71',
+                            border: '1px solid #00a3e0',
+                            borderRadius: '8px',
+                            color: '#ffffff',
+                        }}
+                        labelStyle={{ color: '#ffffff' }}
+                        itemStyle={{ color: '#ffffff' }}
+                        formatter={(value: any) => formatNumber(Number(value))}
+                    />
+                    {showLegend && (
+                        <Legend
+                            verticalAlign="bottom"
+                            align="center"
+                            height={45}
+                            wrapperStyle={{ color: '#ffffff', fontSize: 12, paddingTop: '4px', cursor: 'default' }}
+                            payload={legendPayload}
+                        />
+                    )}
+                </PieChart>
+            );
         };
 
         switch (chartType) {
@@ -331,19 +396,20 @@ const MultiChart: React.FC<MultiChartProps> = ({
             case 'bar':
             case 'horizontal-bar':
                 const isHorizontal = chartType === 'horizontal-bar';
+
                 return (
                     <BarChart {...commonProps} layout={isHorizontal ? 'vertical' : 'horizontal'} barSize={40}>
                         <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#ffffff30" />
+
                         {isHorizontal ? (
-                            <>
-                                <XAxis type="number" {...commonAxisProps} tickFormatter={formatNumber} width={55} />
-                                <YAxis dataKey="name" type="category" {...commonAxisProps} width={100} />
-                            </>
+                            <XAxis type="number" {...commonAxisProps} tickFormatter={formatNumber} width={55} />
                         ) : (
-                            <>
-                                <XAxis dataKey="name" {...commonAxisProps} />
-                                <YAxis {...commonAxisProps} tickFormatter={formatNumber} width={55} />
-                            </>
+                            <XAxis dataKey="name" {...commonAxisProps} />
+                        )}
+                        {isHorizontal ? (
+                            <YAxis dataKey="name" type="category" {...commonAxisProps} width={100} />
+                        ) : (
+                            <YAxis {...commonAxisProps} tickFormatter={formatNumber} width={55} />
                         )}
                         <Tooltip
                             contentStyle={{
@@ -526,40 +592,10 @@ const MultiChart: React.FC<MultiChartProps> = ({
                 );
 
             case 'pie':
-                // For pie charts, use the first series
-                const pieData = filteredData.map((item, idx) => ({
-                    name: item.name,
-                    value: Number(item[seriesToRender[0]?.dataKey || series[0]?.dataKey || 'value'] || 0),
-                    fill: seriesToRender[idx]?.color || series[idx]?.color || defaultColors[idx % defaultColors.length],
-                }));
+                return renderPieVariant(false);
 
-                return (
-                    <PieChart>
-                        <Pie
-                            data={pieData}
-                            cx="50%"
-                            cy="50%"
-                            labelLine={false}
-                            label={({ name, percent }: any) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                            outerRadius={80}
-                            fill="#8884d8"
-                            dataKey="value"
-                        >
-                            {pieData.map((entry, index) => (
-                                <Cell key={`cell-${index}`} fill={entry.fill} />
-                            ))}
-                        </Pie>
-                        <Tooltip
-                            contentStyle={{
-                                backgroundColor: '#1E3A71',
-                                border: '1px solid #00a3e0',
-                                borderRadius: '8px',
-                                color: '#ffffff',
-                            }}
-                            formatter={(value: any) => formatNumber(Number(value))}
-                        />
-                    </PieChart>
-                );
+            case 'donut':
+                return renderPieVariant(true);
 
             case 'radar':
                 return (
@@ -604,7 +640,7 @@ const MultiChart: React.FC<MultiChartProps> = ({
                 );
 
             default:
-                return null;
+                return <></>;
         }
     };
 
@@ -621,7 +657,7 @@ const MultiChart: React.FC<MultiChartProps> = ({
                             {title}
                         </h3>
                     </div>
-                    {totalValue && (
+                    {/* {totalValue && (
                         <div className="flex flex-col items-center">
                             <span
                                 className="text-xl font-bold whitespace-nowrap text-white"
@@ -631,7 +667,7 @@ const MultiChart: React.FC<MultiChartProps> = ({
                             </span>
                             <span className="text-sm font-normal text-white">Total Value</span>
                         </div>
-                    )}
+                    )} */}
                 </div>
 
                 {/* Label filters (if applicable) */}
@@ -656,7 +692,7 @@ const MultiChart: React.FC<MultiChartProps> = ({
                 <div className="relative min-h-[180px] flex-1">
                     {renderChart && (
                         <ResponsiveContainer width="100%" height="100%">
-                            {renderChart() || <></>}
+                            {renderChart()}
                         </ResponsiveContainer>
                     )}
                 </div>

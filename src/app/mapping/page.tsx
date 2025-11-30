@@ -3709,6 +3709,12 @@ const MappingScreen: React.FC = () => {
                                                 const fieldMapping = fieldMappings[selectedWidget]?.fields[field];
                                                 const isManualInput = fieldMapping?.inputType === 'manual';
                                                 const mappedConfig = fieldMapping?.mappedConfig;
+                                                const widgetType = getSelectedWidgetType();
+
+                                                // For multi-chart, only show title field
+                                                if (widgetType === 'multi-chart' && field !== 'title') {
+                                                    return null;
+                                                }
 
                                                 return field !== 'data' &&
                                                     field !== 'chart_data' &&
@@ -4939,6 +4945,7 @@ const MappingScreen: React.FC = () => {
                                                                     <MenuItem value="area">Area Chart</MenuItem>
                                                                     <MenuItem value="composed">Composed Chart (Mixed)</MenuItem>
                                                                     <MenuItem value="scatter">Scatter Plot</MenuItem>
+                                                                    <MenuItem value="donut">Donut Chart</MenuItem>
                                                                     <MenuItem value="pie">Pie Chart</MenuItem>
                                                                     <MenuItem value="radar">Radar Chart</MenuItem>
                                                                 </Select>
