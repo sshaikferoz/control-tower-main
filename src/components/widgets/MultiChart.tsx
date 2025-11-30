@@ -94,6 +94,8 @@ const MultiChart: React.FC<MultiChartProps> = ({
         color: '#ffffff',
     };
 
+    const defaultColors = ['#8884d8', '#82ca9d', '#ffc658', '#ff7c7c', '#8dd1e1', '#d084d0', '#ffb347', '#87ceeb', '#dda0dd', '#98d8c8'];
+
     // Transform data based on grouping field (Struct field)
     const transformedData = useMemo(() => {
         if (!groupByField || !data.length) {
@@ -159,6 +161,25 @@ const MultiChart: React.FC<MultiChartProps> = ({
         });
     }, [data, groupByField, selectedLabels, series]);
 
+    // Create color mapping for group values
+    const groupColorMap = useMemo(() => {
+        if (!groupByField || !data.length) {
+            return new Map<string, string>();
+        }
+
+        const groupValues = selectedLabels && selectedLabels.length > 0
+            ? selectedLabels
+            : Array.from(new Set(data.map((item) => String(item[groupByField] || item.groupKey || '')).filter(Boolean)));
+
+        const colorMap = new Map<string, string>();
+        groupValues.forEach((groupValue, idx) => {
+            // Assign color based on group value index, not series index
+            colorMap.set(groupValue, defaultColors[idx % defaultColors.length]);
+        });
+
+        return colorMap;
+    }, [data, groupByField, selectedLabels]);
+
     // Create dynamic series based on grouping
     const dynamicSeries = useMemo(() => {
         if (!groupByField || !data.length) {
@@ -173,19 +194,23 @@ const MultiChart: React.FC<MultiChartProps> = ({
         const newSeries: SeriesConfig[] = [];
 
         groupValues.forEach((groupValue) => {
+            // Get color for this group value
+            const groupColor = groupColorMap.get(groupValue) || defaultColors[0];
+
             series.forEach((s) => {
                 const seriesKey = `${groupValue}_${s.dataKey}`;
                 newSeries.push({
                     ...s,
                     name: `${groupValue} - ${s.name}`,
                     dataKey: seriesKey,
+                    color: groupColor, // Use color based on group value
                     hide: hiddenSeries.has(seriesKey),
                 });
             });
         });
 
         return newSeries;
-    }, [data, groupByField, series, selectedLabels, hiddenSeries]);
+    }, [data, groupByField, series, selectedLabels, hiddenSeries, groupColorMap]);
 
     // Filter data by selected labels if no grouping
     const filteredData = useMemo(() => {
@@ -198,6 +223,55 @@ const MultiChart: React.FC<MultiChartProps> = ({
             : data;
     }, [groupByField, transformedData, selectedLabels, data]);
 
+    // Determine legend type based on chart type
+    const getLegendType = (): 'line' | 'rect' | 'circle' => {
+        switch (chartType) {
+            case 'bar':
+            case 'horizontal-bar':
+                return 'rect';
+            case 'pie':
+            case 'donut':
+                return 'circle';
+            default:
+                return 'line';
+        }
+    };
+
+    // Create custom legend payload for group values when groupByField is present
+    const customLegendPayload = useMemo(() => {
+        if (!groupByField || !data.length) {
+            return undefined; // Use default legend
+        }
+
+        const groupValues = selectedLabels && selectedLabels.length > 0
+            ? selectedLabels
+            : Array.from(new Set(data.map((item) => String(item[groupByField] || item.groupKey || '')).filter(Boolean)));
+
+        const legendType = getLegendType();
+
+        return groupValues.map((groupValue) => {
+            const groupColor = groupColorMap.get(groupValue) || defaultColors[0];
+            // Check if all series for this group are hidden
+            const allSeriesHidden = series.length > 0 && series.every((s) => {
+                const seriesKey = `${groupValue}_${s.dataKey}`;
+                return hiddenSeries.has(seriesKey);
+            });
+
+            return {
+                value: groupValue,
+                type: legendType,
+                id: groupValue,
+                color: groupColor,
+                inactive: allSeriesHidden,
+                payload: {
+                    dataKey: groupValue, // Use groupValue as identifier
+                    color: groupColor,
+                    strokeDasharray: 0, // Required by Recharts Payload type
+                },
+            };
+        });
+    }, [groupByField, data, selectedLabels, groupColorMap, chartType, series, hiddenSeries]);
+
     // Handle legend click to show/hide series
     const handleLegendClick = (e: any) => {
         // Recharts passes the entry directly, or it might be in e.payload or e.dataKey
@@ -206,15 +280,40 @@ const MultiChart: React.FC<MultiChartProps> = ({
 
         if (!dataKey) return;
 
-        setHiddenSeries((prev) => {
-            const newSet = new Set(prev);
-            if (newSet.has(dataKey)) {
-                newSet.delete(dataKey);
-            } else {
-                newSet.add(dataKey);
-            }
-            return newSet;
-        });
+        // If groupByField is present and we clicked on a group value, hide/show all series for that group
+        if (groupByField) {
+            const groupValue = dataKey; // The dataKey is the group value in custom legend
+            setHiddenSeries((prev) => {
+                const newSet = new Set(prev);
+                const shouldHide = !series.some((s) => {
+                    const seriesKey = `${groupValue}_${s.dataKey}`;
+                    return newSet.has(seriesKey);
+                });
+
+                // Toggle all series for this group
+                series.forEach((s) => {
+                    const seriesKey = `${groupValue}_${s.dataKey}`;
+                    if (shouldHide) {
+                        newSet.add(seriesKey);
+                    } else {
+                        newSet.delete(seriesKey);
+                    }
+                });
+
+                return newSet;
+            });
+        } else {
+            // Original behavior for non-grouped charts
+            setHiddenSeries((prev) => {
+                const newSet = new Set(prev);
+                if (newSet.has(dataKey)) {
+                    newSet.delete(dataKey);
+                } else {
+                    newSet.add(dataKey);
+                }
+                return newSet;
+            });
+        }
     };
 
     const formatNumber = (num: number) => {
@@ -232,8 +331,6 @@ const MultiChart: React.FC<MultiChartProps> = ({
             return num.toString();
         }
     };
-
-    const defaultColors = ['#8884d8', '#82ca9d', '#ffc658', '#ff7c7c', '#8dd1e1', '#d084d0', '#ffb347', '#87ceeb', '#dda0dd', '#98d8c8'];
 
     // Get series to render (filter out hidden ones)
     // For non-grouping case, filter out hidden series based on dataKey
@@ -372,7 +469,9 @@ const MultiChart: React.FC<MultiChartProps> = ({
                             <Legend
                                 verticalAlign="bottom"
                                 height={30}
-                                wrapperStyle={{ color: '#ffffff', fontSize: 12, paddingTop: '4px', cursor: 'default' }}
+                                wrapperStyle={{ color: '#ffffff', fontSize: 12, paddingTop: '4px', cursor: 'pointer' }}
+                                payload={customLegendPayload}
+                                onClick={handleLegendClick}
                             />
                         )}
                         {seriesToRender.map((s, idx) => {
@@ -424,7 +523,9 @@ const MultiChart: React.FC<MultiChartProps> = ({
                             <Legend
                                 verticalAlign="bottom"
                                 height={30}
-                                wrapperStyle={{ color: '#ffffff', fontSize: 12, paddingTop: '4px', cursor: 'default' }}
+                                wrapperStyle={{ color: '#ffffff', fontSize: 12, paddingTop: '4px', cursor: 'pointer' }}
+                                payload={customLegendPayload}
+                                onClick={handleLegendClick}
                             />
                         )}
                         {seriesToRender.map((s, idx) => {
@@ -463,7 +564,9 @@ const MultiChart: React.FC<MultiChartProps> = ({
                             <Legend
                                 verticalAlign="bottom"
                                 height={30}
-                                wrapperStyle={{ color: '#ffffff', fontSize: 12, paddingTop: '4px', cursor: 'default' }}
+                                wrapperStyle={{ color: '#ffffff', fontSize: 12, paddingTop: '4px', cursor: 'pointer' }}
+                                payload={customLegendPayload}
+                                onClick={handleLegendClick}
                             />
                         )}
                         {seriesToRender.map((s, idx) => {
@@ -504,7 +607,9 @@ const MultiChart: React.FC<MultiChartProps> = ({
                             <Legend
                                 verticalAlign="bottom"
                                 height={30}
-                                wrapperStyle={{ color: '#ffffff', fontSize: 12, paddingTop: '4px', cursor: 'default' }}
+                                wrapperStyle={{ color: '#ffffff', fontSize: 12, paddingTop: '4px', cursor: 'pointer' }}
+                                payload={customLegendPayload}
+                                onClick={handleLegendClick}
                             />
                         )}
                         {seriesToRender.map((s, idx) => {
@@ -573,7 +678,9 @@ const MultiChart: React.FC<MultiChartProps> = ({
                             <Legend
                                 verticalAlign="bottom"
                                 height={30}
-                                wrapperStyle={{ color: '#ffffff', fontSize: 12, paddingTop: '4px', cursor: 'default' }}
+                                wrapperStyle={{ color: '#ffffff', fontSize: 12, paddingTop: '4px', cursor: 'pointer' }}
+                                payload={customLegendPayload}
+                                onClick={handleLegendClick}
                             />
                         )}
                         {seriesToRender.map((s, idx) => {
@@ -619,7 +726,9 @@ const MultiChart: React.FC<MultiChartProps> = ({
                             <Legend
                                 verticalAlign="bottom"
                                 height={30}
-                                wrapperStyle={{ color: '#ffffff', fontSize: 12, paddingTop: '4px', cursor: 'default' }}
+                                wrapperStyle={{ color: '#ffffff', fontSize: 12, paddingTop: '4px', cursor: 'pointer' }}
+                                payload={customLegendPayload}
+                                onClick={handleLegendClick}
                             />
                         )}
                         {seriesToRender.map((s, idx) => {
@@ -670,8 +779,8 @@ const MultiChart: React.FC<MultiChartProps> = ({
                     )} */}
                 </div>
 
-                {/* Label filters (if applicable) */}
-                {(groupByField || (data.some((item) => item.label !== undefined) && selectedLabels.length > 0)) && (
+                {/* Label filters (if applicable) - only show when NOT using groupByField */}
+                {!groupByField && (data.some((item) => item.label !== undefined) && selectedLabels.length > 0) && (
                     <div className="mb-2 flex flex-wrap gap-2">
                         {selectedLabels.map((label, idx) => (
                             <span
