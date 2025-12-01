@@ -200,6 +200,7 @@ export const ConfigurationDialog: React.FC<ConfigurationDialogProps> = ({
     { label: 'Search', icon: 'pi pi-search', id: 'search' },
     { label: 'Branding', icon: 'pi pi-palette', id: 'branding' },
     { label: 'Announcement', icon: 'pi pi-megaphone', id: 'announcement' },
+    { label: 'Dashboard', icon: 'pi pi-th-large', id: 'dashboard' },
   ];
   const addAnnouncement = () => {
     if (!newAnnouncement.title.trim() || !newAnnouncement.description.trim()) {
@@ -750,6 +751,37 @@ export const ConfigurationDialog: React.FC<ConfigurationDialogProps> = ({
                   }
                   className="h-12 w-10 rounded border border-[#3a5a8b] bg-[#2a4a7b] outline-none focus:border-blue-500 disabled:opacity-50"
                 />
+              </div>
+            </div>
+          )}
+
+          {/* Dashboard Settings */}
+          {activeTab === 5 && (
+            <div className="space-y-6">
+              <div>
+                <label className="mb-2 block text-sm font-medium text-gray-300">
+                  Dashboard Type
+                </label>
+                <select
+                  value={formData.dashboard?.type || 'Sections'}
+                  disabled={isSaving || isResetting}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      dashboard: {
+                        ...formData.dashboard,
+                        type: e.target.value as 'Sections' | 'Report',
+                      },
+                    })
+                  }
+                  className="w-full rounded border border-[#3a5a8b] bg-[#2a4a7b] p-3 text-white outline-none focus:border-blue-500 disabled:opacity-50"
+                >
+                  <option value="Sections">Sections</option>
+                  <option value="Report">Report</option>
+                </select>
+                <small className="mt-1 block text-gray-400">
+                  When set to "Report", section headers and lines will be hidden in non-edit mode
+                </small>
               </div>
             </div>
           )}

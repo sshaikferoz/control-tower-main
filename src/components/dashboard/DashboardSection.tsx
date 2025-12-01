@@ -35,6 +35,8 @@ interface ExtendedDashboardSectionProps extends DashboardSectionProps {
     // Optional highlighting props
     highlightSectionId?: string;
     highlightWidgetIds?: string[];
+    // Dashboard configuration
+    dashboardType?: 'Sections' | 'Report';
 }
 
 export const DashboardSection: React.FC<ExtendedDashboardSectionProps> = ({
@@ -52,6 +54,8 @@ export const DashboardSection: React.FC<ExtendedDashboardSectionProps> = ({
     // New highlighting props
     highlightSectionId,
     highlightWidgetIds = [],
+    // Dashboard configuration
+    dashboardType = 'Sections',
 }) => {
     const [reportData, setReportData] = useState<Record<string, any>>({});
     const [widgetProps, setWidgetProps] = useState<Record<string, any>>({});
@@ -416,65 +420,69 @@ export const DashboardSection: React.FC<ExtendedDashboardSectionProps> = ({
             data-index={index}
             data-section-id={section.id || section.originalSection?.id} // Added for scroll-to functionality
         >
-            <div className="m-2 flex items-center gap-2 p-4">
-                {isEditMode && (
-                    <div className="mr-2">
-                        <DragIndicatorIcon className="text-white" />
-                    </div>
-                )}
-                {/* <MyContractsIcon /> */}
-                <p className="text-[#fff]">{section.sectionName}</p>
-                <div className="h-px flex-grow bg-[#E8E9EE80]"></div>
+            {/* Hide section header when dashboardType is 'Report' and not in edit mode */}
+            {(dashboardType !== 'Report' || isEditMode) && (
+                <div className="m-2 flex items-center gap-2 p-4">
+                    {isEditMode && (
+                        <div className="mr-2">
+                            <DragIndicatorIcon className="text-white" />
+                        </div>
+                    )}
+                    {/* <MyContractsIcon /> */}
+                    <p className="text-[#fff]">{section.sectionName}</p>
+                    <div className="h-px flex-grow bg-[#E8E9EE80]"></div>
 
-                {isEditMode && (
-                    <>
-                        <IconButton
-                            onClick={handleMenuClick}
-                            size="small"
-                            aria-label="section actions"
-                            sx={{
-                                color: 'white',
-                                '&:hover': {
-                                    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                                },
-                            }}
-                        >
-                            <MoreVertIcon />
-                        </IconButton>
-                        <Menu
-                            anchorEl={anchorEl}
-                            open={menuOpen}
-                            onClose={handleMenuClose}
-                            onClick={(e) => e.stopPropagation()}
-                        >
-                            <MenuItem onClick={handleEditClick}>
-                                <ListItemIcon>
-                                    <EditIcon fontSize="small" />
-                                </ListItemIcon>
-                                <ListItemText>Edit Section</ListItemText>
-                            </MenuItem>
-                            <MenuItem onClick={handleMappingClick}>
-                                <ListItemIcon>
-                                    <MappingIcon fontSize="small" />
-                                </ListItemIcon>
-                                <ListItemText>Section Mapping</ListItemText>
-                            </MenuItem>
-                            <MenuItem onClick={handleDeleteClick}>
-                                <ListItemIcon>
-                                    <DeleteIcon fontSize="small" />
-                                </ListItemIcon>
-                                <ListItemText>Delete Section</ListItemText>
-                            </MenuItem>
-                        </Menu>
-                    </>
-                )}
-                <span className="cursor-pointer text-white" onClick={toggleExpanded}>
-                    {isExpanded ? '▼' : '►'}
-                </span>
-            </div>
+                    {isEditMode && (
+                        <>
+                            <IconButton
+                                onClick={handleMenuClick}
+                                size="small"
+                                aria-label="section actions"
+                                sx={{
+                                    color: 'white',
+                                    '&:hover': {
+                                        backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                                    },
+                                }}
+                            >
+                                <MoreVertIcon />
+                            </IconButton>
+                            <Menu
+                                anchorEl={anchorEl}
+                                open={menuOpen}
+                                onClose={handleMenuClose}
+                                onClick={(e) => e.stopPropagation()}
+                            >
+                                <MenuItem onClick={handleEditClick}>
+                                    <ListItemIcon>
+                                        <EditIcon fontSize="small" />
+                                    </ListItemIcon>
+                                    <ListItemText>Edit Section</ListItemText>
+                                </MenuItem>
+                                <MenuItem onClick={handleMappingClick}>
+                                    <ListItemIcon>
+                                        <MappingIcon fontSize="small" />
+                                    </ListItemIcon>
+                                    <ListItemText>Section Mapping</ListItemText>
+                                </MenuItem>
+                                <MenuItem onClick={handleDeleteClick}>
+                                    <ListItemIcon>
+                                        <DeleteIcon fontSize="small" />
+                                    </ListItemIcon>
+                                    <ListItemText>Delete Section</ListItemText>
+                                </MenuItem>
+                            </Menu>
+                        </>
+                    )}
+                    <span className="cursor-pointer text-white" onClick={toggleExpanded}>
+                        {isExpanded ? '▼' : '►'}
+                    </span>
+                </div>
+            )}
 
             {/* FIXED: Conditionally render content based on isExpanded state */}
-            {isExpanded && (
+            {/* Always show content when header is hidden (Report mode, non-edit), otherwise respect isExpanded */}
+            {((dashboardType === 'Report' && !isEditMode) || isExpanded) && (
                 <>
                     {/* 🔔 Render announcement widgets outside the grid */}
                     {announcementWidgets.map((widget) => {

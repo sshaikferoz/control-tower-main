@@ -39,6 +39,9 @@ export interface UIConfiguration {
         scrollDelay: number; // in milliseconds
         scrollDirection: 'left' | 'right';
     };
+    dashboard: {
+        type: 'Sections' | 'Report';
+    };
     // Metadata for tracking server state
     _metadata?: {
         id: string;
@@ -85,6 +88,9 @@ export const defaultConfiguration: UIConfiguration = {
         autoScroll: true,
         scrollDelay: 5000,
         scrollDirection: 'left',
+    },
+    dashboard: {
+        type: 'Sections',
     },
 };
 

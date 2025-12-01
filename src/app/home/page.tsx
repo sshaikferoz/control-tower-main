@@ -454,6 +454,8 @@ export default function Home({
       // Pass highlighting props
       highlightSectionId={highlightSectionId}
       highlightWidgetIds={highlightWidgetIds}
+      // Pass dashboard configuration
+      dashboardType={configuration.dashboard?.type || 'Sections'}
     />
   );
 
