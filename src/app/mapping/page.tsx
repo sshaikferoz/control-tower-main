@@ -101,7 +101,10 @@ import FormatPaintIcon from '@mui/icons-material/FormatPaint';
 import PaletteIcon from '@mui/icons-material/Palette';
 import { TypographyConfigUI } from '@/components/TypographyConfigUI';
 import { HexColorPicker } from 'react-colorful';
-import { COLOR_VARIANTS } from '@/components/ColorVariantPicker';
+import ColorVariantPicker, {
+    COLOR_VARIANTS,
+    type ColorVariant,
+} from '@/components/ColorVariantPicker';
 
 const GridLayout = WidthProvider(RGL);
 
@@ -138,12 +141,6 @@ interface TableColumn {
     field: string;
     header: string;
     formatConfig?: FormatConfig;
-}
-
-interface MultiChartColorPalette {
-    id: string;
-    label: string;
-    colors: string[];
 }
 
 if (process.env.NODE_ENV === 'development') mirageServer();
@@ -325,25 +322,6 @@ const getMultiMetricPreviewStyle = (color: string) => {
         backgroundImage: `linear-gradient(to bottom, ${normalized}, ${lighterColor})`,
         color: '#ffffff',
     };
-};
-
-const MULTI_CHART_COLOR_PALETTES: MultiChartColorPalette[] = COLOR_VARIANTS.map((variant) => ({
-    id: variant.id,
-    label: variant.name,
-    colors: variant.colors,
-}));
-
-const DEFAULT_MULTI_CHART_PALETTE = MULTI_CHART_COLOR_PALETTES[0];
-
-const getMultiChartPaletteById = (paletteId?: string) =>
-    MULTI_CHART_COLOR_PALETTES.find((palette) => palette.id === paletteId) || DEFAULT_MULTI_CHART_PALETTE;
-
-const applyPaletteToSeries = <T extends { color?: string }>(series: T[], palette: string[]): T[] => {
-    const effectivePalette = palette.length > 0 ? palette : DEFAULT_MULTI_CHART_PALETTE.colors;
-    return series.map((item, idx) => ({
-        ...item,
-        color: effectivePalette[idx % effectivePalette.length],
-    }));
 };
 
 const defaultPropsMapping: Record<string, any> = {
@@ -573,8 +551,6 @@ const defaultPropsMapping: Record<string, any> = {
             { name: 'Operations', dataKey: 'operations', color: '#ffc658', type: 'line' },
         ],
         chartType: 'line',
-        colorPaletteId: DEFAULT_MULTI_CHART_PALETTE.id,
-        colorPalette: DEFAULT_MULTI_CHART_PALETTE.colors,
         showLegend: true,
         stacked: false,
         selectedLabels: [],
@@ -1368,7 +1344,7 @@ const MappingScreen: React.FC = () => {
     //   const [tableColumns, setTableColumns] = useState<Array<{ field: string; header: string }>>([]);
     const [tableColumns, setTableColumns] = useState<TableColumn[]>([]);
     const [stackedSeries, setStackedSeries] = useState<
-        Array<{ name: string; dataKey: string; color: string; type?: 'line' | 'bar' | 'area' }>
+        Array<{ name: string; dataKey: string; color: string }>
     >([]);
     const [isSaving, setIsSaving] = useState<boolean>(false);
     const [saveMessage, setSaveMessage] = useState<string>('');
@@ -1388,6 +1364,46 @@ const MappingScreen: React.FC = () => {
         roleIndex: null,
         roleName: null,
     });
+
+    const handleMultiChartVariantSelect = (variant: ColorVariant) => {
+        if (!selectedWidget) return;
+
+        // Update widget-level configuration with the selected variant and palette
+        setWidgetConfigurations((prev) => ({
+            ...prev,
+            [selectedWidget]: {
+                ...prev[selectedWidget],
+                colorVariantId: variant.id,
+                colorPalette: variant.colors,
+            },
+        }));
+
+        // Apply the palette colors to the configured data series (used by multi-chart)
+        if (stackedSeries && stackedSeries.length > 0) {
+            const updatedSeries = stackedSeries.map((series, index) => ({
+                ...series,
+                color: variant.colors[index % variant.colors.length],
+            }));
+
+            setStackedSeries(updatedSeries);
+
+            setFieldMappings((prevMappings) => {
+                const existingConfig = prevMappings[selectedWidget] || {};
+                const existingSeriesConfig = existingConfig.seriesConfig || {};
+
+                return {
+                    ...prevMappings,
+                    [selectedWidget]: {
+                        ...existingConfig,
+                        seriesConfig: {
+                            ...existingSeriesConfig,
+                            series: updatedSeries,
+                        },
+                    },
+                };
+            });
+        }
+    };
     // useEffect(() => {
     //   if (!adminCheckLoading && isAdmin) {
     //     fetch('/api/endpoints')
@@ -2066,56 +2082,6 @@ const MappingScreen: React.FC = () => {
 
     const handleBackgroundColorReset = () => {
         handleBackgroundColorChange(DEFAULT_MULTI_METRIC_COLOR);
-    };
-
-    const handleMultiChartPaletteSelect = (paletteId: string) => {
-        if (!selectedWidget) return;
-
-        const palette = getMultiChartPaletteById(paletteId);
-        const currentSeries =
-            stackedSeries.length > 0
-                ? stackedSeries
-                : (fieldMappings[selectedWidget]?.seriesConfig?.series as Array<{
-                    name: string;
-                    dataKey: string;
-                    color: string;
-                    type?: 'line' | 'bar' | 'area';
-                }>) || [];
-
-        const updatedSeries = applyPaletteToSeries(currentSeries, palette.colors);
-
-        setStackedSeries(updatedSeries);
-
-        setWidgetConfigurations((prev) => ({
-            ...prev,
-            [selectedWidget]: {
-                ...prev[selectedWidget],
-                colorPaletteId: palette.id,
-                colorPalette: palette.colors,
-            },
-        }));
-
-        setFieldMappings((prev) => {
-            const widgetConfig = prev[selectedWidget] || ({} as WidgetMappingConfig);
-            return {
-                ...prev,
-                [selectedWidget]: {
-                    ...widgetConfig,
-                    seriesConfig: {
-                        ...(widgetConfig.seriesConfig || {}),
-                        series: updatedSeries,
-                    },
-                },
-            };
-        });
-
-        if (previewData) {
-            setPreviewData((prev: any) => ({
-                ...prev,
-                colorPaletteId: palette.id,
-                colorPalette: palette.colors,
-            }));
-        }
     };
 
     // NEW: Handler for format config changes
@@ -3373,7 +3339,6 @@ const MappingScreen: React.FC = () => {
 
         const config = fieldMappings[selectedWidget];
         const widgetCategory = getWidgetCategory(widgetType);
-        const existingWidgetConfig = widgetConfigurations[selectedWidget] || {};
 
         let previewProps: any = {};
 
@@ -3417,10 +3382,6 @@ const MappingScreen: React.FC = () => {
                         value: value === undefined || value === null ? '' : value,
                     };
                 });
-            }
-
-            if (widgetType === 'multi-metric') {
-                previewProps.color = existingWidgetConfig.color || DEFAULT_MULTI_METRIC_COLOR;
             }
             updateWidgetConfiguration(selectedWidget, previewProps);
         } else if (config.mappingType === 'chart' && config.chartConfig) {
@@ -3662,11 +3623,6 @@ const MappingScreen: React.FC = () => {
                         return;
                     }
 
-                    const selectedPalette =
-                        widgetConfigurations[selectedWidget]?.colorPalette || DEFAULT_MULTI_CHART_PALETTE.colors;
-                    const selectedPaletteId =
-                        widgetConfigurations[selectedWidget]?.colorPaletteId || DEFAULT_MULTI_CHART_PALETTE.id;
-
                     // Check if there's a Struct field (label contains "Struct" or "struct")
                     const structField = parsedResponse.header.find(
                         (h: any) =>
@@ -3718,11 +3674,7 @@ const MappingScreen: React.FC = () => {
                         });
 
                         // Build series configuration for grouped data
-                        const baseSeriesConfig = config.seriesConfig?.series || [];
-                        const baseSeries =
-                            baseSeriesConfig.length > 0
-                                ? applyPaletteToSeries(baseSeriesConfig, selectedPalette)
-                                : [];
+                        const baseSeries = config.seriesConfig?.series || [];
                         const series: any[] = [];
 
                         Array.from(groupValues).forEach((groupValue) => {
@@ -3750,8 +3702,10 @@ const MappingScreen: React.FC = () => {
                         const chartType = widgetConfigurations[selectedWidget]?.chartType || 'line';
                         const showLegend = widgetConfigurations[selectedWidget]?.showLegend !== false;
                         const stacked = widgetConfigurations[selectedWidget]?.stacked || false;
-                        const selectedLabels = widgetConfigurations[selectedWidget]?.selectedLabels || Array.from(groupValues);
+                        const selectedLabels =
+                            widgetConfigurations[selectedWidget]?.selectedLabels || Array.from(groupValues);
                         const valueFormat = widgetConfigurations[selectedWidget]?.valueFormat || 'non-currency';
+                        const colorPalette = widgetConfigurations[selectedWidget]?.colorPalette;
 
                         previewProps = {
                             data: parsedResponse.chartData.map((row: any) => ({
@@ -3773,9 +3727,8 @@ const MappingScreen: React.FC = () => {
                             stacked,
                             selectedLabels,
                             valueFormat,
+                            colorPalette,
                             groupByField: structField.fieldName,
-                            colorPalette: selectedPalette,
-                            colorPaletteId: selectedPaletteId,
                         };
                     } else {
                         // No Struct field - use original logic (no grouping)
@@ -3833,21 +3786,17 @@ const MappingScreen: React.FC = () => {
                         }
 
                         // Build series configuration - auto-generate if not present
-                        let series =
-                            config.seriesConfig?.series && config.seriesConfig.series.length > 0
-                                ? applyPaletteToSeries(config.seriesConfig.series, selectedPalette)
-                                : [];
+                        let series = config.seriesConfig?.series || [];
 
                         // If series is empty, auto-generate from yAxis fields
                         if (series.length === 0 && yAxis.fields.length > 0) {
-                            const effectivePalette =
-                                selectedPalette.length > 0 ? selectedPalette : DEFAULT_MULTI_CHART_PALETTE.colors;
+                            const defaultColors = ['#8884d8', '#82ca9d', '#ffc658', '#ff7c7c', '#8dd1e1', '#d084d0', '#ffb347', '#87ceeb', '#dda0dd', '#98d8c8'];
                             series = yAxis.fields.map((kfField: any, idx: number) => {
                                 const fieldHeader = parsedResponse.header.find((h: any) => h.fieldName === kfField);
                                 return {
                                     name: fieldHeader?.label || kfField,
                                     dataKey: kfField,
-                                    color: effectivePalette[idx % effectivePalette.length],
+                                    color: defaultColors[idx % defaultColors.length],
                                     type: 'line' as const,
                                 };
                             });
@@ -3882,6 +3831,7 @@ const MappingScreen: React.FC = () => {
                         const stacked = widgetConfigurations[selectedWidget]?.stacked || false;
                         const selectedLabels = widgetConfigurations[selectedWidget]?.selectedLabels || [];
                         const valueFormat = widgetConfigurations[selectedWidget]?.valueFormat || 'non-currency';
+                        const colorPalette = widgetConfigurations[selectedWidget]?.colorPalette;
 
                         previewProps = {
                             data,
@@ -3893,10 +3843,9 @@ const MappingScreen: React.FC = () => {
                             stacked,
                             selectedLabels,
                             valueFormat,
+                            colorPalette,
                             // Explicitly set groupByField to undefined for non-grouping case
                             groupByField: undefined,
-                            colorPalette: selectedPalette,
-                            colorPaletteId: selectedPaletteId,
                         };
                     }
 
@@ -5803,80 +5752,31 @@ const MappingScreen: React.FC = () => {
                                                                 </FormHelperText>
                                                             </FormControl>
 
-                                                            <Box
-                                                                mt={2}
-                                                                sx={{
-                                                                    maxHeight: 220,
-                                                                    overflowY: 'auto',
-                                                                    pr: 1,
-                                                                }}
-                                                            >
+                                                            {/* Color Variant Selection */}
+                                                            <Box mt={3}>
                                                                 <Typography
-                                                                    variant="subtitle2"
-                                                                    sx={{ color: 'white', fontWeight: 600, mb: 1 }}
+                                                                    variant="subtitle1"
+                                                                    gutterBottom
+                                                                    sx={{ color: 'white', fontWeight: 'bold' }}
                                                                 >
-                                                                    Color Palette
+                                                                    Color Variants
                                                                 </Typography>
-                                                                <Grid container spacing={2}>
-                                                                    {MULTI_CHART_COLOR_PALETTES.map((palette) => {
-                                                                        const activePaletteId =
-                                                                            widgetConfigurations[selectedWidget]?.colorPaletteId ||
-                                                                            DEFAULT_MULTI_CHART_PALETTE.id;
-                                                                        const isSelected = activePaletteId === palette.id;
-                                                                        return (
-                                                                            <Grid item xs={12} sm={6} key={palette.id}>
-                                                                                <Card
-                                                                                    onClick={() => handleMultiChartPaletteSelect(palette.id)}
-                                                                                    sx={{
-                                                                                        cursor: 'pointer',
-                                                                                        backgroundColor: 'rgba(255,255,255,0.08)',
-                                                                                        border: isSelected
-                                                                                            ? '2px solid #00d4ff'
-                                                                                            : '2px solid rgba(255,255,255,0.2)',
-                                                                                        transition: 'all 0.2s ease',
-                                                                                        '&:hover': {
-                                                                                            borderColor: '#00d4ff',
-                                                                                            transform: 'translateY(-2px)',
-                                                                                        },
-                                                                                    }}
-                                                                                >
-                                                                                    <CardContent sx={{ py: 2 }}>
-                                                                                        <Typography
-                                                                                            variant="body2"
-                                                                                            sx={{ color: 'white', fontWeight: 500 }}
-                                                                                        >
-                                                                                            {palette.label}
-                                                                                        </Typography>
-                                                                                        <Box
-                                                                                            sx={{
-                                                                                                display: 'flex',
-                                                                                                gap: 1,
-                                                                                                mt: 1.5,
-                                                                                            }}
-                                                                                        >
-                                                                                            {palette.colors.slice(0, 5).map((color, idx) => (
-                                                                                                <Box
-                                                                                                    key={idx}
-                                                                                                    sx={{
-                                                                                                        flex: 1,
-                                                                                                        height: 18,
-                                                                                                        borderRadius: '4px',
-                                                                                                        backgroundColor: color,
-                                                                                                        border: '1px solid rgba(255,255,255,0.3)',
-                                                                                                    }}
-                                                                                                />
-                                                                                            ))}
-                                                                                        </Box>
-                                                                                    </CardContent>
-                                                                                </Card>
-                                                                            </Grid>
-                                                                        );
-                                                                    })}
-                                                                </Grid>
-                                                                <FormHelperText sx={{ color: 'rgba(255,255,255,0.8)', mt: 1 }}>
-                                                                    Palette selection controls the default colors used for auto-generated
-                                                                    multi-chart series.
-                                                                </FormHelperText>
+                                                                <Typography
+                                                                    variant="body2"
+                                                                    sx={{ color: 'white', mb: 2 }}
+                                                                >
+                                                                    Choose a predefined color palette for this multi-chart
+                                                                    widget. The selected variant will be applied to the data
+                                                                    series and used as the default color palette.
+                                                                </Typography>
+                                                                <ColorVariantPicker
+                                                                    selectedVariant={
+                                                                        widgetConfigurations[selectedWidget]?.colorVariantId
+                                                                    }
+                                                                    onVariantSelect={handleMultiChartVariantSelect}
+                                                                    showGradient={true}
+                                                                    compact={true}
+                                                                />
                                                             </Box>
 
                                                             {/* Show Legend Toggle */}
@@ -6218,22 +6118,21 @@ const MappingScreen: React.FC = () => {
                                                                             parsedResponse?.header.find((h: any) => h.fieldName === field)
                                                                                 ?.label || field;
 
-                                                                        const palette =
-                                                                            widgetConfigurations[selectedWidget]?.colorPalette ||
-                                                                            DEFAULT_MULTI_CHART_PALETTE.colors;
-                                                                        const effectivePalette =
-                                                                            palette.length > 0
-                                                                                ? palette
-                                                                                : DEFAULT_MULTI_CHART_PALETTE.colors;
+                                                                        const colors = [
+                                                                            '#84BD00',
+                                                                            '#FFC846',
+                                                                            '#8979FF',
+                                                                            '#E1553F',
+                                                                            '#5899DA',
+                                                                            '#4DD0E1',
+                                                                            '#FF6F61',
+                                                                        ];
                                                                         const newSeriesIndex = stackedSeries.length;
 
                                                                         const newSeries = {
                                                                             name: fieldLabel,
                                                                             dataKey: field,
-                                                                            color:
-                                                                                effectivePalette[
-                                                                                newSeriesIndex % effectivePalette.length
-                                                                                ],
+                                                                            color: colors[newSeriesIndex % colors.length],
                                                                             type: 'line' as 'line' | 'bar' | 'area',
                                                                         };
 
@@ -6638,8 +6537,7 @@ const MappingScreen: React.FC = () => {
                                                 )}
                                             </TabPanel>
                                         )}
-                                        {(getSelectedWidgetType() === 'multi-metric' ||
-                                            getSelectedWidgetType() === 'multi-chart') &&
+                                        {getSelectedWidgetType() === 'multi-metric' &&
                                             tabIndices.colorConfig !== undefined && (
                                                 <TabPanel value={tabValue} index={tabIndices.colorConfig}>
                                                     <Box>
@@ -6648,7 +6546,7 @@ const MappingScreen: React.FC = () => {
                                                         </Typography>
                                                         <Typography variant="body2" sx={{ color: 'white', mb: 3 }}>
                                                             Use the color picker to control the gradient background for the
-                                                            selected widget (Multi Metric or Multi Chart).
+                                                            Multi Metric widget.
                                                         </Typography>
                                                         <Box
                                                             display="flex"
