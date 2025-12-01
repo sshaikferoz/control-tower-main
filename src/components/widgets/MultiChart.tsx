@@ -45,6 +45,7 @@ interface MultiChartProps {
     series: SeriesConfig[];
     chartType: 'line' | 'bar' | 'area' | 'composed' | 'scatter' | 'pie' | 'donut' | 'radar' | 'horizontal-bar';
     color?: string;
+    colorPalette?: string[];
     setChangeColor?: (color: string) => void;
     selectedLabels?: string[];
     showLegend?: boolean;
@@ -54,6 +55,8 @@ interface MultiChartProps {
     groupByField?: string; // Field name to group by (e.g., Struct field)
 }
 
+const defaultColors = ['#8884d8', '#82ca9d', '#ffc658', '#ff7c7c', '#8dd1e1', '#d084d0', '#ffb347', '#87ceeb', '#dda0dd', '#98d8c8'];
+
 const MultiChart: React.FC<MultiChartProps> = ({
     data = [],
     title = 'Chart',
@@ -61,6 +64,7 @@ const MultiChart: React.FC<MultiChartProps> = ({
     series = [],
     chartType = 'line',
     color,
+    colorPalette,
     setChangeColor,
     selectedLabels = [],
     showLegend = true,
@@ -75,6 +79,11 @@ const MultiChart: React.FC<MultiChartProps> = ({
 
     const defaultBaseColor = '#00214E';
     const defaultLighterColor = '#0164B0';
+
+    const paletteColors = useMemo(
+        () => (colorPalette && colorPalette.length > 0 ? colorPalette : defaultColors),
+        [colorPalette]
+    );
 
     useEffect(() => {
         if (color && !userColor) setUserColor(color);
@@ -93,6 +102,32 @@ const MultiChart: React.FC<MultiChartProps> = ({
         backgroundImage: `linear-gradient(to bottom, ${baseColor}, ${lighterColor})`,
         color: '#ffffff',
     };
+
+    const groupValues = useMemo(() => {
+        if (!groupByField) return [];
+        if (selectedLabels && selectedLabels.length > 0) {
+            return selectedLabels;
+        }
+
+        return Array.from(
+            new Set(
+                data
+                    .map((item) => String(item[groupByField] || item.groupKey || ''))
+                    .filter((value) => value)
+            )
+        );
+    }, [groupByField, selectedLabels, data]);
+
+    const groupColorMap = useMemo(() => {
+        if (!groupByField || groupValues.length === 0) return new Map<string, string>();
+
+        return new Map(
+            groupValues.map((groupValue, idx) => [
+                groupValue,
+                paletteColors[idx % paletteColors.length],
+            ])
+        );
+    }, [groupByField, groupValues, paletteColors]);
 
     // Transform data based on grouping field (Struct field)
     const transformedData = useMemo(() => {
@@ -165,11 +200,6 @@ const MultiChart: React.FC<MultiChartProps> = ({
             return series;
         }
 
-        // Get unique group values
-        const groupValues = selectedLabels && selectedLabels.length > 0
-            ? selectedLabels
-            : Array.from(new Set(data.map((item) => String(item[groupByField] || item.groupKey || '')).filter(Boolean)));
-
         const newSeries: SeriesConfig[] = [];
 
         groupValues.forEach((groupValue) => {
@@ -180,12 +210,13 @@ const MultiChart: React.FC<MultiChartProps> = ({
                     name: `${groupValue} - ${s.name}`,
                     dataKey: seriesKey,
                     hide: hiddenSeries.has(seriesKey),
+                    color: groupColorMap.get(groupValue) || s.color || paletteColors[0],
                 });
             });
         });
 
         return newSeries;
-    }, [data, groupByField, series, selectedLabels, hiddenSeries]);
+    }, [data, groupByField, series, selectedLabels, hiddenSeries, groupColorMap]);
 
     // Filter data by selected labels if no grouping
     const filteredData = useMemo(() => {
@@ -233,8 +264,6 @@ const MultiChart: React.FC<MultiChartProps> = ({
         }
     };
 
-    const defaultColors = ['#8884d8', '#82ca9d', '#ffc658', '#ff7c7c', '#8dd1e1', '#d084d0', '#ffb347', '#87ceeb', '#dda0dd', '#98d8c8'];
-
     // Get series to render (filter out hidden ones)
     // For non-grouping case, filter out hidden series based on dataKey
     const seriesToRender = useMemo(() => {
@@ -244,6 +273,19 @@ const MultiChart: React.FC<MultiChartProps> = ({
         // For non-grouping, filter out hidden series
         return series.filter((s) => !hiddenSeries.has(s.dataKey));
     }, [groupByField, dynamicSeries, series, hiddenSeries]);
+
+    const groupLegendPayload = useMemo(() => {
+        if (!groupByField || groupValues.length === 0) return undefined;
+
+        return groupValues.map((groupValue, idx) => {
+            return {
+                id: groupValue,
+                value: groupValue,
+                color: groupColorMap.get(groupValue) || paletteColors[idx % paletteColors.length],
+                type: 'square' as const,
+            };
+        });
+    }, [groupByField, groupValues, groupColorMap, paletteColors]);
 
     // Get typography styles
     const getTitleStyle = () => {
@@ -295,7 +337,7 @@ const MultiChart: React.FC<MultiChartProps> = ({
                 fill:
                     seriesToRender[idx]?.color ||
                     series[idx]?.color ||
-                    defaultColors[idx % defaultColors.length],
+                    paletteColors[idx % paletteColors.length],
             }));
 
             const outerRadius = '80%';
@@ -373,6 +415,7 @@ const MultiChart: React.FC<MultiChartProps> = ({
                                 verticalAlign="bottom"
                                 height={30}
                                 wrapperStyle={{ color: '#ffffff', fontSize: 12, paddingTop: '4px', cursor: 'default' }}
+                                payload={groupLegendPayload}
                             />
                         )}
                         {seriesToRender.map((s, idx) => {
@@ -382,7 +425,7 @@ const MultiChart: React.FC<MultiChartProps> = ({
                                     key={`${s.dataKey}-${idx}`}
                                     type="monotone"
                                     dataKey={s.dataKey}
-                                    stroke={s.color || defaultColors[idx % defaultColors.length]}
+                                    stroke={s.color || paletteColors[idx % paletteColors.length]}
                                     strokeWidth={2}
                                     dot={{ r: 4 }}
                                     name={s.name}
@@ -425,6 +468,7 @@ const MultiChart: React.FC<MultiChartProps> = ({
                                 verticalAlign="bottom"
                                 height={30}
                                 wrapperStyle={{ color: '#ffffff', fontSize: 12, paddingTop: '4px', cursor: 'default' }}
+                                payload={groupLegendPayload}
                             />
                         )}
                         {seriesToRender.map((s, idx) => {
@@ -433,7 +477,7 @@ const MultiChart: React.FC<MultiChartProps> = ({
                                 <Bar
                                     key={`${s.dataKey}-${idx}`}
                                     dataKey={s.dataKey}
-                                    fill={s.color || defaultColors[idx % defaultColors.length]}
+                                    fill={s.color || paletteColors[idx % paletteColors.length]}
                                     radius={[4, 4, 0, 0]}
                                     name={s.name}
                                     stackId={stacked ? 'stack' : undefined}
@@ -464,6 +508,7 @@ const MultiChart: React.FC<MultiChartProps> = ({
                                 verticalAlign="bottom"
                                 height={30}
                                 wrapperStyle={{ color: '#ffffff', fontSize: 12, paddingTop: '4px', cursor: 'default' }}
+                                payload={groupLegendPayload}
                             />
                         )}
                         {seriesToRender.map((s, idx) => {
@@ -473,8 +518,8 @@ const MultiChart: React.FC<MultiChartProps> = ({
                                     key={`${s.dataKey}-${idx}`}
                                     type="monotone"
                                     dataKey={s.dataKey}
-                                    stroke={s.color || defaultColors[idx % defaultColors.length]}
-                                    fill={s.color || defaultColors[idx % defaultColors.length]}
+                                    stroke={s.color || paletteColors[idx % paletteColors.length]}
+                                    fill={s.color || paletteColors[idx % paletteColors.length]}
                                     fillOpacity={0.6}
                                     name={s.name}
                                     stackId={stacked ? 'stack' : undefined}
@@ -505,11 +550,12 @@ const MultiChart: React.FC<MultiChartProps> = ({
                                 verticalAlign="bottom"
                                 height={30}
                                 wrapperStyle={{ color: '#ffffff', fontSize: 12, paddingTop: '4px', cursor: 'default' }}
+                                payload={groupLegendPayload}
                             />
                         )}
                         {seriesToRender.map((s, idx) => {
                             if (s.hide) return null;
-                            const color = s.color || defaultColors[idx % defaultColors.length];
+                            const color = s.color || paletteColors[idx % paletteColors.length];
                             const componentType = s.type || 'line';
 
                             if (componentType === 'bar') {
@@ -574,6 +620,7 @@ const MultiChart: React.FC<MultiChartProps> = ({
                                 verticalAlign="bottom"
                                 height={30}
                                 wrapperStyle={{ color: '#ffffff', fontSize: 12, paddingTop: '4px', cursor: 'default' }}
+                                payload={groupLegendPayload}
                             />
                         )}
                         {seriesToRender.map((s, idx) => {
@@ -583,7 +630,7 @@ const MultiChart: React.FC<MultiChartProps> = ({
                                     key={`${s.dataKey}-${idx}`}
                                     name={s.name}
                                     dataKey={s.dataKey}
-                                    fill={s.color || defaultColors[idx % defaultColors.length]}
+                                    fill={s.color || paletteColors[idx % paletteColors.length]}
                                     hide={s.hide}
                                 />
                             );
@@ -620,6 +667,7 @@ const MultiChart: React.FC<MultiChartProps> = ({
                                 verticalAlign="bottom"
                                 height={30}
                                 wrapperStyle={{ color: '#ffffff', fontSize: 12, paddingTop: '4px', cursor: 'default' }}
+                                payload={groupLegendPayload}
                             />
                         )}
                         {seriesToRender.map((s, idx) => {
@@ -629,8 +677,8 @@ const MultiChart: React.FC<MultiChartProps> = ({
                                     key={`${s.dataKey}-${idx}`}
                                     name={s.name}
                                     dataKey={s.dataKey}
-                                    stroke={s.color || defaultColors[idx % defaultColors.length]}
-                                    fill={s.color || defaultColors[idx % defaultColors.length]}
+                                    stroke={s.color || paletteColors[idx % paletteColors.length]}
+                                    fill={s.color || paletteColors[idx % paletteColors.length]}
                                     fillOpacity={0.6}
                                     hide={s.hide}
                                 />
