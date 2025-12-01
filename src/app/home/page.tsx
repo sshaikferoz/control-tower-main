@@ -37,6 +37,40 @@ interface SearchResult {
   ai_summary: string;
 }
 
+// Helper to derive tab icon URL from configuration
+const getTabIconFromConfiguration = (config: UIConfiguration): string | null => {
+  // Prefer explicitly configured logo image as the tab icon
+  if (config.branding.useLogoBase64 && config.branding.logoBase64) {
+    return config.branding.logoBase64;
+  }
+
+  if (config.branding.logoUrl) {
+    return config.branding.logoUrl;
+  }
+
+  // Fallback to default favicon (served from public/)
+  return '/favicon.ico';
+};
+
+// Helper to update (or create) the favicon link element
+const applyFavicon = (href: string | null) => {
+  if (typeof document === 'undefined' || !href) return;
+
+  const relValues = ['icon', 'shortcut icon'];
+
+  relValues.forEach((rel) => {
+    let link = document.querySelector<HTMLLinkElement>(`link[rel="${rel}"]`);
+
+    if (!link) {
+      link = document.createElement('link');
+      link.rel = rel;
+      document.head.appendChild(link);
+    }
+
+    link.href = href;
+  });
+};
+
 export default function Home({
   selectedMenuItemId,
   isAdmin = false,
@@ -78,6 +112,12 @@ export default function Home({
   const [showEditSectionDialog, setShowEditSectionDialog] = useState(false);
   const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
   const [selectedSection, setSelectedSection] = useState<Section | null>(null);
+
+  // Update favicon whenever configuration changes
+  useEffect(() => {
+    const icon = getTabIconFromConfiguration(configuration);
+    applyFavicon(icon);
+  }, [configuration]);
 
   // Load configuration when tab changes
   useEffect(() => {
