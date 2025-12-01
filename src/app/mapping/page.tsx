@@ -101,6 +101,7 @@ import FormatPaintIcon from '@mui/icons-material/FormatPaint';
 import PaletteIcon from '@mui/icons-material/Palette';
 import { TypographyConfigUI } from '@/components/TypographyConfigUI';
 import { HexColorPicker } from 'react-colorful';
+import { COLOR_VARIANTS } from '@/components/ColorVariantPicker';
 
 const GridLayout = WidthProvider(RGL);
 
@@ -326,28 +327,11 @@ const getMultiMetricPreviewStyle = (color: string) => {
     };
 };
 
-const MULTI_CHART_COLOR_PALETTES: MultiChartColorPalette[] = [
-    {
-        id: 'aramco-core',
-        label: 'Aramco Core',
-        colors: ['#84BD00', '#00A3ED', '#FFC846', '#643278', '#26A8AB', '#0033A0', '#F05F41', '#4DD0E1'],
-    },
-    {
-        id: 'cool-spectrum',
-        label: 'Cool Spectrum',
-        colors: ['#00A3ED', '#26A8AB', '#4FC1BB', '#398AE9', '#90CAF9', '#5C6BC0', '#7E57C2', '#4DD0E1'],
-    },
-    {
-        id: 'warm-spectrum',
-        label: 'Warm Spectrum',
-        colors: ['#FFC846', '#FFAA04', '#F05F41', '#E1553F', '#C1472E', '#A93226', '#FF7043', '#F06292'],
-    },
-    {
-        id: 'earthy',
-        label: 'Earthy',
-        colors: ['#008430', '#84B000', '#B9BF53', '#C9BD31', '#8D6E63', '#5D4037', '#A1887F', '#D4AF37'],
-    },
-];
+const MULTI_CHART_COLOR_PALETTES: MultiChartColorPalette[] = COLOR_VARIANTS.map((variant) => ({
+    id: variant.id,
+    label: variant.name,
+    colors: variant.colors,
+}));
 
 const DEFAULT_MULTI_CHART_PALETTE = MULTI_CHART_COLOR_PALETTES[0];
 
@@ -5819,7 +5803,14 @@ const MappingScreen: React.FC = () => {
                                                                 </FormHelperText>
                                                             </FormControl>
 
-                                                            <Box mt={2}>
+                                                            <Box
+                                                                mt={2}
+                                                                sx={{
+                                                                    maxHeight: 220,
+                                                                    overflowY: 'auto',
+                                                                    pr: 1,
+                                                                }}
+                                                            >
                                                                 <Typography
                                                                     variant="subtitle2"
                                                                     sx={{ color: 'white', fontWeight: 600, mb: 1 }}
@@ -6647,7 +6638,8 @@ const MappingScreen: React.FC = () => {
                                                 )}
                                             </TabPanel>
                                         )}
-                                        {getSelectedWidgetType() === 'multi-metric' &&
+                                        {(getSelectedWidgetType() === 'multi-metric' ||
+                                            getSelectedWidgetType() === 'multi-chart') &&
                                             tabIndices.colorConfig !== undefined && (
                                                 <TabPanel value={tabValue} index={tabIndices.colorConfig}>
                                                     <Box>
@@ -6656,7 +6648,7 @@ const MappingScreen: React.FC = () => {
                                                         </Typography>
                                                         <Typography variant="body2" sx={{ color: 'white', mb: 3 }}>
                                                             Use the color picker to control the gradient background for the
-                                                            Multi Metric widget.
+                                                            selected widget (Multi Metric or Multi Chart).
                                                         </Typography>
                                                         <Box
                                                             display="flex"
