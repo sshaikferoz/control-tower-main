@@ -5,6 +5,7 @@ import PSCLogo from '@/assets/PSCLogo';
 import Image from 'next/image';
 
 const menuItems = [
+  { name: 'multi-metric', imageURL: '' },
   { name: 'one-metric', imageURL: '' },
   { name: 'one-metric-date', imageURL: '' },
   { name: 'two-metrics-linechart', imageURL: '' },

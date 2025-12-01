@@ -71,6 +71,7 @@ export function mergeTypographyStyles(
 export function getTypographyElementsForWidget(widgetType: string): string[] {
   const widgetElementMap: Record<string, string[]> = {
     'one-metric': ['name', 'value'],
+    'multi-metric': ['name', 'value'],
     'one-metric-date': ['name', 'value', 'date'],
     'two-metrics': ['metric1', 'value1', 'metric2', 'value2'],
     'two-metrics-linechart': ['title', 'value', 'label'],

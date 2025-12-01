@@ -2,6 +2,7 @@ import { lazy } from 'react';
 
 // Lazy load all widget components
 const MultiMetrics = lazy(() => import('@/components/widgets/MultiMetrics'));
+const MultiMetricWidget = lazy(() => import('@/components/widgets/MultiMetricWidget'));
 const PieMetric = lazy(() => import('@/components/widgets/PieMetric'));
 const SimpleMetric = lazy(() => import('@/components/widgets/SimpleMetric'));
 const SimpleMetricDate = lazy(() => import('@/components/widgets/SimpleMetricDate'));
@@ -26,6 +27,7 @@ const MultiChart = lazy(() => import('@/components/widgets/MultiChart'));
 export const widgetMapping: Record<string, React.ComponentType<any>> = {
     'two-metrics': MultiMetrics,
     'two-metrics-piechart': PieMetric,
+    'multi-metric': MultiMetricWidget,
     'one-metric': SimpleMetric,
     'one-metric-date': SimpleMetricDate,
     'two-metrics-linechart': SingleLineChart,
@@ -48,6 +50,13 @@ export const widgetMapping: Record<string, React.ComponentType<any>> = {
 
 // Default widget props for when data isn't available
 export const defaultPropsMapping: Record<string, any> = {
+    'multi-metric': {
+        items: [
+            { id: 'metric-1', title: 'Metric One', value: '120' },
+            { id: 'metric-2', title: 'Metric Two', value: '87' },
+            { id: 'metric-3', title: 'Metric Three', value: '42' },
+        ],
+    },
     'one-metric': { name: 'Active Contracts', value: 45 },
     'one-metric-date': {
         name: 'Open PO Orders',

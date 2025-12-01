@@ -6,6 +6,7 @@ import RGL, { WidthProvider, Layout } from 'react-grid-layout';
 import 'react-grid-layout/css/styles.css';
 import 'react-resizable/css/styles.css';
 import MultiMetrics from '@/components/widgets/MultiMetrics';
+import MultiMetricWidget from '@/components/widgets/MultiMetricWidget';
 import PieMetric from '@/components/widgets/PieMetric';
 import SimpleMetric from '@/components/widgets/SimpleMetric';
 import SimpleMetricDate from '@/components/widgets/SimpleMetricDate';
@@ -73,6 +74,7 @@ import {
     widgetConfigFields,
     WidgetFieldMapping,
     WidgetMappingConfig,
+    MultiMetricItemMapping,
 } from '@/helpers/types';
 import LoansAppTray from '@/components/widgets/LoansAppTray';
 import mirageServer from '@/lib/mirage/mirageServer';
@@ -96,8 +98,9 @@ import type { FormatConfig } from '@/helpers/formatConfig';
 import { TypographyConfig, WidgetTypographyConfig } from '@/helpers/types';
 import { getTypographyElementsForWidget } from '@/helpers/typographyHelper';
 import FormatPaintIcon from '@mui/icons-material/FormatPaint';
+import PaletteIcon from '@mui/icons-material/Palette';
 import { TypographyConfigUI } from '@/components/TypographyConfigUI';
-import ColorVariantPicker, { COLOR_VARIANTS, type ColorVariant } from '@/components/ColorVariantPicker';
+import { HexColorPicker } from 'react-colorful';
 
 const GridLayout = WidthProvider(RGL);
 
@@ -141,6 +144,7 @@ if (process.env.NODE_ENV === 'development') mirageServer();
 const widgetMapping: Record<string, React.ComponentType<any>> = {
     'two-metrics': MultiMetrics,
     'two-metrics-piechart': PieMetric,
+    'multi-metric': MultiMetricWidget,
     'one-metric': SimpleMetric,
     'one-metric-date': SimpleMetricDate,
     'two-metrics-linechart': SingleLineChart,
@@ -162,6 +166,7 @@ const widgetMapping: Record<string, React.ComponentType<any>> = {
 };
 
 const widgetSizes: Record<string, { w: number; h: number }> = {
+    'multi-metric': { w: 3, h: 2 },
     'one-metric': { w: 2, h: 1.5 },
     'one-metric-date': { w: 2, h: 1.5 },
     'two-metrics-linechart': { w: 4, h: 3 },
@@ -253,20 +258,6 @@ const getWidgetCategory = (widgetName: string): string => {
     }
 };
 
-// Helper function to get colors from selected color variant
-const getColorsFromVariant = (variantId?: string): string[] => {
-    if (!variantId) {
-        // Default colors if no variant is selected
-        return ['#8884d8', '#82ca9d', '#ffc658', '#ff7c7c', '#8dd1e1', '#d084d0', '#ffb347', '#87ceeb', '#dda0dd', '#98d8c8'];
-    }
-    const variant = COLOR_VARIANTS.find((v) => v.id === variantId);
-    if (variant) {
-        return variant.colors;
-    }
-    // Fallback to default colors
-    return ['#8884d8', '#82ca9d', '#ffc658', '#ff7c7c', '#8dd1e1', '#d084d0', '#ffb347', '#87ceeb', '#dda0dd', '#98d8c8'];
-};
-
 const getAllMUIIcons = () => {
     return [
         'Assignment',
@@ -314,7 +305,30 @@ const getAllMUIIcons = () => {
     ];
 };
 
+const DEFAULT_MULTI_METRIC_COLOR = '#00214E';
+
+const getMultiMetricPreviewStyle = (color: string) => {
+    const normalized = color || DEFAULT_MULTI_METRIC_COLOR;
+    const lighterColor =
+        normalized.toLowerCase() === DEFAULT_MULTI_METRIC_COLOR.toLowerCase()
+            ? '#0164B0'
+            : `${normalized}b3`;
+
+    return {
+        backgroundImage: `linear-gradient(to bottom, ${normalized}, ${lighterColor})`,
+        color: '#ffffff',
+    };
+};
+
 const defaultPropsMapping: Record<string, any> = {
+    'multi-metric': {
+        items: [
+            { id: 'metric-1', title: 'Metric One', value: '120' },
+            { id: 'metric-2', title: 'Metric Two', value: '87' },
+            { id: 'metric-3', title: 'Metric Three', value: '42' },
+        ],
+        color: DEFAULT_MULTI_METRIC_COLOR,
+    },
     'one-metric': { name: 'Active Contracts', value: 45 },
     'one-metric-date': {
         name: 'Open PO Orders',
@@ -670,8 +684,7 @@ const LoansAppTrayConfig: React.FC<LoansAppTrayConfigProps> = ({
 
     const addAlert = () => {
         const newId = Math.max(...menuItems.map((item: any) => item.id), 0) + 1;
-        const colorVariant = widgetConfigurations[selectedWidget]?.colorVariant;
-        const defaultColors = getColorsFromVariant(colorVariant);
+        const defaultColors = ['#449ca4', '#5899da', '#ffaa04', '#ff0000', '#8979FF', '#00C9FF', '#FF6B9D'];
         const newItem = {
             id: newId,
             label: `Alert ${newId}`,
@@ -1335,7 +1348,8 @@ const MappingScreen: React.FC = () => {
     const [saveAlertSeverity, setSaveAlertSeverity] = useState<'success' | 'error'>('success');
     const [announcementCount, setAnnouncementCount] = useState(0);
     const [announcementValues, setAnnouncementValues] = useState<string[]>([]);
-    const [changeColor, setChangeColorOneMetric] = useState<string>('');
+    const activeWidgetColor =
+        (selectedWidget && widgetConfigurations[selectedWidget]?.color) || DEFAULT_MULTI_METRIC_COLOR;
     const [currentLoadedReport, setCurrentLoadedReport] = useState<string>('');
     const [deleteRoleConfirmDialog, setDeleteRoleConfirmDialog] = useState<{
         open: boolean;
@@ -1549,6 +1563,26 @@ const MappingScreen: React.FC = () => {
                 ...baseConfig,
                 mappingType: 'loans-app-tray',
                 menuItemConfigs: defaultMenuItemConfigs,
+            };
+        } else if (widgetName === 'multi-metric') {
+            const defaultItems = (defaultPropsMapping['multi-metric']?.items || []) as any[];
+            const multiMetricItems: MultiMetricItemMapping[] = defaultItems.map((item: any, index: number) => ({
+                id: item.id || `metric-${index + 1}`,
+                title: {
+                    fieldPath: `items.${index}.title`,
+                    inputType: 'manual',
+                    manualValue: item.title || `Metric ${index + 1}`,
+                },
+                value: {
+                    fieldPath: `items.${index}.value`,
+                    inputType: 'manual',
+                    manualValue: item.value ?? '0',
+                },
+            }));
+
+            configToSave = {
+                ...baseConfig,
+                multiMetricItems,
             };
         } else if (mappingType === 'chart') {
             if (widgetCategory === 'dual-line') {
@@ -1996,6 +2030,16 @@ const MappingScreen: React.FC = () => {
         }
     };
 
+    const handleBackgroundColorChange = (newColor: string) => {
+        if (!selectedWidget) return;
+        const colorValue = newColor || DEFAULT_MULTI_METRIC_COLOR;
+        handleLiveValueUpdate('color', colorValue);
+    };
+
+    const handleBackgroundColorReset = () => {
+        handleBackgroundColorChange(DEFAULT_MULTI_METRIC_COLOR);
+    };
+
     // NEW: Handler for format config changes
     const handleFormatConfigChange = (field: string, formatConfig: FormatConfig) => {
         if (!selectedWidget) return;
@@ -2053,8 +2097,7 @@ const MappingScreen: React.FC = () => {
                     const currentFields = config.chartConfig?.yAxis?.fields || [];
 
                     if (!currentFields.includes(field)) {
-                        const colorVariant = widgetConfigurations[selectedWidget]?.colorVariant;
-                        const colors = getColorsFromVariant(colorVariant);
+                        const colors = ['#84BD00', '#FFC846', '#8979FF', '#E1553F', '#5899DA'];
                         const newSeriesIndex = stackedSeries.length;
                         const seriesName =
                             parsedResponse?.header.find((h: any) => h.fieldName === field)?.label || field;
@@ -2484,6 +2527,602 @@ const MappingScreen: React.FC = () => {
         }
     };
 
+    const resolveMultiMetricFieldValue = (mapping?: WidgetFieldMapping) => {
+        if (!mapping) return '';
+        if (mapping.inputType === 'manual') {
+            return mapping.manualValue ?? '';
+        }
+
+        if (mapping.inputType === 'mapped' && mapping.mappedConfig) {
+            const { chaField, chaValue, kfField } = mapping.mappedConfig;
+            if (chaField && chaValue && kfField) {
+                const mapped = getKFValue(chaField, chaValue, kfField);
+                return mapped ?? '';
+            }
+        }
+
+        return '';
+    };
+
+    const updateMultiMetricPreviewData = (
+        widgetId: string | null = selectedWidget,
+        configOverride?: WidgetMappingConfig
+    ) => {
+        if (!widgetId) return;
+        const config = configOverride || fieldMappings[widgetId];
+        if (!config?.multiMetricItems || config.multiMetricItems.length === 0) return;
+
+        const previewItems = config.multiMetricItems.map((item, index) => {
+            const resolvedTitle = resolveMultiMetricFieldValue(item.title) || `Metric ${index + 1}`;
+            let resolvedValue: any = resolveMultiMetricFieldValue(item.value);
+
+            if (
+                item.value?.formatConfig &&
+                resolvedValue !== '' &&
+                resolvedValue !== null &&
+                resolvedValue !== undefined &&
+                !isNaN(Number(resolvedValue))
+            ) {
+                resolvedValue = applyValueFormat(Number(resolvedValue), item.value.formatConfig);
+            }
+
+            return {
+                id: item.id,
+                title: resolvedTitle,
+                value: resolvedValue === undefined || resolvedValue === null ? '' : resolvedValue,
+            };
+        });
+
+        if (widgetId === selectedWidget) {
+            handleLiveValueUpdate('items', previewItems);
+        } else {
+            setWidgetConfigurations((prev) => ({
+                ...prev,
+                [widgetId]: {
+                    ...prev[widgetId],
+                    items: previewItems,
+                },
+            }));
+        }
+    };
+
+    const handleAddMultiMetricItem = () => {
+        if (!selectedWidget) return;
+        const currentConfig = fieldMappings[selectedWidget];
+        if (!currentConfig) return;
+
+        const existingItems = currentConfig.multiMetricItems || [];
+        const newIndex = existingItems.length;
+        const newItem: MultiMetricItemMapping = {
+            id: `multi-metric-${Date.now()}`,
+            title: {
+                fieldPath: `items.${newIndex}.title`,
+                inputType: 'manual',
+                manualValue: `Metric ${newIndex + 1}`,
+            },
+            value: {
+                fieldPath: `items.${newIndex}.value`,
+                inputType: 'manual',
+                manualValue: '0',
+            },
+        };
+
+        const updatedConfig = {
+            ...currentConfig,
+            multiMetricItems: [...existingItems, newItem],
+        };
+
+        setFieldMappings((prev) => ({
+            ...prev,
+            [selectedWidget]: updatedConfig,
+        }));
+
+        updateMultiMetricPreviewData(selectedWidget, updatedConfig);
+    };
+
+    const handleRemoveMultiMetricItem = (itemId: string) => {
+        if (!selectedWidget) return;
+        const currentConfig = fieldMappings[selectedWidget];
+        const items = currentConfig?.multiMetricItems || [];
+
+        if (items.length <= 1) {
+            alert('At least one metric is required.');
+            return;
+        }
+
+        const updatedItems = items.filter((item) => item.id !== itemId);
+        const updatedConfig = {
+            ...currentConfig,
+            multiMetricItems: updatedItems,
+        };
+
+        setFieldMappings((prev) => ({
+            ...prev,
+            [selectedWidget]: updatedConfig,
+        }));
+
+        updateMultiMetricPreviewData(selectedWidget, updatedConfig);
+    };
+
+    const handleMultiMetricInputTypeChange = (
+        itemId: string,
+        fieldKey: 'title' | 'value',
+        inputType: 'manual' | 'mapped'
+    ) => {
+        if (!selectedWidget) return;
+        const currentConfig = fieldMappings[selectedWidget];
+        if (!currentConfig?.multiMetricItems) return;
+
+        const updatedItems = currentConfig.multiMetricItems.map((item) => {
+            if (item.id !== itemId) return item;
+            const updatedField: WidgetFieldMapping = {
+                ...(item[fieldKey] || { fieldPath: '', inputType: 'manual' }),
+                inputType,
+            };
+
+            if (inputType === 'mapped' && !updatedField.mappedConfig) {
+                updatedField.mappedConfig = { chaField: '', chaValue: '', kfField: '' };
+            }
+
+            if (inputType === 'manual') {
+                delete updatedField.mappedConfig;
+            }
+
+            return {
+                ...item,
+                [fieldKey]: updatedField,
+            };
+        });
+
+        const updatedConfig = {
+            ...currentConfig,
+            multiMetricItems: updatedItems,
+        };
+
+        setFieldMappings((prev) => ({
+            ...prev,
+            [selectedWidget]: updatedConfig,
+        }));
+
+        if (inputType === 'manual') {
+            updateMultiMetricPreviewData(selectedWidget, updatedConfig);
+        }
+    };
+
+    const handleMultiMetricManualValueChange = (itemId: string, fieldKey: 'title' | 'value', value: any) => {
+        if (!selectedWidget) return;
+        const currentConfig = fieldMappings[selectedWidget];
+        if (!currentConfig?.multiMetricItems) return;
+
+        const updatedItems = currentConfig.multiMetricItems.map((item) => {
+            if (item.id !== itemId) return item;
+            const updatedField: WidgetFieldMapping = {
+                ...(item[fieldKey] || { fieldPath: '', inputType: 'manual' }),
+                inputType: 'manual',
+                manualValue: value,
+            };
+
+            delete updatedField.mappedConfig;
+
+            return {
+                ...item,
+                [fieldKey]: updatedField,
+            };
+        });
+
+        const updatedConfig = {
+            ...currentConfig,
+            multiMetricItems: updatedItems,
+        };
+
+        setFieldMappings((prev) => ({
+            ...prev,
+            [selectedWidget]: updatedConfig,
+        }));
+
+        updateMultiMetricPreviewData(selectedWidget, updatedConfig);
+    };
+
+    const handleMultiMetricMappedSelection = (
+        itemId: string,
+        fieldKey: 'title' | 'value',
+        chaField: string,
+        chaValue: string,
+        kfField: string
+    ) => {
+        if (!selectedWidget) return;
+        const currentConfig = fieldMappings[selectedWidget];
+        if (!currentConfig?.multiMetricItems) return;
+
+        const updatedItems = currentConfig.multiMetricItems.map((item) => {
+            if (item.id !== itemId) return item;
+            return {
+                ...item,
+                [fieldKey]: {
+                    ...(item[fieldKey] || { fieldPath: '', inputType: 'mapped' }),
+                    inputType: 'mapped',
+                    mappedConfig: {
+                        chaField,
+                        chaValue,
+                        kfField,
+                    },
+                },
+            };
+        });
+
+        const updatedConfig = {
+            ...currentConfig,
+            multiMetricItems: updatedItems,
+        };
+
+        setFieldMappings((prev) => ({
+            ...prev,
+            [selectedWidget]: updatedConfig,
+        }));
+
+        updateMultiMetricPreviewData(selectedWidget, updatedConfig);
+    };
+
+    const handleMultiMetricFormatChange = (itemId: string, formatConfig: FormatConfig) => {
+        if (!selectedWidget) return;
+        const currentConfig = fieldMappings[selectedWidget];
+        if (!currentConfig?.multiMetricItems) return;
+
+        const updatedItems = currentConfig.multiMetricItems.map((item) => {
+            if (item.id !== itemId) return item;
+            return {
+                ...item,
+                value: {
+                    ...item.value,
+                    formatConfig,
+                },
+            };
+        });
+
+        const updatedConfig = {
+            ...currentConfig,
+            multiMetricItems: updatedItems,
+        };
+
+        setFieldMappings((prev) => ({
+            ...prev,
+            [selectedWidget]: updatedConfig,
+        }));
+
+        updateMultiMetricPreviewData(selectedWidget, updatedConfig);
+    };
+
+    const getMultiMetricItems = () => {
+        if (!selectedWidget) return [];
+        return fieldMappings[selectedWidget]?.multiMetricItems || [];
+    };
+
+    const renderMultiMetricMappingControls = (
+        itemId: string,
+        fieldKey: 'title' | 'value',
+        mapping?: WidgetFieldMapping
+    ) => {
+        const mappedConfig = mapping?.mappedConfig;
+
+        return (
+            <Box mt={2} p={2} border={1} borderColor="rgba(255,255,255,0.3)" borderRadius={1} sx={{ backgroundColor: '#ffffff10' }}>
+                <Typography variant="subtitle2" sx={{ color: 'white', mb: 2 }}>
+                    Data Mapping Configuration
+                </Typography>
+                {!parsedResponse && (
+                    <Alert severity="warning" sx={{ mb: 2, backgroundColor: '#ff980020' }}>
+                        <Typography sx={{ color: 'white' }}>
+                            Please configure and fetch report data first to enable field mapping.
+                        </Typography>
+                    </Alert>
+                )}
+
+                {parsedResponse && (
+                    <Grid container spacing={2}>
+                        <Grid item xs={12}>
+                            <FormControl fullWidth size="small">
+                                <InputLabel sx={{ color: 'white' }}>CHA Field</InputLabel>
+                                <Select
+                                    value={mappedConfig?.chaField || ''}
+                                    label="CHA Field"
+                                    onChange={(e) =>
+                                        handleMultiMetricMappedSelection(
+                                            itemId,
+                                            fieldKey,
+                                            e.target.value as string,
+                                            mappedConfig?.chaValue || '',
+                                            mappedConfig?.kfField || ''
+                                        )
+                                    }
+                                    sx={{
+                                        color: 'white',
+                                        '& .MuiOutlinedInput-notchedOutline': { borderColor: 'white' },
+                                        '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: 'white' },
+                                        '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: 'white' },
+                                        '& .MuiSvgIcon-root': { color: 'white' },
+                                    }}
+                                >
+                                    {getCHAFields().map((chaField: any) => (
+                                        <MenuItem key={chaField.fieldName} value={chaField.fieldName}>
+                                            {chaField.label} ({chaField.fieldName})
+                                        </MenuItem>
+                                    ))}
+                                </Select>
+                            </FormControl>
+                        </Grid>
+
+                        {mappedConfig?.chaField && (
+                            <Grid item xs={12}>
+                                <FormControl fullWidth size="small">
+                                    <InputLabel sx={{ color: 'white' }}>CHA Value</InputLabel>
+                                    <Select
+                                        value={mappedConfig?.chaValue || ''}
+                                        label="CHA Value"
+                                        onChange={(e) =>
+                                            handleMultiMetricMappedSelection(
+                                                itemId,
+                                                fieldKey,
+                                                mappedConfig?.chaField || '',
+                                                e.target.value as string,
+                                                mappedConfig?.kfField || ''
+                                            )
+                                        }
+                                        sx={{
+                                            color: 'white',
+                                            '& .MuiOutlinedInput-notchedOutline': { borderColor: 'white' },
+                                            '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: 'white' },
+                                            '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: 'white' },
+                                            '& .MuiSvgIcon-root': { color: 'white' },
+                                        }}
+                                    >
+                                        {getCHAValues(mappedConfig?.chaField).map((value) => (
+                                            <MenuItem key={value} value={value}>
+                                                {value}
+                                            </MenuItem>
+                                        ))}
+                                    </Select>
+                                </FormControl>
+                            </Grid>
+                        )}
+
+                        {mappedConfig?.chaField && mappedConfig?.chaValue && (
+                            <Grid item xs={12}>
+                                <FormControl fullWidth size="small">
+                                    <InputLabel sx={{ color: 'white' }}>KF Field</InputLabel>
+                                    <Select
+                                        value={mappedConfig?.kfField || ''}
+                                        label="KF Field"
+                                        onChange={(e) =>
+                                            handleMultiMetricMappedSelection(
+                                                itemId,
+                                                fieldKey,
+                                                mappedConfig?.chaField || '',
+                                                mappedConfig?.chaValue || '',
+                                                e.target.value as string
+                                            )
+                                        }
+                                        sx={{
+                                            color: 'white',
+                                            '& .MuiOutlinedInput-notchedOutline': { borderColor: 'white' },
+                                            '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: 'white' },
+                                            '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: 'white' },
+                                            '& .MuiSvgIcon-root': { color: 'white' },
+                                        }}
+                                    >
+                                        {getKFFields().map((kfField: any) => (
+                                            <MenuItem key={kfField.fieldName} value={kfField.fieldName}>
+                                                {kfField.label} ({kfField.fieldName})
+                                            </MenuItem>
+                                        ))}
+                                    </Select>
+                                </FormControl>
+                            </Grid>
+                        )}
+
+                        {mappedConfig?.chaField && mappedConfig?.chaValue && mappedConfig?.kfField && (
+                            <Grid item xs={12}>
+                                <Alert severity="success" sx={{ backgroundColor: '#4caf5020' }}>
+                                    <Typography variant="body2" sx={{ color: 'white' }}>
+                                        Mapped Value:{' '}
+                                        {getKFValue(mappedConfig.chaField, mappedConfig.chaValue, mappedConfig.kfField) ||
+                                            'No data'}
+                                    </Typography>
+                                </Alert>
+                            </Grid>
+                        )}
+                    </Grid>
+                )}
+            </Box>
+        );
+    };
+
+    const renderMultiMetricConfigurator = () => {
+        if (getSelectedWidgetType() !== 'multi-metric') return null;
+        const items = getMultiMetricItems();
+
+        return (
+            <Paper elevation={2} sx={{ p: 2, mb: 2, backgroundColor: '#ffffff20' }}>
+                <Box display="flex" alignItems="center" justifyContent="space-between" mb={2}>
+                    <Typography variant="h6" sx={{ color: 'white' }}>
+                        Multi Metric Items
+                    </Typography>
+                    <Button label="Add Metric" icon="pi pi-plus" onClick={handleAddMultiMetricItem} />
+                </Box>
+
+                {!items.length && (
+                    <Alert severity="info" sx={{ backgroundColor: '#2196f320' }}>
+                        <Typography sx={{ color: 'white' }}>
+                            No metrics added yet. Click &quot;Add Metric&quot; to get started.
+                        </Typography>
+                    </Alert>
+                )}
+
+                {items.map((item, index) => {
+                    const titleMapping = item.title;
+                    const valueMapping = item.value;
+                    const isTitleManual = titleMapping?.inputType !== 'mapped';
+                    const isValueManual = valueMapping?.inputType !== 'mapped';
+
+                    return (
+                        <Box
+                            key={item.id}
+                            mb={2}
+                            p={2}
+                            border={1}
+                            borderColor="rgba(255,255,255,0.2)"
+                            borderRadius={2}
+                            sx={{ backgroundColor: '#ffffff10' }}
+                        >
+                            <Box display="flex" alignItems="center" justifyContent="space-between" mb={1}>
+                                <Typography variant="subtitle1" sx={{ color: 'white' }}>
+                                    Metric {index + 1}
+                                </Typography>
+                                <IconButton
+                                    size="small"
+                                    onClick={() => handleRemoveMultiMetricItem(item.id)}
+                                    sx={{ color: 'white' }}
+                                >
+                                    <DeleteIcon fontSize="small" />
+                                </IconButton>
+                            </Box>
+                            <Divider sx={{ borderColor: 'rgba(255,255,255,0.2)', mb: 2 }} />
+
+                            <Typography variant="subtitle2" sx={{ color: 'white', mb: 1 }}>
+                                Title
+                            </Typography>
+                            <FormControl fullWidth size="small">
+                                <InputLabel sx={{ color: 'white' }}>Input Type</InputLabel>
+                                <Select
+                                    value={isTitleManual ? 'manual' : 'mapped'}
+                                    label="Input Type"
+                                    onChange={(e) =>
+                                        handleMultiMetricInputTypeChange(item.id, 'title', e.target.value as 'manual' | 'mapped')
+                                    }
+                                    sx={{
+                                        color: 'white',
+                                        '& .MuiOutlinedInput-notchedOutline': { borderColor: 'white' },
+                                        '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: 'white' },
+                                        '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: 'white' },
+                                        '& .MuiSvgIcon-root': { color: 'white' },
+                                    }}
+                                >
+                                    <MenuItem value="manual">Manual Input</MenuItem>
+                                    <MenuItem value="mapped">Query Mapping</MenuItem>
+                                </Select>
+                            </FormControl>
+
+                            {isTitleManual ? (
+                                <TextField
+                                    fullWidth
+                                    size="small"
+                                    margin="normal"
+                                    label="Title"
+                                    value={titleMapping?.manualValue || ''}
+                                    onChange={(e) => handleMultiMetricManualValueChange(item.id, 'title', e.target.value)}
+                                    sx={{
+                                        input: { color: 'white' },
+                                        label: { color: 'white' },
+                                        '& .MuiOutlinedInput-root': {
+                                            '& fieldset': { borderColor: 'white' },
+                                            '&:hover fieldset': { borderColor: 'white' },
+                                            '&.Mui-focused fieldset': { borderColor: 'white' },
+                                        },
+                                    }}
+                                />
+                            ) : (
+                                renderMultiMetricMappingControls(item.id, 'title', titleMapping)
+                            )}
+
+                            <Typography variant="subtitle2" sx={{ color: 'white', mt: 3, mb: 1 }}>
+                                Value
+                            </Typography>
+                            <FormControl fullWidth size="small">
+                                <InputLabel sx={{ color: 'white' }}>Input Type</InputLabel>
+                                <Select
+                                    value={isValueManual ? 'manual' : 'mapped'}
+                                    label="Input Type"
+                                    onChange={(e) =>
+                                        handleMultiMetricInputTypeChange(item.id, 'value', e.target.value as 'manual' | 'mapped')
+                                    }
+                                    sx={{
+                                        color: 'white',
+                                        '& .MuiOutlinedInput-notchedOutline': { borderColor: 'white' },
+                                        '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: 'white' },
+                                        '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: 'white' },
+                                        '& .MuiSvgIcon-root': { color: 'white' },
+                                    }}
+                                >
+                                    <MenuItem value="manual">Manual Input</MenuItem>
+                                    <MenuItem value="mapped">Query Mapping</MenuItem>
+                                </Select>
+                            </FormControl>
+
+                            {isValueManual ? (
+                                <TextField
+                                    fullWidth
+                                    size="small"
+                                    margin="normal"
+                                    label="Value"
+                                    value={valueMapping?.manualValue || ''}
+                                    onChange={(e) => handleMultiMetricManualValueChange(item.id, 'value', e.target.value)}
+                                    sx={{
+                                        input: { color: 'white' },
+                                        label: { color: 'white' },
+                                        '& .MuiOutlinedInput-root': {
+                                            '& fieldset': { borderColor: 'white' },
+                                            '&:hover fieldset': { borderColor: 'white' },
+                                            '&.Mui-focused fieldset': { borderColor: 'white' },
+                                        },
+                                    }}
+                                />
+                            ) : (
+                                renderMultiMetricMappingControls(item.id, 'value', valueMapping)
+                            )}
+
+                            <FormatConfigUI
+                                value={valueMapping?.formatConfig}
+                                onChange={(config) => handleMultiMetricFormatChange(item.id, config)}
+                                sampleValue={
+                                    isValueManual
+                                        ? parseFloat(valueMapping?.manualValue) || 1234567.89
+                                        : valueMapping?.mappedConfig?.chaField &&
+                                            valueMapping?.mappedConfig?.chaValue &&
+                                            valueMapping?.mappedConfig?.kfField
+                                            ? parseFloat(
+                                                getKFValue(
+                                                    valueMapping.mappedConfig.chaField,
+                                                    valueMapping.mappedConfig.chaValue,
+                                                    valueMapping.mappedConfig.kfField
+                                                )
+                                            ) || 1234567.89
+                                            : 1234567.89
+                                }
+                                label="Format Value"
+                            />
+
+                            <Box
+                                mt={2}
+                                p={1.5}
+                                border={1}
+                                borderColor="rgba(255,255,255,0.2)"
+                                borderRadius={1}
+                                sx={{ backgroundColor: '#ffffff10' }}
+                            >
+                                <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.7)' }}>
+                                    Preview
+                                </Typography>
+                                <Typography variant="body2" sx={{ color: 'white' }}>
+                                    {resolveMultiMetricFieldValue(titleMapping) || `Metric ${index + 1}`}:{' '}
+                                    {resolveMultiMetricFieldValue(valueMapping) || '—'}
+                                </Typography>
+                            </Box>
+                        </Box>
+                    );
+                })}
+            </Paper>
+        );
+    };
+
     const updateWidgetConfiguration = (widgetId: string, previewProps: any) => {
         setWidgetConfigurations((prev) => {
             const currentConfig = prev[widgetId] || {};
@@ -2529,8 +3168,22 @@ const MappingScreen: React.FC = () => {
     const hasAnyMappedFields = () => {
         if (!selectedWidget || !fieldMappings[selectedWidget]) return false;
 
-        const fields = fieldMappings[selectedWidget].fields || {};
-        return Object.values(fields).some((field: any) => field.inputType === 'mapped');
+        const config = fieldMappings[selectedWidget];
+        const fields = config.fields || {};
+        const hasSimpleMapped = Object.values(fields).some((field: any) => field.inputType === 'mapped');
+
+        if (hasSimpleMapped) {
+            return true;
+        }
+
+        if (config.multiMetricItems?.length) {
+            return config.multiMetricItems.some(
+                (item: MultiMetricItemMapping) =>
+                    item.title?.inputType === 'mapped' || item.value?.inputType === 'mapped'
+            );
+        }
+
+        return false;
     };
     const getTabIndices = () => {
         if (!selectedWidget || !fieldMappings[selectedWidget]) return {};
@@ -2552,6 +3205,10 @@ const MappingScreen: React.FC = () => {
             indices.tableConfig = currentIndex++;
         } else if (mappingType === 'quadrant') {
             indices.quadrantConfig = currentIndex++;
+        }
+
+        if (widgetType === 'multi-metric') {
+            indices.colorConfig = currentIndex++;
         }
 
         indices.typography = currentIndex++; // ADD THIS LINE
@@ -2611,9 +3268,8 @@ const MappingScreen: React.FC = () => {
 
             // Generate chart data from menu items (alerts)
             // Chart uses the same data as the alerts - each alert's count becomes a bar
-            const colorVariant = widgetConfigurations[selectedWidget]?.colorVariant;
-            const defaultColors = getColorsFromVariant(colorVariant);
             previewProps.chartData = processedMenuItems.map((item: any, index: number) => {
+                const defaultColors = ['#449ca4', '#5899da', '#ffaa04', '#ff0000', '#8979FF', '#00C9FF', '#FF6B9D'];
                 return {
                     name: item.label,
                     value: item.count,
@@ -2639,11 +3295,12 @@ const MappingScreen: React.FC = () => {
 
         const config = fieldMappings[selectedWidget];
         const widgetCategory = getWidgetCategory(widgetType);
+        const existingWidgetConfig = widgetConfigurations[selectedWidget] || {};
 
         let previewProps: any = {};
 
         if (config.mappingType === 'simple') {
-            Object.entries(config.fields).forEach(([field, fieldMapping]) => {
+            Object.entries(config.fields || {}).forEach(([field, fieldMapping]) => {
                 let value: any;
 
                 if (fieldMapping.inputType === 'manual') {
@@ -2660,6 +3317,33 @@ const MappingScreen: React.FC = () => {
                     previewProps[field] = value;
                 }
             });
+
+            if (config.multiMetricItems?.length) {
+                previewProps.items = config.multiMetricItems.map((item, index) => {
+                    const title = resolveMultiMetricFieldValue(item.title) || `Metric ${index + 1}`;
+                    let value: any = resolveMultiMetricFieldValue(item.value);
+
+                    if (
+                        item.value?.formatConfig &&
+                        value !== '' &&
+                        value !== null &&
+                        value !== undefined &&
+                        !isNaN(Number(value))
+                    ) {
+                        value = applyValueFormat(Number(value), item.value.formatConfig);
+                    }
+
+                    return {
+                        id: item.id,
+                        title,
+                        value: value === undefined || value === null ? '' : value,
+                    };
+                });
+            }
+
+            if (widgetType === 'multi-metric') {
+                previewProps.color = existingWidgetConfig.color || DEFAULT_MULTI_METRIC_COLOR;
+            }
             updateWidgetConfiguration(selectedWidget, previewProps);
         } else if (config.mappingType === 'chart' && config.chartConfig) {
             if (!transformedData) {
@@ -3064,8 +3748,7 @@ const MappingScreen: React.FC = () => {
 
                         // If series is empty, auto-generate from yAxis fields
                         if (series.length === 0 && yAxis.fields.length > 0) {
-                            const colorVariant = widgetConfigurations[selectedWidget]?.colorVariant;
-                            const defaultColors = getColorsFromVariant(colorVariant);
+                            const defaultColors = ['#8884d8', '#82ca9d', '#ffc658', '#ff7c7c', '#8dd1e1', '#d084d0', '#ffb347', '#87ceeb', '#dda0dd', '#98d8c8'];
                             series = yAxis.fields.map((kfField: any, idx: number) => {
                                 const fieldHeader = parsedResponse.header.find((h: any) => h.fieldName === kfField);
                                 return {
@@ -3657,6 +4340,14 @@ const MappingScreen: React.FC = () => {
                                                 className="!text-white"
                                             />
                                         ),
+                                        getSelectedWidgetType() === 'multi-metric' && (
+                                            <Tab
+                                                key="color"
+                                                icon={<PaletteIcon />}
+                                                label="Background"
+                                                className="!text-white"
+                                            />
+                                        ),
                                         <Tab
                                             key="typography"
                                             icon={<FormatPaintIcon />}
@@ -4054,6 +4745,8 @@ const MappingScreen: React.FC = () => {
                                                     </FormControl>
                                                 ) : null;
                                             })}
+
+                                            {renderMultiMetricConfigurator()}
 
                                             {selectedWidgetName === 'announcement'
                                                 ? (() => {
@@ -4928,26 +5621,6 @@ const MappingScreen: React.FC = () => {
                                                             )}
                                                         </>
                                                     )}
-
-                                                    {/* Color Variant Picker - Available for all chart types */}
-                                                    {parsedResponse && (
-                                                        <Box mt={3}>
-                                                            <ColorVariantPicker
-                                                                selectedVariant={widgetConfigurations[selectedWidget]?.colorVariant}
-                                                                onVariantSelect={(variant: ColorVariant) => {
-                                                                    setWidgetConfigurations((prev) => ({
-                                                                        ...prev,
-                                                                        [selectedWidget]: {
-                                                                            ...prev[selectedWidget],
-                                                                            colorVariant: variant.id,
-                                                                        },
-                                                                    }));
-                                                                }}
-                                                                compact={true}
-                                                            />
-                                                        </Box>
-                                                    )}
-
                                                     {/* Add Multi-Chart Specific Config */}
                                                     {getWidgetCategory(getSelectedWidgetType() || '') === 'multi-chart' && (
                                                         <Box mt={3} className="multi-chart-config">
@@ -5374,8 +6047,15 @@ const MappingScreen: React.FC = () => {
                                                                             parsedResponse?.header.find((h: any) => h.fieldName === field)
                                                                                 ?.label || field;
 
-                                                                        const colorVariant = widgetConfigurations[selectedWidget]?.colorVariant;
-                                                                        const colors = getColorsFromVariant(colorVariant);
+                                                                        const colors = [
+                                                                            '#84BD00',
+                                                                            '#FFC846',
+                                                                            '#8979FF',
+                                                                            '#E1553F',
+                                                                            '#5899DA',
+                                                                            '#4DD0E1',
+                                                                            '#FF6F61',
+                                                                        ];
                                                                         const newSeriesIndex = stackedSeries.length;
 
                                                                         const newSeries = {
@@ -5786,6 +6466,120 @@ const MappingScreen: React.FC = () => {
                                                 )}
                                             </TabPanel>
                                         )}
+                                        {getSelectedWidgetType() === 'multi-metric' &&
+                                            tabIndices.colorConfig !== undefined && (
+                                                <TabPanel value={tabValue} index={tabIndices.colorConfig}>
+                                                    <Box>
+                                                        <Typography variant="h6" gutterBottom sx={{ color: 'white' }}>
+                                                            Background Color
+                                                        </Typography>
+                                                        <Typography variant="body2" sx={{ color: 'white', mb: 3 }}>
+                                                            Use the color picker to control the gradient background for the
+                                                            Multi Metric widget.
+                                                        </Typography>
+                                                        <Box
+                                                            display="flex"
+                                                            flexDirection={{ xs: 'column', md: 'row' }}
+                                                            gap={3}
+                                                        >
+                                                            <Paper
+                                                                elevation={2}
+                                                                sx={{
+                                                                    flex: 1,
+                                                                    p: 3,
+                                                                    backgroundColor: '#ffffff10',
+                                                                }}
+                                                            >
+                                                                <Typography variant="subtitle2" sx={{ color: 'white', mb: 2 }}>
+                                                                    Pick a Color
+                                                                </Typography>
+                                                                <Box
+                                                                    sx={{
+                                                                        backgroundColor: '#fff',
+                                                                        borderRadius: 2,
+                                                                        p: 2,
+                                                                    }}
+                                                                >
+                                                                    <HexColorPicker
+                                                                        color={activeWidgetColor}
+                                                                        onChange={handleBackgroundColorChange}
+                                                                    />
+                                                                </Box>
+                                                                <TextField
+                                                                    label="Hex Value"
+                                                                    value={activeWidgetColor.toUpperCase()}
+                                                                    margin="normal"
+                                                                    fullWidth
+                                                                    InputProps={{
+                                                                        readOnly: true,
+                                                                        sx: { color: 'white' },
+                                                                    }}
+                                                                    InputLabelProps={{ sx: { color: 'white' } }}
+                                                                    sx={{
+                                                                        mt: 2,
+                                                                        '& .MuiOutlinedInput-root': {
+                                                                            '& fieldset': { borderColor: 'white' },
+                                                                            '&:hover fieldset': { borderColor: 'white' },
+                                                                            '&.Mui-focused fieldset': { borderColor: 'white' },
+                                                                        },
+                                                                    }}
+                                                                />
+                                                                <Button
+                                                                    label="Reset to Default"
+                                                                    onClick={handleBackgroundColorReset}
+                                                                    className="mt-2"
+                                                                />
+                                                            </Paper>
+
+                                                            <Paper
+                                                                elevation={2}
+                                                                sx={{
+                                                                    flex: 1,
+                                                                    p: 3,
+                                                                    backgroundColor: '#ffffff10',
+                                                                }}
+                                                            >
+                                                                <Typography variant="subtitle2" sx={{ color: 'white', mb: 2 }}>
+                                                                    Preview
+                                                                </Typography>
+                                                                <Box
+                                                                    sx={{
+                                                                        ...getMultiMetricPreviewStyle(activeWidgetColor),
+                                                                        borderRadius: 2,
+                                                                        minHeight: 220,
+                                                                        p: 3,
+                                                                        display: 'flex',
+                                                                        flexDirection: 'column',
+                                                                        justifyContent: 'space-between',
+                                                                        boxShadow: 'inset 0 0 20px rgba(0,0,0,0.25)',
+                                                                    }}
+                                                                >
+                                                                    {[1, 2, 3].map((item) => (
+                                                                        <Box key={item}>
+                                                                            <Typography
+                                                                                variant="h4"
+                                                                                sx={{
+                                                                                    fontWeight: 700,
+                                                                                    mb: 0.5,
+                                                                                    color: '#fff',
+                                                                                }}
+                                                                            >
+                                                                                {item === 1 ? '120' : item === 2 ? '87' : '42'}
+                                                                            </Typography>
+                                                                            <Typography
+                                                                                variant="subtitle2"
+                                                                                sx={{ color: 'rgba(255,255,255,0.7)', textTransform: 'uppercase' }}
+                                                                            >
+                                                                                {`Metric ${item}`}
+                                                                            </Typography>
+                                                                        </Box>
+                                                                    ))}
+                                                                </Box>
+                                                            </Paper>
+                                                        </Box>
+                                                    </Box>
+                                                </TabPanel>
+                                            )}
                                         <TabPanel value={tabValue} index={tabIndices.typography!}>
                                             <TypographyConfigUI
                                                 value={widgetConfigurations[selectedWidget]?.typography}

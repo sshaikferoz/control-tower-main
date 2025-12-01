@@ -66,6 +66,12 @@ export interface WidgetFieldMapping {
     formatConfig?: FormatConfig;
 }
 
+export interface MultiMetricItemMapping {
+    id: string;
+    title: WidgetFieldMapping;
+    value: WidgetFieldMapping;
+}
+
 export interface Field {
     field: string;
     type: 'CHA' | 'KF';
@@ -128,11 +134,13 @@ export interface WidgetMappingConfig {
     endpoint?: string;
     entity?: string;
     typography?: WidgetTypographyConfig;
+    multiMetricItems?: MultiMetricItemMapping[];
 }
 
 // Widget types for specific configurations
 export type WidgetTypes =
     | 'one-metric'
+    | 'multi-metric'
     | 'one-metric-date'
     | 'two-metrics'
     | 'two-metrics-linechart'
@@ -157,6 +165,7 @@ export const widgetConfigFields: Record<
     WidgetTypes,
     { field: string; type: string; path: ObjectPath }[]
 > = {
+    'multi-metric': [],
     'one-metric': [
         { field: 'name', type: 'string', path: 'name' },
         { field: 'value', type: 'number', path: 'value' },
@@ -239,7 +248,6 @@ export const widgetConfigFields: Record<
         },
     ],
     'loans-app-tray': [
-        { field: 'title', type: 'string', path: 'title' },
         { field: 'menuItems', type: 'array', path: 'menuItems' },
         { field: 'chartData', type: 'array', path: 'chartData' },
         { field: 'menuItemConfigs', type: 'object', path: 'menuItemConfigs' }, // New field
