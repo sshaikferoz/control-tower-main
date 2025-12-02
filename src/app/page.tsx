@@ -1,5 +1,3 @@
-//app page.tsx
-// Simplified Dashboard component - only handles Section type menu items
 'use client';
 import React, { useState } from 'react';
 import { useURLParams } from '../hooks/useURLParams';

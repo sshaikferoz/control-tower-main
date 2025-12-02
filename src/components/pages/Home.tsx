@@ -1,8 +1,10 @@
 //Home component
 'use client';
-import React, { useState, useEffect } from 'react';
-import { CircularProgress, Typography, Button, Snackbar, Alert } from '@mui/material';
-import AddIcon from '@mui/icons-material/Add';
+import React, { useState, useEffect, useRef } from 'react';
+import { ProgressSpinner } from 'primereact/progressspinner';
+import { Button } from 'primereact/button';
+import { Toast } from 'primereact/toast';
+import { Plus } from 'lucide-react';
 import { sapODataService, Section } from '@/services/sapODataService';
 import { useDashboardData } from '@/hooks/useDashboardData';
 import { DashboardHeader } from '@/components/layout/DashboardHeader';
@@ -91,10 +93,6 @@ export default function Home({
     const [configuration, setConfiguration] = useState<UIConfiguration>(defaultConfiguration);
     const [configurationLoading, setConfigurationLoading] = useState(true);
     const [showConfigDialog, setShowConfigDialog] = useState(false);
-    const [configSaveMessage, setConfigSaveMessage] = useState<{
-        type: 'success' | 'error';
-        text: string;
-    } | null>(null);
 
     // Search highlighting state
     const [highlightSectionId, setHighlightSectionId] = useState<string>('');
@@ -104,11 +102,13 @@ export default function Home({
     const [isEditMode, setIsEditMode] = useState(false);
     const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
     const [isDragging, setIsDragging] = useState(false);
-    const [showSaveSuccess, setShowSaveSuccess] = useState(false);
     const [showNewSectionDialog, setShowNewSectionDialog] = useState(false);
     const [showEditSectionDialog, setShowEditSectionDialog] = useState(false);
     const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
     const [selectedSection, setSelectedSection] = useState<Section | null>(null);
+
+    // Toast ref for notifications
+    const toast = useRef<Toast>(null);
 
     // Update favicon whenever configuration changes
     useEffect(() => {
@@ -212,17 +212,21 @@ export default function Home({
             const savedConfig = await configManager.saveConfiguration(tabId, newConfig);
 
             setConfiguration(savedConfig);
-            setConfigSaveMessage({
-                type: 'success',
-                text: 'Configuration saved successfully!',
+            toast.current?.show({
+                severity: 'success',
+                summary: 'Success',
+                detail: 'Configuration saved successfully!',
+                life: 3000,
             });
 
             return true;
         } catch (error) {
             console.error('Failed to save configuration:', error);
-            setConfigSaveMessage({
-                type: 'error',
-                text: 'Failed to save configuration. Please try again.',
+            toast.current?.show({
+                severity: 'error',
+                summary: 'Error',
+                detail: 'Failed to save configuration. Please try again.',
+                life: 3000,
             });
             return false;
         } finally {
@@ -245,28 +249,25 @@ export default function Home({
             const savedConfig = await configManager.saveConfiguration(tabId, defaultConfig);
             setConfiguration(savedConfig);
 
-            setConfigSaveMessage({
-                type: 'success',
-                text: 'Configuration reset to defaults successfully!',
+            toast.current?.show({
+                severity: 'success',
+                summary: 'Success',
+                detail: 'Configuration reset to defaults successfully!',
+                life: 3000,
             });
         } catch (error) {
             console.error('Failed to reset configuration:', error);
-            setConfigSaveMessage({
-                type: 'error',
-                text: 'Failed to reset configuration. Please try again.',
+            toast.current?.show({
+                severity: 'error',
+                summary: 'Error',
+                detail: 'Failed to reset configuration. Please try again.',
+                life: 3000,
             });
         } finally {
             setConfigurationLoading(false);
         }
     };
 
-    // Clear config save message after 3 seconds
-    useEffect(() => {
-        if (configSaveMessage) {
-            const timer = setTimeout(() => setConfigSaveMessage(null), 3000);
-            return () => clearTimeout(timer);
-        }
-    }, [configSaveMessage]);
 
     // Existing dashboard handlers
     const toggleEditMode = () => {
@@ -297,7 +298,12 @@ export default function Home({
 
             setIsEditMode(false);
             setLoading(false);
-            setShowSaveSuccess(true);
+            toast.current?.show({
+                severity: 'success',
+                summary: 'Success',
+                detail: 'Dashboard layout saved successfully!',
+                life: 3000,
+            });
         } catch (err) {
             console.error('Error saving dashboard data:', err);
             setError('Failed to save dashboard configuration to SAP');
@@ -323,7 +329,12 @@ export default function Home({
             updateDashboardData(updatedSections);
 
             setLoading(false);
-            setShowSaveSuccess(true);
+            toast.current?.show({
+                severity: 'success',
+                summary: 'Success',
+                detail: 'Section created successfully!',
+                life: 3000,
+            });
         } catch (err) {
             console.error('Error creating section:', err);
             setError('Failed to create new section');
@@ -351,7 +362,12 @@ export default function Home({
             updateDashboardData(updatedSections);
 
             setLoading(false);
-            setShowSaveSuccess(true);
+            toast.current?.show({
+                severity: 'success',
+                summary: 'Success',
+                detail: 'Section updated successfully!',
+                life: 3000,
+            });
             setSelectedSection(null);
         } catch (err) {
             console.error('Error updating section:', err);
@@ -378,7 +394,12 @@ export default function Home({
             updateDashboardData(updatedSections);
 
             setLoading(false);
-            setShowSaveSuccess(true);
+            toast.current?.show({
+                severity: 'success',
+                summary: 'Success',
+                detail: 'Section deleted successfully!',
+                life: 3000,
+            });
             setShowDeleteConfirmation(false);
             setSelectedSection(null);
         } catch (err) {
@@ -522,7 +543,12 @@ export default function Home({
             updateDashboardData(savedSections);
             setSapSections(savedSections);
 
-            setShowSaveSuccess(true);
+            toast.current?.show({
+                severity: 'success',
+                summary: 'Success',
+                detail: 'Dashboard layout saved successfully!',
+                life: 3000,
+            });
         } catch (err) {
             console.error('Error saving dashboard layout:', err);
             setError('Failed to save dashboard layout');
@@ -543,7 +569,7 @@ export default function Home({
     if (loading || configurationLoading) {
         return (
             <div className="flex h-screen items-center justify-center">
-                <CircularProgress />
+                <ProgressSpinner />
                 <div className="ml-4 text-white">Loading dashboard...</div>
             </div>
         );
@@ -559,6 +585,7 @@ export default function Home({
 
     return (
         <div className="flex w-full" style={themeVariables}>
+            <Toast ref={toast} />
             <div className="flex min-h-screen"></div>
             <div className="relative min-h-screen w-full">
                 {/* Dynamic background based on configuration */}
@@ -582,32 +609,30 @@ export default function Home({
 
                     {!dashboardData?.sections || dashboardData.sections.length === 0 ? (
                         <div className="flex h-[60vh] flex-col items-center justify-center">
-                            <Typography variant="h5" className="mb-4 text-white">
+                            <h5 className="mb-4 text-white text-xl font-semibold">
                                 No dashboard sections found
-                            </Typography>
+                            </h5>
                             {isEditModeAllowed ? (
                                 <>
-                                    <Typography className="mb-4 text-white">
+                                    <p className="mb-4 text-white">
                                         Create a new section by clicking the + button in edit mode
-                                    </Typography>
+                                    </p>
                                     <Button
-                                        variant="contained"
+                                        label="Create Section"
+                                        icon={<Plus className="w-4 h-4" />}
                                         onClick={() => setShowNewSectionDialog(true)}
-                                        startIcon={<AddIcon />}
-                                        className="bg-green-500"
-                                    >
-                                        Create Section
-                                    </Button>
+                                        className="bg-green-500 hover:bg-green-600"
+                                    />
                                 </>
                             ) : (
-                                <Typography className="mb-4 text-white">
+                                <p className="mb-4 text-white">
                                     Dashboard content will appear here when available
                                     {isAdmin && !isEditModeAllowed && (
                                         <span className="mt-2 block text-sm text-gray-300">
                                             Add ?view=edit to the URL to enable editing features
                                         </span>
                                     )}
-                                </Typography>
+                                </p>
                             )}
                         </div>
                     ) : (
@@ -650,31 +675,8 @@ export default function Home({
                         onConfirm={confirmDeleteSection}
                         sectionName={selectedSection?.name || ''}
                     />
-
-                    <Snackbar
-                        open={showSaveSuccess}
-                        autoHideDuration={3000}
-                        onClose={() => setShowSaveSuccess(false)}
-                        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
-                    >
-                        <Alert severity="success" sx={{ width: '100%' }}>
-                            Dashboard layout saved successfully!
-                        </Alert>
-                    </Snackbar>
                 </>
             )}
-
-            {/* Configuration Save Messages */}
-            <Snackbar
-                open={!!configSaveMessage}
-                autoHideDuration={3000}
-                onClose={() => setConfigSaveMessage(null)}
-                anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
-            >
-                <Alert severity={configSaveMessage?.type || 'info'} sx={{ width: '100%' }}>
-                    {configSaveMessage?.text}
-                </Alert>
-            </Snackbar>
         </div>
     );
 }
