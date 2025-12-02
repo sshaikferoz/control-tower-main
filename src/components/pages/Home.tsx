@@ -1,10 +1,8 @@
 //Home component
 'use client';
-import React, { useState, useCallback, useMemo, useEffect } from 'react';
-import { Suspense } from 'react';
+import React, { useState, useEffect } from 'react';
 import { CircularProgress, Typography, Button, Snackbar, Alert } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
-import { HomeProps } from '@/types/dashboard';
 import { sapODataService, Section } from '@/services/sapODataService';
 import { useDashboardData } from '@/hooks/useDashboardData';
 import { DashboardHeader } from '@/components/layout/DashboardHeader';
@@ -13,7 +11,6 @@ import { NewSectionDialog } from '@/components/dialogs/NewSectionDialog';
 import { EditSectionDialog } from '@/components/dialogs/EditSectionDialog';
 import { DeleteConfirmationDialog } from '@/components/dialogs/DeleteConfirmationDialog';
 import { ConfigurationDialog } from '@/components/dialogs/ConfigurationDialog';
-import { WidgetSkeleton } from '@/components/ui/WidgetSkeleton';
 import { getNextSectionOrder } from '@/utils/dashboardUtils';
 import { UIConfiguration, defaultConfiguration, ConfigurationManager } from '@/types/configuration';
 
