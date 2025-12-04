@@ -6,7 +6,7 @@ import { Button } from 'primereact/button';
 import { Toast } from 'primereact/toast';
 import { Plus } from 'lucide-react';
 import { sapODataService, Section } from '@/services/sapODataService';
-import { useDashboardData } from '@/hooks/useDashboardData';
+import { useDashboardData } from '@/hooks/dashboard/useDashboardData';
 import { DashboardHeader } from '@/components/layout/DashboardHeader';
 import { DashboardSection } from '@/components/dashboard/DashboardSection';
 import { NewSectionDialog } from '@/components/dialogs/NewSectionDialog';

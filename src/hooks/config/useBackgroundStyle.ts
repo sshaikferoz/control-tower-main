@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { UIConfiguration } from '../types/configuration';
+import { UIConfiguration } from '../../types/configuration';
 
 export const useBackgroundStyle = (configuration: UIConfiguration) => {
     return useMemo(() => {

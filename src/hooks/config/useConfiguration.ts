@@ -1,6 +1,6 @@
 //useConfiguration.ts
 import { useState, useEffect } from 'react';
-import { UIConfiguration, defaultConfiguration } from '../types/configuration';
+import { UIConfiguration, defaultConfiguration } from '../../types/configuration';
 
 const CONFIG_STORAGE_KEY = 'ui_configuration';
 

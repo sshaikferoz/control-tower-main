@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { MenuItem } from '../types';
+import { MenuItem } from '../../types';
 
 interface UseDashboardStateProps {
     menuItems: MenuItem[];
