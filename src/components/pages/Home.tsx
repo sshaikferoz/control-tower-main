@@ -1,5 +1,6 @@
 //Home component
 'use client';
+
 import React, { useState, useEffect, useRef } from 'react';
 import { ProgressSpinner } from 'primereact/progressspinner';
 import { Button } from 'primereact/button';

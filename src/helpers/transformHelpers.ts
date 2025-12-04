@@ -236,6 +236,60 @@ export function processWidgetMappings(
         }
     }
 
+    // Special handling for filter-widget
+    // Convert FormStructure to flat array format for filter widget
+    if (widgetConfig.filterConfig) {
+        const filterData: any[] = [];
+        
+        // Get all CHA fields from FormStructure
+        Object.keys(reportData.FormStructure || {}).forEach((chaField) => {
+            const chaValues = Object.keys(reportData.FormStructure[chaField] || {});
+            
+            chaValues.forEach((chaValue) => {
+                const row: Record<string, any> = {
+                    [chaField]: chaValue, // Add CHA field and value
+                };
+                
+                // Add all KF fields for this CHA value
+                const kfValues = reportData.FormStructure[chaField][chaValue];
+                Object.keys(kfValues || {}).forEach((kfField) => {
+                    row[kfField] = kfValues[kfField];
+                });
+                
+                filterData.push(row);
+            });
+        });
+        
+        result.data = filterData;
+    }
+
+    // Special handling for listener-widget
+    // Convert FormStructure to flat array format for listener widget
+    if (widgetConfig.listenerConfig) {
+        const listenerData: any[] = [];
+        
+        // Get all CHA fields from FormStructure
+        Object.keys(reportData.FormStructure || {}).forEach((chaField) => {
+            const chaValues = Object.keys(reportData.FormStructure[chaField] || {});
+            
+            chaValues.forEach((chaValue) => {
+                const row: Record<string, any> = {
+                    [chaField]: chaValue, // Add CHA field and value
+                };
+                
+                // Add all KF fields for this CHA value
+                const kfValues = reportData.FormStructure[chaField][chaValue];
+                Object.keys(kfValues || {}).forEach((kfField) => {
+                    row[kfField] = kfValues[kfField];
+                });
+                
+                listenerData.push(row);
+            });
+        });
+        
+        result.data = listenerData;
+    }
+
     return result;
 }
 

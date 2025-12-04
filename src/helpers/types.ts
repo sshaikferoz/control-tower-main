@@ -135,6 +135,18 @@ export interface WidgetMappingConfig {
     entity?: string;
     typography?: WidgetTypographyConfig;
     multiMetricItems?: MultiMetricItemMapping[];
+    filterConfig?: {
+        eventName?: string;
+        // For emitter-style filter widgets: map free-text variable names to source columns
+        variableMappings?: {
+            varName: string;
+            sourceField: string;
+            operator?: string;
+        }[];
+    };
+    listenerConfig?: {
+        listenToEvent?: string;
+    };
 }
 
 // Widget types for specific configurations
@@ -158,7 +170,9 @@ export type WidgetTypes =
     | 'column-chart'
     | 'prediction-chart'
     | 'radar-chart'
-    | 'multi-chart';
+    | 'multi-chart'
+    | 'filter-widget'
+    | 'listener-widget';
 
 // Mapping configurations for each widget type
 export const widgetConfigFields: Record<

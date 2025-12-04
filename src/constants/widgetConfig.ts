@@ -22,6 +22,8 @@ const ColumnChart = lazy(() => import('@/components/widgets/ColumnChart'));
 const PredictionChart = lazy(() => import('@/components/widgets/Prediction'));
 const RadarChartComponent = lazy(() => import('@/components/widgets/RadarChart'));
 const MultiChart = lazy(() => import('@/components/widgets/MultiChart'));
+const FilterWidget = lazy(() => import('@/components/widgets/FilterWidget'));
+const ListenerWidget = lazy(() => import('@/components/widgets/ListenerWidget'));
 
 // Component mappings with lazy loading
 export const widgetMapping: Record<string, React.ComponentType<any>> = {
@@ -46,6 +48,8 @@ export const widgetMapping: Record<string, React.ComponentType<any>> = {
     'prediction-chart': PredictionChart,
     'radar-chart': RadarChartComponent,
     'multi-chart': MultiChart,
+    'filter-widget': FilterWidget,
+    'listener-widget': ListenerWidget,
 };
 
 // Default widget props for when data isn't available
@@ -238,6 +242,14 @@ export const defaultPropsMapping: Record<string, any> = {
             { label: 'Segment 4', value: 100, fill: '#FFC846' },
         ],
         title: 'Distribution Chart',
+    },
+    'filter-widget': {
+        reportName: '',
+        eventName: 'filter-changed',
+    },
+    'listener-widget': {
+        reportName: '',
+        listenToEvent: 'filter-changed',
     },
     
 };

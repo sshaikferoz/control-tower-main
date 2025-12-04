@@ -26,6 +26,8 @@ const menuItems = [
   //   { name: 'prediction-chart', imageURL: '' },
   //   { name: 'radar-chart', imageURL: '' },
   { name: 'multi-chart', imageURL: '' },
+  { name: 'filter-widget', imageURL: '' },
+  { name: 'listener-widget', imageURL: '' },
   //   { name: 'announcement', imageURL: '' },
 ];
 

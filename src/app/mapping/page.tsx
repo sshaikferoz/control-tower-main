@@ -92,6 +92,8 @@ import PieChartComponent from '@/components/widgets/PieChart';
 import StackedColumn from '@/components/widgets/ColumnChart';
 import PredictionChart from '@/components/widgets/Prediction';
 import RadarChartComponent from '@/components/widgets/RadarChart';
+import FilterWidget from '@/components/widgets/FilterWidget';
+import ListenerWidget from '@/components/widgets/ListenerWidget';
 import { FormatConfigUI } from '@/components/FormatConfigUI';
 import { applyValueFormat } from '@/helpers/formatConfig';
 import type { FormatConfig } from '@/helpers/formatConfig';
@@ -167,6 +169,8 @@ const widgetMapping: Record<string, React.ComponentType<any>> = {
     'prediction-chart': PredictionChart,
     'radar-chart': RadarChartComponent,
     'multi-chart': MultiChart,
+    'filter-widget': FilterWidget,
+    'listener-widget': ListenerWidget,
 };
 
 const widgetSizes: Record<string, { w: number; h: number }> = {
@@ -191,6 +195,8 @@ const widgetSizes: Record<string, { w: number; h: number }> = {
     'prediction-chart': { w: 6, h: 3 },
     'radar-chart': { w: 6, h: 3 },
     'multi-chart': { w: 6, h: 3 },
+    'filter-widget': { w: 4, h: 4 },
+    'listener-widget': { w: 4, h: 4 },
 };
 
 const REPORT_TYPE_OPTIONS = [
@@ -1005,7 +1011,7 @@ const LoansAppTrayConfig: React.FC<LoansAppTrayConfigProps> = ({
                                             return IconComponent ? (
                                                 <Chip icon={<IconComponent />} label={item.iconName} />
                                             ) : (
-                                                <Chip label={item.iconName} sx={{ bgcolor: '#ffff', color: 'white' }} />
+                                                <Chip label={item.iconName} sx={{ bgcolor: '#ffff', color: 'black' }} />
                                             );
                                         })()}
 
@@ -1364,6 +1370,7 @@ const MappingScreen: React.FC = () => {
         roleIndex: null,
         roleName: null,
     });
+    const [isViewMode, setIsViewMode] = useState(false);
 
     const handleMultiChartVariantSelect = (variant: ColorVariant) => {
         if (!selectedWidget) return;
@@ -1686,6 +1693,21 @@ const MappingScreen: React.FC = () => {
                 quadrantConfig: {
                     chaField: '',
                     metrics: [],
+                },
+            };
+        } else if (widgetName === 'filter-widget') {
+            configToSave = {
+                ...baseConfig,
+                filterConfig: {
+                    eventName: 'filter-changed',
+                    variableMappings: [],
+                },
+            };
+        } else if (widgetName === 'listener-widget') {
+            configToSave = {
+                ...baseConfig,
+                listenerConfig: {
+                    listenToEvent: 'filter-changed',
                 },
             };
         } else {
@@ -4082,6 +4104,67 @@ const MappingScreen: React.FC = () => {
                 };
                 updateWidgetConfiguration(selectedWidget, previewProps);
             }
+        } else if (widgetType === 'filter-widget' || widgetType === 'listener-widget') {
+            // Handle filter-widget and listener-widget data generation
+            if (!transformedData) {
+                console.error('transformedData is required for filter/listener widget mapping');
+                return;
+            }
+
+            // Convert FormStructure to flat array format (similar to table widget)
+            const filterData: any[] = [];
+            // Map of technical field name -> user-friendly label from FormMetadata
+            const columnLabels: Record<string, string> = {};
+
+            // Get all CHA fields from FormStructure
+            Object.keys(transformedData.FormStructure || {}).forEach((chaField) => {
+                const chaValues = Object.keys(transformedData.FormStructure[chaField] || {});
+
+                // Capture CHA field label if available
+                if (!columnLabels[chaField]) {
+                    columnLabels[chaField] =
+                        transformedData.FormMetadata[chaField]?.label || chaField;
+                }
+
+                chaValues.forEach((chaValue) => {
+                    const row: Record<string, any> = {
+                        [chaField]: chaValue, // Add CHA field and value
+                    };
+
+                    // Add all KF fields for this CHA value
+                    const kfValues = transformedData.FormStructure[chaField][chaValue];
+                    Object.keys(kfValues || {}).forEach((kfField) => {
+                        row[kfField] = kfValues[kfField];
+
+                        // Capture KF field label if available
+                        if (!columnLabels[kfField]) {
+                            columnLabels[kfField] =
+                                transformedData.FormMetadata[kfField]?.label || kfField;
+                        }
+                    });
+
+                    filterData.push(row);
+                });
+            });
+
+            if (widgetType === 'filter-widget') {
+                previewProps = {
+                    data: filterData,
+                    reportName: config.reportName || '',
+                    eventName: config.filterConfig?.eventName || 'filter-changed',
+                    variableMappings: config.filterConfig?.variableMappings || [],
+                    columnLabels,
+                };
+            } else if (widgetType === 'listener-widget') {
+                previewProps = {
+                    data: filterData,
+                    reportName: config.reportName || '',
+                    listenToEvent: config.listenerConfig?.listenToEvent || 'filter-changed',
+                    columnLabels,
+                };
+            }
+
+            updateWidgetConfiguration(selectedWidget, previewProps);
         } else if (config.mappingType === 'table' && config.tableConfig) {
             if (!transformedData) {
                 console.error('transformedData is required for chart mapping');
@@ -4229,9 +4312,19 @@ const MappingScreen: React.FC = () => {
 
     return (
         <div className="relative flex h-screen w-full">
-            <div className="h-full bg-white">
-                <SidebarMapping onItemClick={addWidget} />
+            <div className="absolute right-4 top-4 z-50 flex gap-2">
+                <Button
+                    label={isViewMode ? 'Exit View Mode' : 'View Mode'}
+                    icon={isViewMode ? 'pi pi-pencil' : 'pi pi-eye'}
+                    onClick={() => setIsViewMode((prev) => !prev)}
+                />
             </div>
+
+            {!isViewMode && (
+                <div className="h-full bg-white">
+                    <SidebarMapping onItemClick={addWidget} />
+                </div>
+            )}
 
             <Splitter
                 className="h-100vh w-full overflow-y-auto"
@@ -4264,10 +4357,35 @@ const MappingScreen: React.FC = () => {
                                 .filter((widget) => !widget.deleted)
                                 .map(({ id, name }) => {
                                     const Component = widgetMapping[name];
-                                    const widgetProps =
+                                    let widgetProps =
                                         previewData && selectedWidget === id
                                             ? previewData
                                             : widgetConfigurations[id] || defaultPropsMapping[name];
+
+                                    // Extract props from fieldMappings for filter-widget and listener-widget
+                                    if (name === 'filter-widget' && fieldMappings[id]) {
+                                        const mapping = fieldMappings[id];
+                                        widgetProps = {
+                                            ...widgetProps,
+                                            reportName: mapping.reportName || '',
+                                            eventName: mapping.filterConfig?.eventName || 'filter-changed',
+                                            variableMappings:
+                                                mapping.filterConfig?.variableMappings ||
+                                                widgetConfigurations[id]?.variableMappings ||
+                                                [],
+                                            // Pass data if available from widgetConfigurations (processed data)
+                                            data: widgetConfigurations[id]?.data || widgetProps.data,
+                                        };
+                                    } else if (name === 'listener-widget' && fieldMappings[id]) {
+                                        const mapping = fieldMappings[id];
+                                        widgetProps = {
+                                            ...widgetProps,
+                                            reportName: mapping.reportName || '',
+                                            listenToEvent: mapping.listenerConfig?.listenToEvent || 'filter-changed',
+                                            // Pass data if available from widgetConfigurations (processed data)
+                                            data: widgetConfigurations[id]?.data || widgetProps.data,
+                                        };
+                                    }
 
                                     // Add typography to widget props
                                     const propsWithTypography = {
@@ -4309,133 +4427,143 @@ const MappingScreen: React.FC = () => {
                 </SplitterPanel>
             </Splitter>
 
-            <div className="flex h-screen w-1/3 flex-col overflow-auto bg-gradient-to-b from-[#00214E] to-[#0164B0] p-4 text-white">
-                <div className="h-full overflow-y-auto">
-                    <Typography variant="h6" component="h2" gutterBottom>
-                        Widget Configuration
-                    </Typography>
+            {!isViewMode && (
+                <div className="flex h-screen w-1/3 flex-col overflow-auto bg-gradient-to-b from-[#00214E] to-[#0164B0] p-4 text-white">
+                    <div className="h-full overflow-y-auto">
+                        <Typography variant="h6" component="h2" gutterBottom>
+                            Widget Configuration
+                        </Typography>
 
-                    {selectedWidget ? (
-                        <Box>
-                            <Typography variant="subtitle1" gutterBottom>
-                                Configure {getSelectedWidgetType()} Widget
-                            </Typography>
+                        {selectedWidget ? (
+                            <Box>
+                                <Typography variant="subtitle1" gutterBottom>
+                                    Configure {getSelectedWidgetType()} Widget
+                                </Typography>
 
-                            <Tabs
-                                value={tabValue}
-                                onChange={handleTabChange}
-                                aria-label="mapping tabs"
-                                className="!bg-[#ffffff20]"
-                                variant="scrollable"
-                                scrollButtons={true}
-                            >
-                                {selectedWidgetName === 'announcement'
-                                    ? [
-                                        <Tab
-                                            key="announcement"
-                                            icon={<SettingsIcon />}
-                                            label="Announcement Mapping"
-                                            className="!text-white"
-                                        />,
-                                    ]
-                                    : [
-                                        <Tab
-                                            key="data-mapping"
-                                            icon={<SettingsIcon />}
-                                            label="Data Mapping"
-                                            className="!text-white"
-                                        />,
-                                        <Tab
-                                            key="auth"
-                                            icon={<SecurityIcon />}
-                                            label="Authorization"
-                                            className="!text-white"
-                                        />,
-                                        <Tab key="info" icon={<InfoIcon />} label="Info" className="!text-white" />,
-                                        getSelectedWidgetType() === 'loans-app-tray' && (
+                                <Tabs
+                                    value={tabValue}
+                                    onChange={handleTabChange}
+                                    aria-label="mapping tabs"
+                                    className="!bg-[#ffffff20]"
+                                    variant="scrollable"
+                                    scrollButtons={true}
+                                >
+                                    {selectedWidgetName === 'announcement'
+                                        ? [
                                             <Tab
-                                                key="loans-app-tray"
-                                                icon={<DataIcon />}
-                                                label="LoansApp Config"
+                                                key="announcement"
+                                                icon={<SettingsIcon />}
+                                                label="Announcement Mapping"
                                                 className="!text-white"
-                                            />
-                                        ),
-                                        fieldMappings[selectedWidget]?.mappingType === 'chart' && (
+                                            />,
+                                        ]
+                                        : [
                                             <Tab
-                                                key="chart"
-                                                icon={<DataIcon />}
-                                                label="Chart Config"
+                                                key="data-mapping"
+                                                icon={<SettingsIcon />}
+                                                label="Data Mapping"
                                                 className="!text-white"
-                                            />
-                                        ),
-                                        fieldMappings[selectedWidget]?.mappingType === 'table' && (
+                                            />,
                                             <Tab
-                                                key="table"
-                                                icon={<DataIcon />}
-                                                label="Table Config"
+                                                key="auth"
+                                                icon={<SecurityIcon />}
+                                                label="Authorization"
                                                 className="!text-white"
-                                            />
-                                        ),
-                                        fieldMappings[selectedWidget]?.mappingType === 'quadrant' && (
+                                            />,
+                                            <Tab key="info" icon={<InfoIcon />} label="Info" className="!text-white" />,
+                                            getSelectedWidgetType() === 'loans-app-tray' && (
+                                                <Tab
+                                                    key="loans-app-tray"
+                                                    icon={<DataIcon />}
+                                                    label="LoansApp Config"
+                                                    className="!text-white"
+                                                />
+                                            ),
+                                            fieldMappings[selectedWidget]?.mappingType === 'chart' && (
+                                                <Tab
+                                                    key="chart"
+                                                    icon={<DataIcon />}
+                                                    label="Chart Config"
+                                                    className="!text-white"
+                                                />
+                                            ),
+                                            fieldMappings[selectedWidget]?.mappingType === 'table' && (
+                                                <Tab
+                                                    key="table"
+                                                    icon={<DataIcon />}
+                                                    label="Table Config"
+                                                    className="!text-white"
+                                                />
+                                            ),
+                                            fieldMappings[selectedWidget]?.mappingType === 'quadrant' && (
+                                                <Tab
+                                                    key="quadrant"
+                                                    icon={<DataIcon />}
+                                                    label="Quadrant Config"
+                                                    className="!text-white"
+                                                />
+                                            ),
+                                            getSelectedWidgetType() === 'multi-metric' && (
+                                                <Tab
+                                                    key="color"
+                                                    icon={<PaletteIcon />}
+                                                    label="Background"
+                                                    className="!text-white"
+                                                />
+                                            ),
                                             <Tab
-                                                key="quadrant"
-                                                icon={<DataIcon />}
-                                                label="Quadrant Config"
+                                                key="typography"
+                                                icon={<FormatPaintIcon />}
+                                                label="Typography"
                                                 className="!text-white"
-                                            />
-                                        ),
-                                        getSelectedWidgetType() === 'multi-metric' && (
+                                            />, // ADD THIS
                                             <Tab
-                                                key="color"
-                                                icon={<PaletteIcon />}
-                                                label="Background"
+                                                key="data-preview"
+                                                icon={<PreviewIcon />}
+                                                label="Data Preview"
                                                 className="!text-white"
-                                            />
-                                        ),
-                                        <Tab
-                                            key="typography"
-                                            icon={<FormatPaintIcon />}
-                                            label="Typography"
-                                            className="!text-white"
-                                        />, // ADD THIS
-                                        <Tab
-                                            key="data-preview"
-                                            icon={<PreviewIcon />}
-                                            label="Data Preview"
-                                            className="!text-white"
-                                        />,
-                                        <Tab
-                                            key="widget-preview"
-                                            icon={<VisibilityIcon />}
-                                            label="Widget Preview"
-                                            className="!text-white"
-                                        />,
-                                    ].filter(Boolean)}
-                            </Tabs>
+                                            />,
+                                            <Tab
+                                                key="widget-preview"
+                                                icon={<VisibilityIcon />}
+                                                label="Widget Preview"
+                                                className="!text-white"
+                                            />,
+                                        ].filter(Boolean)}
+                                </Tabs>
 
-                            {(() => {
-                                const tabIndices = getTabIndices();
-                                return (
-                                    <>
-                                        <TabPanel value={tabValue} index={tabIndices.dataMapping}>
-                                            {hasAnyMappedFields() && (
-                                                <Paper elevation={2} sx={{ p: 2, mb: 2, backgroundColor: '#ffffff20' }}>
-                                                    <Typography variant="h6" gutterBottom sx={{ color: 'white' }}>
-                                                        Query Configuration
-                                                    </Typography>
-                                                    <Alert severity="info" sx={{ mb: 2, backgroundColor: '#2196f320' }}>
-                                                        <Typography sx={{ color: 'white' }}>
-                                                            Configure the SAP BW report to fetch data from when using mapped
-                                                            fields.
+                                {(() => {
+                                    const tabIndices = getTabIndices();
+                                    return (
+                                        <>
+                                            <TabPanel value={tabValue} index={tabIndices.dataMapping}>
+                                                {/* Filter Widget Configuration */}
+                                                {selectedWidgetName === 'filter-widget' && (
+                                                    <Paper elevation={2} sx={{ p: 2, mb: 2, backgroundColor: '#ffffff20' }}>
+                                                        <Typography variant="h6" gutterBottom sx={{ color: 'white' }}>
+                                                            Filter Widget Configuration
                                                         </Typography>
-                                                    </Alert>
-
-                                                    <FormControl fullWidth variant="outlined" margin="normal">
                                                         <TextField
-                                                            label="Report Technical Name"
-                                                            value={reportName}
-                                                            onChange={handleReportNameChange}
-                                                            helperText="Enter the technical name of the SAP BW report"
+                                                            fullWidth
+                                                            label="Report Name"
+                                                            value={fieldMappings[selectedWidget]?.reportName || ''}
+                                                            onChange={(e) => {
+                                                                setFieldMappings((prev) => ({
+                                                                    ...prev,
+                                                                    [selectedWidget]: {
+                                                                        ...prev[selectedWidget],
+                                                                        reportName: e.target.value,
+                                                                    },
+                                                                }));
+                                                                setWidgetConfigurations((prev) => ({
+                                                                    ...prev,
+                                                                    [selectedWidget]: {
+                                                                        ...prev[selectedWidget],
+                                                                        reportName: e.target.value,
+                                                                    },
+                                                                }));
+                                                            }}
+                                                            margin="normal"
                                                             sx={{
                                                                 input: { color: 'white' },
                                                                 label: { color: 'white' },
@@ -4444,184 +4572,487 @@ const MappingScreen: React.FC = () => {
                                                                     '&:hover fieldset': { borderColor: 'white' },
                                                                     '&.Mui-focused fieldset': { borderColor: 'white' },
                                                                 },
-                                                                '& .MuiFormHelperText-root': { color: 'white' },
                                                             }}
                                                         />
-                                                        <Box mt={2} display="flex" alignItems="center" gap={2}>
+                                                        <TextField
+                                                            fullWidth
+                                                            label="Event Name (for emitter)"
+                                                            value={fieldMappings[selectedWidget]?.filterConfig?.eventName || 'filter-changed'}
+                                                            onChange={(e) => {
+                                                                setFieldMappings((prev) => ({
+                                                                    ...prev,
+                                                                    [selectedWidget]: {
+                                                                        ...prev[selectedWidget],
+                                                                        filterConfig: {
+                                                                            ...prev[selectedWidget]?.filterConfig,
+                                                                            eventName: e.target.value,
+                                                                        },
+                                                                    },
+                                                                }));
+                                                                setWidgetConfigurations((prev) => ({
+                                                                    ...prev,
+                                                                    [selectedWidget]: {
+                                                                        ...prev[selectedWidget],
+                                                                        filterConfig: {
+                                                                            ...prev[selectedWidget]?.filterConfig,
+                                                                            eventName: e.target.value,
+                                                                        },
+                                                                    },
+                                                                }));
+                                                                setWidgetConfigurations((prev) => ({
+                                                                    ...prev,
+                                                                    [selectedWidget]: {
+                                                                        ...prev[selectedWidget],
+                                                                        eventName: e.target.value,
+                                                                    },
+                                                                }));
+                                                            }}
+                                                            margin="normal"
+                                                            sx={{
+                                                                input: { color: 'white' },
+                                                                label: { color: 'white' },
+                                                                '& .MuiOutlinedInput-root': {
+                                                                    '& fieldset': { borderColor: 'white' },
+                                                                    '&:hover fieldset': { borderColor: 'white' },
+                                                                    '&.Mui-focused fieldset': { borderColor: 'white' },
+                                                                },
+                                                            }}
+                                                        />
+
+                                                        {/* Variable mappings: free-text variable name -> source column */}
+                                                        <Box mt={3}>
+                                                            <Typography variant="subtitle1" sx={{ color: 'white', mb: 1 }}>
+                                                                SAP BW Variable Mappings
+                                                            </Typography>
+                                                            <Typography
+                                                                variant="caption"
+                                                                sx={{ color: 'rgba(255,255,255,0.7)', mb: 1, display: 'block' }}
+                                                            >
+                                                                Define multiple variables; each variable uses a column from the
+                                                                data source as its value.
+                                                            </Typography>
+
+                                                            {(fieldMappings[selectedWidget]?.filterConfig?.variableMappings ||
+                                                                []
+                                                            ).map((mapping: any, index: number) => (
+                                                                <Box
+                                                                    key={index}
+                                                                    sx={{
+                                                                        display: 'flex',
+                                                                        gap: 1,
+                                                                        mb: 1,
+                                                                        alignItems: 'center',
+                                                                    }}
+                                                                >
+                                                                    <TextField
+                                                                        size="small"
+                                                                        label="Variable Name"
+                                                                        value={mapping.varName || ''}
+                                                                        onChange={(e) => {
+                                                                            const newMappings = [
+                                                                                ...(fieldMappings[selectedWidget]
+                                                                                    ?.filterConfig?.variableMappings || []),
+                                                                            ];
+                                                                            newMappings[index] = {
+                                                                                ...newMappings[index],
+                                                                                varName: e.target.value,
+                                                                            };
+
+                                                                            setFieldMappings((prev: any) => ({
+                                                                                ...prev,
+                                                                                [selectedWidget]: {
+                                                                                    ...prev[selectedWidget],
+                                                                                    filterConfig: {
+                                                                                        ...prev[selectedWidget]?.filterConfig,
+                                                                                        variableMappings: newMappings,
+                                                                                    },
+                                                                                },
+                                                                            }));
+
+                                                                            setWidgetConfigurations((prev) => ({
+                                                                                ...prev,
+                                                                                [selectedWidget]: {
+                                                                                    ...prev[selectedWidget],
+                                                                                    variableMappings: newMappings,
+                                                                                },
+                                                                            }));
+                                                                        }}
+                                                                        placeholder="e.g., YCOM_ML"
+                                                                        sx={{
+                                                                            flex: 1,
+                                                                            input: { color: 'white' },
+                                                                            label: { color: 'white' },
+                                                                            '& .MuiOutlinedInput-root': {
+                                                                                '& fieldset': { borderColor: 'white' },
+                                                                                '&:hover fieldset': { borderColor: 'white' },
+                                                                                '&.Mui-focused fieldset': { borderColor: 'white' },
+                                                                            },
+                                                                        }}
+                                                                    />
+                                                                    <TextField
+                                                                        size="small"
+                                                                        label="Source Column"
+                                                                        value={mapping.sourceField || ''}
+                                                                        onChange={(e) => {
+                                                                            const newMappings = [
+                                                                                ...(fieldMappings[selectedWidget]
+                                                                                    ?.filterConfig?.variableMappings || []),
+                                                                            ];
+                                                                            newMappings[index] = {
+                                                                                ...newMappings[index],
+                                                                                sourceField: e.target.value,
+                                                                            };
+
+                                                                            setFieldMappings((prev: any) => ({
+                                                                                ...prev,
+                                                                                [selectedWidget]: {
+                                                                                    ...prev[selectedWidget],
+                                                                                    filterConfig: {
+                                                                                        ...prev[selectedWidget]?.filterConfig,
+                                                                                        variableMappings: newMappings,
+                                                                                    },
+                                                                                },
+                                                                            }));
+
+                                                                            setWidgetConfigurations((prev) => ({
+                                                                                ...prev,
+                                                                                [selectedWidget]: {
+                                                                                    ...prev[selectedWidget],
+                                                                                    variableMappings: newMappings,
+                                                                                },
+                                                                            }));
+                                                                        }}
+                                                                        placeholder="e.g., PLANT"
+                                                                        sx={{
+                                                                            flex: 1,
+                                                                            input: { color: 'white' },
+                                                                            label: { color: 'white' },
+                                                                            '& .MuiOutlinedInput-root': {
+                                                                                '& fieldset': { borderColor: 'white' },
+                                                                                '&:hover fieldset': { borderColor: 'white' },
+                                                                                '&.Mui-focused fieldset': { borderColor: 'white' },
+                                                                            },
+                                                                        }}
+                                                                    />
+                                                                    <IconButton
+                                                                        size="small"
+                                                                        onClick={() => {
+                                                                            const current =
+                                                                                fieldMappings[selectedWidget]?.filterConfig
+                                                                                    ?.variableMappings || [];
+                                                                            const newMappings = current.filter(
+                                                                                (_: any, i: number) => i !== index
+                                                                            );
+
+                                                                            setFieldMappings((prev: any) => ({
+                                                                                ...prev,
+                                                                                [selectedWidget]: {
+                                                                                    ...prev[selectedWidget],
+                                                                                    filterConfig: {
+                                                                                        ...prev[selectedWidget]?.filterConfig,
+                                                                                        variableMappings: newMappings,
+                                                                                    },
+                                                                                },
+                                                                            }));
+
+                                                                            setWidgetConfigurations((prev) => ({
+                                                                                ...prev,
+                                                                                [selectedWidget]: {
+                                                                                    ...prev[selectedWidget],
+                                                                                    variableMappings: newMappings,
+                                                                                },
+                                                                            }));
+                                                                        }}
+                                                                        sx={{ color: 'white' }}
+                                                                    >
+                                                                        <DeleteIcon fontSize="small" />
+                                                                    </IconButton>
+                                                                </Box>
+                                                            ))}
+
                                                             <Button
-                                                                label="Fetch Report Data"
-                                                                onClick={handleFetchReportData}
-                                                                disabled={loading}
-                                                            />
-                                                            {loading && <CircularProgress size={20} />}
-                                                        </Box>
-                                                    </FormControl>
-                                                </Paper>
-                                            )}
-
-                                            {getWidgetConfigFields().map(({ field }) => {
-                                                const fieldMapping = fieldMappings[selectedWidget]?.fields[field];
-                                                const isManualInput = fieldMapping?.inputType === 'manual';
-                                                const mappedConfig = fieldMapping?.mappedConfig;
-                                                const widgetType = getSelectedWidgetType();
-
-                                                // For multi-chart, only show title field
-                                                if (widgetType === 'multi-chart' && field !== 'title') {
-                                                    return null;
-                                                }
-
-                                                return field !== 'data' &&
-                                                    field !== 'chart_data' &&
-                                                    field !== 'chart_yaxis' &&
-                                                    field !== 'series' &&
-                                                    field !== 'metrics' &&
-                                                    field !== 'menuItems' &&
-                                                    field !== 'chartData' &&
-                                                    field !== 'menuItemConfigs' &&
-                                                    field !== 'chartDataConfig' &&
-                                                    selectedWidgetName !== 'announcement' ? (
-                                                    <FormControl fullWidth variant="outlined" margin="normal" key={field}>
-                                                        <Typography variant="subtitle2" sx={{ color: 'white', mb: 1 }}>
-                                                            {field === 'name' || field === 'widget_name'
-                                                                ? 'TITLE'
-                                                                : field?.toUpperCase()}
-                                                        </Typography>
-
-                                                        <FormControl fullWidth variant="outlined" margin="normal" size="small">
-                                                            <InputLabel sx={{ color: 'white' }}>Input Type</InputLabel>
-                                                            <Select
-                                                                value={isManualInput ? 'manual' : 'mapped'}
-                                                                onChange={(e) =>
-                                                                    handleFieldMappingTypeChange(
-                                                                        field,
-                                                                        e.target.value as 'manual' | 'mapped'
-                                                                    )
-                                                                }
-                                                                label="Input Type"
+                                                                size="small"
                                                                 sx={{
+                                                                    mt: 1,
+                                                                    borderColor: 'white',
                                                                     color: 'white',
-                                                                    '& .MuiOutlinedInput-notchedOutline': {
+                                                                    borderWidth: 1,
+                                                                    borderStyle: 'solid',
+                                                                    textTransform: 'none',
+                                                                    '&:hover': {
                                                                         borderColor: 'white',
+                                                                        backgroundColor: 'rgba(255,255,255,0.1)',
                                                                     },
-                                                                    '&:hover .MuiOutlinedInput-notchedOutline': {
-                                                                        borderColor: 'white',
-                                                                    },
-                                                                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                                                                        borderColor: 'white',
-                                                                    },
-                                                                    '& .MuiSvgIcon-root': { color: 'white' },
+                                                                }}
+                                                                onClick={() => {
+                                                                    const current =
+                                                                        fieldMappings[selectedWidget]?.filterConfig
+                                                                            ?.variableMappings || [];
+                                                                    const newMappings = [
+                                                                        ...current,
+                                                                        { varName: '', sourceField: '', operator: 'EQ' },
+                                                                    ];
+
+                                                                    setFieldMappings((prev: any) => ({
+                                                                        ...prev,
+                                                                        [selectedWidget]: {
+                                                                            ...prev[selectedWidget],
+                                                                            filterConfig: {
+                                                                                ...prev[selectedWidget]?.filterConfig,
+                                                                                variableMappings: newMappings,
+                                                                            },
+                                                                        },
+                                                                    }));
+
+                                                                    setWidgetConfigurations((prev) => ({
+                                                                        ...prev,
+                                                                        [selectedWidget]: {
+                                                                            ...prev[selectedWidget],
+                                                                            variableMappings: newMappings,
+                                                                        },
+                                                                    }));
                                                                 }}
                                                             >
-                                                                <MenuItem value="manual">Manual Input</MenuItem>
-                                                                <MenuItem value="mapped">Query Mapping</MenuItem>
-                                                            </Select>
-                                                        </FormControl>
+                                                                Add Variable Mapping
+                                                            </Button>
+                                                        </Box>
+                                                    </Paper>
+                                                )}
 
-                                                        {isManualInput ? (
+                                                {/* Listener Widget Configuration */}
+                                                {selectedWidgetName === 'listener-widget' && (
+                                                    <Paper elevation={2} sx={{ p: 2, mb: 2, backgroundColor: '#ffffff20' }}>
+                                                        <Typography variant="h6" gutterBottom sx={{ color: 'white' }}>
+                                                            Listener Widget Configuration
+                                                        </Typography>
+                                                        <TextField
+                                                            fullWidth
+                                                            label="Report Name"
+                                                            value={fieldMappings[selectedWidget]?.reportName || ''}
+                                                            onChange={(e) => {
+                                                                setFieldMappings((prev) => ({
+                                                                    ...prev,
+                                                                    [selectedWidget]: {
+                                                                        ...prev[selectedWidget],
+                                                                        reportName: e.target.value,
+                                                                    },
+                                                                }));
+                                                                setWidgetConfigurations((prev) => ({
+                                                                    ...prev,
+                                                                    [selectedWidget]: {
+                                                                        ...prev[selectedWidget],
+                                                                        reportName: e.target.value,
+                                                                    },
+                                                                }));
+                                                            }}
+                                                            margin="normal"
+                                                            sx={{
+                                                                input: { color: 'white' },
+                                                                label: { color: 'white' },
+                                                                '& .MuiOutlinedInput-root': {
+                                                                    '& fieldset': { borderColor: 'white' },
+                                                                    '&:hover fieldset': { borderColor: 'white' },
+                                                                    '&.Mui-focused fieldset': { borderColor: 'white' },
+                                                                },
+                                                            }}
+                                                        />
+                                                        <TextField
+                                                            fullWidth
+                                                            label="Listen to Event (event name to subscribe to)"
+                                                            value={fieldMappings[selectedWidget]?.listenerConfig?.listenToEvent || 'filter-changed'}
+                                                            onChange={(e) => {
+                                                                setFieldMappings((prev) => ({
+                                                                    ...prev,
+                                                                    [selectedWidget]: {
+                                                                        ...prev[selectedWidget],
+                                                                        listenerConfig: {
+                                                                            ...prev[selectedWidget]?.listenerConfig,
+                                                                            listenToEvent: e.target.value,
+                                                                        },
+                                                                    },
+                                                                }));
+                                                                setWidgetConfigurations((prev) => ({
+                                                                    ...prev,
+                                                                    [selectedWidget]: {
+                                                                        ...prev[selectedWidget],
+                                                                        listenToEvent: e.target.value,
+                                                                    },
+                                                                }));
+                                                            }}
+                                                            margin="normal"
+                                                            sx={{
+                                                                input: { color: 'white' },
+                                                                label: { color: 'white' },
+                                                                '& .MuiOutlinedInput-root': {
+                                                                    '& fieldset': { borderColor: 'white' },
+                                                                    '&:hover fieldset': { borderColor: 'white' },
+                                                                    '&.Mui-focused fieldset': { borderColor: 'white' },
+                                                                },
+                                                            }}
+                                                        />
+                                                    </Paper>
+                                                )}
+
+                                                {hasAnyMappedFields() && (
+                                                    <Paper elevation={2} sx={{ p: 2, mb: 2, backgroundColor: '#ffffff20' }}>
+                                                        <Typography variant="h6" gutterBottom sx={{ color: 'white' }}>
+                                                            Query Configuration
+                                                        </Typography>
+                                                        <Alert severity="info" sx={{ mb: 2, backgroundColor: '#2196f320' }}>
+                                                            <Typography sx={{ color: 'white' }}>
+                                                                Configure the SAP BW report to fetch data from when using mapped
+                                                                fields.
+                                                            </Typography>
+                                                        </Alert>
+
+                                                        <FormControl fullWidth variant="outlined" margin="normal">
                                                             <TextField
-                                                                label={`Value for ${field}`}
-                                                                value={fieldMapping?.manualValue || ''}
-                                                                onChange={(e) => handleManualValueChange(field, e.target.value)}
-                                                                fullWidth
-                                                                margin="normal"
-                                                                size="small"
+                                                                label="Report Technical Name"
+                                                                value={reportName}
+                                                                onChange={handleReportNameChange}
+                                                                helperText="Enter the technical name of the SAP BW report"
                                                                 sx={{
                                                                     input: { color: 'white' },
                                                                     label: { color: 'white' },
                                                                     '& .MuiOutlinedInput-root': {
                                                                         '& fieldset': { borderColor: 'white' },
                                                                         '&:hover fieldset': { borderColor: 'white' },
-                                                                        '&.Mui-focused fieldset': {
-                                                                            borderColor: 'white',
-                                                                        },
+                                                                        '&.Mui-focused fieldset': { borderColor: 'white' },
                                                                     },
+                                                                    '& .MuiFormHelperText-root': { color: 'white' },
                                                                 }}
                                                             />
-                                                        ) : (
-                                                            <Box
-                                                                mt={2}
-                                                                p={2}
-                                                                border={1}
-                                                                borderColor="rgba(255,255,255,0.3)"
-                                                                borderRadius={1}
-                                                                sx={{ backgroundColor: '#ffffff10' }}
-                                                            >
-                                                                <Typography variant="subtitle2" sx={{ color: 'white', mb: 2 }}>
-                                                                    Data Mapping Configuration
-                                                                </Typography>
-                                                                {!parsedResponse && (
-                                                                    <Alert
-                                                                        severity="warning"
-                                                                        sx={{ mb: 2, backgroundColor: '#ff980020' }}
-                                                                    >
-                                                                        <Typography sx={{ color: 'white' }}>
-                                                                            Please configure and fetch report data first to enable field
-                                                                            mapping.
-                                                                        </Typography>
-                                                                    </Alert>
-                                                                )}
+                                                            <Box mt={2} display="flex" alignItems="center" gap={2}>
+                                                                <Button
+                                                                    label="Fetch Report Data"
+                                                                    onClick={handleFetchReportData}
+                                                                    disabled={loading}
+                                                                />
+                                                                {loading && <CircularProgress size={20} />}
+                                                            </Box>
+                                                        </FormControl>
+                                                    </Paper>
+                                                )}
 
-                                                                {parsedResponse && (
-                                                                    <Grid container spacing={2}>
-                                                                        <Grid item xs={12}>
-                                                                            <FormControl fullWidth size="small">
-                                                                                <InputLabel sx={{ color: 'white' }}>CHA Field</InputLabel>
-                                                                                <Select
-                                                                                    value={mappedConfig?.chaField || ''}
-                                                                                    onChange={(e) => {
-                                                                                        const chaField = e.target.value as string;
-                                                                                        handleMappedFieldSelection(
-                                                                                            field,
-                                                                                            chaField,
-                                                                                            mappedConfig?.chaValue || '',
-                                                                                            mappedConfig?.kfField || ''
-                                                                                        );
-                                                                                    }}
-                                                                                    label="CHA Field"
-                                                                                    sx={{
-                                                                                        color: 'white',
-                                                                                        '& .MuiOutlinedInput-notchedOutline': {
-                                                                                            borderColor: 'white',
-                                                                                        },
-                                                                                        '&:hover .MuiOutlinedInput-notchedOutline': {
-                                                                                            borderColor: 'white',
-                                                                                        },
-                                                                                        '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                                                                                            borderColor: 'white',
-                                                                                        },
-                                                                                        '& .MuiSvgIcon-root': {
-                                                                                            color: 'white',
-                                                                                        },
-                                                                                    }}
-                                                                                >
-                                                                                    {getCHAFields().map((chaField: any) => (
-                                                                                        <MenuItem
-                                                                                            key={chaField.fieldName}
-                                                                                            value={chaField.fieldName}
-                                                                                        >
-                                                                                            {chaField.label} ({chaField.fieldName})
-                                                                                        </MenuItem>
-                                                                                    ))}
-                                                                                </Select>
-                                                                            </FormControl>
-                                                                        </Grid>
+                                                {getWidgetConfigFields().map(({ field }) => {
+                                                    const fieldMapping = fieldMappings[selectedWidget]?.fields[field];
+                                                    const isManualInput = fieldMapping?.inputType === 'manual';
+                                                    const mappedConfig = fieldMapping?.mappedConfig;
+                                                    const widgetType = getSelectedWidgetType();
 
-                                                                        {mappedConfig?.chaField && (
+                                                    // For multi-chart, only show title field
+                                                    if (widgetType === 'multi-chart' && field !== 'title') {
+                                                        return null;
+                                                    }
+
+                                                    return field !== 'data' &&
+                                                        field !== 'chart_data' &&
+                                                        field !== 'chart_yaxis' &&
+                                                        field !== 'series' &&
+                                                        field !== 'metrics' &&
+                                                        field !== 'menuItems' &&
+                                                        field !== 'chartData' &&
+                                                        field !== 'menuItemConfigs' &&
+                                                        field !== 'chartDataConfig' &&
+                                                        selectedWidgetName !== 'announcement' ? (
+                                                        <FormControl fullWidth variant="outlined" margin="normal" key={field}>
+                                                            <Typography variant="subtitle2" sx={{ color: 'white', mb: 1 }}>
+                                                                {field === 'name' || field === 'widget_name'
+                                                                    ? 'TITLE'
+                                                                    : field?.toUpperCase()}
+                                                            </Typography>
+
+                                                            <FormControl fullWidth variant="outlined" margin="normal" size="small">
+                                                                <InputLabel sx={{ color: 'white' }}>Input Type</InputLabel>
+                                                                <Select
+                                                                    value={isManualInput ? 'manual' : 'mapped'}
+                                                                    onChange={(e) =>
+                                                                        handleFieldMappingTypeChange(
+                                                                            field,
+                                                                            e.target.value as 'manual' | 'mapped'
+                                                                        )
+                                                                    }
+                                                                    label="Input Type"
+                                                                    sx={{
+                                                                        color: 'white',
+                                                                        '& .MuiOutlinedInput-notchedOutline': {
+                                                                            borderColor: 'white',
+                                                                        },
+                                                                        '&:hover .MuiOutlinedInput-notchedOutline': {
+                                                                            borderColor: 'white',
+                                                                        },
+                                                                        '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                                                                            borderColor: 'white',
+                                                                        },
+                                                                        '& .MuiSvgIcon-root': { color: 'white' },
+                                                                    }}
+                                                                >
+                                                                    <MenuItem value="manual">Manual Input</MenuItem>
+                                                                    <MenuItem value="mapped">Query Mapping</MenuItem>
+                                                                </Select>
+                                                            </FormControl>
+
+                                                            {isManualInput ? (
+                                                                <TextField
+                                                                    label={`Value for ${field}`}
+                                                                    value={fieldMapping?.manualValue || ''}
+                                                                    onChange={(e) => handleManualValueChange(field, e.target.value)}
+                                                                    fullWidth
+                                                                    margin="normal"
+                                                                    size="small"
+                                                                    sx={{
+                                                                        input: { color: 'white' },
+                                                                        label: { color: 'white' },
+                                                                        '& .MuiOutlinedInput-root': {
+                                                                            '& fieldset': { borderColor: 'white' },
+                                                                            '&:hover fieldset': { borderColor: 'white' },
+                                                                            '&.Mui-focused fieldset': {
+                                                                                borderColor: 'white',
+                                                                            },
+                                                                        },
+                                                                    }}
+                                                                />
+                                                            ) : (
+                                                                <Box
+                                                                    mt={2}
+                                                                    p={2}
+                                                                    border={1}
+                                                                    borderColor="rgba(255,255,255,0.3)"
+                                                                    borderRadius={1}
+                                                                    sx={{ backgroundColor: '#ffffff10' }}
+                                                                >
+                                                                    <Typography variant="subtitle2" sx={{ color: 'white', mb: 2 }}>
+                                                                        Data Mapping Configuration
+                                                                    </Typography>
+                                                                    {!parsedResponse && (
+                                                                        <Alert
+                                                                            severity="warning"
+                                                                            sx={{ mb: 2, backgroundColor: '#ff980020' }}
+                                                                        >
+                                                                            <Typography sx={{ color: 'white' }}>
+                                                                                Please configure and fetch report data first to enable field
+                                                                                mapping.
+                                                                            </Typography>
+                                                                        </Alert>
+                                                                    )}
+
+                                                                    {parsedResponse && (
+                                                                        <Grid container spacing={2}>
                                                                             <Grid item xs={12}>
                                                                                 <FormControl fullWidth size="small">
-                                                                                    <InputLabel sx={{ color: 'white' }}>CHA Value</InputLabel>
+                                                                                    <InputLabel sx={{ color: 'white' }}>CHA Field</InputLabel>
                                                                                     <Select
-                                                                                        value={mappedConfig?.chaValue || ''}
+                                                                                        value={mappedConfig?.chaField || ''}
                                                                                         onChange={(e) => {
-                                                                                            const chaValue = e.target.value as string;
+                                                                                            const chaField = e.target.value as string;
                                                                                             handleMappedFieldSelection(
                                                                                                 field,
-                                                                                                mappedConfig?.chaField || '',
-                                                                                                chaValue,
+                                                                                                chaField,
+                                                                                                mappedConfig?.chaValue || '',
                                                                                                 mappedConfig?.kfField || ''
                                                                                             );
                                                                                         }}
-                                                                                        label="CHA Value"
+                                                                                        label="CHA Field"
                                                                                         sx={{
                                                                                             color: 'white',
                                                                                             '& .MuiOutlinedInput-notchedOutline': {
@@ -4638,254 +5069,224 @@ const MappingScreen: React.FC = () => {
                                                                                             },
                                                                                         }}
                                                                                     >
-                                                                                        {getCHAValues(mappedConfig?.chaField).map((value) => (
-                                                                                            <MenuItem key={value} value={value}>
-                                                                                                {value}
-                                                                                            </MenuItem>
-                                                                                        ))}
-                                                                                    </Select>
-                                                                                </FormControl>
-                                                                            </Grid>
-                                                                        )}
-
-                                                                        {mappedConfig?.chaField && mappedConfig?.chaValue && (
-                                                                            <Grid item xs={12}>
-                                                                                <FormControl fullWidth size="small">
-                                                                                    <InputLabel sx={{ color: 'white' }}>KF Field</InputLabel>
-                                                                                    <Select
-                                                                                        value={mappedConfig?.kfField || ''}
-                                                                                        onChange={(e) => {
-                                                                                            const kfField = e.target.value as string;
-                                                                                            handleMappedFieldSelection(
-                                                                                                field,
-                                                                                                mappedConfig?.chaField || '',
-                                                                                                mappedConfig?.chaValue || '',
-                                                                                                kfField
-                                                                                            );
-                                                                                        }}
-                                                                                        label="KF Field"
-                                                                                        sx={{
-                                                                                            color: 'white',
-                                                                                            '& .MuiOutlinedInput-notchedOutline': {
-                                                                                                borderColor: 'white',
-                                                                                            },
-                                                                                            '&:hover .MuiOutlinedInput-notchedOutline': {
-                                                                                                borderColor: 'white',
-                                                                                            },
-                                                                                            '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                                                                                                borderColor: 'white',
-                                                                                            },
-                                                                                            '& .MuiSvgIcon-root': {
-                                                                                                color: 'white',
-                                                                                            },
-                                                                                        }}
-                                                                                    >
-                                                                                        {getKFFields().map((kfField: any) => (
+                                                                                        {getCHAFields().map((chaField: any) => (
                                                                                             <MenuItem
-                                                                                                key={kfField.fieldName}
-                                                                                                value={kfField.fieldName}
+                                                                                                key={chaField.fieldName}
+                                                                                                value={chaField.fieldName}
                                                                                             >
-                                                                                                {kfField.label} ({kfField.fieldName})
+                                                                                                {chaField.label} ({chaField.fieldName})
                                                                                             </MenuItem>
                                                                                         ))}
                                                                                     </Select>
                                                                                 </FormControl>
                                                                             </Grid>
-                                                                        )}
 
-                                                                        {mappedConfig?.chaField &&
-                                                                            mappedConfig?.chaValue &&
-                                                                            mappedConfig?.kfField && (
+                                                                            {mappedConfig?.chaField && (
                                                                                 <Grid item xs={12}>
-                                                                                    <Alert
-                                                                                        severity="success"
-                                                                                        sx={{ backgroundColor: '#4caf5020' }}
-                                                                                    >
-                                                                                        <Typography variant="body2" sx={{ color: 'white' }}>
-                                                                                            Mapped Value:{' '}
-                                                                                            {getKFValue(
-                                                                                                mappedConfig.chaField,
-                                                                                                mappedConfig.chaValue,
-                                                                                                mappedConfig.kfField
-                                                                                            ) || 'No data'}
-                                                                                        </Typography>
-                                                                                    </Alert>
+                                                                                    <FormControl fullWidth size="small">
+                                                                                        <InputLabel sx={{ color: 'white' }}>CHA Value</InputLabel>
+                                                                                        <Select
+                                                                                            value={mappedConfig?.chaValue || ''}
+                                                                                            onChange={(e) => {
+                                                                                                const chaValue = e.target.value as string;
+                                                                                                handleMappedFieldSelection(
+                                                                                                    field,
+                                                                                                    mappedConfig?.chaField || '',
+                                                                                                    chaValue,
+                                                                                                    mappedConfig?.kfField || ''
+                                                                                                );
+                                                                                            }}
+                                                                                            label="CHA Value"
+                                                                                            sx={{
+                                                                                                color: 'white',
+                                                                                                '& .MuiOutlinedInput-notchedOutline': {
+                                                                                                    borderColor: 'white',
+                                                                                                },
+                                                                                                '&:hover .MuiOutlinedInput-notchedOutline': {
+                                                                                                    borderColor: 'white',
+                                                                                                },
+                                                                                                '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                                                                                                    borderColor: 'white',
+                                                                                                },
+                                                                                                '& .MuiSvgIcon-root': {
+                                                                                                    color: 'white',
+                                                                                                },
+                                                                                            }}
+                                                                                        >
+                                                                                            {getCHAValues(mappedConfig?.chaField).map((value) => (
+                                                                                                <MenuItem key={value} value={value}>
+                                                                                                    {value}
+                                                                                                </MenuItem>
+                                                                                            ))}
+                                                                                        </Select>
+                                                                                    </FormControl>
                                                                                 </Grid>
                                                                             )}
-                                                                    </Grid>
-                                                                )}
-                                                            </Box>
-                                                        )}
 
-                                                        {/* ADD FORMATTING UI HERE */}
-                                                        {(field === 'value' ||
-                                                            field === 'value1' ||
-                                                            field === 'value2' ||
-                                                            field === 'totalValue' ||
-                                                            field === 'amount' ||
-                                                            field.toLowerCase().includes('value')) && (
-                                                                <FormatConfigUI
-                                                                    value={fieldMapping?.formatConfig}
-                                                                    onChange={(config) => handleFormatConfigChange(field, config)}
-                                                                    sampleValue={
-                                                                        isManualInput
-                                                                            ? parseFloat(fieldMapping?.manualValue) || 1234567.89
-                                                                            : mappedConfig?.chaField &&
+                                                                            {mappedConfig?.chaField && mappedConfig?.chaValue && (
+                                                                                <Grid item xs={12}>
+                                                                                    <FormControl fullWidth size="small">
+                                                                                        <InputLabel sx={{ color: 'white' }}>KF Field</InputLabel>
+                                                                                        <Select
+                                                                                            value={mappedConfig?.kfField || ''}
+                                                                                            onChange={(e) => {
+                                                                                                const kfField = e.target.value as string;
+                                                                                                handleMappedFieldSelection(
+                                                                                                    field,
+                                                                                                    mappedConfig?.chaField || '',
+                                                                                                    mappedConfig?.chaValue || '',
+                                                                                                    kfField
+                                                                                                );
+                                                                                            }}
+                                                                                            label="KF Field"
+                                                                                            sx={{
+                                                                                                color: 'white',
+                                                                                                '& .MuiOutlinedInput-notchedOutline': {
+                                                                                                    borderColor: 'white',
+                                                                                                },
+                                                                                                '&:hover .MuiOutlinedInput-notchedOutline': {
+                                                                                                    borderColor: 'white',
+                                                                                                },
+                                                                                                '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                                                                                                    borderColor: 'white',
+                                                                                                },
+                                                                                                '& .MuiSvgIcon-root': {
+                                                                                                    color: 'white',
+                                                                                                },
+                                                                                            }}
+                                                                                        >
+                                                                                            {getKFFields().map((kfField: any) => (
+                                                                                                <MenuItem
+                                                                                                    key={kfField.fieldName}
+                                                                                                    value={kfField.fieldName}
+                                                                                                >
+                                                                                                    {kfField.label} ({kfField.fieldName})
+                                                                                                </MenuItem>
+                                                                                            ))}
+                                                                                        </Select>
+                                                                                    </FormControl>
+                                                                                </Grid>
+                                                                            )}
+
+                                                                            {mappedConfig?.chaField &&
                                                                                 mappedConfig?.chaValue &&
-                                                                                mappedConfig?.kfField
-                                                                                ? parseFloat(
-                                                                                    getKFValue(
-                                                                                        mappedConfig.chaField,
-                                                                                        mappedConfig.chaValue,
-                                                                                        mappedConfig.kfField
-                                                                                    )
-                                                                                ) || 1234567.89
-                                                                                : 1234567.89
-                                                                    }
-                                                                    label={`Format ${field}`}
-                                                                />
+                                                                                mappedConfig?.kfField && (
+                                                                                    <Grid item xs={12}>
+                                                                                        <Alert
+                                                                                            severity="success"
+                                                                                            sx={{ backgroundColor: '#4caf5020' }}
+                                                                                        >
+                                                                                            <Typography variant="body2" sx={{ color: 'white' }}>
+                                                                                                Mapped Value:{' '}
+                                                                                                {getKFValue(
+                                                                                                    mappedConfig.chaField,
+                                                                                                    mappedConfig.chaValue,
+                                                                                                    mappedConfig.kfField
+                                                                                                ) || 'No data'}
+                                                                                            </Typography>
+                                                                                        </Alert>
+                                                                                    </Grid>
+                                                                                )}
+                                                                        </Grid>
+                                                                    )}
+                                                                </Box>
                                                             )}
 
-                                                        {/* Value Preview */}
-                                                        <Box
-                                                            mt={2}
-                                                            p={1.5}
-                                                            border={1}
-                                                            borderColor="rgba(255,255,255,0.2)"
-                                                            borderRadius={1}
-                                                            sx={{
-                                                                backgroundColor: '#ffffff10',
-                                                                display: 'flex',
-                                                                alignItems: 'center',
-                                                                gap: 1
-                                                            }}
-                                                        >
-                                                            <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.7)' }}>
-                                                                Preview:
-                                                            </Typography>
-                                                            <Typography
-                                                                variant="body2"
+                                                            {/* ADD FORMATTING UI HERE */}
+                                                            {(field === 'value' ||
+                                                                field === 'value1' ||
+                                                                field === 'value2' ||
+                                                                field === 'totalValue' ||
+                                                                field === 'amount' ||
+                                                                field.toLowerCase().includes('value')) && (
+                                                                    <FormatConfigUI
+                                                                        value={fieldMapping?.formatConfig}
+                                                                        onChange={(config) => handleFormatConfigChange(field, config)}
+                                                                        sampleValue={
+                                                                            isManualInput
+                                                                                ? parseFloat(fieldMapping?.manualValue) || 1234567.89
+                                                                                : mappedConfig?.chaField &&
+                                                                                    mappedConfig?.chaValue &&
+                                                                                    mappedConfig?.kfField
+                                                                                    ? parseFloat(
+                                                                                        getKFValue(
+                                                                                            mappedConfig.chaField,
+                                                                                            mappedConfig.chaValue,
+                                                                                            mappedConfig.kfField
+                                                                                        )
+                                                                                    ) || 1234567.89
+                                                                                    : 1234567.89
+                                                                        }
+                                                                        label={`Format ${field}`}
+                                                                    />
+                                                                )}
+
+                                                            {/* Value Preview */}
+                                                            <Box
+                                                                mt={2}
+                                                                p={1.5}
+                                                                border={1}
+                                                                borderColor="rgba(255,255,255,0.2)"
+                                                                borderRadius={1}
                                                                 sx={{
-                                                                    color: 'white',
-                                                                    fontWeight: 'medium',
-                                                                    flex: 1
+                                                                    backgroundColor: '#ffffff10',
+                                                                    display: 'flex',
+                                                                    alignItems: 'center',
+                                                                    gap: 1
                                                                 }}
                                                             >
-                                                                {isManualInput ? (
-                                                                    fieldMapping?.manualValue !== undefined && fieldMapping?.manualValue !== null
-                                                                        ? String(fieldMapping.manualValue)
-                                                                        : 'No value set'
-                                                                ) : (
-                                                                    mappedConfig?.chaField && mappedConfig?.chaValue && mappedConfig?.kfField
-                                                                        ? (getKFValue(
-                                                                            mappedConfig.chaField,
-                                                                            mappedConfig.chaValue,
-                                                                            mappedConfig.kfField
-                                                                        ) || 'No data available')
-                                                                        : 'Configure mapping to see preview'
-                                                                )}
-                                                            </Typography>
-                                                        </Box>
-                                                    </FormControl>
-                                                ) : null;
-                                            })}
-
-                                            {renderMultiMetricConfigurator()}
-
-                                            {selectedWidgetName === 'announcement'
-                                                ? (() => {
-                                                    const fieldMapping = fieldMappings[selectedWidget]?.fields['title'];
-                                                    return (
-                                                        <>
-                                                            <Box sx={{ color: 'white' }}>
-                                                                <FormControl
-                                                                    fullWidth
-                                                                    variant="outlined"
-                                                                    margin="normal"
-                                                                    key={'title'}
+                                                                <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.7)' }}>
+                                                                    Preview:
+                                                                </Typography>
+                                                                <Typography
+                                                                    variant="body2"
+                                                                    sx={{
+                                                                        color: 'white',
+                                                                        fontWeight: 'medium',
+                                                                        flex: 1
+                                                                    }}
                                                                 >
-                                                                    <TextField
-                                                                        label="TITLE"
-                                                                        onChange={(e) =>
-                                                                            handleAnnouncementValueChange('title', e.target.value)
-                                                                        }
-                                                                        fullWidth
-                                                                        margin="normal"
-                                                                        value={fieldMapping?.manualValue || ''}
-                                                                        size="small"
-                                                                        sx={{
-                                                                            input: { color: 'white' },
-                                                                            label: { color: 'white' },
-                                                                            '& .MuiOutlinedInput-root': {
-                                                                                '& fieldset': { borderColor: 'white' },
-                                                                                '&:hover fieldset': { borderColor: 'white' },
-                                                                                '&.Mui-focused fieldset': {
-                                                                                    borderColor: 'white',
-                                                                                },
-                                                                            },
-                                                                        }}
-                                                                    />
-                                                                </FormControl>
+                                                                    {isManualInput ? (
+                                                                        fieldMapping?.manualValue !== undefined && fieldMapping?.manualValue !== null
+                                                                            ? String(fieldMapping.manualValue)
+                                                                            : 'No value set'
+                                                                    ) : (
+                                                                        mappedConfig?.chaField && mappedConfig?.chaValue && mappedConfig?.kfField
+                                                                            ? (getKFValue(
+                                                                                mappedConfig.chaField,
+                                                                                mappedConfig.chaValue,
+                                                                                mappedConfig.kfField
+                                                                            ) || 'No data available')
+                                                                            : 'Configure mapping to see preview'
+                                                                    )}
+                                                                </Typography>
+                                                            </Box>
+                                                        </FormControl>
+                                                    ) : null;
+                                                })}
 
-                                                                <FormControl fullWidth variant="outlined" margin="normal">
-                                                                    <InputLabel sx={{ color: 'white' }}>
-                                                                        Number of Announcements
-                                                                    </InputLabel>
-                                                                    <Select
-                                                                        value={announcementCount}
-                                                                        onChange={handleCountChange}
-                                                                        label="Number of Announcements"
-                                                                        size="small"
-                                                                        sx={{
-                                                                            color: 'white',
-                                                                            '& .MuiOutlinedInput-notchedOutline': {
-                                                                                borderColor: 'white',
-                                                                            },
-                                                                            '&:hover .MuiOutlinedInput-notchedOutline': {
-                                                                                borderColor: 'white',
-                                                                            },
-                                                                            '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                                                                                borderColor: 'white',
-                                                                            },
-                                                                        }}
-                                                                    >
-                                                                        {[...Array(5).keys()].map((num) => (
-                                                                            <MenuItem key={num + 1} value={num + 1}>
-                                                                                {num + 1}
-                                                                            </MenuItem>
-                                                                        ))}
-                                                                    </Select>
-                                                                </FormControl>
+                                                {renderMultiMetricConfigurator()}
 
-                                                                {announcementValues.map((value, index) => (
+                                                {selectedWidgetName === 'announcement'
+                                                    ? (() => {
+                                                        const fieldMapping = fieldMappings[selectedWidget]?.fields['title'];
+                                                        return (
+                                                            <>
+                                                                <Box sx={{ color: 'white' }}>
                                                                     <FormControl
                                                                         fullWidth
                                                                         variant="outlined"
                                                                         margin="normal"
-                                                                        key={`announcement-${index}`}
+                                                                        key={'title'}
                                                                     >
                                                                         <TextField
-                                                                            label={`ANNOUNCEMENT ${index + 1}`}
-                                                                            value={value}
+                                                                            label="TITLE"
                                                                             onChange={(e) =>
-                                                                                handleAnnouncementValueChanges(index, e.target.value)
+                                                                                handleAnnouncementValueChange('title', e.target.value)
                                                                             }
                                                                             fullWidth
-                                                                            multiline
-                                                                            minRows={3}
-                                                                            InputProps={{
-                                                                                style: {
-                                                                                    color: 'white',
-                                                                                    fontSize: '1.1rem',
-                                                                                    fontWeight: '500',
-                                                                                },
-                                                                            }}
-                                                                            InputLabelProps={{
-                                                                                style: {
-                                                                                    color: 'white',
-                                                                                    fontSize: '1rem',
-                                                                                },
-                                                                            }}
+                                                                            margin="normal"
+                                                                            value={fieldMapping?.manualValue || ''}
                                                                             size="small"
                                                                             sx={{
                                                                                 input: { color: 'white' },
@@ -4900,68 +5301,110 @@ const MappingScreen: React.FC = () => {
                                                                             }}
                                                                         />
                                                                     </FormControl>
-                                                                ))}
-                                                            </Box>
-                                                        </>
-                                                    );
-                                                })()
-                                                : null}
-                                        </TabPanel>
 
-                                        <TabPanel value={tabValue} index={tabIndices.authorization}>
-                                            <Box>
-                                                <Typography variant="h6" gutterBottom sx={{ color: 'white' }}>
-                                                    Role Management
-                                                </Typography>
-                                                <Alert severity="info" sx={{ mb: 2, backgroundColor: '#2196f320' }}>
-                                                    <Typography sx={{ color: 'white' }}>
-                                                        Add roles that are allowed to view this widget. If no roles are
-                                                        specified, the widget will be visible to all users.
+                                                                    <FormControl fullWidth variant="outlined" margin="normal">
+                                                                        <InputLabel sx={{ color: 'white' }}>
+                                                                            Number of Announcements
+                                                                        </InputLabel>
+                                                                        <Select
+                                                                            value={announcementCount}
+                                                                            onChange={handleCountChange}
+                                                                            label="Number of Announcements"
+                                                                            size="small"
+                                                                            sx={{
+                                                                                color: 'white',
+                                                                                '& .MuiOutlinedInput-notchedOutline': {
+                                                                                    borderColor: 'white',
+                                                                                },
+                                                                                '&:hover .MuiOutlinedInput-notchedOutline': {
+                                                                                    borderColor: 'white',
+                                                                                },
+                                                                                '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                                                                                    borderColor: 'white',
+                                                                                },
+                                                                            }}
+                                                                        >
+                                                                            {[...Array(5).keys()].map((num) => (
+                                                                                <MenuItem key={num + 1} value={num + 1}>
+                                                                                    {num + 1}
+                                                                                </MenuItem>
+                                                                            ))}
+                                                                        </Select>
+                                                                    </FormControl>
+
+                                                                    {announcementValues.map((value, index) => (
+                                                                        <FormControl
+                                                                            fullWidth
+                                                                            variant="outlined"
+                                                                            margin="normal"
+                                                                            key={`announcement-${index}`}
+                                                                        >
+                                                                            <TextField
+                                                                                label={`ANNOUNCEMENT ${index + 1}`}
+                                                                                value={value}
+                                                                                onChange={(e) =>
+                                                                                    handleAnnouncementValueChanges(index, e.target.value)
+                                                                                }
+                                                                                fullWidth
+                                                                                multiline
+                                                                                minRows={3}
+                                                                                InputProps={{
+                                                                                    style: {
+                                                                                        color: 'white',
+                                                                                        fontSize: '1.1rem',
+                                                                                        fontWeight: '500',
+                                                                                    },
+                                                                                }}
+                                                                                InputLabelProps={{
+                                                                                    style: {
+                                                                                        color: 'white',
+                                                                                        fontSize: '1rem',
+                                                                                    },
+                                                                                }}
+                                                                                size="small"
+                                                                                sx={{
+                                                                                    input: { color: 'white' },
+                                                                                    label: { color: 'white' },
+                                                                                    '& .MuiOutlinedInput-root': {
+                                                                                        '& fieldset': { borderColor: 'white' },
+                                                                                        '&:hover fieldset': { borderColor: 'white' },
+                                                                                        '&.Mui-focused fieldset': {
+                                                                                            borderColor: 'white',
+                                                                                        },
+                                                                                    },
+                                                                                }}
+                                                                            />
+                                                                        </FormControl>
+                                                                    ))}
+                                                                </Box>
+                                                            </>
+                                                        );
+                                                    })()
+                                                    : null}
+                                            </TabPanel>
+
+                                            <TabPanel value={tabValue} index={tabIndices.authorization}>
+                                                <Box>
+                                                    <Typography variant="h6" gutterBottom sx={{ color: 'white' }}>
+                                                        Role Management
                                                     </Typography>
-                                                </Alert>
+                                                    <Alert severity="info" sx={{ mb: 2, backgroundColor: '#2196f320' }}>
+                                                        <Typography sx={{ color: 'white' }}>
+                                                            Add roles that are allowed to view this widget. If no roles are
+                                                            specified, the widget will be visible to all users.
+                                                        </Typography>
+                                                    </Alert>
 
-                                                <Box mb={2}>
-                                                    <TextField
-                                                        label="Add Role"
-                                                        fullWidth
-                                                        size="small"
-                                                        variant="outlined"
-                                                        value={newRole}
-                                                        onChange={(e) => setNewRole(e.target.value)}
-                                                        onKeyDown={(e) => {
-                                                            if (e.key === 'Enter' && newRole.trim()) {
-                                                                const currentRoles =
-                                                                    widgetConfigurations[selectedWidget]?.roles || [];
-                                                                // Add new role as an object with empty RoleId
-                                                                const newRoleObj = {
-                                                                    Name: newRole.trim(),
-                                                                    RoleId: '', // Empty for new roles
-                                                                    Description: '',
-                                                                    Type: 'Custom',
-                                                                    DelFlag: '',
-                                                                };
-                                                                const updatedRoles = [...currentRoles, newRoleObj];
-                                                                handleRolesChange(updatedRoles);
-                                                                setNewRole('');
-                                                            }
-                                                        }}
-                                                        sx={{
-                                                            input: { color: 'white' },
-                                                            label: { color: 'white' },
-                                                            '& .MuiOutlinedInput-root': {
-                                                                '& fieldset': { borderColor: 'white' },
-                                                                '&:hover fieldset': { borderColor: 'white' },
-                                                                '&.Mui-focused fieldset': {
-                                                                    borderColor: 'white',
-                                                                },
-                                                            },
-                                                        }}
-                                                    />
-                                                    <div className="mt-2">
-                                                        <Button
+                                                    <Box mb={2}>
+                                                        <TextField
                                                             label="Add Role"
-                                                            onClick={() => {
-                                                                if (newRole.trim()) {
+                                                            fullWidth
+                                                            size="small"
+                                                            variant="outlined"
+                                                            value={newRole}
+                                                            onChange={(e) => setNewRole(e.target.value)}
+                                                            onKeyDown={(e) => {
+                                                                if (e.key === 'Enter' && newRole.trim()) {
                                                                     const currentRoles =
                                                                         widgetConfigurations[selectedWidget]?.roles || [];
                                                                     // Add new role as an object with empty RoleId
@@ -4977,331 +5420,1267 @@ const MappingScreen: React.FC = () => {
                                                                     setNewRole('');
                                                                 }
                                                             }}
-                                                            icon={<AddIcon />}
+                                                            sx={{
+                                                                input: { color: 'white' },
+                                                                label: { color: 'white' },
+                                                                '& .MuiOutlinedInput-root': {
+                                                                    '& fieldset': { borderColor: 'white' },
+                                                                    '&:hover fieldset': { borderColor: 'white' },
+                                                                    '&.Mui-focused fieldset': {
+                                                                        borderColor: 'white',
+                                                                    },
+                                                                },
+                                                            }}
                                                         />
-                                                    </div>
-                                                </Box>
+                                                        <div className="mt-2">
+                                                            <Button
+                                                                label="Add Role"
+                                                                onClick={() => {
+                                                                    if (newRole.trim()) {
+                                                                        const currentRoles =
+                                                                            widgetConfigurations[selectedWidget]?.roles || [];
+                                                                        // Add new role as an object with empty RoleId
+                                                                        const newRoleObj = {
+                                                                            Name: newRole.trim(),
+                                                                            RoleId: '', // Empty for new roles
+                                                                            Description: '',
+                                                                            Type: 'Custom',
+                                                                            DelFlag: '',
+                                                                        };
+                                                                        const updatedRoles = [...currentRoles, newRoleObj];
+                                                                        handleRolesChange(updatedRoles);
+                                                                        setNewRole('');
+                                                                    }
+                                                                }}
+                                                                icon={<AddIcon />}
+                                                            />
+                                                        </div>
+                                                    </Box>
 
-                                                <Typography variant="subtitle2" gutterBottom sx={{ color: 'white' }}>
-                                                    Assigned Roles:
-                                                </Typography>
-
-                                                <List>
-                                                    {(widgetConfigurations[selectedWidget]?.roles || [])
-                                                        .filter((role: any) => {
-                                                            // Filter out deleted roles from display
-                                                            if (typeof role === 'object' && role.DelFlag === 'X') {
-                                                                return false;
-                                                            }
-                                                            return true;
-                                                        })
-                                                        .map((role: any, index: number) => {
-                                                            // Get the actual index in the original array
-                                                            const actualIndex = (
-                                                                widgetConfigurations[selectedWidget]?.roles || []
-                                                            ).findIndex((r: any, i: number) => {
-                                                                if (typeof role === 'object' && typeof r === 'object') {
-                                                                    return r.Name === role.Name && r.RoleId === role.RoleId;
-                                                                }
-                                                                return r === role;
-                                                            });
-
-                                                            return (
-                                                                <ListItem key={actualIndex} sx={{ px: 0 }}>
-                                                                    <Box
-                                                                        width="100%"
-                                                                        sx={{
-                                                                            display: 'flex',
-                                                                            justifyContent: 'space-between',
-                                                                            alignItems: 'center',
-                                                                            backgroundColor: '#ffffff10',
-                                                                            borderRadius: 1,
-                                                                            px: 2,
-                                                                            py: 1,
-                                                                        }}
-                                                                    >
-                                                                        <Box display="flex" alignItems="center" gap={1}>
-                                                                            <Typography sx={{ color: 'white' }}>
-                                                                                {typeof role === 'object' ? role.Name : role}
-                                                                            </Typography>
-                                                                            {typeof role === 'object' && role.RoleId && (
-                                                                                <Chip
-                                                                                    size="small"
-                                                                                    label="Existing"
-                                                                                    sx={{
-                                                                                        backgroundColor: '#4caf50',
-                                                                                        color: 'white',
-                                                                                        fontSize: '0.7rem',
-                                                                                        height: '20px',
-                                                                                    }}
-                                                                                />
-                                                                            )}
-                                                                        </Box>
-                                                                        <IconButton
-                                                                            edge="end"
-                                                                            onClick={() => handleDeleteRoleClick(role, actualIndex)}
-                                                                            sx={{ color: 'white' }}
-                                                                        >
-                                                                            <DeleteIcon />
-                                                                        </IconButton>
-                                                                    </Box>
-                                                                </ListItem>
-                                                            );
-                                                        })}
-                                                    {(widgetConfigurations[selectedWidget]?.roles || []).filter(
-                                                        (role: any) => {
-                                                            // Count non-deleted roles
-                                                            if (typeof role === 'object' && role.DelFlag === 'X') {
-                                                                return false;
-                                                            }
-                                                            return true;
-                                                        }
-                                                    ).length === 0 && (
-                                                            <Typography
-                                                                variant="body2"
-                                                                sx={{ color: 'white', fontStyle: 'italic' }}
-                                                            >
-                                                                No roles assigned. This widget will be visible to all users.
-                                                            </Typography>
-                                                        )}
-                                                </List>
-                                            </Box>
-                                        </TabPanel>
-
-                                        <TabPanel value={tabValue} index={tabIndices.info}>
-                                            <Box>
-                                                <Typography variant="h6" gutterBottom sx={{ color: 'white' }}>
-                                                    Widget Information
-                                                </Typography>
-                                                <Alert severity="info" sx={{ mb: 2, backgroundColor: '#2196f320' }}>
-                                                    <Typography sx={{ color: 'white' }}>
-                                                        Add a description to help users understand what this widget displays.
+                                                    <Typography variant="subtitle2" gutterBottom sx={{ color: 'white' }}>
+                                                        Assigned Roles:
                                                     </Typography>
-                                                </Alert>
 
-                                                <TextField
-                                                    label="Widget Description"
-                                                    fullWidth
-                                                    multiline
-                                                    rows={4}
-                                                    variant="outlined"
-                                                    value={widgetConfigurations[selectedWidget]?.description || ''}
-                                                    onChange={(e) => handleDescriptionChange(e.target.value)}
-                                                    placeholder="Enter a description for this widget..."
-                                                    sx={{
-                                                        input: { color: 'white' },
-                                                        label: { color: 'white' },
-                                                        '& .MuiOutlinedInput-root': {
-                                                            color: 'white',
-                                                            '& fieldset': { borderColor: 'white' },
-                                                            '&:hover fieldset': { borderColor: 'white' },
-                                                            '&.Mui-focused fieldset': {
-                                                                borderColor: 'white',
-                                                            },
-                                                        },
-                                                        '& .MuiInputBase-input': {
-                                                            color: 'white',
-                                                        },
-                                                        '& .MuiFormHelperText-root': { color: 'white' },
-                                                    }}
-                                                    helperText="This description will be saved with the widget configuration."
-                                                />
+                                                    <List>
+                                                        {(widgetConfigurations[selectedWidget]?.roles || [])
+                                                            .filter((role: any) => {
+                                                                // Filter out deleted roles from display
+                                                                if (typeof role === 'object' && role.DelFlag === 'X') {
+                                                                    return false;
+                                                                }
+                                                                return true;
+                                                            })
+                                                            .map((role: any, index: number) => {
+                                                                // Get the actual index in the original array
+                                                                const actualIndex = (
+                                                                    widgetConfigurations[selectedWidget]?.roles || []
+                                                                ).findIndex((r: any, i: number) => {
+                                                                    if (typeof role === 'object' && typeof r === 'object') {
+                                                                        return r.Name === role.Name && r.RoleId === role.RoleId;
+                                                                    }
+                                                                    return r === role;
+                                                                });
 
-                                                <Box mt={4}>
-                                                    <Typography
-                                                        variant="h6"
-                                                        gutterBottom
-                                                        sx={{
-                                                            color: 'white',
-                                                            display: 'flex',
-                                                            alignItems: 'center',
-                                                        }}
-                                                    >
-                                                        <AssignmentIcon sx={{ mr: 1 }} />
-                                                        Detailed Report Configuration
+                                                                return (
+                                                                    <ListItem key={actualIndex} sx={{ px: 0 }}>
+                                                                        <Box
+                                                                            width="100%"
+                                                                            sx={{
+                                                                                display: 'flex',
+                                                                                justifyContent: 'space-between',
+                                                                                alignItems: 'center',
+                                                                                backgroundColor: '#ffffff10',
+                                                                                borderRadius: 1,
+                                                                                px: 2,
+                                                                                py: 1,
+                                                                            }}
+                                                                        >
+                                                                            <Box display="flex" alignItems="center" gap={1}>
+                                                                                <Typography sx={{ color: 'white' }}>
+                                                                                    {typeof role === 'object' ? role.Name : role}
+                                                                                </Typography>
+                                                                                {typeof role === 'object' && role.RoleId && (
+                                                                                    <Chip
+                                                                                        size="small"
+                                                                                        label="Existing"
+                                                                                        sx={{
+                                                                                            backgroundColor: '#4caf50',
+                                                                                            color: 'black',
+                                                                                            fontSize: '0.7rem',
+                                                                                            height: '20px',
+                                                                                        }}
+                                                                                    />
+                                                                                )}
+                                                                            </Box>
+                                                                            <IconButton
+                                                                                edge="end"
+                                                                                onClick={() => handleDeleteRoleClick(role, actualIndex)}
+                                                                                sx={{ color: 'white' }}
+                                                                            >
+                                                                                <DeleteIcon />
+                                                                            </IconButton>
+                                                                        </Box>
+                                                                    </ListItem>
+                                                                );
+                                                            })}
+                                                        {(widgetConfigurations[selectedWidget]?.roles || []).filter(
+                                                            (role: any) => {
+                                                                // Count non-deleted roles
+                                                                if (typeof role === 'object' && role.DelFlag === 'X') {
+                                                                    return false;
+                                                                }
+                                                                return true;
+                                                            }
+                                                        ).length === 0 && (
+                                                                <Typography
+                                                                    variant="body2"
+                                                                    sx={{ color: 'white', fontStyle: 'italic' }}
+                                                                >
+                                                                    No roles assigned. This widget will be visible to all users.
+                                                                </Typography>
+                                                            )}
+                                                    </List>
+                                                </Box>
+                                            </TabPanel>
+
+                                            <TabPanel value={tabValue} index={tabIndices.info}>
+                                                <Box>
+                                                    <Typography variant="h6" gutterBottom sx={{ color: 'white' }}>
+                                                        Widget Information
                                                     </Typography>
                                                     <Alert severity="info" sx={{ mb: 2, backgroundColor: '#2196f320' }}>
                                                         <Typography sx={{ color: 'white' }}>
-                                                            Configure the Detailed Report that this widget will open when
-                                                            accessed.
+                                                            Add a description to help users understand what this widget displays.
                                                         </Typography>
                                                     </Alert>
 
-                                                    <Grid container spacing={2}>
-                                                        <Grid item xs={12}>
-                                                            <FormControl fullWidth>
-                                                                <InputLabel sx={{ color: 'white' }}>Report Type</InputLabel>
-                                                                <Select
+                                                    <TextField
+                                                        label="Widget Description"
+                                                        fullWidth
+                                                        multiline
+                                                        rows={4}
+                                                        variant="outlined"
+                                                        value={widgetConfigurations[selectedWidget]?.description || ''}
+                                                        onChange={(e) => handleDescriptionChange(e.target.value)}
+                                                        placeholder="Enter a description for this widget..."
+                                                        sx={{
+                                                            input: { color: 'white' },
+                                                            label: { color: 'white' },
+                                                            '& .MuiOutlinedInput-root': {
+                                                                color: 'white',
+                                                                '& fieldset': { borderColor: 'white' },
+                                                                '&:hover fieldset': { borderColor: 'white' },
+                                                                '&.Mui-focused fieldset': {
+                                                                    borderColor: 'white',
+                                                                },
+                                                            },
+                                                            '& .MuiInputBase-input': {
+                                                                color: 'white',
+                                                            },
+                                                            '& .MuiFormHelperText-root': { color: 'white' },
+                                                        }}
+                                                        helperText="This description will be saved with the widget configuration."
+                                                    />
+
+                                                    <Box mt={4}>
+                                                        <Typography
+                                                            variant="h6"
+                                                            gutterBottom
+                                                            sx={{
+                                                                color: 'white',
+                                                                display: 'flex',
+                                                                alignItems: 'center',
+                                                            }}
+                                                        >
+                                                            <AssignmentIcon sx={{ mr: 1 }} />
+                                                            Detailed Report Configuration
+                                                        </Typography>
+                                                        <Alert severity="info" sx={{ mb: 2, backgroundColor: '#2196f320' }}>
+                                                            <Typography sx={{ color: 'white' }}>
+                                                                Configure the Detailed Report that this widget will open when
+                                                                accessed.
+                                                            </Typography>
+                                                        </Alert>
+
+                                                        <Grid container spacing={2}>
+                                                            <Grid item xs={12}>
+                                                                <FormControl fullWidth>
+                                                                    <InputLabel sx={{ color: 'white' }}>Report Type</InputLabel>
+                                                                    <Select
+                                                                        value={
+                                                                            fieldMappings[selectedWidget]?.targetReport?.type || 'Bex Query'
+                                                                        }
+                                                                        onChange={(e) =>
+                                                                            handleTargetReportChange('type', e.target.value as string)
+                                                                        }
+                                                                        label="Report Type"
+                                                                        sx={{
+                                                                            color: 'white',
+                                                                            '& .MuiOutlinedInput-notchedOutline': {
+                                                                                borderColor: 'white',
+                                                                            },
+                                                                            '&:hover .MuiOutlinedInput-notchedOutline': {
+                                                                                borderColor: 'white',
+                                                                            },
+                                                                            '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                                                                                borderColor: 'white',
+                                                                            },
+                                                                            '& .MuiSvgIcon-root': { color: 'white' },
+                                                                        }}
+                                                                    >
+                                                                        {REPORT_TYPE_OPTIONS.map((option) => (
+                                                                            <MenuItem key={option.value} value={option.value}>
+                                                                                {option.label}
+                                                                            </MenuItem>
+                                                                        ))}
+                                                                    </Select>
+                                                                </FormControl>
+                                                            </Grid>
+
+                                                            <Grid item xs={12}>
+                                                                <TextField
+                                                                    label="Technical ID"
+                                                                    fullWidth
+                                                                    variant="outlined"
                                                                     value={
-                                                                        fieldMappings[selectedWidget]?.targetReport?.type || 'Bex Query'
+                                                                        fieldMappings[selectedWidget]?.targetReport?.technicalId || ''
                                                                     }
                                                                     onChange={(e) =>
-                                                                        handleTargetReportChange('type', e.target.value as string)
+                                                                        handleTargetReportChange('technicalId', e.target.value)
                                                                     }
-                                                                    label="Report Type"
+                                                                    placeholder="Enter technical report ID (e.g., YSCM_CT_PROC_OSS)"
                                                                     sx={{
-                                                                        color: 'white',
-                                                                        '& .MuiOutlinedInput-notchedOutline': {
-                                                                            borderColor: 'white',
+                                                                        input: { color: 'white' },
+                                                                        label: { color: 'white' },
+                                                                        '& .MuiOutlinedInput-root': {
+                                                                            '& fieldset': { borderColor: 'white' },
+                                                                            '&:hover fieldset': { borderColor: 'white' },
+                                                                            '&.Mui-focused fieldset': {
+                                                                                borderColor: 'white',
+                                                                            },
                                                                         },
-                                                                        '&:hover .MuiOutlinedInput-notchedOutline': {
-                                                                            borderColor: 'white',
-                                                                        },
-                                                                        '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                                                                            borderColor: 'white',
-                                                                        },
-                                                                        '& .MuiSvgIcon-root': { color: 'white' },
                                                                     }}
-                                                                >
-                                                                    {REPORT_TYPE_OPTIONS.map((option) => (
-                                                                        <MenuItem key={option.value} value={option.value}>
-                                                                            {option.label}
-                                                                        </MenuItem>
-                                                                    ))}
-                                                                </Select>
-                                                            </FormControl>
-                                                        </Grid>
+                                                                />
+                                                            </Grid>
 
-                                                        <Grid item xs={12}>
-                                                            <TextField
-                                                                label="Technical ID"
-                                                                fullWidth
-                                                                variant="outlined"
-                                                                value={
-                                                                    fieldMappings[selectedWidget]?.targetReport?.technicalId || ''
-                                                                }
-                                                                onChange={(e) =>
-                                                                    handleTargetReportChange('technicalId', e.target.value)
-                                                                }
-                                                                placeholder="Enter technical report ID (e.g., YSCM_CT_PROC_OSS)"
-                                                                sx={{
-                                                                    input: { color: 'white' },
-                                                                    label: { color: 'white' },
-                                                                    '& .MuiOutlinedInput-root': {
-                                                                        '& fieldset': { borderColor: 'white' },
-                                                                        '&:hover fieldset': { borderColor: 'white' },
-                                                                        '&.Mui-focused fieldset': {
-                                                                            borderColor: 'white',
+                                                            <Grid item xs={12}>
+                                                                <TextField
+                                                                    label="Report Name"
+                                                                    fullWidth
+                                                                    variant="outlined"
+                                                                    value={fieldMappings[selectedWidget]?.targetReport?.name || ''}
+                                                                    onChange={(e) => handleTargetReportChange('name', e.target.value)}
+                                                                    placeholder="Enter the display name of the report"
+                                                                    sx={{
+                                                                        input: { color: 'white' },
+                                                                        label: { color: 'white' },
+                                                                        '& .MuiOutlinedInput-root': {
+                                                                            '& fieldset': { borderColor: 'white' },
+                                                                            '&:hover fieldset': { borderColor: 'white' },
+                                                                            '&.Mui-focused fieldset': {
+                                                                                borderColor: 'white',
+                                                                            },
                                                                         },
-                                                                    },
-                                                                }}
-                                                            />
-                                                        </Grid>
+                                                                    }}
+                                                                />
+                                                            </Grid>
 
-                                                        <Grid item xs={12}>
-                                                            <TextField
-                                                                label="Report Name"
-                                                                fullWidth
-                                                                variant="outlined"
-                                                                value={fieldMappings[selectedWidget]?.targetReport?.name || ''}
-                                                                onChange={(e) => handleTargetReportChange('name', e.target.value)}
-                                                                placeholder="Enter the display name of the report"
-                                                                sx={{
-                                                                    input: { color: 'white' },
-                                                                    label: { color: 'white' },
-                                                                    '& .MuiOutlinedInput-root': {
-                                                                        '& fieldset': { borderColor: 'white' },
-                                                                        '&:hover fieldset': { borderColor: 'white' },
-                                                                        '&.Mui-focused fieldset': {
-                                                                            borderColor: 'white',
+                                                            <Grid item xs={12}>
+                                                                <TextField
+                                                                    label="Report Description"
+                                                                    fullWidth
+                                                                    multiline
+                                                                    rows={3}
+                                                                    variant="outlined"
+                                                                    value={
+                                                                        fieldMappings[selectedWidget]?.targetReport?.description || ''
+                                                                    }
+                                                                    onChange={(e) =>
+                                                                        handleTargetReportChange('description', e.target.value)
+                                                                    }
+                                                                    placeholder="Enter a description of what this report does"
+                                                                    sx={{
+                                                                        input: { color: 'white' },
+                                                                        label: { color: 'white' },
+                                                                        '& .MuiOutlinedInput-root': {
+                                                                            color: 'white',
+                                                                            '& fieldset': { borderColor: 'white' },
+                                                                            '&:hover fieldset': { borderColor: 'white' },
+                                                                            '&.Mui-focused fieldset': {
+                                                                                borderColor: 'white',
+                                                                            },
                                                                         },
-                                                                    },
-                                                                }}
-                                                            />
+                                                                        '& .MuiInputBase-input': {
+                                                                            color: 'white',
+                                                                        },
+                                                                    }}
+                                                                />
+                                                            </Grid>
                                                         </Grid>
+                                                    </Box>
 
-                                                        <Grid item xs={12}>
-                                                            <TextField
-                                                                label="Report Description"
-                                                                fullWidth
-                                                                multiline
-                                                                rows={3}
-                                                                variant="outlined"
-                                                                value={
-                                                                    fieldMappings[selectedWidget]?.targetReport?.description || ''
-                                                                }
-                                                                onChange={(e) =>
-                                                                    handleTargetReportChange('description', e.target.value)
-                                                                }
-                                                                placeholder="Enter a description of what this report does"
-                                                                sx={{
-                                                                    input: { color: 'white' },
-                                                                    label: { color: 'white' },
-                                                                    '& .MuiOutlinedInput-root': {
-                                                                        color: 'white',
-                                                                        '& fieldset': { borderColor: 'white' },
-                                                                        '&:hover fieldset': { borderColor: 'white' },
-                                                                        '&.Mui-focused fieldset': {
-                                                                            borderColor: 'white',
-                                                                        },
-                                                                    },
-                                                                    '& .MuiInputBase-input': {
-                                                                        color: 'white',
-                                                                    },
-                                                                }}
-                                                            />
-                                                        </Grid>
-                                                    </Grid>
+                                                    <Box mt={3}>
+                                                        <Typography variant="subtitle2" gutterBottom sx={{ color: 'white' }}>
+                                                            Widget Details:
+                                                        </Typography>
+                                                        <Paper elevation={2} sx={{ p: 2, backgroundColor: '#ffffff10' }}>
+                                                            <Typography variant="body2" sx={{ color: 'white', mb: 1 }}>
+                                                                <strong>Widget Type:</strong> {getSelectedWidgetType()}
+                                                            </Typography>
+                                                            <Typography variant="body2" sx={{ color: 'white', mb: 1 }}>
+                                                                <strong>Mapping Type:</strong>{' '}
+                                                                {fieldMappings[selectedWidget]?.mappingType || 'Not configured'}
+                                                            </Typography>
+                                                            <Typography variant="body2" sx={{ color: 'white', mb: 1 }}>
+                                                                <strong>Data Source:</strong> {reportName || 'Not specified'}
+                                                            </Typography>
+                                                            <Typography variant="body2" sx={{ color: 'white', mb: 1 }}>
+                                                                <strong>Detailed Report:</strong>{' '}
+                                                                {fieldMappings[selectedWidget]?.targetReport?.name ||
+                                                                    'Not configured'}
+                                                            </Typography>
+                                                            <Typography variant="body2" sx={{ color: 'white' }}>
+                                                                <strong>Roles Assigned:</strong>{' '}
+                                                                {(widgetConfigurations[selectedWidget]?.roles || []).length > 0
+                                                                    ? (widgetConfigurations[selectedWidget]?.roles || []).join(', ')
+                                                                    : 'No roles assigned (visible to all)'}
+                                                            </Typography>
+                                                        </Paper>
+                                                    </Box>
                                                 </Box>
-
-                                                <Box mt={3}>
-                                                    <Typography variant="subtitle2" gutterBottom sx={{ color: 'white' }}>
-                                                        Widget Details:
-                                                    </Typography>
-                                                    <Paper elevation={2} sx={{ p: 2, backgroundColor: '#ffffff10' }}>
-                                                        <Typography variant="body2" sx={{ color: 'white', mb: 1 }}>
-                                                            <strong>Widget Type:</strong> {getSelectedWidgetType()}
-                                                        </Typography>
-                                                        <Typography variant="body2" sx={{ color: 'white', mb: 1 }}>
-                                                            <strong>Mapping Type:</strong>{' '}
-                                                            {fieldMappings[selectedWidget]?.mappingType || 'Not configured'}
-                                                        </Typography>
-                                                        <Typography variant="body2" sx={{ color: 'white', mb: 1 }}>
-                                                            <strong>Data Source:</strong> {reportName || 'Not specified'}
-                                                        </Typography>
-                                                        <Typography variant="body2" sx={{ color: 'white', mb: 1 }}>
-                                                            <strong>Detailed Report:</strong>{' '}
-                                                            {fieldMappings[selectedWidget]?.targetReport?.name ||
-                                                                'Not configured'}
-                                                        </Typography>
-                                                        <Typography variant="body2" sx={{ color: 'white' }}>
-                                                            <strong>Roles Assigned:</strong>{' '}
-                                                            {(widgetConfigurations[selectedWidget]?.roles || []).length > 0
-                                                                ? (widgetConfigurations[selectedWidget]?.roles || []).join(', ')
-                                                                : 'No roles assigned (visible to all)'}
-                                                        </Typography>
-                                                    </Paper>
-                                                </Box>
-                                            </Box>
-                                        </TabPanel>
-
-                                        {getSelectedWidgetType() === 'loans-app-tray' && (
-                                            <TabPanel value={tabValue} index={tabIndices.loansAppTrayConfig!}>
-                                                <LoansAppTrayConfig
-                                                    selectedWidget={selectedWidget}
-                                                    fieldMappings={fieldMappings}
-                                                    setFieldMappings={setFieldMappings}
-                                                    widgetConfigurations={widgetConfigurations}
-                                                    setWidgetConfigurations={setWidgetConfigurations}
-                                                    parsedResponse={parsedResponse}
-                                                    transformedData={transformedData}
-                                                    getCHAFields={getCHAFields}
-                                                    getKFFields={getKFFields}
-                                                    getCHAValues={getCHAValues}
-                                                    getKFValue={getKFValue}
-                                                    reportName={reportName}
-                                                    handleReportNameChange={handleReportNameChange}
-                                                    fetchReportData={fetchReportData}
-                                                    loading={loading}
-                                                />
                                             </TabPanel>
-                                        )}
 
-                                        {fieldMappings[selectedWidget]?.mappingType === 'chart' && (
-                                            <TabPanel value={tabValue} index={tabIndices.chartConfig!}>
-                                                <Box className="chart-config">
+                                            {getSelectedWidgetType() === 'loans-app-tray' && (
+                                                <TabPanel value={tabValue} index={tabIndices.loansAppTrayConfig!}>
+                                                    <LoansAppTrayConfig
+                                                        selectedWidget={selectedWidget}
+                                                        fieldMappings={fieldMappings}
+                                                        setFieldMappings={setFieldMappings}
+                                                        widgetConfigurations={widgetConfigurations}
+                                                        setWidgetConfigurations={setWidgetConfigurations}
+                                                        parsedResponse={parsedResponse}
+                                                        transformedData={transformedData}
+                                                        getCHAFields={getCHAFields}
+                                                        getKFFields={getKFFields}
+                                                        getCHAValues={getCHAValues}
+                                                        getKFValue={getKFValue}
+                                                        reportName={reportName}
+                                                        handleReportNameChange={handleReportNameChange}
+                                                        fetchReportData={fetchReportData}
+                                                        loading={loading}
+                                                    />
+                                                </TabPanel>
+                                            )}
+
+                                            {fieldMappings[selectedWidget]?.mappingType === 'chart' && (
+                                                <TabPanel value={tabValue} index={tabIndices.chartConfig!}>
+                                                    <Box className="chart-config">
+                                                        <Typography variant="h6" gutterBottom sx={{ color: 'white' }}>
+                                                            Chart Configuration
+                                                        </Typography>
+
+                                                        <Paper elevation={2} sx={{ p: 2, mb: 2, backgroundColor: '#ffffff20' }}>
+                                                            <Typography variant="h6" gutterBottom sx={{ color: 'white' }}>
+                                                                Query Configuration
+                                                            </Typography>
+                                                            <Alert severity="info" sx={{ mb: 2, backgroundColor: '#2196f320' }}>
+                                                                <Typography sx={{ color: 'white' }}>
+                                                                    Configure the SAP BW report to fetch data from when using mapped
+                                                                    fields.
+                                                                </Typography>
+                                                            </Alert>
+
+                                                            <FormControl fullWidth variant="outlined" margin="normal">
+                                                                <TextField
+                                                                    label="Report Technical Name"
+                                                                    value={reportName}
+                                                                    onChange={handleReportNameChange}
+                                                                    helperText="Enter the technical name of the SAP BW report"
+                                                                    sx={{
+                                                                        input: { color: 'white' },
+                                                                        label: { color: 'white' },
+                                                                        '& .MuiOutlinedInput-root': {
+                                                                            '& fieldset': { borderColor: 'white' },
+                                                                            '&:hover fieldset': { borderColor: 'white' },
+                                                                            '&.Mui-focused fieldset': { borderColor: 'white' },
+                                                                        },
+                                                                        '& .MuiFormHelperText-root': { color: 'white' },
+                                                                    }}
+                                                                />
+                                                                <Box mt={2} display="flex" alignItems="center" gap={2}>
+                                                                    <Button
+                                                                        label="Fetch Report Data"
+                                                                        onClick={handleFetchReportData}
+                                                                        disabled={loading}
+                                                                    />
+                                                                    {loading && <CircularProgress size={20} />}
+                                                                </Box>
+                                                            </FormControl>
+                                                        </Paper>
+
+                                                        {!parsedResponse && (
+                                                            <Alert severity="warning" sx={{ mb: 2, backgroundColor: '#ff980020' }}>
+                                                                <Typography sx={{ color: 'white' }}>
+                                                                    Please fetch report data first to configure chart axes.
+                                                                </Typography>
+                                                            </Alert>
+                                                        )}
+                                                        {parsedResponse && (
+                                                            <>
+                                                                <Box mt={3}>
+                                                                    <FormControl fullWidth margin="normal">
+                                                                        <InputLabel sx={{ color: 'white' }}>
+                                                                            X-Axis (Categories)
+                                                                        </InputLabel>
+                                                                        <Select
+                                                                            value={chartXAxis}
+                                                                            onChange={(e) =>
+                                                                                handleChartAxisChange(
+                                                                                    'xAxis',
+                                                                                    e.target.value as string,
+                                                                                    'CHA'
+                                                                                )
+                                                                            }
+                                                                            label="X-Axis (Categories)"
+                                                                            sx={{
+                                                                                color: 'white',
+                                                                                '& .MuiOutlinedInput-notchedOutline': {
+                                                                                    borderColor: 'white',
+                                                                                },
+                                                                                '&:hover .MuiOutlinedInput-notchedOutline': {
+                                                                                    borderColor: 'white',
+                                                                                },
+                                                                                '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                                                                                    borderColor: 'white',
+                                                                                },
+                                                                                '& .MuiSvgIcon-root': { color: 'white' },
+                                                                            }}
+                                                                        >
+                                                                            {getCHAFields().map((field: any) => (
+                                                                                <MenuItem key={field.fieldName} value={field.fieldName}>
+                                                                                    {field.label} ({field.fieldName})
+                                                                                </MenuItem>
+                                                                            ))}
+                                                                        </Select>
+                                                                        <FormHelperText sx={{ color: 'white' }}>
+                                                                            Select the character field to use for X-axis labels
+                                                                        </FormHelperText>
+                                                                    </FormControl>
+                                                                </Box>
+
+                                                                {getWidgetCategory(getSelectedWidgetType() || '') ===
+                                                                    'stacked-bar' ? (
+                                                                    <Box mt={3} className="stacked-series-config">
+                                                                        <Typography
+                                                                            variant="subtitle1"
+                                                                            gutterBottom
+                                                                            sx={{ color: 'white' }}
+                                                                        >
+                                                                            Series Configuration
+                                                                        </Typography>
+
+                                                                        <Box mb={2}>
+                                                                            {stackedSeries.length > 0 ? (
+                                                                                <Grid container spacing={2}>
+                                                                                    {stackedSeries.map((series, index) => (
+                                                                                        <Grid item xs={12} key={index}>
+                                                                                            <Card
+                                                                                                variant="outlined"
+                                                                                                sx={{ backgroundColor: '#ffffff20' }}
+                                                                                            >
+                                                                                                <CardContent className="py-2">
+                                                                                                    <Grid container alignItems="center">
+                                                                                                        <Grid item xs={1}>
+                                                                                                            <Box
+                                                                                                                sx={{
+                                                                                                                    width: 20,
+                                                                                                                    height: 20,
+                                                                                                                    backgroundColor: series.color,
+                                                                                                                    borderRadius: '4px',
+                                                                                                                }}
+                                                                                                            />
+                                                                                                        </Grid>
+                                                                                                        <Grid item xs={8}>
+                                                                                                            <Typography
+                                                                                                                variant="body2"
+                                                                                                                sx={{ color: 'white' }}
+                                                                                                            >
+                                                                                                                {series.name} ({series.dataKey})
+                                                                                                            </Typography>
+                                                                                                        </Grid>
+                                                                                                        <Grid item xs={3} textAlign="right">
+                                                                                                            <IconButton
+                                                                                                                size="small"
+                                                                                                                color="error"
+                                                                                                                onClick={() =>
+                                                                                                                    handleRemoveStackedSeries(index)
+                                                                                                                }
+                                                                                                            >
+                                                                                                                <DeleteIcon fontSize="small" />
+                                                                                                            </IconButton>
+                                                                                                        </Grid>
+                                                                                                    </Grid>
+                                                                                                </CardContent>
+                                                                                            </Card>
+                                                                                        </Grid>
+                                                                                    ))}
+                                                                                </Grid>
+                                                                            ) : (
+                                                                                <Typography sx={{ color: 'white' }}>
+                                                                                    No series configured yet. Add a data series below.
+                                                                                </Typography>
+                                                                            )}
+                                                                        </Box>
+
+                                                                        <FormControl fullWidth margin="normal">
+                                                                            <InputLabel sx={{ color: 'white' }}>Add Data Series</InputLabel>
+                                                                            <Select
+                                                                                value=""
+                                                                                onChange={(e) =>
+                                                                                    handleChartAxisChange(
+                                                                                        'yAxis',
+                                                                                        e.target.value as string,
+                                                                                        'KF'
+                                                                                    )
+                                                                                }
+                                                                                label="Add Data Series"
+                                                                                sx={{
+                                                                                    color: 'white',
+                                                                                    '& .MuiOutlinedInput-notchedOutline': {
+                                                                                        borderColor: 'white',
+                                                                                    },
+                                                                                    '&:hover .MuiOutlinedInput-notchedOutline': {
+                                                                                        borderColor: 'white',
+                                                                                    },
+                                                                                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                                                                                        borderColor: 'white',
+                                                                                    },
+                                                                                    '& .MuiSvgIcon-root': { color: 'white' },
+                                                                                }}
+                                                                            >
+                                                                                {getKFFields()
+                                                                                    .filter((field: any) => {
+                                                                                        return !stackedSeries.some(
+                                                                                            (s) => s.dataKey === field.fieldName
+                                                                                        );
+                                                                                    })
+                                                                                    .map((field: any) => (
+                                                                                        <MenuItem key={field.fieldName} value={field.fieldName}>
+                                                                                            {field.label} ({field.fieldName})
+                                                                                        </MenuItem>
+                                                                                    ))}
+                                                                            </Select>
+                                                                            <FormHelperText sx={{ color: 'white' }}>
+                                                                                Select fields to include in the stacked chart
+                                                                            </FormHelperText>
+                                                                        </FormControl>
+                                                                    </Box>
+                                                                ) : getWidgetCategory(getSelectedWidgetType() || '') ===
+                                                                    'dual-line' ? (
+                                                                    <Box mt={3}>
+                                                                        <FormControl fullWidth margin="normal">
+                                                                            <InputLabel sx={{ color: 'white' }}>
+                                                                                First Y-Axis (Line 1)
+                                                                            </InputLabel>
+                                                                            <Select
+                                                                                value={chartYAxis}
+                                                                                onChange={(e) =>
+                                                                                    handleChartAxisChange(
+                                                                                        'yAxis',
+                                                                                        e.target.value as string,
+                                                                                        'KF'
+                                                                                    )
+                                                                                }
+                                                                                label="First Y-Axis (Line 1)"
+                                                                                sx={{
+                                                                                    color: 'white',
+                                                                                    '& .MuiOutlinedInput-notchedOutline': {
+                                                                                        borderColor: 'white',
+                                                                                    },
+                                                                                    '&:hover .MuiOutlinedInput-notchedOutline': {
+                                                                                        borderColor: 'white',
+                                                                                    },
+                                                                                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                                                                                        borderColor: 'white',
+                                                                                    },
+                                                                                    '& .MuiSvgIcon-root': { color: 'white' },
+                                                                                }}
+                                                                            >
+                                                                                {getKFFields().map((field: any) => (
+                                                                                    <MenuItem key={field.fieldName} value={field.fieldName}>
+                                                                                        {field.label} ({field.fieldName})
+                                                                                    </MenuItem>
+                                                                                ))}
+                                                                            </Select>
+                                                                            <FormHelperText sx={{ color: 'white' }}>
+                                                                                Select the first line to display
+                                                                            </FormHelperText>
+                                                                        </FormControl>
+
+                                                                        <FormControl fullWidth margin="normal">
+                                                                            <InputLabel sx={{ color: 'white' }}>
+                                                                                Second Y-Axis (Line 2)
+                                                                            </InputLabel>
+                                                                            <Select
+                                                                                value={chartYAxis2}
+                                                                                onChange={(e) =>
+                                                                                    handleChartAxisChange(
+                                                                                        'yAxis2',
+                                                                                        e.target.value as string,
+                                                                                        'KF'
+                                                                                    )
+                                                                                }
+                                                                                label="Second Y-Axis (Line 2)"
+                                                                                sx={{
+                                                                                    color: 'white',
+                                                                                    '& .MuiOutlinedInput-notchedOutline': {
+                                                                                        borderColor: 'white',
+                                                                                    },
+                                                                                    '&:hover .MuiOutlinedInput-notchedOutline': {
+                                                                                        borderColor: 'white',
+                                                                                    },
+                                                                                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                                                                                        borderColor: 'white',
+                                                                                    },
+                                                                                    '& .MuiSvgIcon-root': { color: 'white' },
+                                                                                }}
+                                                                            >
+                                                                                {getKFFields().map((field: any) => (
+                                                                                    <MenuItem key={field.fieldName} value={field.fieldName}>
+                                                                                        {field.label} ({field.fieldName})
+                                                                                    </MenuItem>
+                                                                                ))}
+                                                                            </Select>
+                                                                            <FormHelperText sx={{ color: 'white' }}>
+                                                                                Select the second line to display
+                                                                            </FormHelperText>
+                                                                        </FormControl>
+                                                                    </Box>
+                                                                ) : getWidgetCategory(getSelectedWidgetType() || '') ===
+                                                                    'prediction-chart' ? (
+                                                                    <Box mt={3}>
+                                                                        <Alert
+                                                                            severity="info"
+                                                                            sx={{ mb: 2, backgroundColor: '#2196f320' }}
+                                                                        >
+                                                                            <Typography sx={{ color: 'white' }}>
+                                                                                Prediction charts automatically detect categories and display:
+                                                                            </Typography>
+                                                                            <ul
+                                                                                style={{
+                                                                                    color: 'white',
+                                                                                    paddingLeft: '20px',
+                                                                                    marginTop: '8px',
+                                                                                }}
+                                                                            >
+                                                                                <li>Actual values (solid lines)</li>
+                                                                                <li>Predicted values (dashed lines)</li>
+                                                                                <li>Forecast range (shaded area with boundaries)</li>
+                                                                            </ul>
+                                                                        </Alert>
+
+                                                                        <Typography variant="subtitle2" sx={{ color: 'white', mb: 1 }}>
+                                                                            Expected Data Fields:
+                                                                        </Typography>
+                                                                        <Box sx={{ backgroundColor: '#ffffff10', p: 2, borderRadius: 1 }}>
+                                                                            <Typography variant="body2" sx={{ color: 'white', mb: 1 }}>
+                                                                                • <strong>Time Period:</strong> Selected X-Axis field
+                                                                            </Typography>
+                                                                            <Typography variant="body2" sx={{ color: 'white', mb: 1 }}>
+                                                                                • <strong>Categories:</strong> Automatically detected from
+                                                                                data structure
+                                                                            </Typography>
+                                                                            <Typography variant="body2" sx={{ color: 'white', mb: 1 }}>
+                                                                                • <strong>VALUE001:</strong> Actual values
+                                                                            </Typography>
+                                                                            <Typography variant="body2" sx={{ color: 'white', mb: 1 }}>
+                                                                                • <strong>VALUE002:</strong> Predicted values
+                                                                            </Typography>
+                                                                            <Typography variant="body2" sx={{ color: 'white', mb: 1 }}>
+                                                                                • <strong>VALUE003:</strong> Forecast upper bound
+                                                                            </Typography>
+                                                                            <Typography variant="body2" sx={{ color: 'white' }}>
+                                                                                • <strong>VALUE004:</strong> Forecast lower bound
+                                                                            </Typography>
+                                                                        </Box>
+                                                                    </Box>
+                                                                ) : (
+                                                                    <FormControl fullWidth margin="normal">
+                                                                        <InputLabel sx={{ color: 'white' }}>Y-Axis (Values)</InputLabel>
+                                                                        <Select
+                                                                            value={chartYAxis}
+                                                                            onChange={(e) =>
+                                                                                handleChartAxisChange('yAxis', e.target.value as string, 'KF')
+                                                                            }
+                                                                            label="Y-Axis (Values)"
+                                                                            sx={{
+                                                                                color: 'white',
+                                                                                '& .MuiOutlinedInput-notchedOutline': {
+                                                                                    borderColor: 'white',
+                                                                                },
+                                                                                '&:hover .MuiOutlinedInput-notchedOutline': {
+                                                                                    borderColor: 'white',
+                                                                                },
+                                                                                '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                                                                                    borderColor: 'white',
+                                                                                },
+                                                                                '& .MuiSvgIcon-root': { color: 'white' },
+                                                                            }}
+                                                                        >
+                                                                            {getKFFields().map((field: any) => (
+                                                                                <MenuItem key={field.fieldName} value={field.fieldName}>
+                                                                                    {field.label} ({field.fieldName})
+                                                                                </MenuItem>
+                                                                            ))}
+                                                                        </Select>
+                                                                        <FormHelperText sx={{ color: 'white' }}>
+                                                                            Select the key figure field to use for Y-axis values
+                                                                        </FormHelperText>
+                                                                    </FormControl>
+                                                                )}
+                                                            </>
+                                                        )}
+                                                        {/* Add Multi-Chart Specific Config */}
+                                                        {getWidgetCategory(getSelectedWidgetType() || '') === 'multi-chart' && (
+                                                            <Box mt={3} className="multi-chart-config">
+                                                                {/* Chart Type Selection */}
+                                                                <FormControl fullWidth margin="normal">
+                                                                    <InputLabel sx={{ color: 'white' }}>Chart Type</InputLabel>
+                                                                    <Select
+                                                                        value={widgetConfigurations[selectedWidget]?.chartType || 'line'}
+                                                                        onChange={(e) => {
+                                                                            setWidgetConfigurations((prev) => ({
+                                                                                ...prev,
+                                                                                [selectedWidget]: {
+                                                                                    ...prev[selectedWidget],
+                                                                                    chartType: e.target.value,
+                                                                                },
+                                                                            }));
+                                                                        }}
+                                                                        label="Chart Type"
+                                                                        sx={{
+                                                                            color: 'white',
+                                                                            '& .MuiOutlinedInput-notchedOutline': { borderColor: 'white' },
+                                                                            '&:hover .MuiOutlinedInput-notchedOutline': {
+                                                                                borderColor: 'white',
+                                                                            },
+                                                                            '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                                                                                borderColor: 'white',
+                                                                            },
+                                                                            '& .MuiSvgIcon-root': { color: 'white' },
+                                                                        }}
+                                                                    >
+                                                                        <MenuItem value="line">Line Chart</MenuItem>
+                                                                        <MenuItem value="bar">Bar Chart (Vertical)</MenuItem>
+                                                                        <MenuItem value="horizontal-bar">Bar Chart (Horizontal)</MenuItem>
+                                                                        <MenuItem value="area">Area Chart</MenuItem>
+                                                                        <MenuItem value="composed">Composed Chart (Mixed)</MenuItem>
+                                                                        <MenuItem value="scatter">Scatter Plot</MenuItem>
+                                                                        <MenuItem value="donut">Donut Chart</MenuItem>
+                                                                        <MenuItem value="pie">Pie Chart</MenuItem>
+                                                                        <MenuItem value="radar">Radar Chart</MenuItem>
+                                                                    </Select>
+                                                                    <FormHelperText sx={{ color: 'white' }}>
+                                                                        Select the visualization type for this widget
+                                                                    </FormHelperText>
+                                                                </FormControl>
+
+                                                                {/* VALUE FORMAT CONFIGURATION*/}
+                                                                <FormControl fullWidth margin="normal">
+                                                                    <InputLabel sx={{ color: 'white' }}>Value Format</InputLabel>
+                                                                    <Select
+                                                                        value={
+                                                                            widgetConfigurations[selectedWidget]?.valueFormat ||
+                                                                            'non-currency'
+                                                                        }
+                                                                        onChange={(e) => {
+                                                                            setWidgetConfigurations((prev) => ({
+                                                                                ...prev,
+                                                                                [selectedWidget]: {
+                                                                                    ...prev[selectedWidget],
+                                                                                    valueFormat: e.target.value,
+                                                                                },
+                                                                            }));
+                                                                        }}
+                                                                        label="Value Format"
+                                                                        sx={{
+                                                                            color: 'white',
+                                                                            '& .MuiOutlinedInput-notchedOutline': { borderColor: 'white' },
+                                                                            '&:hover .MuiOutlinedInput-notchedOutline': {
+                                                                                borderColor: 'white',
+                                                                            },
+                                                                            '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                                                                                borderColor: 'white',
+                                                                            },
+                                                                            '& .MuiSvgIcon-root': { color: 'white' },
+                                                                        }}
+                                                                    >
+                                                                        <MenuItem value="currency">
+                                                                            Currency (Thousand → M, Million → MM, Billion → B)
+                                                                        </MenuItem>
+                                                                        <MenuItem value="non-currency">
+                                                                            Non-Currency (Thousand → K, Million → M, Billion → B)
+                                                                        </MenuItem>
+                                                                    </Select>
+                                                                    <FormHelperText sx={{ color: 'white' }}>
+                                                                        Select how numbers should be abbreviated in the chart
+                                                                    </FormHelperText>
+                                                                </FormControl>
+
+                                                                {/* Color Variant Selection */}
+                                                                <Box mt={3}>
+                                                                    <Typography
+                                                                        variant="subtitle1"
+                                                                        gutterBottom
+                                                                        sx={{ color: 'white', fontWeight: 'bold' }}
+                                                                    >
+                                                                        Color Variants
+                                                                    </Typography>
+                                                                    <Typography
+                                                                        variant="body2"
+                                                                        sx={{ color: 'white', mb: 2 }}
+                                                                    >
+                                                                        Choose a predefined color palette for this multi-chart
+                                                                        widget. The selected variant will be applied to the data
+                                                                        series and used as the default color palette.
+                                                                    </Typography>
+                                                                    <ColorVariantPicker
+                                                                        selectedVariant={
+                                                                            widgetConfigurations[selectedWidget]?.colorVariantId
+                                                                        }
+                                                                        onVariantSelect={handleMultiChartVariantSelect}
+                                                                        showGradient={true}
+                                                                        compact={true}
+                                                                    />
+                                                                </Box>
+
+                                                                {/* Show Legend Toggle */}
+                                                                <FormControl fullWidth margin="normal">
+                                                                    <FormControlLabel
+                                                                        control={
+                                                                            <Checkbox
+                                                                                checked={
+                                                                                    widgetConfigurations[selectedWidget]?.showLegend !== false
+                                                                                }
+                                                                                onChange={(e) => {
+                                                                                    setWidgetConfigurations((prev) => ({
+                                                                                        ...prev,
+                                                                                        [selectedWidget]: {
+                                                                                            ...prev[selectedWidget],
+                                                                                            showLegend: e.target.checked,
+                                                                                        },
+                                                                                    }));
+                                                                                }}
+                                                                                sx={{
+                                                                                    color: 'white',
+                                                                                    '&.Mui-checked': { color: 'white' },
+                                                                                }}
+                                                                            />
+                                                                        }
+                                                                        label={
+                                                                            <Typography variant="body2" sx={{ color: 'white' }}>
+                                                                                Show Legend
+                                                                            </Typography>
+                                                                        }
+                                                                    />
+                                                                    <FormHelperText sx={{ color: 'white', ml: 0 }}>
+                                                                        Display legend below the chart
+                                                                    </FormHelperText>
+                                                                </FormControl>
+
+                                                                {/* Stacked Toggle (for applicable chart types) */}
+                                                                {['bar', 'horizontal-bar', 'area'].includes(
+                                                                    widgetConfigurations[selectedWidget]?.chartType || 'line'
+                                                                ) && (
+                                                                        <FormControl fullWidth margin="normal">
+                                                                            <FormControlLabel
+                                                                                control={
+                                                                                    <Checkbox
+                                                                                        checked={
+                                                                                            widgetConfigurations[selectedWidget]?.stacked || false
+                                                                                        }
+                                                                                        onChange={(e) => {
+                                                                                            setWidgetConfigurations((prev) => ({
+                                                                                                ...prev,
+                                                                                                [selectedWidget]: {
+                                                                                                    ...prev[selectedWidget],
+                                                                                                    stacked: e.target.checked,
+                                                                                                },
+                                                                                            }));
+                                                                                        }}
+                                                                                        sx={{
+                                                                                            color: 'white',
+                                                                                            '&.Mui-checked': { color: 'white' },
+                                                                                        }}
+                                                                                    />
+                                                                                }
+                                                                                label={
+                                                                                    <Typography variant="body2" sx={{ color: 'white' }}>
+                                                                                        Stacked
+                                                                                    </Typography>
+                                                                                }
+                                                                            />
+                                                                            <FormHelperText sx={{ color: 'white', ml: 0 }}>
+                                                                                Stack series on top of each other
+                                                                            </FormHelperText>
+                                                                        </FormControl>
+                                                                    )}
+
+                                                                {/* Selected Labels Multi-Select */}
+                                                                {parsedResponse &&
+                                                                    (() => {
+                                                                        // Check if data has label field or Struct field
+                                                                        const labelField = parsedResponse.header.find(
+                                                                            (h: any) =>
+                                                                                (h.fieldName.toLowerCase().includes('label') ||
+                                                                                    h.label?.toLowerCase().includes('struct') ||
+                                                                                    h.fieldName?.toLowerCase().includes('struct')) &&
+                                                                                h.type === 'CHA' &&
+                                                                                h.fieldName !== chartXAxis
+                                                                        );
+
+                                                                        if (labelField && chartXAxis) {
+                                                                            // Get unique values from chartData if available, otherwise use getCHAValues
+                                                                            let labelValues: string[] = [];
+
+                                                                            if (parsedResponse.chartData && Array.isArray(parsedResponse.chartData)) {
+                                                                                const uniqueValues = new Set<string>();
+                                                                                parsedResponse.chartData.forEach((row: any) => {
+                                                                                    if (row[labelField.fieldName]) {
+                                                                                        uniqueValues.add(row[labelField.fieldName]);
+                                                                                    }
+                                                                                });
+                                                                                labelValues = Array.from(uniqueValues).filter(
+                                                                                    (val) => val !== 'Overall Result' && val !== ''
+                                                                                );
+                                                                            } else {
+                                                                                labelValues = getCHAValues(labelField.fieldName).filter(
+                                                                                    (val) => val !== 'Overall Result'
+                                                                                );
+                                                                            }
+
+                                                                            if (labelValues.length > 0) {
+                                                                                return (
+                                                                                    <FormControl fullWidth margin="normal">
+                                                                                        <InputLabel sx={{ color: 'white' }}>
+                                                                                            Filter by {labelField.label || 'Labels'}
+                                                                                        </InputLabel>
+                                                                                        <Select
+                                                                                            multiple
+                                                                                            value={
+                                                                                                widgetConfigurations[selectedWidget]?.selectedLabels ||
+                                                                                                []
+                                                                                            }
+                                                                                            onChange={(e) => {
+                                                                                                setWidgetConfigurations((prev) => ({
+                                                                                                    ...prev,
+                                                                                                    [selectedWidget]: {
+                                                                                                        ...prev[selectedWidget],
+                                                                                                        selectedLabels: e.target.value as string[],
+                                                                                                    },
+                                                                                                }));
+                                                                                            }}
+                                                                                            label={`Filter by ${labelField.label || 'Labels'}`}
+                                                                                            renderValue={(selected) => (
+                                                                                                <Box
+                                                                                                    sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}
+                                                                                                >
+                                                                                                    {(selected as string[]).map((value) => (
+                                                                                                        <Chip
+                                                                                                            key={value}
+                                                                                                            label={value}
+                                                                                                            size="small"
+                                                                                                            sx={{
+                                                                                                                backgroundColor: '#ffffff20',
+                                                                                                                color: 'black',
+                                                                                                            }}
+                                                                                                        />
+                                                                                                    ))}
+                                                                                                </Box>
+                                                                                            )}
+                                                                                            sx={{
+                                                                                                color: 'white',
+                                                                                                '& .MuiOutlinedInput-notchedOutline': {
+                                                                                                    borderColor: 'white',
+                                                                                                },
+                                                                                                '&:hover .MuiOutlinedInput-notchedOutline': {
+                                                                                                    borderColor: 'white',
+                                                                                                },
+                                                                                                '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                                                                                                    borderColor: 'white',
+                                                                                                },
+                                                                                                '& .MuiSvgIcon-root': { color: 'white' },
+                                                                                            }}
+                                                                                        >
+                                                                                            {labelValues.map((label) => (
+                                                                                                <MenuItem key={label} value={label}>
+                                                                                                    <Checkbox
+                                                                                                        checked={
+                                                                                                            (
+                                                                                                                widgetConfigurations[selectedWidget]
+                                                                                                                    ?.selectedLabels || []
+                                                                                                            ).indexOf(label) > -1
+                                                                                                        }
+                                                                                                    />
+                                                                                                    {label}
+                                                                                                </MenuItem>
+                                                                                            ))}
+                                                                                        </Select>
+                                                                                        <FormHelperText sx={{ color: 'white' }}>
+                                                                                            Select specific {labelField.label?.toLowerCase() || 'labels'} to display (leave empty for all)
+                                                                                        </FormHelperText>
+                                                                                    </FormControl>
+                                                                                );
+                                                                            }
+                                                                        }
+                                                                        return null;
+                                                                    })()}
+
+                                                                <Divider sx={{ my: 3, borderColor: 'rgba(255,255,255,0.2)' }} />
+
+                                                                {/* DATA SERIES CONFIGURATION */}
+                                                                <Typography
+                                                                    variant="subtitle1"
+                                                                    gutterBottom
+                                                                    sx={{ color: 'white', fontWeight: 'bold' }}
+                                                                >
+                                                                    Data Series Configuration
+                                                                </Typography>
+
+                                                                <Box mb={2}>
+                                                                    {stackedSeries.length > 0 ? (
+                                                                        <Grid container spacing={2}>
+                                                                            {stackedSeries.map((series: any, index) => (
+                                                                                <Grid item xs={12} key={index}>
+                                                                                    <Card
+                                                                                        variant="outlined"
+                                                                                        sx={{ backgroundColor: '#ffffff20' }}
+                                                                                    >
+                                                                                        <CardContent className="py-2">
+                                                                                            <Grid container spacing={2} alignItems="center">
+                                                                                                <Grid item xs={1}>
+                                                                                                    <Box
+                                                                                                        sx={{
+                                                                                                            width: 20,
+                                                                                                            height: 20,
+                                                                                                            backgroundColor: series.color,
+                                                                                                            borderRadius: '4px',
+                                                                                                        }}
+                                                                                                    />
+                                                                                                </Grid>
+                                                                                                <Grid item xs={4}>
+                                                                                                    <Typography variant="body2" sx={{ color: 'white' }}>
+                                                                                                        {series.name}
+                                                                                                    </Typography>
+                                                                                                    <Typography
+                                                                                                        variant="caption"
+                                                                                                        sx={{ color: 'rgba(255,255,255,0.7)' }}
+                                                                                                    >
+                                                                                                        {series.dataKey}
+                                                                                                    </Typography>
+                                                                                                </Grid>
+                                                                                                <Grid item xs={3}>
+                                                                                                    <FormControl fullWidth size="small">
+                                                                                                        <Select
+                                                                                                            value={series.type || 'line'}
+                                                                                                            onChange={(e) => {
+                                                                                                                const newSeries: any = [...stackedSeries];
+                                                                                                                newSeries[index] = {
+                                                                                                                    ...newSeries[index],
+                                                                                                                    type: e.target.value as
+                                                                                                                        | 'line'
+                                                                                                                        | 'bar'
+                                                                                                                        | 'area',
+                                                                                                                };
+                                                                                                                setStackedSeries(newSeries);
+
+                                                                                                                setFieldMappings((prev) => ({
+                                                                                                                    ...prev,
+                                                                                                                    [selectedWidget]: {
+                                                                                                                        ...prev[selectedWidget],
+                                                                                                                        seriesConfig: {
+                                                                                                                            ...prev[selectedWidget].seriesConfig,
+                                                                                                                            series: newSeries,
+                                                                                                                        },
+                                                                                                                    },
+                                                                                                                }));
+                                                                                                            }}
+                                                                                                            sx={{
+                                                                                                                color: 'white',
+                                                                                                                '& .MuiOutlinedInput-notchedOutline': {
+                                                                                                                    borderColor: 'white',
+                                                                                                                },
+                                                                                                                '&:hover .MuiOutlinedInput-notchedOutline': {
+                                                                                                                    borderColor: 'white',
+                                                                                                                },
+                                                                                                                '&.Mui-focused .MuiOutlinedInput-notchedOutline':
+                                                                                                                {
+                                                                                                                    borderColor: 'white',
+                                                                                                                },
+                                                                                                                '& .MuiSvgIcon-root': { color: 'white' },
+                                                                                                            }}
+                                                                                                        >
+                                                                                                            <MenuItem value="line">Line</MenuItem>
+                                                                                                            <MenuItem value="bar">Bar</MenuItem>
+                                                                                                            <MenuItem value="area">Area</MenuItem>
+                                                                                                        </Select>
+                                                                                                    </FormControl>
+                                                                                                </Grid>
+                                                                                                <Grid item xs={3}>
+                                                                                                    <TextField
+                                                                                                        size="small"
+                                                                                                        type="color"
+                                                                                                        value={series.color}
+                                                                                                        onChange={(e) => {
+                                                                                                            const newSeries = [...stackedSeries];
+                                                                                                            newSeries[index] = {
+                                                                                                                ...newSeries[index],
+                                                                                                                color: e.target.value,
+                                                                                                            };
+                                                                                                            setStackedSeries(newSeries);
+
+                                                                                                            setFieldMappings((prev) => ({
+                                                                                                                ...prev,
+                                                                                                                [selectedWidget]: {
+                                                                                                                    ...prev[selectedWidget],
+                                                                                                                    seriesConfig: {
+                                                                                                                        ...prev[selectedWidget].seriesConfig,
+                                                                                                                        series: newSeries,
+                                                                                                                    },
+                                                                                                                },
+                                                                                                            }));
+                                                                                                        }}
+                                                                                                        sx={{
+                                                                                                            '& input': {
+                                                                                                                height: '30px',
+                                                                                                                cursor: 'pointer',
+                                                                                                            },
+                                                                                                        }}
+                                                                                                    />
+                                                                                                </Grid>
+                                                                                                <Grid item xs={1}>
+                                                                                                    <IconButton
+                                                                                                        size="small"
+                                                                                                        color="error"
+                                                                                                        onClick={() => handleRemoveStackedSeries(index)}
+                                                                                                    >
+                                                                                                        <DeleteIcon fontSize="small" />
+                                                                                                    </IconButton>
+                                                                                                </Grid>
+                                                                                            </Grid>
+                                                                                        </CardContent>
+                                                                                    </Card>
+                                                                                </Grid>
+                                                                            ))}
+                                                                        </Grid>
+                                                                    ) : (
+                                                                        <Alert severity="info" sx={{ backgroundColor: '#2196f320' }}>
+                                                                            <Typography sx={{ color: 'white' }}>
+                                                                                No data series configured yet. Add a series below.
+                                                                            </Typography>
+                                                                        </Alert>
+                                                                    )}
+                                                                </Box>
+
+                                                                {/* Add New Series */}
+                                                                <FormControl fullWidth margin="normal">
+                                                                    <InputLabel sx={{ color: 'white' }}>Add Data Series</InputLabel>
+                                                                    <Select
+                                                                        value=""
+                                                                        onChange={(e) => {
+                                                                            const field = e.target.value as string;
+                                                                            const fieldLabel =
+                                                                                parsedResponse?.header.find((h: any) => h.fieldName === field)
+                                                                                    ?.label || field;
+
+                                                                            const colors = [
+                                                                                '#84BD00',
+                                                                                '#FFC846',
+                                                                                '#8979FF',
+                                                                                '#E1553F',
+                                                                                '#5899DA',
+                                                                                '#4DD0E1',
+                                                                                '#FF6F61',
+                                                                            ];
+                                                                            const newSeriesIndex = stackedSeries.length;
+
+                                                                            const newSeries = {
+                                                                                name: fieldLabel,
+                                                                                dataKey: field,
+                                                                                color: colors[newSeriesIndex % colors.length],
+                                                                                type: 'line' as 'line' | 'bar' | 'area',
+                                                                            };
+
+                                                                            const updatedSeries = [...stackedSeries, newSeries];
+                                                                            setStackedSeries(updatedSeries);
+
+                                                                            setFieldMappings((prev) => {
+                                                                                const config = JSON.parse(
+                                                                                    JSON.stringify(prev[selectedWidget])
+                                                                                );
+
+                                                                                // Initialize yAxis.fields array if it doesn't exist
+                                                                                if (!config.chartConfig) config.chartConfig = {};
+                                                                                if (!config.chartConfig.yAxis) config.chartConfig.yAxis = {};
+                                                                                if (!config.chartConfig.yAxis.fields)
+                                                                                    config.chartConfig.yAxis.fields = [];
+
+                                                                                // Add the field to yAxis.fields
+                                                                                config.chartConfig.yAxis.fields = [
+                                                                                    ...config.chartConfig.yAxis.fields,
+                                                                                    field,
+                                                                                ];
+                                                                                config.chartConfig.yAxis.type = 'KF';
+
+                                                                                // Update seriesConfig
+                                                                                if (!config.seriesConfig)
+                                                                                    config.seriesConfig = { series: [] };
+                                                                                config.seriesConfig.series = updatedSeries;
+
+                                                                                return { ...prev, [selectedWidget]: config };
+                                                                            });
+                                                                        }}
+                                                                        label="Add Data Series"
+                                                                        sx={{
+                                                                            color: 'white',
+                                                                            '& .MuiOutlinedInput-notchedOutline': {
+                                                                                borderColor: 'white',
+                                                                            },
+                                                                            '&:hover .MuiOutlinedInput-notchedOutline': {
+                                                                                borderColor: 'white',
+                                                                            },
+                                                                            '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                                                                                borderColor: 'white',
+                                                                            },
+                                                                            '& .MuiSvgIcon-root': { color: 'white' },
+                                                                        }}
+                                                                    >
+                                                                        {getKFFields()
+                                                                            .filter((field: any) => {
+                                                                                return !stackedSeries.some(
+                                                                                    (s) => s.dataKey === field.fieldName
+                                                                                );
+                                                                            })
+                                                                            .map((field: any) => (
+                                                                                <MenuItem key={field.fieldName} value={field.fieldName}>
+                                                                                    {field.label} ({field.fieldName})
+                                                                                </MenuItem>
+                                                                            ))}
+                                                                    </Select>
+                                                                    <FormHelperText sx={{ color: 'white' }}>
+                                                                        Select key figure fields to include as data series in the chart
+                                                                    </FormHelperText>
+                                                                </FormControl>
+                                                            </Box>
+                                                        )}
+                                                    </Box>
+                                                </TabPanel>
+                                            )}
+
+                                            {fieldMappings[selectedWidget]?.mappingType === 'table' && (
+                                                <TabPanel value={tabValue} index={tabIndices.tableConfig!}>
                                                     <Typography variant="h6" gutterBottom sx={{ color: 'white' }}>
-                                                        Chart Configuration
+                                                        Table Columns Configuration
                                                     </Typography>
 
                                                     <Paper elevation={2} sx={{ p: 2, mb: 2, backgroundColor: '#ffffff20' }}>
@@ -5346,826 +6725,185 @@ const MappingScreen: React.FC = () => {
                                                     {!parsedResponse && (
                                                         <Alert severity="warning" sx={{ mb: 2, backgroundColor: '#ff980020' }}>
                                                             <Typography sx={{ color: 'white' }}>
-                                                                Please fetch report data first to configure chart axes.
+                                                                Please fetch report data first to configure table columns.
                                                             </Typography>
                                                         </Alert>
                                                     )}
                                                     {parsedResponse && (
-                                                        <>
-                                                            <Box mt={3}>
-                                                                <FormControl fullWidth margin="normal">
-                                                                    <InputLabel sx={{ color: 'white' }}>
-                                                                        X-Axis (Categories)
-                                                                    </InputLabel>
-                                                                    <Select
-                                                                        value={chartXAxis}
-                                                                        onChange={(e) =>
-                                                                            handleChartAxisChange(
-                                                                                'xAxis',
-                                                                                e.target.value as string,
-                                                                                'CHA'
-                                                                            )
-                                                                        }
-                                                                        label="X-Axis (Categories)"
-                                                                        sx={{
-                                                                            color: 'white',
-                                                                            '& .MuiOutlinedInput-notchedOutline': {
-                                                                                borderColor: 'white',
-                                                                            },
-                                                                            '&:hover .MuiOutlinedInput-notchedOutline': {
-                                                                                borderColor: 'white',
-                                                                            },
-                                                                            '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                                                                                borderColor: 'white',
-                                                                            },
-                                                                            '& .MuiSvgIcon-root': { color: 'white' },
-                                                                        }}
-                                                                    >
-                                                                        {getCHAFields().map((field: any) => (
-                                                                            <MenuItem key={field.fieldName} value={field.fieldName}>
-                                                                                {field.label} ({field.fieldName})
-                                                                            </MenuItem>
-                                                                        ))}
-                                                                    </Select>
-                                                                    <FormHelperText sx={{ color: 'white' }}>
-                                                                        Select the character field to use for X-axis labels
-                                                                    </FormHelperText>
-                                                                </FormControl>
-                                                            </Box>
-
-                                                            {getWidgetCategory(getSelectedWidgetType() || '') ===
-                                                                'stacked-bar' ? (
-                                                                <Box mt={3} className="stacked-series-config">
-                                                                    <Typography
-                                                                        variant="subtitle1"
-                                                                        gutterBottom
-                                                                        sx={{ color: 'white' }}
-                                                                    >
-                                                                        Series Configuration
-                                                                    </Typography>
-
-                                                                    <Box mb={2}>
-                                                                        {stackedSeries.length > 0 ? (
-                                                                            <Grid container spacing={2}>
-                                                                                {stackedSeries.map((series, index) => (
-                                                                                    <Grid item xs={12} key={index}>
-                                                                                        <Card
-                                                                                            variant="outlined"
-                                                                                            sx={{ backgroundColor: '#ffffff20' }}
-                                                                                        >
-                                                                                            <CardContent className="py-2">
-                                                                                                <Grid container alignItems="center">
-                                                                                                    <Grid item xs={1}>
-                                                                                                        <Box
-                                                                                                            sx={{
-                                                                                                                width: 20,
-                                                                                                                height: 20,
-                                                                                                                backgroundColor: series.color,
-                                                                                                                borderRadius: '4px',
-                                                                                                            }}
-                                                                                                        />
-                                                                                                    </Grid>
-                                                                                                    <Grid item xs={8}>
-                                                                                                        <Typography
-                                                                                                            variant="body2"
-                                                                                                            sx={{ color: 'white' }}
-                                                                                                        >
-                                                                                                            {series.name} ({series.dataKey})
-                                                                                                        </Typography>
-                                                                                                    </Grid>
-                                                                                                    <Grid item xs={3} textAlign="right">
-                                                                                                        <IconButton
-                                                                                                            size="small"
-                                                                                                            color="error"
-                                                                                                            onClick={() =>
-                                                                                                                handleRemoveStackedSeries(index)
-                                                                                                            }
-                                                                                                        >
-                                                                                                            <DeleteIcon fontSize="small" />
-                                                                                                        </IconButton>
-                                                                                                    </Grid>
-                                                                                                </Grid>
-                                                                                            </CardContent>
-                                                                                        </Card>
-                                                                                    </Grid>
-                                                                                ))}
-                                                                            </Grid>
-                                                                        ) : (
-                                                                            <Typography sx={{ color: 'white' }}>
-                                                                                No series configured yet. Add a data series below.
-                                                                            </Typography>
-                                                                        )}
-                                                                    </Box>
-
-                                                                    <FormControl fullWidth margin="normal">
-                                                                        <InputLabel sx={{ color: 'white' }}>Add Data Series</InputLabel>
+                                                        <Box mt={3}>
+                                                            <Grid container spacing={2} alignItems="flex-end">
+                                                                <Grid item xs={12}>
+                                                                    <FormControl fullWidth size="small">
+                                                                        <InputLabel sx={{ color: 'white' }}>Add Column</InputLabel>
                                                                         <Select
+                                                                            label="Add Column"
                                                                             value=""
-                                                                            onChange={(e) =>
-                                                                                handleChartAxisChange(
-                                                                                    'yAxis',
-                                                                                    e.target.value as string,
-                                                                                    'KF'
-                                                                                )
-                                                                            }
-                                                                            label="Add Data Series"
-                                                                            sx={{
-                                                                                color: 'white',
-                                                                                '& .MuiOutlinedInput-notchedOutline': {
-                                                                                    borderColor: 'white',
-                                                                                },
-                                                                                '&:hover .MuiOutlinedInput-notchedOutline': {
-                                                                                    borderColor: 'white',
-                                                                                },
-                                                                                '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                                                                                    borderColor: 'white',
-                                                                                },
-                                                                                '& .MuiSvgIcon-root': { color: 'white' },
-                                                                            }}
-                                                                        >
-                                                                            {getKFFields()
-                                                                                .filter((field: any) => {
-                                                                                    return !stackedSeries.some(
-                                                                                        (s) => s.dataKey === field.fieldName
-                                                                                    );
-                                                                                })
-                                                                                .map((field: any) => (
-                                                                                    <MenuItem key={field.fieldName} value={field.fieldName}>
-                                                                                        {field.label} ({field.fieldName})
-                                                                                    </MenuItem>
-                                                                                ))}
-                                                                        </Select>
-                                                                        <FormHelperText sx={{ color: 'white' }}>
-                                                                            Select fields to include in the stacked chart
-                                                                        </FormHelperText>
-                                                                    </FormControl>
-                                                                </Box>
-                                                            ) : getWidgetCategory(getSelectedWidgetType() || '') ===
-                                                                'dual-line' ? (
-                                                                <Box mt={3}>
-                                                                    <FormControl fullWidth margin="normal">
-                                                                        <InputLabel sx={{ color: 'white' }}>
-                                                                            First Y-Axis (Line 1)
-                                                                        </InputLabel>
-                                                                        <Select
-                                                                            value={chartYAxis}
-                                                                            onChange={(e) =>
-                                                                                handleChartAxisChange(
-                                                                                    'yAxis',
-                                                                                    e.target.value as string,
-                                                                                    'KF'
-                                                                                )
-                                                                            }
-                                                                            label="First Y-Axis (Line 1)"
-                                                                            sx={{
-                                                                                color: 'white',
-                                                                                '& .MuiOutlinedInput-notchedOutline': {
-                                                                                    borderColor: 'white',
-                                                                                },
-                                                                                '&:hover .MuiOutlinedInput-notchedOutline': {
-                                                                                    borderColor: 'white',
-                                                                                },
-                                                                                '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                                                                                    borderColor: 'white',
-                                                                                },
-                                                                                '& .MuiSvgIcon-root': { color: 'white' },
-                                                                            }}
-                                                                        >
-                                                                            {getKFFields().map((field: any) => (
-                                                                                <MenuItem key={field.fieldName} value={field.fieldName}>
-                                                                                    {field.label} ({field.fieldName})
-                                                                                </MenuItem>
-                                                                            ))}
-                                                                        </Select>
-                                                                        <FormHelperText sx={{ color: 'white' }}>
-                                                                            Select the first line to display
-                                                                        </FormHelperText>
-                                                                    </FormControl>
-
-                                                                    <FormControl fullWidth margin="normal">
-                                                                        <InputLabel sx={{ color: 'white' }}>
-                                                                            Second Y-Axis (Line 2)
-                                                                        </InputLabel>
-                                                                        <Select
-                                                                            value={chartYAxis2}
-                                                                            onChange={(e) =>
-                                                                                handleChartAxisChange(
-                                                                                    'yAxis2',
-                                                                                    e.target.value as string,
-                                                                                    'KF'
-                                                                                )
-                                                                            }
-                                                                            label="Second Y-Axis (Line 2)"
-                                                                            sx={{
-                                                                                color: 'white',
-                                                                                '& .MuiOutlinedInput-notchedOutline': {
-                                                                                    borderColor: 'white',
-                                                                                },
-                                                                                '&:hover .MuiOutlinedInput-notchedOutline': {
-                                                                                    borderColor: 'white',
-                                                                                },
-                                                                                '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                                                                                    borderColor: 'white',
-                                                                                },
-                                                                                '& .MuiSvgIcon-root': { color: 'white' },
-                                                                            }}
-                                                                        >
-                                                                            {getKFFields().map((field: any) => (
-                                                                                <MenuItem key={field.fieldName} value={field.fieldName}>
-                                                                                    {field.label} ({field.fieldName})
-                                                                                </MenuItem>
-                                                                            ))}
-                                                                        </Select>
-                                                                        <FormHelperText sx={{ color: 'white' }}>
-                                                                            Select the second line to display
-                                                                        </FormHelperText>
-                                                                    </FormControl>
-                                                                </Box>
-                                                            ) : getWidgetCategory(getSelectedWidgetType() || '') ===
-                                                                'prediction-chart' ? (
-                                                                <Box mt={3}>
-                                                                    <Alert
-                                                                        severity="info"
-                                                                        sx={{ mb: 2, backgroundColor: '#2196f320' }}
-                                                                    >
-                                                                        <Typography sx={{ color: 'white' }}>
-                                                                            Prediction charts automatically detect categories and display:
-                                                                        </Typography>
-                                                                        <ul
-                                                                            style={{
-                                                                                color: 'white',
-                                                                                paddingLeft: '20px',
-                                                                                marginTop: '8px',
-                                                                            }}
-                                                                        >
-                                                                            <li>Actual values (solid lines)</li>
-                                                                            <li>Predicted values (dashed lines)</li>
-                                                                            <li>Forecast range (shaded area with boundaries)</li>
-                                                                        </ul>
-                                                                    </Alert>
-
-                                                                    <Typography variant="subtitle2" sx={{ color: 'white', mb: 1 }}>
-                                                                        Expected Data Fields:
-                                                                    </Typography>
-                                                                    <Box sx={{ backgroundColor: '#ffffff10', p: 2, borderRadius: 1 }}>
-                                                                        <Typography variant="body2" sx={{ color: 'white', mb: 1 }}>
-                                                                            • <strong>Time Period:</strong> Selected X-Axis field
-                                                                        </Typography>
-                                                                        <Typography variant="body2" sx={{ color: 'white', mb: 1 }}>
-                                                                            • <strong>Categories:</strong> Automatically detected from
-                                                                            data structure
-                                                                        </Typography>
-                                                                        <Typography variant="body2" sx={{ color: 'white', mb: 1 }}>
-                                                                            • <strong>VALUE001:</strong> Actual values
-                                                                        </Typography>
-                                                                        <Typography variant="body2" sx={{ color: 'white', mb: 1 }}>
-                                                                            • <strong>VALUE002:</strong> Predicted values
-                                                                        </Typography>
-                                                                        <Typography variant="body2" sx={{ color: 'white', mb: 1 }}>
-                                                                            • <strong>VALUE003:</strong> Forecast upper bound
-                                                                        </Typography>
-                                                                        <Typography variant="body2" sx={{ color: 'white' }}>
-                                                                            • <strong>VALUE004:</strong> Forecast lower bound
-                                                                        </Typography>
-                                                                    </Box>
-                                                                </Box>
-                                                            ) : (
-                                                                <FormControl fullWidth margin="normal">
-                                                                    <InputLabel sx={{ color: 'white' }}>Y-Axis (Values)</InputLabel>
-                                                                    <Select
-                                                                        value={chartYAxis}
-                                                                        onChange={(e) =>
-                                                                            handleChartAxisChange('yAxis', e.target.value as string, 'KF')
-                                                                        }
-                                                                        label="Y-Axis (Values)"
-                                                                        sx={{
-                                                                            color: 'white',
-                                                                            '& .MuiOutlinedInput-notchedOutline': {
-                                                                                borderColor: 'white',
-                                                                            },
-                                                                            '&:hover .MuiOutlinedInput-notchedOutline': {
-                                                                                borderColor: 'white',
-                                                                            },
-                                                                            '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                                                                                borderColor: 'white',
-                                                                            },
-                                                                            '& .MuiSvgIcon-root': { color: 'white' },
-                                                                        }}
-                                                                    >
-                                                                        {getKFFields().map((field: any) => (
-                                                                            <MenuItem key={field.fieldName} value={field.fieldName}>
-                                                                                {field.label} ({field.fieldName})
-                                                                            </MenuItem>
-                                                                        ))}
-                                                                    </Select>
-                                                                    <FormHelperText sx={{ color: 'white' }}>
-                                                                        Select the key figure field to use for Y-axis values
-                                                                    </FormHelperText>
-                                                                </FormControl>
-                                                            )}
-                                                        </>
-                                                    )}
-                                                    {/* Add Multi-Chart Specific Config */}
-                                                    {getWidgetCategory(getSelectedWidgetType() || '') === 'multi-chart' && (
-                                                        <Box mt={3} className="multi-chart-config">
-                                                            {/* Chart Type Selection */}
-                                                            <FormControl fullWidth margin="normal">
-                                                                <InputLabel sx={{ color: 'white' }}>Chart Type</InputLabel>
-                                                                <Select
-                                                                    value={widgetConfigurations[selectedWidget]?.chartType || 'line'}
-                                                                    onChange={(e) => {
-                                                                        setWidgetConfigurations((prev) => ({
-                                                                            ...prev,
-                                                                            [selectedWidget]: {
-                                                                                ...prev[selectedWidget],
-                                                                                chartType: e.target.value,
-                                                                            },
-                                                                        }));
-                                                                    }}
-                                                                    label="Chart Type"
-                                                                    sx={{
-                                                                        color: 'white',
-                                                                        '& .MuiOutlinedInput-notchedOutline': { borderColor: 'white' },
-                                                                        '&:hover .MuiOutlinedInput-notchedOutline': {
-                                                                            borderColor: 'white',
-                                                                        },
-                                                                        '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                                                                            borderColor: 'white',
-                                                                        },
-                                                                        '& .MuiSvgIcon-root': { color: 'white' },
-                                                                    }}
-                                                                >
-                                                                    <MenuItem value="line">Line Chart</MenuItem>
-                                                                    <MenuItem value="bar">Bar Chart (Vertical)</MenuItem>
-                                                                    <MenuItem value="horizontal-bar">Bar Chart (Horizontal)</MenuItem>
-                                                                    <MenuItem value="area">Area Chart</MenuItem>
-                                                                    <MenuItem value="composed">Composed Chart (Mixed)</MenuItem>
-                                                                    <MenuItem value="scatter">Scatter Plot</MenuItem>
-                                                                    <MenuItem value="donut">Donut Chart</MenuItem>
-                                                                    <MenuItem value="pie">Pie Chart</MenuItem>
-                                                                    <MenuItem value="radar">Radar Chart</MenuItem>
-                                                                </Select>
-                                                                <FormHelperText sx={{ color: 'white' }}>
-                                                                    Select the visualization type for this widget
-                                                                </FormHelperText>
-                                                            </FormControl>
-
-                                                            {/* VALUE FORMAT CONFIGURATION*/}
-                                                            <FormControl fullWidth margin="normal">
-                                                                <InputLabel sx={{ color: 'white' }}>Value Format</InputLabel>
-                                                                <Select
-                                                                    value={
-                                                                        widgetConfigurations[selectedWidget]?.valueFormat ||
-                                                                        'non-currency'
-                                                                    }
-                                                                    onChange={(e) => {
-                                                                        setWidgetConfigurations((prev) => ({
-                                                                            ...prev,
-                                                                            [selectedWidget]: {
-                                                                                ...prev[selectedWidget],
-                                                                                valueFormat: e.target.value,
-                                                                            },
-                                                                        }));
-                                                                    }}
-                                                                    label="Value Format"
-                                                                    sx={{
-                                                                        color: 'white',
-                                                                        '& .MuiOutlinedInput-notchedOutline': { borderColor: 'white' },
-                                                                        '&:hover .MuiOutlinedInput-notchedOutline': {
-                                                                            borderColor: 'white',
-                                                                        },
-                                                                        '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                                                                            borderColor: 'white',
-                                                                        },
-                                                                        '& .MuiSvgIcon-root': { color: 'white' },
-                                                                    }}
-                                                                >
-                                                                    <MenuItem value="currency">
-                                                                        Currency (Thousand → M, Million → MM, Billion → B)
-                                                                    </MenuItem>
-                                                                    <MenuItem value="non-currency">
-                                                                        Non-Currency (Thousand → K, Million → M, Billion → B)
-                                                                    </MenuItem>
-                                                                </Select>
-                                                                <FormHelperText sx={{ color: 'white' }}>
-                                                                    Select how numbers should be abbreviated in the chart
-                                                                </FormHelperText>
-                                                            </FormControl>
-
-                                                            {/* Color Variant Selection */}
-                                                            <Box mt={3}>
-                                                                <Typography
-                                                                    variant="subtitle1"
-                                                                    gutterBottom
-                                                                    sx={{ color: 'white', fontWeight: 'bold' }}
-                                                                >
-                                                                    Color Variants
-                                                                </Typography>
-                                                                <Typography
-                                                                    variant="body2"
-                                                                    sx={{ color: 'white', mb: 2 }}
-                                                                >
-                                                                    Choose a predefined color palette for this multi-chart
-                                                                    widget. The selected variant will be applied to the data
-                                                                    series and used as the default color palette.
-                                                                </Typography>
-                                                                <ColorVariantPicker
-                                                                    selectedVariant={
-                                                                        widgetConfigurations[selectedWidget]?.colorVariantId
-                                                                    }
-                                                                    onVariantSelect={handleMultiChartVariantSelect}
-                                                                    showGradient={true}
-                                                                    compact={true}
-                                                                />
-                                                            </Box>
-
-                                                            {/* Show Legend Toggle */}
-                                                            <FormControl fullWidth margin="normal">
-                                                                <FormControlLabel
-                                                                    control={
-                                                                        <Checkbox
-                                                                            checked={
-                                                                                widgetConfigurations[selectedWidget]?.showLegend !== false
-                                                                            }
                                                                             onChange={(e) => {
-                                                                                setWidgetConfigurations((prev) => ({
-                                                                                    ...prev,
-                                                                                    [selectedWidget]: {
-                                                                                        ...prev[selectedWidget],
-                                                                                        showLegend: e.target.checked,
-                                                                                    },
-                                                                                }));
+                                                                                const field = e.target.value as string;
+                                                                                handleTableColumnAdd(field);
                                                                             }}
                                                                             sx={{
                                                                                 color: 'white',
-                                                                                '&.Mui-checked': { color: 'white' },
+                                                                                '& .MuiOutlinedInput-notchedOutline': {
+                                                                                    borderColor: 'white',
+                                                                                },
+                                                                                '&:hover .MuiOutlinedInput-notchedOutline': {
+                                                                                    borderColor: 'white',
+                                                                                },
+                                                                                '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                                                                                    borderColor: 'white',
+                                                                                },
+                                                                                '& .MuiSvgIcon-root': { color: 'white' },
                                                                             }}
-                                                                        />
-                                                                    }
-                                                                    label={
-                                                                        <Typography variant="body2" sx={{ color: 'white' }}>
-                                                                            Show Legend
-                                                                        </Typography>
-                                                                    }
-                                                                />
-                                                                <FormHelperText sx={{ color: 'white', ml: 0 }}>
-                                                                    Display legend below the chart
-                                                                </FormHelperText>
-                                                            </FormControl>
-
-                                                            {/* Stacked Toggle (for applicable chart types) */}
-                                                            {['bar', 'horizontal-bar', 'area'].includes(
-                                                                widgetConfigurations[selectedWidget]?.chartType || 'line'
-                                                            ) && (
-                                                                    <FormControl fullWidth margin="normal">
-                                                                        <FormControlLabel
-                                                                            control={
-                                                                                <Checkbox
-                                                                                    checked={
-                                                                                        widgetConfigurations[selectedWidget]?.stacked || false
-                                                                                    }
-                                                                                    onChange={(e) => {
-                                                                                        setWidgetConfigurations((prev) => ({
-                                                                                            ...prev,
-                                                                                            [selectedWidget]: {
-                                                                                                ...prev[selectedWidget],
-                                                                                                stacked: e.target.checked,
-                                                                                            },
-                                                                                        }));
-                                                                                    }}
-                                                                                    sx={{
-                                                                                        color: 'white',
-                                                                                        '&.Mui-checked': { color: 'white' },
-                                                                                    }}
-                                                                                />
-                                                                            }
-                                                                            label={
-                                                                                <Typography variant="body2" sx={{ color: 'white' }}>
-                                                                                    Stacked
-                                                                                </Typography>
-                                                                            }
-                                                                        />
-                                                                        <FormHelperText sx={{ color: 'white', ml: 0 }}>
-                                                                            Stack series on top of each other
-                                                                        </FormHelperText>
-                                                                    </FormControl>
-                                                                )}
-
-                                                            {/* Selected Labels Multi-Select */}
-                                                            {parsedResponse &&
-                                                                (() => {
-                                                                    // Check if data has label field or Struct field
-                                                                    const labelField = parsedResponse.header.find(
-                                                                        (h: any) =>
-                                                                            (h.fieldName.toLowerCase().includes('label') ||
-                                                                                h.label?.toLowerCase().includes('struct') ||
-                                                                                h.fieldName?.toLowerCase().includes('struct')) &&
-                                                                            h.type === 'CHA' &&
-                                                                            h.fieldName !== chartXAxis
-                                                                    );
-
-                                                                    if (labelField && chartXAxis) {
-                                                                        // Get unique values from chartData if available, otherwise use getCHAValues
-                                                                        let labelValues: string[] = [];
-
-                                                                        if (parsedResponse.chartData && Array.isArray(parsedResponse.chartData)) {
-                                                                            const uniqueValues = new Set<string>();
-                                                                            parsedResponse.chartData.forEach((row: any) => {
-                                                                                if (row[labelField.fieldName]) {
-                                                                                    uniqueValues.add(row[labelField.fieldName]);
-                                                                                }
-                                                                            });
-                                                                            labelValues = Array.from(uniqueValues).filter(
-                                                                                (val) => val !== 'Overall Result' && val !== ''
-                                                                            );
-                                                                        } else {
-                                                                            labelValues = getCHAValues(labelField.fieldName).filter(
-                                                                                (val) => val !== 'Overall Result'
-                                                                            );
-                                                                        }
-
-                                                                        if (labelValues.length > 0) {
-                                                                            return (
-                                                                                <FormControl fullWidth margin="normal">
-                                                                                    <InputLabel sx={{ color: 'white' }}>
-                                                                                        Filter by {labelField.label || 'Labels'}
-                                                                                    </InputLabel>
-                                                                                    <Select
-                                                                                        multiple
-                                                                                        value={
-                                                                                            widgetConfigurations[selectedWidget]?.selectedLabels ||
-                                                                                            []
-                                                                                        }
-                                                                                        onChange={(e) => {
-                                                                                            setWidgetConfigurations((prev) => ({
-                                                                                                ...prev,
-                                                                                                [selectedWidget]: {
-                                                                                                    ...prev[selectedWidget],
-                                                                                                    selectedLabels: e.target.value as string[],
-                                                                                                },
-                                                                                            }));
-                                                                                        }}
-                                                                                        label={`Filter by ${labelField.label || 'Labels'}`}
-                                                                                        renderValue={(selected) => (
-                                                                                            <Box
-                                                                                                sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}
-                                                                                            >
-                                                                                                {(selected as string[]).map((value) => (
-                                                                                                    <Chip
-                                                                                                        key={value}
-                                                                                                        label={value}
-                                                                                                        size="small"
-                                                                                                        sx={{
-                                                                                                            backgroundColor: '#ffffff20',
-                                                                                                            color: 'white',
-                                                                                                        }}
-                                                                                                    />
-                                                                                                ))}
-                                                                                            </Box>
-                                                                                        )}
-                                                                                        sx={{
-                                                                                            color: 'white',
-                                                                                            '& .MuiOutlinedInput-notchedOutline': {
-                                                                                                borderColor: 'white',
-                                                                                            },
-                                                                                            '&:hover .MuiOutlinedInput-notchedOutline': {
-                                                                                                borderColor: 'white',
-                                                                                            },
-                                                                                            '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                                                                                                borderColor: 'white',
-                                                                                            },
-                                                                                            '& .MuiSvgIcon-root': { color: 'white' },
-                                                                                        }}
-                                                                                    >
-                                                                                        {labelValues.map((label) => (
-                                                                                            <MenuItem key={label} value={label}>
-                                                                                                <Checkbox
-                                                                                                    checked={
-                                                                                                        (
-                                                                                                            widgetConfigurations[selectedWidget]
-                                                                                                                ?.selectedLabels || []
-                                                                                                        ).indexOf(label) > -1
-                                                                                                    }
-                                                                                                />
-                                                                                                {label}
-                                                                                            </MenuItem>
-                                                                                        ))}
-                                                                                    </Select>
-                                                                                    <FormHelperText sx={{ color: 'white' }}>
-                                                                                        Select specific {labelField.label?.toLowerCase() || 'labels'} to display (leave empty for all)
-                                                                                    </FormHelperText>
-                                                                                </FormControl>
-                                                                            );
-                                                                        }
-                                                                    }
-                                                                    return null;
-                                                                })()}
-
-                                                            <Divider sx={{ my: 3, borderColor: 'rgba(255,255,255,0.2)' }} />
-
-                                                            {/* DATA SERIES CONFIGURATION */}
-                                                            <Typography
-                                                                variant="subtitle1"
-                                                                gutterBottom
-                                                                sx={{ color: 'white', fontWeight: 'bold' }}
-                                                            >
-                                                                Data Series Configuration
-                                                            </Typography>
-
-                                                            <Box mb={2}>
-                                                                {stackedSeries.length > 0 ? (
-                                                                    <Grid container spacing={2}>
-                                                                        {stackedSeries.map((series: any, index) => (
-                                                                            <Grid item xs={12} key={index}>
-                                                                                <Card
-                                                                                    variant="outlined"
-                                                                                    sx={{ backgroundColor: '#ffffff20' }}
+                                                                        >
+                                                                            {parsedResponse.header.map((field: any) => (
+                                                                                <MenuItem
+                                                                                    key={field.fieldName}
+                                                                                    value={field.fieldName}
+                                                                                    disabled={tableColumns.some(
+                                                                                        (col) => col.field === field.fieldName
+                                                                                    )}
                                                                                 >
-                                                                                    <CardContent className="py-2">
-                                                                                        <Grid container spacing={2} alignItems="center">
-                                                                                            <Grid item xs={1}>
-                                                                                                <Box
-                                                                                                    sx={{
-                                                                                                        width: 20,
-                                                                                                        height: 20,
-                                                                                                        backgroundColor: series.color,
-                                                                                                        borderRadius: '4px',
-                                                                                                    }}
-                                                                                                />
-                                                                                            </Grid>
-                                                                                            <Grid item xs={4}>
-                                                                                                <Typography variant="body2" sx={{ color: 'white' }}>
-                                                                                                    {series.name}
-                                                                                                </Typography>
-                                                                                                <Typography
-                                                                                                    variant="caption"
-                                                                                                    sx={{ color: 'rgba(255,255,255,0.7)' }}
-                                                                                                >
-                                                                                                    {series.dataKey}
-                                                                                                </Typography>
-                                                                                            </Grid>
-                                                                                            <Grid item xs={3}>
-                                                                                                <FormControl fullWidth size="small">
-                                                                                                    <Select
-                                                                                                        value={series.type || 'line'}
-                                                                                                        onChange={(e) => {
-                                                                                                            const newSeries: any = [...stackedSeries];
-                                                                                                            newSeries[index] = {
-                                                                                                                ...newSeries[index],
-                                                                                                                type: e.target.value as
-                                                                                                                    | 'line'
-                                                                                                                    | 'bar'
-                                                                                                                    | 'area',
-                                                                                                            };
-                                                                                                            setStackedSeries(newSeries);
+                                                                                    {field.label} ({field.fieldName})
+                                                                                </MenuItem>
+                                                                            ))}
+                                                                        </Select>
+                                                                    </FormControl>
+                                                                </Grid>
+                                                            </Grid>
 
-                                                                                                            setFieldMappings((prev) => ({
-                                                                                                                ...prev,
-                                                                                                                [selectedWidget]: {
-                                                                                                                    ...prev[selectedWidget],
-                                                                                                                    seriesConfig: {
-                                                                                                                        ...prev[selectedWidget].seriesConfig,
-                                                                                                                        series: newSeries,
-                                                                                                                    },
-                                                                                                                },
-                                                                                                            }));
-                                                                                                        }}
-                                                                                                        sx={{
-                                                                                                            color: 'white',
-                                                                                                            '& .MuiOutlinedInput-notchedOutline': {
-                                                                                                                borderColor: 'white',
-                                                                                                            },
-                                                                                                            '&:hover .MuiOutlinedInput-notchedOutline': {
-                                                                                                                borderColor: 'white',
-                                                                                                            },
-                                                                                                            '&.Mui-focused .MuiOutlinedInput-notchedOutline':
-                                                                                                            {
-                                                                                                                borderColor: 'white',
-                                                                                                            },
-                                                                                                            '& .MuiSvgIcon-root': { color: 'white' },
-                                                                                                        }}
-                                                                                                    >
-                                                                                                        <MenuItem value="line">Line</MenuItem>
-                                                                                                        <MenuItem value="bar">Bar</MenuItem>
-                                                                                                        <MenuItem value="area">Area</MenuItem>
-                                                                                                    </Select>
-                                                                                                </FormControl>
-                                                                                            </Grid>
-                                                                                            <Grid item xs={3}>
-                                                                                                <TextField
-                                                                                                    size="small"
-                                                                                                    type="color"
-                                                                                                    value={series.color}
-                                                                                                    onChange={(e) => {
-                                                                                                        const newSeries = [...stackedSeries];
-                                                                                                        newSeries[index] = {
-                                                                                                            ...newSeries[index],
-                                                                                                            color: e.target.value,
-                                                                                                        };
-                                                                                                        setStackedSeries(newSeries);
+                                                            <Box mt={3}>
+                                                                <Typography variant="subtitle2" gutterBottom sx={{ color: 'white' }}>
+                                                                    Configured Columns
+                                                                </Typography>
 
-                                                                                                        setFieldMappings((prev) => ({
-                                                                                                            ...prev,
-                                                                                                            [selectedWidget]: {
-                                                                                                                ...prev[selectedWidget],
-                                                                                                                seriesConfig: {
-                                                                                                                    ...prev[selectedWidget].seriesConfig,
-                                                                                                                    series: newSeries,
-                                                                                                                },
-                                                                                                            },
-                                                                                                        }));
-                                                                                                    }}
-                                                                                                    sx={{
-                                                                                                        '& input': {
-                                                                                                            height: '30px',
-                                                                                                            cursor: 'pointer',
-                                                                                                        },
-                                                                                                    }}
-                                                                                                />
-                                                                                            </Grid>
-                                                                                            <Grid item xs={1}>
-                                                                                                <IconButton
-                                                                                                    size="small"
-                                                                                                    color="error"
-                                                                                                    onClick={() => handleRemoveStackedSeries(index)}
-                                                                                                >
-                                                                                                    <DeleteIcon fontSize="small" />
-                                                                                                </IconButton>
-                                                                                            </Grid>
-                                                                                        </Grid>
-                                                                                    </CardContent>
-                                                                                </Card>
-                                                                            </Grid>
-                                                                        ))}
-                                                                    </Grid>
+                                                                {tableColumns.length === 0 ? (
+                                                                    <Typography sx={{ color: 'white' }}>
+                                                                        No columns added yet
+                                                                    </Typography>
                                                                 ) : (
-                                                                    <Alert severity="info" sx={{ backgroundColor: '#2196f320' }}>
-                                                                        <Typography sx={{ color: 'white' }}>
-                                                                            No data series configured yet. Add a series below.
-                                                                        </Typography>
-                                                                    </Alert>
+                                                                    <Box>
+                                                                        {tableColumns.map((column, idx) => (
+                                                                            <Accordion
+                                                                                key={idx}
+                                                                                sx={{
+                                                                                    backgroundColor: '#ffffff20',
+                                                                                    color: 'white',
+                                                                                    mb: 1,
+                                                                                    '&:before': { display: 'none' },
+                                                                                }}
+                                                                            >
+                                                                                <AccordionSummary
+                                                                                    expandIcon={<ExpandMoreIcon sx={{ color: 'white' }} />}
+                                                                                >
+                                                                                    <Box
+                                                                                        display="flex"
+                                                                                        justifyContent="space-between"
+                                                                                        alignItems="center"
+                                                                                        width="100%"
+                                                                                    >
+                                                                                        <Typography sx={{ color: 'white' }}>
+                                                                                            {column.header} ({column.field})
+                                                                                        </Typography>
+                                                                                        <IconButton
+                                                                                            size="small"
+                                                                                            onClick={(e) => {
+                                                                                                e.stopPropagation();
+                                                                                                handleTableColumnRemove(idx);
+                                                                                            }}
+                                                                                            sx={{ color: 'white' }}
+                                                                                        >
+                                                                                            <DeleteIcon fontSize="small" />
+                                                                                        </IconButton>
+                                                                                    </Box>
+                                                                                </AccordionSummary>
+                                                                                <AccordionDetails>
+                                                                                    <Box>
+                                                                                        <Typography
+                                                                                            variant="subtitle2"
+                                                                                            gutterBottom
+                                                                                            sx={{ color: 'white' }}
+                                                                                        >
+                                                                                            Column Formatting
+                                                                                        </Typography>
+
+                                                                                        {/* Get sample value for this column */}
+                                                                                        {(() => {
+                                                                                            let sampleValue = 1234567.89;
+
+                                                                                            // Try to get a real sample value from the data
+                                                                                            if (transformedData && tableColumns.length > 0) {
+                                                                                                try {
+                                                                                                    const chaField = tableColumns[0].field;
+                                                                                                    const chaValues = getCHAValues(chaField).filter(
+                                                                                                        (val) => val !== 'Overall Result'
+                                                                                                    );
+
+                                                                                                    if (
+                                                                                                        chaValues.length > 0 &&
+                                                                                                        column.field !== chaField
+                                                                                                    ) {
+                                                                                                        const value = getKFValue(
+                                                                                                            chaField,
+                                                                                                            chaValues[0],
+                                                                                                            column.field
+                                                                                                        );
+                                                                                                        if (value && !isNaN(parseFloat(value))) {
+                                                                                                            sampleValue = parseFloat(value);
+                                                                                                        }
+                                                                                                    }
+                                                                                                } catch (e) {
+                                                                                                    console.log('Could not get sample value:', e);
+                                                                                                }
+                                                                                            }
+
+                                                                                            return (
+                                                                                                <FormatConfigUI
+                                                                                                    value={column.formatConfig}
+                                                                                                    onChange={(config) =>
+                                                                                                        handleTableColumnFormatChange(idx, config)
+                                                                                                    }
+                                                                                                    sampleValue={sampleValue}
+                                                                                                    label={`Format for ${column.header}`}
+                                                                                                />
+                                                                                            );
+                                                                                        })()}
+                                                                                    </Box>
+                                                                                </AccordionDetails>
+                                                                            </Accordion>
+                                                                        ))}
+                                                                    </Box>
                                                                 )}
                                                             </Box>
+                                                        </Box>
+                                                    )}
+                                                </TabPanel>
+                                            )}
 
-                                                            {/* Add New Series */}
+                                            {fieldMappings[selectedWidget]?.mappingType === 'quadrant' && (
+                                                <TabPanel value={tabValue} index={tabIndices.quadrantConfig!}>
+                                                    <Typography variant="h6" gutterBottom sx={{ color: 'white' }}>
+                                                        Quadrant Metrics Configuration
+                                                    </Typography>
+
+                                                    {!parsedResponse && (
+                                                        <Alert severity="warning" sx={{ mb: 2, backgroundColor: '#ff980020' }}>
+                                                            <Typography sx={{ color: 'white' }}>
+                                                                Please fetch report data first to configure quadrant metrics.
+                                                            </Typography>
+                                                        </Alert>
+                                                    )}
+
+                                                    {parsedResponse && (
+                                                        <Box mt={3}>
                                                             <FormControl fullWidth margin="normal">
-                                                                <InputLabel sx={{ color: 'white' }}>Add Data Series</InputLabel>
+                                                                <InputLabel sx={{ color: 'white' }}>Category Field</InputLabel>
                                                                 <Select
-                                                                    value=""
-                                                                    onChange={(e) => {
-                                                                        const field = e.target.value as string;
-                                                                        const fieldLabel =
-                                                                            parsedResponse?.header.find((h: any) => h.fieldName === field)
-                                                                                ?.label || field;
-
-                                                                        const colors = [
-                                                                            '#84BD00',
-                                                                            '#FFC846',
-                                                                            '#8979FF',
-                                                                            '#E1553F',
-                                                                            '#5899DA',
-                                                                            '#4DD0E1',
-                                                                            '#FF6F61',
-                                                                        ];
-                                                                        const newSeriesIndex = stackedSeries.length;
-
-                                                                        const newSeries = {
-                                                                            name: fieldLabel,
-                                                                            dataKey: field,
-                                                                            color: colors[newSeriesIndex % colors.length],
-                                                                            type: 'line' as 'line' | 'bar' | 'area',
-                                                                        };
-
-                                                                        const updatedSeries = [...stackedSeries, newSeries];
-                                                                        setStackedSeries(updatedSeries);
-
-                                                                        setFieldMappings((prev) => {
-                                                                            const config = JSON.parse(
-                                                                                JSON.stringify(prev[selectedWidget])
-                                                                            );
-
-                                                                            // Initialize yAxis.fields array if it doesn't exist
-                                                                            if (!config.chartConfig) config.chartConfig = {};
-                                                                            if (!config.chartConfig.yAxis) config.chartConfig.yAxis = {};
-                                                                            if (!config.chartConfig.yAxis.fields)
-                                                                                config.chartConfig.yAxis.fields = [];
-
-                                                                            // Add the field to yAxis.fields
-                                                                            config.chartConfig.yAxis.fields = [
-                                                                                ...config.chartConfig.yAxis.fields,
-                                                                                field,
-                                                                            ];
-                                                                            config.chartConfig.yAxis.type = 'KF';
-
-                                                                            // Update seriesConfig
-                                                                            if (!config.seriesConfig)
-                                                                                config.seriesConfig = { series: [] };
-                                                                            config.seriesConfig.series = updatedSeries;
-
-                                                                            return { ...prev, [selectedWidget]: config };
-                                                                        });
-                                                                    }}
-                                                                    label="Add Data Series"
+                                                                    value={chartXAxis}
+                                                                    onChange={(e) =>
+                                                                        handleChartAxisChange('xAxis', e.target.value as string, 'CHA')
+                                                                    }
+                                                                    label="Category Field"
                                                                     sx={{
                                                                         color: 'white',
                                                                         '& .MuiOutlinedInput-notchedOutline': {
@@ -6180,658 +6918,396 @@ const MappingScreen: React.FC = () => {
                                                                         '& .MuiSvgIcon-root': { color: 'white' },
                                                                     }}
                                                                 >
-                                                                    {getKFFields()
-                                                                        .filter((field: any) => {
-                                                                            return !stackedSeries.some(
-                                                                                (s) => s.dataKey === field.fieldName
-                                                                            );
-                                                                        })
-                                                                        .map((field: any) => (
-                                                                            <MenuItem key={field.fieldName} value={field.fieldName}>
-                                                                                {field.label} ({field.fieldName})
-                                                                            </MenuItem>
-                                                                        ))}
+                                                                    {getCHAFields().map((field: any) => (
+                                                                        <MenuItem key={field.fieldName} value={field.fieldName}>
+                                                                            {field.label} ({field.fieldName})
+                                                                        </MenuItem>
+                                                                    ))}
                                                                 </Select>
                                                                 <FormHelperText sx={{ color: 'white' }}>
-                                                                    Select key figure fields to include as data series in the chart
+                                                                    Select the field for the quadrant categories
                                                                 </FormHelperText>
                                                             </FormControl>
-                                                        </Box>
-                                                    )}
-                                                </Box>
-                                            </TabPanel>
-                                        )}
 
-                                        {fieldMappings[selectedWidget]?.mappingType === 'table' && (
-                                            <TabPanel value={tabValue} index={tabIndices.tableConfig!}>
-                                                <Typography variant="h6" gutterBottom sx={{ color: 'white' }}>
-                                                    Table Columns Configuration
-                                                </Typography>
-
-                                                <Paper elevation={2} sx={{ p: 2, mb: 2, backgroundColor: '#ffffff20' }}>
-                                                    <Typography variant="h6" gutterBottom sx={{ color: 'white' }}>
-                                                        Query Configuration
-                                                    </Typography>
-                                                    <Alert severity="info" sx={{ mb: 2, backgroundColor: '#2196f320' }}>
-                                                        <Typography sx={{ color: 'white' }}>
-                                                            Configure the SAP BW report to fetch data from when using mapped
-                                                            fields.
-                                                        </Typography>
-                                                    </Alert>
-
-                                                    <FormControl fullWidth variant="outlined" margin="normal">
-                                                        <TextField
-                                                            label="Report Technical Name"
-                                                            value={reportName}
-                                                            onChange={handleReportNameChange}
-                                                            helperText="Enter the technical name of the SAP BW report"
-                                                            sx={{
-                                                                input: { color: 'white' },
-                                                                label: { color: 'white' },
-                                                                '& .MuiOutlinedInput-root': {
-                                                                    '& fieldset': { borderColor: 'white' },
-                                                                    '&:hover fieldset': { borderColor: 'white' },
-                                                                    '&.Mui-focused fieldset': { borderColor: 'white' },
-                                                                },
-                                                                '& .MuiFormHelperText-root': { color: 'white' },
-                                                            }}
-                                                        />
-                                                        <Box mt={2} display="flex" alignItems="center" gap={2}>
-                                                            <Button
-                                                                label="Fetch Report Data"
-                                                                onClick={handleFetchReportData}
-                                                                disabled={loading}
-                                                            />
-                                                            {loading && <CircularProgress size={20} />}
-                                                        </Box>
-                                                    </FormControl>
-                                                </Paper>
-
-                                                {!parsedResponse && (
-                                                    <Alert severity="warning" sx={{ mb: 2, backgroundColor: '#ff980020' }}>
-                                                        <Typography sx={{ color: 'white' }}>
-                                                            Please fetch report data first to configure table columns.
-                                                        </Typography>
-                                                    </Alert>
-                                                )}
-                                                {parsedResponse && (
-                                                    <Box mt={3}>
-                                                        <Grid container spacing={2} alignItems="flex-end">
-                                                            <Grid item xs={12}>
-                                                                <FormControl fullWidth size="small">
-                                                                    <InputLabel sx={{ color: 'white' }}>Add Column</InputLabel>
-                                                                    <Select
-                                                                        label="Add Column"
-                                                                        value=""
-                                                                        onChange={(e) => {
-                                                                            const field = e.target.value as string;
-                                                                            handleTableColumnAdd(field);
-                                                                        }}
-                                                                        sx={{
-                                                                            color: 'white',
-                                                                            '& .MuiOutlinedInput-notchedOutline': {
-                                                                                borderColor: 'white',
-                                                                            },
-                                                                            '&:hover .MuiOutlinedInput-notchedOutline': {
-                                                                                borderColor: 'white',
-                                                                            },
-                                                                            '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                                                                                borderColor: 'white',
-                                                                            },
-                                                                            '& .MuiSvgIcon-root': { color: 'white' },
-                                                                        }}
+                                                            {chartXAxis && (
+                                                                <Box mt={3}>
+                                                                    <Typography
+                                                                        variant="subtitle2"
+                                                                        gutterBottom
+                                                                        sx={{ color: 'white' }}
                                                                     >
-                                                                        {parsedResponse.header.map((field: any) => (
-                                                                            <MenuItem
-                                                                                key={field.fieldName}
-                                                                                value={field.fieldName}
-                                                                                disabled={tableColumns.some(
-                                                                                    (col) => col.field === field.fieldName
-                                                                                )}
-                                                                            >
-                                                                                {field.label} ({field.fieldName})
-                                                                            </MenuItem>
-                                                                        ))}
-                                                                    </Select>
-                                                                </FormControl>
-                                                            </Grid>
-                                                        </Grid>
+                                                                        Select Metrics for Each Quadrant
+                                                                    </Typography>
 
-                                                        <Box mt={3}>
-                                                            <Typography variant="subtitle2" gutterBottom sx={{ color: 'white' }}>
-                                                                Configured Columns
-                                                            </Typography>
-
-                                                            {tableColumns.length === 0 ? (
-                                                                <Typography sx={{ color: 'white' }}>
-                                                                    No columns added yet
-                                                                </Typography>
-                                                            ) : (
-                                                                <Box>
-                                                                    {tableColumns.map((column, idx) => (
-                                                                        <Accordion
-                                                                            key={idx}
-                                                                            sx={{
-                                                                                backgroundColor: '#ffffff20',
-                                                                                color: 'white',
-                                                                                mb: 1,
-                                                                                '&:before': { display: 'none' },
-                                                                            }}
-                                                                        >
-                                                                            <AccordionSummary
-                                                                                expandIcon={<ExpandMoreIcon sx={{ color: 'white' }} />}
-                                                                            >
-                                                                                <Box
-                                                                                    display="flex"
-                                                                                    justifyContent="space-between"
-                                                                                    alignItems="center"
-                                                                                    width="100%"
-                                                                                >
-                                                                                    <Typography sx={{ color: 'white' }}>
-                                                                                        {column.header} ({column.field})
-                                                                                    </Typography>
-                                                                                    <IconButton
-                                                                                        size="small"
-                                                                                        onClick={(e) => {
-                                                                                            e.stopPropagation();
-                                                                                            handleTableColumnRemove(idx);
-                                                                                        }}
-                                                                                        sx={{ color: 'white' }}
+                                                                    <Grid container spacing={2}>
+                                                                        {['top-left', 'top-right', 'bottom-left', 'bottom-right'].map(
+                                                                            (position, idx) => (
+                                                                                <Grid item xs={6} key={position}>
+                                                                                    <Paper
+                                                                                        elevation={2}
+                                                                                        sx={{ p: 2, backgroundColor: '#ffffff20' }}
                                                                                     >
-                                                                                        <DeleteIcon fontSize="small" />
-                                                                                    </IconButton>
-                                                                                </Box>
-                                                                            </AccordionSummary>
-                                                                            <AccordionDetails>
-                                                                                <Box>
-                                                                                    <Typography
-                                                                                        variant="subtitle2"
-                                                                                        gutterBottom
-                                                                                        sx={{ color: 'white' }}
-                                                                                    >
-                                                                                        Column Formatting
-                                                                                    </Typography>
+                                                                                        <Typography
+                                                                                            variant="body2"
+                                                                                            gutterBottom
+                                                                                            sx={{ color: 'white' }}
+                                                                                        >
+                                                                                            {position
+                                                                                                .split('-')
+                                                                                                .map(
+                                                                                                    (word) =>
+                                                                                                        word.charAt(0).toUpperCase() + word.slice(1)
+                                                                                                )
+                                                                                                .join(' ')}{' '}
+                                                                                            Quadrant
+                                                                                        </Typography>
 
-                                                                                    {/* Get sample value for this column */}
-                                                                                    {(() => {
-                                                                                        let sampleValue = 1234567.89;
-
-                                                                                        // Try to get a real sample value from the data
-                                                                                        if (transformedData && tableColumns.length > 0) {
-                                                                                            try {
-                                                                                                const chaField = tableColumns[0].field;
-                                                                                                const chaValues = getCHAValues(chaField).filter(
-                                                                                                    (val) => val !== 'Overall Result'
-                                                                                                );
-
-                                                                                                if (
-                                                                                                    chaValues.length > 0 &&
-                                                                                                    column.field !== chaField
-                                                                                                ) {
-                                                                                                    const value = getKFValue(
-                                                                                                        chaField,
-                                                                                                        chaValues[0],
-                                                                                                        column.field
-                                                                                                    );
-                                                                                                    if (value && !isNaN(parseFloat(value))) {
-                                                                                                        sampleValue = parseFloat(value);
-                                                                                                    }
+                                                                                        <FormControl fullWidth margin="dense" size="small">
+                                                                                            <InputLabel sx={{ color: 'white' }}>Metric</InputLabel>
+                                                                                            <Select
+                                                                                                value={selectedMetrics[idx] || ''}
+                                                                                                onChange={(e) =>
+                                                                                                    handleQuadrantMetricSelection(
+                                                                                                        e.target.value as string,
+                                                                                                        idx
+                                                                                                    )
                                                                                                 }
-                                                                                            } catch (e) {
-                                                                                                console.log('Could not get sample value:', e);
-                                                                                            }
-                                                                                        }
-
-                                                                                        return (
-                                                                                            <FormatConfigUI
-                                                                                                value={column.formatConfig}
-                                                                                                onChange={(config) =>
-                                                                                                    handleTableColumnFormatChange(idx, config)
-                                                                                                }
-                                                                                                sampleValue={sampleValue}
-                                                                                                label={`Format for ${column.header}`}
-                                                                                            />
-                                                                                        );
-                                                                                    })()}
-                                                                                </Box>
-                                                                            </AccordionDetails>
-                                                                        </Accordion>
-                                                                    ))}
+                                                                                                label="Metric"
+                                                                                                sx={{
+                                                                                                    color: 'white',
+                                                                                                    '& .MuiOutlinedInput-notchedOutline': {
+                                                                                                        borderColor: 'white',
+                                                                                                    },
+                                                                                                    '&:hover .MuiOutlinedInput-notchedOutline': {
+                                                                                                        borderColor: 'white',
+                                                                                                    },
+                                                                                                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                                                                                                        borderColor: 'white',
+                                                                                                    },
+                                                                                                    '& .MuiSvgIcon-root': {
+                                                                                                        color: 'white',
+                                                                                                    },
+                                                                                                }}
+                                                                                            >
+                                                                                                <MenuItem value="" disabled>
+                                                                                                    -- CHA Values --
+                                                                                                </MenuItem>
+                                                                                                {getCHAValues(chartXAxis)
+                                                                                                    .filter((value) => value !== 'Overall Result')
+                                                                                                    .map((value) => (
+                                                                                                        <MenuItem key={value} value={value}>
+                                                                                                            {value}
+                                                                                                        </MenuItem>
+                                                                                                    ))}
+                                                                                            </Select>
+                                                                                        </FormControl>
+                                                                                    </Paper>
+                                                                                </Grid>
+                                                                            )
+                                                                        )}
+                                                                    </Grid>
                                                                 </Box>
                                                             )}
                                                         </Box>
-                                                    </Box>
-                                                )}
-                                            </TabPanel>
-                                        )}
-
-                                        {fieldMappings[selectedWidget]?.mappingType === 'quadrant' && (
-                                            <TabPanel value={tabValue} index={tabIndices.quadrantConfig!}>
-                                                <Typography variant="h6" gutterBottom sx={{ color: 'white' }}>
-                                                    Quadrant Metrics Configuration
-                                                </Typography>
-
-                                                {!parsedResponse && (
-                                                    <Alert severity="warning" sx={{ mb: 2, backgroundColor: '#ff980020' }}>
-                                                        <Typography sx={{ color: 'white' }}>
-                                                            Please fetch report data first to configure quadrant metrics.
-                                                        </Typography>
-                                                    </Alert>
-                                                )}
-
-                                                {parsedResponse && (
-                                                    <Box mt={3}>
-                                                        <FormControl fullWidth margin="normal">
-                                                            <InputLabel sx={{ color: 'white' }}>Category Field</InputLabel>
-                                                            <Select
-                                                                value={chartXAxis}
-                                                                onChange={(e) =>
-                                                                    handleChartAxisChange('xAxis', e.target.value as string, 'CHA')
-                                                                }
-                                                                label="Category Field"
-                                                                sx={{
-                                                                    color: 'white',
-                                                                    '& .MuiOutlinedInput-notchedOutline': {
-                                                                        borderColor: 'white',
-                                                                    },
-                                                                    '&:hover .MuiOutlinedInput-notchedOutline': {
-                                                                        borderColor: 'white',
-                                                                    },
-                                                                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                                                                        borderColor: 'white',
-                                                                    },
-                                                                    '& .MuiSvgIcon-root': { color: 'white' },
-                                                                }}
-                                                            >
-                                                                {getCHAFields().map((field: any) => (
-                                                                    <MenuItem key={field.fieldName} value={field.fieldName}>
-                                                                        {field.label} ({field.fieldName})
-                                                                    </MenuItem>
-                                                                ))}
-                                                            </Select>
-                                                            <FormHelperText sx={{ color: 'white' }}>
-                                                                Select the field for the quadrant categories
-                                                            </FormHelperText>
-                                                        </FormControl>
-
-                                                        {chartXAxis && (
-                                                            <Box mt={3}>
-                                                                <Typography
-                                                                    variant="subtitle2"
-                                                                    gutterBottom
-                                                                    sx={{ color: 'white' }}
-                                                                >
-                                                                    Select Metrics for Each Quadrant
-                                                                </Typography>
-
-                                                                <Grid container spacing={2}>
-                                                                    {['top-left', 'top-right', 'bottom-left', 'bottom-right'].map(
-                                                                        (position, idx) => (
-                                                                            <Grid item xs={6} key={position}>
-                                                                                <Paper
-                                                                                    elevation={2}
-                                                                                    sx={{ p: 2, backgroundColor: '#ffffff20' }}
-                                                                                >
-                                                                                    <Typography
-                                                                                        variant="body2"
-                                                                                        gutterBottom
-                                                                                        sx={{ color: 'white' }}
-                                                                                    >
-                                                                                        {position
-                                                                                            .split('-')
-                                                                                            .map(
-                                                                                                (word) =>
-                                                                                                    word.charAt(0).toUpperCase() + word.slice(1)
-                                                                                            )
-                                                                                            .join(' ')}{' '}
-                                                                                        Quadrant
-                                                                                    </Typography>
-
-                                                                                    <FormControl fullWidth margin="dense" size="small">
-                                                                                        <InputLabel sx={{ color: 'white' }}>Metric</InputLabel>
-                                                                                        <Select
-                                                                                            value={selectedMetrics[idx] || ''}
-                                                                                            onChange={(e) =>
-                                                                                                handleQuadrantMetricSelection(
-                                                                                                    e.target.value as string,
-                                                                                                    idx
-                                                                                                )
-                                                                                            }
-                                                                                            label="Metric"
-                                                                                            sx={{
-                                                                                                color: 'white',
-                                                                                                '& .MuiOutlinedInput-notchedOutline': {
-                                                                                                    borderColor: 'white',
-                                                                                                },
-                                                                                                '&:hover .MuiOutlinedInput-notchedOutline': {
-                                                                                                    borderColor: 'white',
-                                                                                                },
-                                                                                                '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                                                                                                    borderColor: 'white',
-                                                                                                },
-                                                                                                '& .MuiSvgIcon-root': {
-                                                                                                    color: 'white',
-                                                                                                },
-                                                                                            }}
-                                                                                        >
-                                                                                            <MenuItem value="" disabled>
-                                                                                                -- CHA Values --
-                                                                                            </MenuItem>
-                                                                                            {getCHAValues(chartXAxis)
-                                                                                                .filter((value) => value !== 'Overall Result')
-                                                                                                .map((value) => (
-                                                                                                    <MenuItem key={value} value={value}>
-                                                                                                        {value}
-                                                                                                    </MenuItem>
-                                                                                                ))}
-                                                                                        </Select>
-                                                                                    </FormControl>
-                                                                                </Paper>
-                                                                            </Grid>
-                                                                        )
-                                                                    )}
-                                                                </Grid>
-                                                            </Box>
-                                                        )}
-                                                    </Box>
-                                                )}
-                                            </TabPanel>
-                                        )}
-                                        {getSelectedWidgetType() === 'multi-metric' &&
-                                            tabIndices.colorConfig !== undefined && (
-                                                <TabPanel value={tabValue} index={tabIndices.colorConfig}>
-                                                    <Box>
-                                                        <Typography variant="h6" gutterBottom sx={{ color: 'white' }}>
-                                                            Background Color
-                                                        </Typography>
-                                                        <Typography variant="body2" sx={{ color: 'white', mb: 3 }}>
-                                                            Use the color picker to control the gradient background for the
-                                                            Multi Metric widget.
-                                                        </Typography>
-                                                        <Box
-                                                            display="flex"
-                                                            flexDirection={{ xs: 'column', md: 'row' }}
-                                                            gap={3}
-                                                        >
-                                                            <Paper
-                                                                elevation={2}
-                                                                sx={{
-                                                                    flex: 1,
-                                                                    p: 3,
-                                                                    backgroundColor: '#ffffff10',
-                                                                }}
-                                                            >
-                                                                <Typography variant="subtitle2" sx={{ color: 'white', mb: 2 }}>
-                                                                    Pick a Color
-                                                                </Typography>
-                                                                <Box
-                                                                    sx={{
-                                                                        backgroundColor: '#fff',
-                                                                        borderRadius: 2,
-                                                                        p: 2,
-                                                                    }}
-                                                                >
-                                                                    <HexColorPicker
-                                                                        color={activeWidgetColor}
-                                                                        onChange={handleBackgroundColorChange}
-                                                                    />
-                                                                </Box>
-                                                                <TextField
-                                                                    label="Hex Value"
-                                                                    value={activeWidgetColor.toUpperCase()}
-                                                                    margin="normal"
-                                                                    fullWidth
-                                                                    InputProps={{
-                                                                        readOnly: true,
-                                                                        sx: { color: 'white' },
-                                                                    }}
-                                                                    InputLabelProps={{ sx: { color: 'white' } }}
-                                                                    sx={{
-                                                                        mt: 2,
-                                                                        '& .MuiOutlinedInput-root': {
-                                                                            '& fieldset': { borderColor: 'white' },
-                                                                            '&:hover fieldset': { borderColor: 'white' },
-                                                                            '&.Mui-focused fieldset': { borderColor: 'white' },
-                                                                        },
-                                                                    }}
-                                                                />
-                                                                <Button
-                                                                    label="Reset to Default"
-                                                                    onClick={handleBackgroundColorReset}
-                                                                    className="mt-2"
-                                                                />
-                                                            </Paper>
-
-                                                            <Paper
-                                                                elevation={2}
-                                                                sx={{
-                                                                    flex: 1,
-                                                                    p: 3,
-                                                                    backgroundColor: '#ffffff10',
-                                                                }}
-                                                            >
-                                                                <Typography variant="subtitle2" sx={{ color: 'white', mb: 2 }}>
-                                                                    Preview
-                                                                </Typography>
-                                                                <Box
-                                                                    sx={{
-                                                                        ...getMultiMetricPreviewStyle(activeWidgetColor),
-                                                                        borderRadius: 2,
-                                                                        minHeight: 220,
-                                                                        p: 3,
-                                                                        display: 'flex',
-                                                                        flexDirection: 'column',
-                                                                        justifyContent: 'space-between',
-                                                                        boxShadow: 'inset 0 0 20px rgba(0,0,0,0.25)',
-                                                                    }}
-                                                                >
-                                                                    {[1, 2, 3].map((item) => (
-                                                                        <Box key={item}>
-                                                                            <Typography
-                                                                                variant="h4"
-                                                                                sx={{
-                                                                                    fontWeight: 700,
-                                                                                    mb: 0.5,
-                                                                                    color: '#fff',
-                                                                                }}
-                                                                            >
-                                                                                {item === 1 ? '120' : item === 2 ? '87' : '42'}
-                                                                            </Typography>
-                                                                            <Typography
-                                                                                variant="subtitle2"
-                                                                                sx={{ color: 'rgba(255,255,255,0.7)', textTransform: 'uppercase' }}
-                                                                            >
-                                                                                {`Metric ${item}`}
-                                                                            </Typography>
-                                                                        </Box>
-                                                                    ))}
-                                                                </Box>
-                                                            </Paper>
-                                                        </Box>
-                                                    </Box>
+                                                    )}
                                                 </TabPanel>
                                             )}
-                                        <TabPanel value={tabValue} index={tabIndices.typography!}>
-                                            <TypographyConfigUI
-                                                value={widgetConfigurations[selectedWidget]?.typography}
-                                                onChange={handleTypographyChange}
-                                                elementTypes={getTypographyElementsForWidget(getSelectedWidgetType() || '')}
-                                            />
-                                        </TabPanel>
-                                        <TabPanel value={tabValue} index={tabIndices.dataPreview}>
-                                            <Typography variant="h6" gutterBottom sx={{ color: 'white' }}>
-                                                Raw Data Preview
-                                            </Typography>
+                                            {getSelectedWidgetType() === 'multi-metric' &&
+                                                tabIndices.colorConfig !== undefined && (
+                                                    <TabPanel value={tabValue} index={tabIndices.colorConfig}>
+                                                        <Box>
+                                                            <Typography variant="h6" gutterBottom sx={{ color: 'white' }}>
+                                                                Background Color
+                                                            </Typography>
+                                                            <Typography variant="body2" sx={{ color: 'white', mb: 3 }}>
+                                                                Use the color picker to control the gradient background for the
+                                                                Multi Metric widget.
+                                                            </Typography>
+                                                            <Box
+                                                                display="flex"
+                                                                flexDirection={{ xs: 'column', md: 'row' }}
+                                                                gap={3}
+                                                            >
+                                                                <Paper
+                                                                    elevation={2}
+                                                                    sx={{
+                                                                        flex: 1,
+                                                                        p: 3,
+                                                                        backgroundColor: '#ffffff10',
+                                                                    }}
+                                                                >
+                                                                    <Typography variant="subtitle2" sx={{ color: 'white', mb: 2 }}>
+                                                                        Pick a Color
+                                                                    </Typography>
+                                                                    <Box
+                                                                        sx={{
+                                                                            backgroundColor: '#fff',
+                                                                            borderRadius: 2,
+                                                                            p: 2,
+                                                                        }}
+                                                                    >
+                                                                        <HexColorPicker
+                                                                            color={activeWidgetColor}
+                                                                            onChange={handleBackgroundColorChange}
+                                                                        />
+                                                                    </Box>
+                                                                    <TextField
+                                                                        label="Hex Value"
+                                                                        value={activeWidgetColor.toUpperCase()}
+                                                                        margin="normal"
+                                                                        fullWidth
+                                                                        InputProps={{
+                                                                            readOnly: true,
+                                                                            sx: { color: 'white' },
+                                                                        }}
+                                                                        InputLabelProps={{ sx: { color: 'white' } }}
+                                                                        sx={{
+                                                                            mt: 2,
+                                                                            '& .MuiOutlinedInput-root': {
+                                                                                '& fieldset': { borderColor: 'white' },
+                                                                                '&:hover fieldset': { borderColor: 'white' },
+                                                                                '&.Mui-focused fieldset': { borderColor: 'white' },
+                                                                            },
+                                                                        }}
+                                                                    />
+                                                                    <Button
+                                                                        label="Reset to Default"
+                                                                        onClick={handleBackgroundColorReset}
+                                                                        className="mt-2"
+                                                                    />
+                                                                </Paper>
 
-                                            {transformedData ? (
-                                                <Box>
-                                                    <Typography variant="subtitle2" gutterBottom sx={{ color: 'white' }}>
-                                                        Available Fields:
-                                                    </Typography>
-                                                    <Box mb={3}>
-                                                        <Typography variant="body2" sx={{ color: 'white', mb: 1 }}>
-                                                            Character Fields (CHA):
+                                                                <Paper
+                                                                    elevation={2}
+                                                                    sx={{
+                                                                        flex: 1,
+                                                                        p: 3,
+                                                                        backgroundColor: '#ffffff10',
+                                                                    }}
+                                                                >
+                                                                    <Typography variant="subtitle2" sx={{ color: 'white', mb: 2 }}>
+                                                                        Preview
+                                                                    </Typography>
+                                                                    <Box
+                                                                        sx={{
+                                                                            ...getMultiMetricPreviewStyle(activeWidgetColor),
+                                                                            borderRadius: 2,
+                                                                            minHeight: 220,
+                                                                            p: 3,
+                                                                            display: 'flex',
+                                                                            flexDirection: 'column',
+                                                                            justifyContent: 'space-between',
+                                                                            boxShadow: 'inset 0 0 20px rgba(0,0,0,0.25)',
+                                                                        }}
+                                                                    >
+                                                                        {[1, 2, 3].map((item) => (
+                                                                            <Box key={item}>
+                                                                                <Typography
+                                                                                    variant="h4"
+                                                                                    sx={{
+                                                                                        fontWeight: 700,
+                                                                                        mb: 0.5,
+                                                                                        color: '#fff',
+                                                                                    }}
+                                                                                >
+                                                                                    {item === 1 ? '120' : item === 2 ? '87' : '42'}
+                                                                                </Typography>
+                                                                                <Typography
+                                                                                    variant="subtitle2"
+                                                                                    sx={{ color: 'rgba(255,255,255,0.7)', textTransform: 'uppercase' }}
+                                                                                >
+                                                                                    {`Metric ${item}`}
+                                                                                </Typography>
+                                                                            </Box>
+                                                                        ))}
+                                                                    </Box>
+                                                                </Paper>
+                                                            </Box>
+                                                        </Box>
+                                                    </TabPanel>
+                                                )}
+                                            <TabPanel value={tabValue} index={tabIndices.typography!}>
+                                                <TypographyConfigUI
+                                                    value={widgetConfigurations[selectedWidget]?.typography}
+                                                    onChange={handleTypographyChange}
+                                                    elementTypes={getTypographyElementsForWidget(getSelectedWidgetType() || '')}
+                                                />
+                                            </TabPanel>
+                                            <TabPanel value={tabValue} index={tabIndices.dataPreview}>
+                                                <Typography variant="h6" gutterBottom sx={{ color: 'white' }}>
+                                                    Raw Data Preview
+                                                </Typography>
+
+                                                {transformedData ? (
+                                                    <Box>
+                                                        <Typography variant="subtitle2" gutterBottom sx={{ color: 'white' }}>
+                                                            Available Fields:
                                                         </Typography>
-                                                        {getCHAFields().map((field: any) => (
-                                                            <Chip
-                                                                key={field.fieldName}
-                                                                label={`${field.label} (${field.fieldName})`}
-                                                                size="small"
-                                                                sx={{
-                                                                    m: 0.5,
-                                                                    backgroundColor: '#e3f2fd20',
-                                                                    color: 'white',
-                                                                    border: '1px solid #2196f3',
-                                                                }}
-                                                            />
-                                                        ))}
-                                                    </Box>
+                                                        <Box mb={3}>
+                                                            <Typography variant="body2" sx={{ color: 'white', mb: 1 }}>
+                                                                Character Fields (CHA):
+                                                            </Typography>
+                                                            {getCHAFields().map((field: any) => (
+                                                                <Chip
+                                                                    key={field.fieldName}
+                                                                    label={`${field.label} (${field.fieldName})`}
+                                                                    size="small"
+                                                                    sx={{
+                                                                        m: 0.5,
+                                                                        backgroundColor: '#e3f2fd20',
+                                                                        color: 'black',
+                                                                        border: '1px solid #2196f3',
+                                                                    }}
+                                                                />
+                                                            ))}
+                                                        </Box>
 
-                                                    <Box mb={3}>
-                                                        <Typography variant="body2" sx={{ color: 'white', mb: 1 }}>
-                                                            Key Figure Fields (KF):
+                                                        <Box mb={3}>
+                                                            <Typography variant="body2" sx={{ color: 'white', mb: 1 }}>
+                                                                Key Figure Fields (KF):
+                                                            </Typography>
+                                                            {getKFFields().map((field: any) => (
+                                                                <Chip
+                                                                    key={field.fieldName}
+                                                                    label={`${field.label} (${field.fieldName})`}
+                                                                    size="small"
+                                                                    sx={{
+                                                                        m: 0.5,
+                                                                        backgroundColor: '#fff3e020',
+                                                                        color: 'black',
+                                                                        border: '1px solid #ff9800',
+                                                                    }}
+                                                                />
+                                                            ))}
+                                                        </Box>
+
+                                                        <Typography variant="subtitle2" gutterBottom sx={{ color: 'white' }}>
+                                                            Sample Data:
                                                         </Typography>
-                                                        {getKFFields().map((field: any) => (
-                                                            <Chip
-                                                                key={field.fieldName}
-                                                                label={`${field.label} (${field.fieldName})`}
-                                                                size="small"
-                                                                sx={{
-                                                                    m: 0.5,
-                                                                    backgroundColor: '#fff3e020',
+                                                        <Paper
+                                                            elevation={3}
+                                                            sx={{
+                                                                p: 2,
+                                                                backgroundColor: '#ffffff10',
+                                                                maxHeight: 400,
+                                                                overflow: 'auto',
+                                                            }}
+                                                        >
+                                                            <pre
+                                                                style={{
                                                                     color: 'white',
-                                                                    border: '1px solid #ff9800',
+                                                                    fontSize: '12px',
+                                                                    margin: 0,
                                                                 }}
-                                                            />
-                                                        ))}
+                                                            >
+                                                                {JSON.stringify(
+                                                                    {
+                                                                        metadata: transformedData.FormMetadata,
+                                                                        sampleStructure: Object.keys(
+                                                                            transformedData.FormStructure
+                                                                        ).reduce((acc: any, key: string) => {
+                                                                            const values = transformedData.FormStructure[key];
+                                                                            const firstKey = Object.keys(values)[0];
+                                                                            if (firstKey) {
+                                                                                acc[key] = { [firstKey]: values[firstKey] };
+                                                                            }
+                                                                            return acc;
+                                                                        }, {}),
+                                                                    },
+                                                                    null,
+                                                                    2
+                                                                )}
+                                                            </pre>
+                                                        </Paper>
                                                     </Box>
-
-                                                    <Typography variant="subtitle2" gutterBottom sx={{ color: 'white' }}>
-                                                        Sample Data:
+                                                ) : (
+                                                    <Typography sx={{ color: 'white' }} textAlign="center">
+                                                        No data available. Please fetch report data first.
                                                     </Typography>
-                                                    <Paper
-                                                        elevation={3}
-                                                        sx={{
-                                                            p: 2,
-                                                            backgroundColor: '#ffffff10',
-                                                            maxHeight: 400,
-                                                            overflow: 'auto',
-                                                        }}
-                                                    >
+                                                )}
+                                            </TabPanel>
+
+                                            <TabPanel value={tabValue} index={tabIndices.widgetPreview}>
+                                                <Box textAlign="center" mb={3}>
+                                                    <Button label="Generate Preview" onClick={generatePreview} />
+                                                </Box>
+
+                                                {previewData ? (
+                                                    <Paper elevation={3} sx={{ p: 2, backgroundColor: '#ffffff10' }}>
+                                                        <Typography variant="subtitle1" gutterBottom sx={{ color: 'white' }}>
+                                                            Widget Preview Data
+                                                        </Typography>
                                                         <pre
                                                             style={{
                                                                 color: 'white',
                                                                 fontSize: '12px',
+                                                                maxHeight: '300px',
+                                                                overflow: 'auto',
                                                                 margin: 0,
+                                                                backgroundColor: '#00000020',
+                                                                padding: '10px',
+                                                                borderRadius: '4px',
                                                             }}
                                                         >
-                                                            {JSON.stringify(
-                                                                {
-                                                                    metadata: transformedData.FormMetadata,
-                                                                    sampleStructure: Object.keys(
-                                                                        transformedData.FormStructure
-                                                                    ).reduce((acc: any, key: string) => {
-                                                                        const values = transformedData.FormStructure[key];
-                                                                        const firstKey = Object.keys(values)[0];
-                                                                        if (firstKey) {
-                                                                            acc[key] = { [firstKey]: values[firstKey] };
-                                                                        }
-                                                                        return acc;
-                                                                    }, {}),
-                                                                },
-                                                                null,
-                                                                2
-                                                            )}
+                                                            {JSON.stringify(previewData, null, 2)}
                                                         </pre>
                                                     </Paper>
-                                                </Box>
-                                            ) : (
-                                                <Typography sx={{ color: 'white' }} textAlign="center">
-                                                    No data available. Please fetch report data first.
-                                                </Typography>
-                                            )}
-                                        </TabPanel>
-
-                                        <TabPanel value={tabValue} index={tabIndices.widgetPreview}>
-                                            <Box textAlign="center" mb={3}>
-                                                <Button label="Generate Preview" onClick={generatePreview} />
-                                            </Box>
-
-                                            {previewData ? (
-                                                <Paper elevation={3} sx={{ p: 2, backgroundColor: '#ffffff10' }}>
-                                                    <Typography variant="subtitle1" gutterBottom sx={{ color: 'white' }}>
-                                                        Widget Preview Data
+                                                ) : (
+                                                    <Typography sx={{ color: 'white' }} textAlign="center">
+                                                        Click "Generate Preview" to see how your widget will look with the mapped
+                                                        data
                                                     </Typography>
-                                                    <pre
-                                                        style={{
-                                                            color: 'white',
-                                                            fontSize: '12px',
-                                                            maxHeight: '300px',
-                                                            overflow: 'auto',
-                                                            margin: 0,
-                                                            backgroundColor: '#00000020',
-                                                            padding: '10px',
-                                                            borderRadius: '4px',
-                                                        }}
-                                                    >
-                                                        {JSON.stringify(previewData, null, 2)}
-                                                    </pre>
-                                                </Paper>
-                                            ) : (
-                                                <Typography sx={{ color: 'white' }} textAlign="center">
-                                                    Click "Generate Preview" to see how your widget will look with the mapped
-                                                    data
-                                                </Typography>
-                                            )}
-                                        </TabPanel>
-                                    </>
-                                );
-                            })()}
+                                                )}
+                                            </TabPanel>
+                                        </>
+                                    );
+                                })()}
 
-                            <FormControl>
-                                <FormControlLabel
-                                    control={
-                                        <Checkbox
-                                            onChange={(e) => handleDescriptionToggle(e.target.checked)}
-                                            sx={{
-                                                color: 'white',
-                                                '&.Mui-checked': { color: 'white' },
-                                            }}
-                                        />
-                                    }
-                                    label={
-                                        <Typography variant="body2" sx={{ color: 'white' }}>
-                                            Add description icon
-                                        </Typography>
-                                    }
-                                />
-                            </FormControl>
+                                <FormControl>
+                                    <FormControlLabel
+                                        control={
+                                            <Checkbox
+                                                onChange={(e) => handleDescriptionToggle(e.target.checked)}
+                                                sx={{
+                                                    color: 'white',
+                                                    '&.Mui-checked': { color: 'white' },
+                                                }}
+                                            />
+                                        }
+                                        label={
+                                            <Typography variant="body2" sx={{ color: 'white' }}>
+                                                Add description icon
+                                            </Typography>
+                                        }
+                                    />
+                                </FormControl>
 
-                            <Box mt={4} pt={2} borderTop={1} borderColor="rgba(255,255,255,0.2)">
+                                <Box mt={4} pt={2} borderTop={1} borderColor="rgba(255,255,255,0.2)">
+                                    <Button
+                                        label="Apply Configuration"
+                                        className="mt-2 mr-2"
+                                        severity="secondary"
+                                        onClick={generatePreview}
+                                    />
+                                </Box>
+                            </Box>
+                        ) : (
+                            <Typography sx={{ color: 'white' }}>Select a widget to configure it</Typography>
+                        )}
+
+                        <div className="absolute right-0 bottom-0 p-4">
+                            <Box mt={4} pt={2} borderColor="rgba(255,255,255,0.2)">
                                 <Button
-                                    label="Apply Configuration"
-                                    className="mt-2 mr-2"
-                                    severity="secondary"
-                                    onClick={generatePreview}
+                                    label={isSaving ? 'Saving...' : 'Save Layout'}
+                                    onClick={saveLayout}
+                                    disabled={isSaving}
+                                    loading={isSaving}
                                 />
                             </Box>
-                        </Box>
-                    ) : (
-                        <Typography sx={{ color: 'white' }}>Select a widget to configure it</Typography>
-                    )}
-
-                    <div className="absolute right-0 bottom-0 p-4">
-                        <Box mt={4} pt={2} borderColor="rgba(255,255,255,0.2)">
-                            <Button
-                                label={isSaving ? 'Saving...' : 'Save Layout'}
-                                onClick={saveLayout}
-                                disabled={isSaving}
-                                loading={isSaving}
-                            />
-                        </Box>
+                        </div>
                     </div>
                 </div>
-            </div>
+            )}
 
             <Dialog open={isMappingDialogOpen} onClose={closeMappingDialog} maxWidth="md" fullWidth>
                 <DialogTitle>Map Field: {currentMappingField}</DialogTitle>

@@ -719,22 +719,7 @@ const MultiChart: React.FC<MultiChartProps> = ({
                 </div>
 
                 {/* Label filters (if applicable) */}
-                {(groupByField || (data.some((item) => item.label !== undefined) && selectedLabels.length > 0)) && (
-                    <div className="mb-2 flex flex-wrap gap-2">
-                        {selectedLabels.map((label, idx) => (
-                            <span
-                                key={idx}
-                                className="rounded-full bg-black/40 backdrop-blur-sm px-3 py-1 text-xs font-medium text-white shadow-md border border-white/30"
-                                style={{
-                                    backgroundColor: 'rgba(0, 0, 0, 0.4)',
-                                    backdropFilter: 'blur(4px)'
-                                }}
-                            >
-                                {label}
-                            </span>
-                        ))}
-                    </div>
-                )}
+
 
                 {/* Chart */}
                 <div className="relative min-h-[180px] flex-1">
