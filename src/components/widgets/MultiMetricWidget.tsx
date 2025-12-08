@@ -38,15 +38,15 @@ const MultiMetricWidget: React.FC<MultiMetricWidgetProps> = ({ items = defaultIt
             <div className="h-full rounded-2xl p-4" style={backgroundStyle}>
                 <div className="flex h-full flex-col gap-4">
                     {(items.length ? items : defaultItems).map((item, index) => (
-                        <div key={item.id || index} className="flex flex-col gap-1">
+                        <div key={item.id || index} className="flex min-w-0 flex-col gap-1">
                             <span
-                                className="text-3xl font-bold leading-tight sm:text-4xl"
+                                className="break-words text-3xl font-bold leading-tight sm:text-4xl"
                                 style={getCleanTypographyStyles('value', typography)}
                             >
                                 {item.value ?? '--'}
                             </span>
                             <span
-                                className="text-sm tracking-wide text-white/70 sm:text-base"
+                                className="break-words text-sm tracking-wide text-white/70 sm:text-base"
                                 style={getCleanTypographyStyles('name', typography)}
                             >
                                 {item.title ?? ''}
