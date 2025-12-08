@@ -94,6 +94,7 @@ export default function Home({
     const [configuration, setConfiguration] = useState<UIConfiguration>(defaultConfiguration);
     const [configurationLoading, setConfigurationLoading] = useState(true);
     const [showConfigDialog, setShowConfigDialog] = useState(false);
+    const fallbackBackground = defaultConfiguration.background.fallbackColor;
 
     // Search highlighting state
     const [highlightSectionId, setHighlightSectionId] = useState<string>('');
@@ -569,16 +570,22 @@ export default function Home({
 
     if (loading || configurationLoading) {
         return (
-            <div className="flex h-screen items-center justify-center">
+            <div
+                className="flex h-screen w-full flex-col items-center justify-center"
+                style={{ backgroundColor: fallbackBackground }}
+            >
                 <ProgressSpinner />
-                <div className="ml-4 text-white">Loading dashboard...</div>
+            
             </div>
         );
     }
 
     if (error) {
         return (
-            <div className="flex h-screen items-center justify-center">
+            <div
+                className="flex h-screen items-center justify-center"
+                style={{ backgroundColor: fallbackBackground }}
+            >
                 <div className="rounded-lg bg-red-500 p-4 text-white">{error}</div>
             </div>
         );
@@ -587,7 +594,6 @@ export default function Home({
     return (
         <div className="flex w-full" style={themeVariables}>
             <Toast ref={toast} />
-            <div className="flex min-h-screen"></div>
             <div className="relative min-h-screen w-full">
                 {/* Dynamic background based on configuration */}
                 <div className="absolute inset-0" style={backgroundStyle}></div>

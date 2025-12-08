@@ -243,7 +243,7 @@ const ChatbotInterface: React.FC = () => {
     // Show loading state while fetching user info
     if (userInfoLoading) {
         return (
-            <div className="relative flex max-h-[80vh] min-h-screen w-full flex-col items-center justify-center overflow-auto bg-[url('../../public/chatbot/bg.png')] bg-cover bg-center p-1 md:p-8">
+            <div className="relative flex max-h-[80vh] min-h-screen w-full flex-col items-center justify-center overflow-auto bg-gray-100 bg-[url('../../public/chatbot/bg.png')] bg-cover bg-center p-1 md:p-8">
                 <div className="flex items-center gap-2">
                     <div className="h-4 w-4 animate-bounce rounded-full bg-blue-500 [animation-delay:0s]"></div>
                     <div className="h-4 w-4 animate-bounce rounded-full bg-blue-500 [animation-delay:0.2s]"></div>
@@ -255,7 +255,7 @@ const ChatbotInterface: React.FC = () => {
     }
 
     return (
-        <div className="relative flex max-h-[80vh] min-h-screen w-full flex-col items-center justify-between overflow-auto bg-[url('../../public/chatbot/bg.png')] bg-cover bg-no-repeat bg-center p-1 md:p-8">
+        <div className="relative flex max-h-[80vh] min-h-screen w-full flex-col items-center justify-between overflow-auto bg-gray-100 bg-[url('../../public/chatbot/bg.png')] bg-cover bg-no-repeat bg-center p-1 md:p-8">
             <div className="flex w-full max-w-5xl flex-grow flex-col overflow-hidden">
                 {visible && <ChatHeader />}
                 <div className="mb-6 flex-grow overflow-y-auto px-2 md:px-4">

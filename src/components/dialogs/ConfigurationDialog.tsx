@@ -293,8 +293,8 @@ export const ConfigurationDialog: React.FC<ConfigurationDialogProps> = ({
                 {saveMessage && (
                     <div
                         className={`mb-4 rounded p-3 text-sm ${saveMessage.type === 'success'
-                                ? 'border border-green-700 bg-green-900/50 text-green-300'
-                                : 'border border-red-700 bg-red-900/50 text-red-300'
+                            ? 'border border-green-700 bg-green-900/50 text-green-300'
+                            : 'border border-red-700 bg-red-900/50 text-red-300'
                             }`}
                     >
                         {saveMessage.text}
@@ -310,8 +310,8 @@ export const ConfigurationDialog: React.FC<ConfigurationDialogProps> = ({
                                 onClick={() => setActiveTab(index)}
                                 disabled={isSaving || isResetting}
                                 className={`flex items-center gap-2 px-4 py-3 text-sm font-medium transition-colors disabled:opacity-50 ${activeTab === index
-                                        ? 'border-b-2 border-blue-500 text-blue-400'
-                                        : 'text-gray-400 hover:text-gray-300'
+                                    ? 'border-b-2 border-blue-500 text-blue-400'
+                                    : 'text-gray-400 hover:text-gray-300'
                                     }`}
                             >
                                 <i className={tab.icon} />
