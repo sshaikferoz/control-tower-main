@@ -1,5 +1,7 @@
 // types/configuration.ts - Updated with multiple announcements support
 
+import type { ColorVariant } from '@/components/ColorVariantPicker';
+
 export interface AnnouncementItem {
     id: string;
     title: string;
@@ -41,6 +43,9 @@ export interface UIConfiguration {
     };
     dashboard: {
         type: 'Sections' | 'Report';
+    };
+    colorPalettes?: {
+        customVariants: ColorVariant[];
     };
     // Metadata for tracking server state
     _metadata?: {
@@ -91,6 +96,9 @@ export const defaultConfiguration: UIConfiguration = {
     },
     dashboard: {
         type: 'Sections',
+    },
+    colorPalettes: {
+        customVariants: [],
     },
 };
 

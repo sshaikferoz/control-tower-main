@@ -107,6 +107,8 @@ import ColorVariantPicker, {
     COLOR_VARIANTS,
     type ColorVariant,
 } from '@/components/ColorVariantPicker';
+import { ConfigurationManager } from '@/types/configuration';
+import { UIConfiguration, defaultConfiguration } from '@/types/configuration';
 
 const GridLayout = WidthProvider(RGL);
 
@@ -1371,6 +1373,22 @@ const MappingScreen: React.FC = () => {
         roleName: null,
     });
     const [isViewMode, setIsViewMode] = useState(false);
+    const [configuration, setConfiguration] = useState<UIConfiguration>(defaultConfiguration);
+
+    // Load configuration on mount
+    useEffect(() => {
+        const loadConfiguration = async () => {
+            try {
+                const tabId = urlParams?.get('tabId') || sectionId || 'default';
+                const configManager = ConfigurationManager.getInstance();
+                const config = await configManager.getConfiguration(tabId);
+                setConfiguration(config);
+            } catch (error) {
+                console.error('Failed to load configuration:', error);
+            }
+        };
+        loadConfiguration();
+    }, [urlParams, sectionId]);
 
     const handleMultiChartVariantSelect = (variant: ColorVariant) => {
         if (!selectedWidget) return;
@@ -6251,6 +6269,7 @@ const MappingScreen: React.FC = () => {
                                                                         onVariantSelect={handleMultiChartVariantSelect}
                                                                         showGradient={true}
                                                                         compact={true}
+                                                                        customVariants={configuration.colorPalettes?.customVariants || []}
                                                                     />
                                                                 </Box>
 

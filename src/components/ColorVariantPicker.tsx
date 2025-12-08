@@ -196,6 +196,7 @@ interface ColorVariantPickerProps {
     onColorSelect?: (color: string) => void;
     showGradient?: boolean;
     compact?: boolean;
+    customVariants?: ColorVariant[];
 }
 
 const ColorVariantPicker: React.FC<ColorVariantPickerProps> = ({
@@ -204,7 +205,11 @@ const ColorVariantPicker: React.FC<ColorVariantPickerProps> = ({
     onColorSelect,
     showGradient = true,
     compact = false,
+    customVariants = [],
 }) => {
+    // Merge default variants with custom variants
+    const allVariants = [...COLOR_VARIANTS, ...customVariants];
+
     const handleVariantClick = (variant: ColorVariant) => {
         onVariantSelect(variant);
     };
@@ -280,8 +285,9 @@ const ColorVariantPicker: React.FC<ColorVariantPickerProps> = ({
                         }}
                     >
                         <Grid container spacing={2}>
-                            {COLOR_VARIANTS.map((variant) => {
+                            {allVariants.map((variant) => {
                                 const isSelected = selectedVariant === variant.id;
+                                const isCustom = customVariants.some((cv) => cv.id === variant.id);
                                 return (
                                     <Grid item xs={12} sm={6} md={4} key={variant.id}>
                                         <Card
@@ -326,16 +332,32 @@ const ColorVariantPicker: React.FC<ColorVariantPickerProps> = ({
                                                         marginBottom: 1.5,
                                                     }}
                                                 >
-                                                    <Typography
-                                                        variant="subtitle2"
-                                                        sx={{
-                                                            color: 'white',
-                                                            fontWeight: 600,
-                                                            fontSize: compact ? '0.875rem' : '1rem',
-                                                        }}
-                                                    >
-                                                        {variant.name}
-                                                    </Typography>
+                                                    <Box display="flex" alignItems="center" gap={1}>
+                                                        <Typography
+                                                            variant="subtitle2"
+                                                            sx={{
+                                                                color: 'white',
+                                                                fontWeight: 600,
+                                                                fontSize: compact ? '0.875rem' : '1rem',
+                                                            }}
+                                                        >
+                                                            {variant.name}
+                                                        </Typography>
+                                                        {isCustom && (
+                                                            <Box
+                                                                sx={{
+                                                                    fontSize: '0.65rem',
+                                                                    backgroundColor: '#00d4ff20',
+                                                                    color: '#00d4ff',
+                                                                    px: 0.5,
+                                                                    py: 0.25,
+                                                                    borderRadius: '4px',
+                                                                }}
+                                                            >
+                                                                Custom
+                                                            </Box>
+                                                        )}
+                                                    </Box>
                                                     {isSelected && (
                                                         <CheckCircleIcon
                                                             sx={{
