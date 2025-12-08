@@ -36,7 +36,7 @@ const MultiMetricWidget: React.FC<MultiMetricWidgetProps> = ({ items = defaultIt
     return (
         <div className="relative h-full w-full">
             <div className="h-full rounded-2xl p-4" style={backgroundStyle}>
-                <div className="grid h-full grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
+                <div className="flex h-full flex-col gap-4">
                     {(items.length ? items : defaultItems).map((item, index) => (
                         <div key={item.id || index} className="flex flex-col gap-1">
                             <span
