@@ -575,7 +575,7 @@ export default function Home({
                 style={{ backgroundColor: fallbackBackground }}
             >
                 <ProgressSpinner />
-            
+
             </div>
         );
     }

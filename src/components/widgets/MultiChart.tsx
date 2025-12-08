@@ -57,6 +57,73 @@ interface MultiChartProps {
 
 const defaultColors = ['#8884d8', '#82ca9d', '#ffc658', '#ff7c7c', '#8dd1e1', '#d084d0', '#ffb347', '#87ceeb', '#dda0dd', '#98d8c8'];
 
+// Premium Custom Tooltip Component
+const PremiumTooltip = ({ active, payload, label, formatter }: any) => {
+    if (!active || !payload || !payload.length) return null;
+
+    return (
+        <>
+            <style>{`
+                @keyframes tooltipFadeIn {
+                    from {
+                        opacity: 0;
+                        transform: scale(0.95) translateY(-5px);
+                    }
+                    to {
+                        opacity: 1;
+                        transform: scale(1) translateY(0);
+                    }
+                }
+            `}</style>
+            <div
+                className="premium-tooltip"
+                style={{
+                    background: 'linear-gradient(135deg, #021c36 0%, #043960 100%)',
+                    border: '1px solid rgba(0, 255, 255, 0.4)',
+                    borderRadius: '12px',
+                    padding: '12px 16px',
+                    boxShadow: '0 8px 32px rgba(0, 255, 255, 0.2), 0 0 20px rgba(0, 255, 255, 0.1)',
+                    backdropFilter: 'blur(10px)',
+                    pointerEvents: 'none',
+                    animation: 'tooltipFadeIn 0.2s ease-out',
+                    transformOrigin: 'bottom center',
+                }}
+            >
+                <div style={{ fontWeight: 'bold', fontSize: '14px', color: '#ffffff', marginBottom: '8px', borderBottom: '1px solid rgba(255, 255, 255, 0.2)', paddingBottom: '6px' }}>
+                    {label}
+                </div>
+                {payload.map((entry: any, index: number) => (
+                    <div
+                        key={index}
+                        style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '8px',
+                            marginTop: '6px',
+                            fontSize: '13px',
+                        }}
+                    >
+                        <div
+                            style={{
+                                width: '10px',
+                                height: '10px',
+                                borderRadius: '2px',
+                                backgroundColor: entry.color,
+                                boxShadow: `0 0 8px ${entry.color}80`,
+                            }}
+                        />
+                        <span style={{ color: '#ffffff', fontWeight: 500 }}>{entry.name}:</span>
+                        <span style={{ color: '#00ffff', fontWeight: 'bold', marginLeft: 'auto' }}>
+                            {formatter ? formatter(entry.value) : entry.value}
+                        </span>
+                    </div>
+                ))}
+            </div>
+        </>
+    );
+};
+
+
 const MultiChart: React.FC<MultiChartProps> = ({
     data = [],
     title = 'Chart',
@@ -76,6 +143,7 @@ const MultiChart: React.FC<MultiChartProps> = ({
     const [userColor, setUserColor] = useState<string | null>(null);
     const colorInputRef = useRef<HTMLInputElement>(null);
     const [hiddenSeries, setHiddenSeries] = useState<Set<string>>(new Set());
+    const chartContainerRef = useRef<HTMLDivElement>(null);
 
     const defaultBaseColor = '#00214E';
     const defaultLighterColor = '#0164B0';
@@ -329,6 +397,21 @@ const MultiChart: React.FC<MultiChartProps> = ({
             tickLine: { stroke: '#ffffff50' },
         };
 
+        const premiumTooltipProps = {
+            content: <PremiumTooltip formatter={formatNumber} />,
+            cursor: { stroke: 'rgba(0, 255, 255, 0.5)', strokeWidth: 2, strokeDasharray: '0' },
+            animationDuration: 200,
+            contentStyle: {
+                background: 'transparent',
+                border: 'none',
+                boxShadow: 'none',
+                padding: 0,
+            },
+            wrapperStyle: {
+                outline: 'none',
+            },
+        };
+
         const renderPieVariant = (isDonut: boolean): React.ReactElement => {
             const pieSeriesKey = seriesToRender[0]?.dataKey || series[0]?.dataKey || 'value';
             const pieData = filteredData.map((item, idx) => ({
@@ -367,19 +450,40 @@ const MultiChart: React.FC<MultiChartProps> = ({
                         paddingAngle={2}
                     >
                         {pieData.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={entry.fill} />
+                            <Cell
+                                key={`cell-${index}`}
+                                fill={entry.fill}
+                                style={{
+                                    transition: 'all 0.2s ease',
+                                    cursor: 'pointer',
+                                }}
+                                onMouseEnter={(e: any) => {
+                                    if (e?.target) {
+                                        e.target.style.filter = `drop-shadow(0 0 12px ${entry.fill}) drop-shadow(0 0 24px ${entry.fill}80) brightness(1.2)`;
+                                        e.target.style.transform = 'scale(1.05)';
+                                        e.target.style.transformOrigin = 'center';
+                                    }
+                                }}
+                                onMouseLeave={(e: any) => {
+                                    if (e?.target) {
+                                        e.target.style.filter = 'none';
+                                        e.target.style.transform = 'scale(1)';
+                                    }
+                                }}
+                            />
                         ))}
                     </Pie>
                     <Tooltip
+                        content={<PremiumTooltip formatter={formatNumber} />}
                         contentStyle={{
-                            backgroundColor: '#1E3A71',
-                            border: '1px solid #00a3e0',
-                            borderRadius: '8px',
-                            color: '#ffffff',
+                            background: 'transparent',
+                            border: 'none',
+                            boxShadow: 'none',
+                            padding: 0,
                         }}
-                        labelStyle={{ color: '#ffffff' }}
-                        itemStyle={{ color: '#ffffff' }}
-                        formatter={(value: any) => formatNumber(Number(value))}
+                        wrapperStyle={{
+                            outline: 'none',
+                        }}
                     />
                     {showLegend && (
                         <Legend
@@ -401,15 +505,7 @@ const MultiChart: React.FC<MultiChartProps> = ({
                         <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#ffffff30" />
                         <XAxis dataKey="name" {...commonAxisProps} />
                         <YAxis {...commonAxisProps} tickFormatter={formatNumber} width={55} />
-                        <Tooltip
-                            contentStyle={{
-                                backgroundColor: '#1E3A71',
-                                border: '1px solid #00a3e0',
-                                borderRadius: '8px',
-                                color: '#ffffff',
-                            }}
-                            formatter={(value: any) => formatNumber(Number(value))}
-                        />
+                        <Tooltip {...premiumTooltipProps} />
                         {showLegend && (
                             <Legend
                                 verticalAlign="bottom"
@@ -420,14 +516,29 @@ const MultiChart: React.FC<MultiChartProps> = ({
                         )}
                         {seriesToRender.map((s, idx) => {
                             if (s.hide) return null;
+                            const color = s.color || paletteColors[idx % paletteColors.length];
                             return (
                                 <Line
                                     key={`${s.dataKey}-${idx}`}
                                     type="monotone"
                                     dataKey={s.dataKey}
-                                    stroke={s.color || paletteColors[idx % paletteColors.length]}
+                                    stroke={color}
                                     strokeWidth={2}
-                                    dot={{ r: 4 }}
+                                    dot={{
+                                        r: 4,
+                                        fill: color,
+                                        strokeWidth: 0,
+                                    }}
+                                    activeDot={{
+                                        r: 8,
+                                        fill: color,
+                                        stroke: '#ffffff',
+                                        strokeWidth: 2,
+                                        style: {
+                                            filter: `drop-shadow(0 0 8px ${color}) drop-shadow(0 0 16px ${color}80)`,
+                                            transition: 'all 0.2s ease',
+                                        },
+                                    }}
                                     name={s.name}
                                     hide={s.hide}
                                 />
@@ -454,15 +565,7 @@ const MultiChart: React.FC<MultiChartProps> = ({
                         ) : (
                             <YAxis {...commonAxisProps} tickFormatter={formatNumber} width={55} />
                         )}
-                        <Tooltip
-                            contentStyle={{
-                                backgroundColor: '#1E3A71',
-                                border: '1px solid #00a3e0',
-                                borderRadius: '8px',
-                                color: '#ffffff',
-                            }}
-                            formatter={(value: any) => formatNumber(Number(value))}
-                        />
+                        <Tooltip {...premiumTooltipProps} />
                         {showLegend && (
                             <Legend
                                 verticalAlign="bottom"
@@ -473,15 +576,29 @@ const MultiChart: React.FC<MultiChartProps> = ({
                         )}
                         {seriesToRender.map((s, idx) => {
                             if (s.hide) return null;
+                            const color = s.color || paletteColors[idx % paletteColors.length];
                             return (
                                 <Bar
                                     key={`${s.dataKey}-${idx}`}
                                     dataKey={s.dataKey}
-                                    fill={s.color || paletteColors[idx % paletteColors.length]}
+                                    fill={color}
                                     radius={[4, 4, 0, 0]}
                                     name={s.name}
                                     stackId={stacked ? 'stack' : undefined}
                                     hide={s.hide}
+                                    style={{
+                                        transition: 'all 0.2s ease',
+                                        cursor: 'pointer',
+                                    }}
+                                    activeBar={{
+                                        fill: color,
+                                        stroke: '#ffffff',
+                                        strokeWidth: 2,
+                                        style: {
+                                            filter: `brightness(1.3) drop-shadow(0 0 12px ${color}) drop-shadow(0 0 24px ${color}80)`,
+                                            transition: 'all 0.2s ease',
+                                        },
+                                    }}
                                 />
                             );
                         })}
@@ -494,15 +611,7 @@ const MultiChart: React.FC<MultiChartProps> = ({
                         <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#ffffff30" />
                         <XAxis dataKey="name" {...commonAxisProps} />
                         <YAxis {...commonAxisProps} tickFormatter={formatNumber} width={55} />
-                        <Tooltip
-                            contentStyle={{
-                                backgroundColor: '#1E3A71',
-                                border: '1px solid #00a3e0',
-                                borderRadius: '8px',
-                                color: '#ffffff',
-                            }}
-                            formatter={(value: any) => formatNumber(Number(value))}
-                        />
+                        <Tooltip {...premiumTooltipProps} />
                         {showLegend && (
                             <Legend
                                 verticalAlign="bottom"
@@ -513,17 +622,33 @@ const MultiChart: React.FC<MultiChartProps> = ({
                         )}
                         {seriesToRender.map((s, idx) => {
                             if (s.hide) return null;
+                            const color = s.color || paletteColors[idx % paletteColors.length];
                             return (
                                 <Area
                                     key={`${s.dataKey}-${idx}`}
                                     type="monotone"
                                     dataKey={s.dataKey}
-                                    stroke={s.color || paletteColors[idx % paletteColors.length]}
-                                    fill={s.color || paletteColors[idx % paletteColors.length]}
+                                    stroke={color}
+                                    fill={color}
                                     fillOpacity={0.6}
                                     name={s.name}
                                     stackId={stacked ? 'stack' : undefined}
                                     hide={s.hide}
+                                    dot={{
+                                        r: 4,
+                                        fill: color,
+                                        strokeWidth: 0,
+                                    }}
+                                    activeDot={{
+                                        r: 8,
+                                        fill: color,
+                                        stroke: '#ffffff',
+                                        strokeWidth: 2,
+                                        style: {
+                                            filter: `drop-shadow(0 0 8px ${color}) drop-shadow(0 0 16px ${color}80)`,
+                                            transition: 'all 0.2s ease',
+                                        },
+                                    }}
                                 />
                             );
                         })}
@@ -536,15 +661,7 @@ const MultiChart: React.FC<MultiChartProps> = ({
                         <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#ffffff30" />
                         <XAxis dataKey="name" {...commonAxisProps} />
                         <YAxis {...commonAxisProps} tickFormatter={formatNumber} width={55} />
-                        <Tooltip
-                            contentStyle={{
-                                backgroundColor: '#1E3A71',
-                                border: '1px solid #00a3e0',
-                                borderRadius: '8px',
-                                color: '#ffffff',
-                            }}
-                            formatter={(value: any) => formatNumber(Number(value))}
-                        />
+                        <Tooltip {...premiumTooltipProps} />
                         {showLegend && (
                             <Legend
                                 verticalAlign="bottom"
@@ -567,6 +684,19 @@ const MultiChart: React.FC<MultiChartProps> = ({
                                         radius={[4, 4, 0, 0]}
                                         name={s.name}
                                         hide={s.hide}
+                                        style={{
+                                            transition: 'all 0.2s ease',
+                                            cursor: 'pointer',
+                                        }}
+                                        activeBar={{
+                                            fill: color,
+                                            stroke: '#ffffff',
+                                            strokeWidth: 2,
+                                            style: {
+                                                filter: `brightness(1.3) drop-shadow(0 0 12px ${color}) drop-shadow(0 0 24px ${color}80)`,
+                                                transition: 'all 0.2s ease',
+                                            },
+                                        }}
                                     />
                                 );
                             } else if (componentType === 'area') {
@@ -580,6 +710,21 @@ const MultiChart: React.FC<MultiChartProps> = ({
                                         fillOpacity={0.6}
                                         name={s.name}
                                         hide={s.hide}
+                                        dot={{
+                                            r: 4,
+                                            fill: color,
+                                            strokeWidth: 0,
+                                        }}
+                                        activeDot={{
+                                            r: 8,
+                                            fill: color,
+                                            stroke: '#ffffff',
+                                            strokeWidth: 2,
+                                            style: {
+                                                filter: `drop-shadow(0 0 8px ${color}) drop-shadow(0 0 16px ${color}80)`,
+                                                transition: 'all 0.2s ease',
+                                            },
+                                        }}
                                     />
                                 );
                             } else {
@@ -590,7 +735,21 @@ const MultiChart: React.FC<MultiChartProps> = ({
                                         dataKey={s.dataKey}
                                         stroke={color}
                                         strokeWidth={2}
-                                        dot={{ r: 4 }}
+                                        dot={{
+                                            r: 4,
+                                            fill: color,
+                                            strokeWidth: 0,
+                                        }}
+                                        activeDot={{
+                                            r: 8,
+                                            fill: color,
+                                            stroke: '#ffffff',
+                                            strokeWidth: 2,
+                                            style: {
+                                                filter: `drop-shadow(0 0 8px ${color}) drop-shadow(0 0 16px ${color}80)`,
+                                                transition: 'all 0.2s ease',
+                                            },
+                                        }}
                                         name={s.name}
                                         hide={s.hide}
                                     />
@@ -606,15 +765,7 @@ const MultiChart: React.FC<MultiChartProps> = ({
                         <CartesianGrid strokeDasharray="3 3" stroke="#ffffff30" />
                         <XAxis dataKey="name" {...commonAxisProps} />
                         <YAxis {...commonAxisProps} tickFormatter={formatNumber} width={55} />
-                        <Tooltip
-                            contentStyle={{
-                                backgroundColor: '#1E3A71',
-                                border: '1px solid #00a3e0',
-                                borderRadius: '8px',
-                                color: '#ffffff',
-                            }}
-                            formatter={(value: any) => formatNumber(Number(value))}
-                        />
+                        <Tooltip {...premiumTooltipProps} />
                         {showLegend && (
                             <Legend
                                 verticalAlign="bottom"
@@ -625,13 +776,45 @@ const MultiChart: React.FC<MultiChartProps> = ({
                         )}
                         {seriesToRender.map((s, idx) => {
                             if (s.hide) return null;
+                            const color = s.color || paletteColors[idx % paletteColors.length];
                             return (
                                 <Scatter
                                     key={`${s.dataKey}-${idx}`}
                                     name={s.name}
                                     dataKey={s.dataKey}
-                                    fill={s.color || paletteColors[idx % paletteColors.length]}
+                                    fill={color}
                                     hide={s.hide}
+                                    shape={(props: any) => {
+                                        const { cx, cy } = props;
+                                        return (
+                                            <circle
+                                                cx={cx}
+                                                cy={cy}
+                                                r={6}
+                                                fill={color}
+                                                style={{
+                                                    transition: 'all 0.2s ease',
+                                                    cursor: 'pointer',
+                                                }}
+                                                onMouseEnter={(e: any) => {
+                                                    if (e?.target) {
+                                                        e.target.setAttribute('r', '8');
+                                                        e.target.setAttribute('stroke', '#ffffff');
+                                                        e.target.setAttribute('stroke-width', '2');
+                                                        e.target.style.filter = `drop-shadow(0 0 8px ${color}) drop-shadow(0 0 16px ${color}80)`;
+                                                    }
+                                                }}
+                                                onMouseLeave={(e: any) => {
+                                                    if (e?.target) {
+                                                        e.target.setAttribute('r', '6');
+                                                        e.target.setAttribute('stroke', 'none');
+                                                        e.target.setAttribute('stroke-width', '0');
+                                                        e.target.style.filter = 'none';
+                                                    }
+                                                }}
+                                            />
+                                        );
+                                    }}
                                 />
                             );
                         })}
@@ -653,15 +836,7 @@ const MultiChart: React.FC<MultiChartProps> = ({
                             tick={{ fill: '#ffffff', fontSize: 12 }}
                             tickFormatter={formatNumber}
                         />
-                        <Tooltip
-                            contentStyle={{
-                                backgroundColor: '#1E3A71',
-                                border: '1px solid #00a3e0',
-                                borderRadius: '8px',
-                                color: '#ffffff',
-                            }}
-                            formatter={(value: any) => formatNumber(Number(value))}
-                        />
+                        <Tooltip {...premiumTooltipProps} />
                         {showLegend && (
                             <Legend
                                 verticalAlign="bottom"
@@ -672,15 +847,31 @@ const MultiChart: React.FC<MultiChartProps> = ({
                         )}
                         {seriesToRender.map((s, idx) => {
                             if (s.hide) return null;
+                            const color = s.color || paletteColors[idx % paletteColors.length];
                             return (
                                 <Radar
                                     key={`${s.dataKey}-${idx}`}
                                     name={s.name}
                                     dataKey={s.dataKey}
-                                    stroke={s.color || paletteColors[idx % paletteColors.length]}
-                                    fill={s.color || paletteColors[idx % paletteColors.length]}
+                                    stroke={color}
+                                    fill={color}
                                     fillOpacity={0.6}
                                     hide={s.hide}
+                                    dot={{
+                                        r: 4,
+                                        fill: color,
+                                        strokeWidth: 0,
+                                    }}
+                                    activeDot={{
+                                        r: 8,
+                                        fill: color,
+                                        stroke: '#ffffff',
+                                        strokeWidth: 2,
+                                        style: {
+                                            filter: `drop-shadow(0 0 8px ${color}) drop-shadow(0 0 16px ${color}80)`,
+                                            transition: 'all 0.2s ease',
+                                        },
+                                    }}
                                 />
                             );
                         })}
@@ -722,7 +913,16 @@ const MultiChart: React.FC<MultiChartProps> = ({
 
 
                 {/* Chart */}
-                <div className="relative min-h-[180px] flex-1">
+                <div className="relative min-h-[180px] flex-1" ref={chartContainerRef}>
+                    <style>{`
+                        .recharts-wrapper {
+                            transition: all 0.2s ease;
+                        }
+                        .recharts-bar-rectangle:hover {
+                            filter: brightness(1.2) !important;
+                            transition: filter 0.2s ease;
+                        }
+                    `}</style>
                     {renderChart && (
                         <ResponsiveContainer width="100%" height="100%">
                             {renderChart()}
