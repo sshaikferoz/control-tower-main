@@ -129,6 +129,15 @@ const Header: React.FC<HeaderProps> = ({ configuration, tabId, onSearchSelect })
         return () => clearInterval(interval);
     }, [announcementConfig, announcementPaused]);
 
+    const getSearchEndpoint = () => {
+        // Domain `dvc.aramco.sa` is treated as development (`dvb`)
+        const isDvbEnv =
+            typeof window !== 'undefined' && window.location.hostname.includes('dvc.aramco.sa');
+        return isDvbEnv
+            ? 'https://scic-search.cml.apps.cdp-ds-test.aramco.com/api/search'
+            : 'https://scic-search.cml.apps.cdp-ds-prod.aramco.com/api/search';
+    };
+
     const performSearch = async (query: string) => {
         if (!query.trim() || query.length < 2 || !searchConfig.enabled) {
             setSearchResults([]);
@@ -138,20 +147,17 @@ const Header: React.FC<HeaderProps> = ({ configuration, tabId, onSearchSelect })
 
         setIsSearching(true);
         try {
-            const res = await fetch(
-                `https://scic-search.cml.apps.cdp-ds-test.aramco.com/api/search`,
-                {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        query: query,
-                        tab_id: tabId,
-                        top_k: 5,
-                    }),
-                }
-            );
+            const res = await fetch(getSearchEndpoint(), {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    query: query,
+                    tab_id: tabId,
+                    top_k: 5,
+                }),
+            });
             const response = await res.json();
 
             setSearchResults(response.results || []);
@@ -308,8 +314,8 @@ const Header: React.FC<HeaderProps> = ({ configuration, tabId, onSearchSelect })
                                         key={index}
                                         onClick={() => setAnnouncementIndex(index)}
                                         className={`h-2.5 rounded-full transition-all duration-300 ${index === announcementIndex
-                                                ? 'w-6 bg-[#83bd01]'
-                                                : 'w-2.5 bg-white/40 hover:bg-white/60'
+                                            ? 'w-6 bg-[#83bd01]'
+                                            : 'w-2.5 bg-white/40 hover:bg-white/60'
                                             }`}
                                         aria-label={`Go to announcement ${index + 1}`}
                                     />
@@ -360,8 +366,8 @@ const Header: React.FC<HeaderProps> = ({ configuration, tabId, onSearchSelect })
                                     <div
                                         key={`${result.metadata.WidgetId}-${index}`}
                                         className={`cursor-pointer border-b border-gray-100 p-4 transition-colors last:border-b-0 ${selectedIndex === index
-                                                ? 'border-l-4 border-l-blue-500 bg-blue-50'
-                                                : 'hover:bg-gray-50'
+                                            ? 'border-l-4 border-l-blue-500 bg-blue-50'
+                                            : 'hover:bg-gray-50'
                                             }`}
                                         onClick={() => handleResultSelect(result)}
                                     >
@@ -372,14 +378,14 @@ const Header: React.FC<HeaderProps> = ({ configuration, tabId, onSearchSelect })
                                                     {result.metadata.SectionName}
                                                 </h3>
                                             </div>
-                                            
+
                                             {/* AI Summary with fixed height */}
                                             <div className="max-h-32 overflow-y-auto rounded-md bg-gray-50 p-3">
                                                 <div className="text-sm text-gray-700 whitespace-pre-wrap">
                                                     {result.ai_summary}
                                                 </div>
                                             </div>
-                                            
+
                                             {/* Widget Description */}
                                             {result.metadata.WidgetDescription && (
                                                 <div className="text-xs text-gray-600">
