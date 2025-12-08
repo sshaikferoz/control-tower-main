@@ -1,5 +1,5 @@
 
-export type ScaleType = 'none' | 'thousand' | 'million' | 'billion';
+export type ScaleType = 'none' | 'thousand' | 'million' | 'billion' | 'auto';
 export type RoundingType = 'none' | 'ceil' | 'floor' | 'round';
 
 export interface FormatConfig {
@@ -9,6 +9,7 @@ export interface FormatConfig {
     prefix?: string;
     suffix?: string;
     showSign?: boolean; // Show +/- for positive/negative
+    autoScale?: boolean; // Automatically determine scale (K/M/B) based on value size
 }
 
 // Default format configurations for common use cases
@@ -63,6 +64,37 @@ export const FORMAT_PRESETS: Record<string, FormatConfig> = {
         decimals: 2,
         rounding: 'round',
     },
+    'number-k': {
+        scale: 'thousand',
+        decimals: 1,
+        suffix: 'K',
+        rounding: 'round',
+    },
+    'number-m': {
+        scale: 'million',
+        decimals: 1,
+        suffix: 'M',
+        rounding: 'round',
+    },
+    'number-b': {
+        scale: 'billion',
+        decimals: 1,
+        suffix: 'B',
+        rounding: 'round',
+    },
+    'number-auto': {
+        scale: 'auto',
+        decimals: 1,
+        rounding: 'round',
+        autoScale: true,
+    },
+    'currency-auto': {
+        scale: 'auto',
+        decimals: 1,
+        prefix: '$',
+        rounding: 'round',
+        autoScale: true,
+    },
 };
 
 /**
@@ -87,19 +119,111 @@ export function applyValueFormat(value: any, config?: FormatConfig): string {
         return numValue.toLocaleString();
     }
 
-    // Apply scaling
+    const decimals = config.decimals ?? 0;
+    const prefix = config.prefix || '';
+    const isCurrency = prefix === '$';
+
+    // Handle auto-scaling (similar to MultiChart formatNumber)
+    if (config.autoScale || config.scale === 'auto') {
+        const absValue = Math.abs(numValue);
+
+        if (absValue >= 1_000_000_000) {
+            // Billion
+            let scaledValue = numValue / 1_000_000_000;
+            switch (config.rounding) {
+                case 'ceil':
+                    scaledValue = Math.ceil(scaledValue * Math.pow(10, decimals)) / Math.pow(10, decimals);
+                    break;
+                case 'floor':
+                    scaledValue = Math.floor(scaledValue * Math.pow(10, decimals)) / Math.pow(10, decimals);
+                    break;
+                case 'round':
+                default:
+                    scaledValue = Math.round(scaledValue * Math.pow(10, decimals)) / Math.pow(10, decimals);
+                    break;
+            }
+            const formatted = scaledValue.toFixed(decimals);
+            const suffix = 'B';
+            return `${prefix}${formatted}${suffix}`;
+        } else if (absValue >= 1_000_000) {
+            // Million
+            let scaledValue = numValue / 1_000_000;
+            switch (config.rounding) {
+                case 'ceil':
+                    scaledValue = Math.ceil(scaledValue * Math.pow(10, decimals)) / Math.pow(10, decimals);
+                    break;
+                case 'floor':
+                    scaledValue = Math.floor(scaledValue * Math.pow(10, decimals)) / Math.pow(10, decimals);
+                    break;
+                case 'round':
+                default:
+                    scaledValue = Math.round(scaledValue * Math.pow(10, decimals)) / Math.pow(10, decimals);
+                    break;
+            }
+            const formatted = scaledValue.toFixed(decimals);
+            // Currency uses MM, non-currency uses M
+            const suffix = isCurrency ? 'MM' : 'M';
+            return `${prefix}${formatted}${suffix}`;
+        } else if (absValue >= 1_000) {
+            // Thousand
+            let scaledValue = numValue / 1_000;
+            switch (config.rounding) {
+                case 'ceil':
+                    scaledValue = Math.ceil(scaledValue * Math.pow(10, decimals)) / Math.pow(10, decimals);
+                    break;
+                case 'floor':
+                    scaledValue = Math.floor(scaledValue * Math.pow(10, decimals)) / Math.pow(10, decimals);
+                    break;
+                case 'round':
+                default:
+                    scaledValue = Math.round(scaledValue * Math.pow(10, decimals)) / Math.pow(10, decimals);
+                    break;
+            }
+            const formatted = scaledValue.toFixed(decimals);
+            // Currency uses M, non-currency uses K
+            const suffix = isCurrency ? 'M' : 'K';
+            return `${prefix}${formatted}${suffix}`;
+        } else {
+            // No scaling needed
+            switch (config.rounding) {
+                case 'ceil':
+                    numValue = Math.ceil(numValue * Math.pow(10, decimals)) / Math.pow(10, decimals);
+                    break;
+                case 'floor':
+                    numValue = Math.floor(numValue * Math.pow(10, decimals)) / Math.pow(10, decimals);
+                    break;
+                case 'round':
+                default:
+                    numValue = Math.round(numValue * Math.pow(10, decimals)) / Math.pow(10, decimals);
+                    break;
+            }
+            let formatted = numValue.toFixed(decimals);
+            // Add thousand separators
+            const parts = formatted.split('.');
+            parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+            formatted = parts.join('.');
+
+            if (config.showSign && numValue > 0) {
+                formatted = '+' + formatted;
+            }
+
+            return `${prefix}${formatted}${config.suffix || ''}`;
+        }
+    }
+
+    // Apply scaling (non-auto mode)
     const scaleDivisors: Record<ScaleType, number> = {
         none: 1,
         thousand: 1000,
         million: 1000000,
         billion: 1000000000,
+        auto: 1, // Should not reach here if auto is handled above
     };
 
     const scale = config.scale || 'none';
     numValue = numValue / scaleDivisors[scale];
 
     // Apply rounding
-    const decimals = config.decimals ?? 0;
     switch (config.rounding) {
         case 'ceil':
             numValue = Math.ceil(numValue * Math.pow(10, decimals)) / Math.pow(10, decimals);
@@ -127,7 +251,6 @@ export function applyValueFormat(value: any, config?: FormatConfig): string {
     }
 
     // Add prefix and suffix
-    const prefix = config.prefix || '';
     const suffix = config.suffix || '';
 
     return `${prefix}${formatted}${suffix}`;
