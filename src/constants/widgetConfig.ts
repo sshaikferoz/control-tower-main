@@ -251,5 +251,5 @@ export const defaultPropsMapping: Record<string, any> = {
         reportName: '',
         listenToEvent: 'filter-changed',
     },
-    
+
 };

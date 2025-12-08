@@ -2,6 +2,8 @@ import { DataTable } from 'primereact/datatable';
 import { Column } from 'primereact/column';
 import React, { useEffect, useRef, useState } from 'react';
 import { HexColorPicker } from 'react-colorful';
+import { WidgetTypographyConfig } from '@/helpers/types';
+import { getCleanTypographyStyles } from '@/helpers/typographyHelper';
 
 type DataItem = {
     [key: string]: string | number;
@@ -13,6 +15,7 @@ type TableMetricProps = {
     title?: string;
     color?: string;
     setChangeColor?: (color: string) => void;
+    typography?: WidgetTypographyConfig;
 };
 
 const tableStyles = `
@@ -78,6 +81,7 @@ const TableMetric = ({
     title = 'My Top Items',
     color,
     setChangeColor,
+    typography,
 }: TableMetricProps) => {
     const [userColor, setUserColor] = useState<string>(color || '#00214E');
     const [showPicker, setShowPicker] = useState(false);
@@ -139,9 +143,41 @@ const TableMetric = ({
         return 'auto';
     };
 
+    // Get typography styles
+    const titleStyles = getCleanTypographyStyles('title', typography);
+    const headerStyles = getCleanTypographyStyles('header', typography);
+    const cellStyles = getCleanTypographyStyles('cell', typography);
+
+    // Generate dynamic CSS for typography
+    const generateTypographyCSS = (styles: React.CSSProperties, selector: string): string => {
+        const rules: string[] = [];
+        if (styles.fontFamily) rules.push(`font-family: ${styles.fontFamily} !important`);
+        if (styles.fontSize) rules.push(`font-size: ${styles.fontSize} !important`);
+        if (styles.fontWeight) rules.push(`font-weight: ${styles.fontWeight} !important`);
+        if (styles.color) rules.push(`color: ${styles.color} !important`);
+        if (styles.textAlign) rules.push(`text-align: ${styles.textAlign} !important`);
+        if (styles.textTransform) rules.push(`text-transform: ${styles.textTransform} !important`);
+        if (styles.letterSpacing) rules.push(`letter-spacing: ${styles.letterSpacing} !important`);
+        if (styles.lineHeight) rules.push(`line-height: ${styles.lineHeight} !important`);
+
+        if (rules.length > 0) {
+            return `.metric-table ${selector} { ${rules.join('; ')} }`;
+        }
+        return '';
+    };
+
+    const headerCSS = generateTypographyCSS(headerStyles, '.p-datatable-thead > tr > th');
+    const cellCSS = generateTypographyCSS(cellStyles, '.p-datatable-tbody > tr > td');
+
+    const dynamicTableStyles = `
+        ${tableStyles}
+        ${headerCSS}
+        ${cellCSS}
+    `;
+
     return (
         <div className="relative h-full w-full">
-            <style>{tableStyles}</style>
+            <style>{dynamicTableStyles}</style>
 
             <div
                 className="h-full w-full overflow-hidden rounded-xl border border-solid border-[#00214E]"
@@ -155,7 +191,10 @@ const TableMetric = ({
                             <div className="flex items-center gap-2">
                                 <div
                                     className="text-base leading-4 font-bold tracking-[-0.16px] text-white"
-                                    style={{ fontFamily: 'Ghawar-Hefty, Helvetica' }}
+                                    style={{
+                                        fontFamily: 'Ghawar-Hefty, Helvetica',
+                                        ...titleStyles
+                                    }}
                                 >
                                     {title}
                                 </div>

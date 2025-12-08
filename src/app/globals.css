@@ -51,7 +51,7 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family:
-    'Manifa2', 'Poppins', system-ui, 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande',
+    'Poppins', system-ui, 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande',
     'Lucida Sans', Arial, sans-serif;
   font-weight: 300;
   transition:
@@ -61,7 +61,7 @@ body {
 
 * {
   font-family:
-    'Manifa2', 'Poppins', system-ui, 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande',
+    'Poppins', system-ui, 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande',
     'Lucida Sans', Arial, sans-serif !important;
 }
 
