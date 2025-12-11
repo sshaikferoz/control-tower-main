@@ -39,13 +39,36 @@ const ChatbotInterfaceDev: React.FC = () => {
     ];
 
     const messagesEndRef = useRef<HTMLDivElement>(null);
+    const isStreamingRef = useRef<boolean>(false);
+    const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+    const messagesContainerRef = useRef<HTMLDivElement>(null);
 
-    const scrollToBottom = () => {
-        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    const scrollToBottom = (smooth: boolean = false) => {
+        if (messagesEndRef.current) {
+            messagesEndRef.current.scrollIntoView({ behavior: smooth ? 'smooth' : 'auto' });
+        }
+    };
+
+    // Throttled scroll for streaming updates
+    const scrollToBottomThrottled = () => {
+        if (scrollTimeoutRef.current) {
+            return;
+        }
+
+        scrollTimeoutRef.current = setTimeout(() => {
+            scrollToBottom(false); // Use instant scroll during streaming
+            scrollTimeoutRef.current = null;
+        }, 50); // Throttle to ~20fps
     };
 
     useEffect(() => {
-        scrollToBottom();
+        // Use smooth scroll only when not streaming (new message added)
+        // Use instant scroll during streaming to prevent flickering
+        if (isStreamingRef.current) {
+            scrollToBottomThrottled();
+        } else {
+            scrollToBottom(true);
+        }
     }, [messages]);
 
     const generateMessageId = () => {
@@ -102,6 +125,15 @@ const ChatbotInterfaceDev: React.FC = () => {
         fetchUserInfo();
     }, []);
 
+    // Cleanup timeout on unmount
+    useEffect(() => {
+        return () => {
+            if (scrollTimeoutRef.current) {
+                clearTimeout(scrollTimeoutRef.current);
+            }
+        };
+    }, []);
+
     const handleSendMessage = async (message: string, visible: boolean) => {
         if (!userInfo) {
             console.warn('User info not loaded yet');
@@ -137,12 +169,14 @@ const ChatbotInterfaceDev: React.FC = () => {
             setMessages((prev) => [...prev, botMessage]);
 
             let accumulated = '';
+            isStreamingRef.current = true;
             const response = await generateResponse(message, userInfo, (chunk) => {
                 accumulated += chunk;
                 setMessages((prev) =>
                     prev.map((m) => (m.id === botMessageId ? { ...m, content: accumulated } : m))
                 );
             });
+            isStreamingRef.current = false;
 
             setAiResponse(response);
 
@@ -155,6 +189,7 @@ const ChatbotInterfaceDev: React.FC = () => {
             );
         } catch (error) {
             console.error('Error generating response (DEV):', error);
+            isStreamingRef.current = false;
 
             const errorMessage: Message = {
                 id: generateMessageId(),
@@ -241,7 +276,11 @@ const ChatbotInterfaceDev: React.FC = () => {
         <div className="relative flex max-h-[80vh] min-h-screen w-full flex-col items-center justify-between overflow-auto bg-gray-100 bg-[url('../../public/chatbot/bg.png')] bg-cover bg-center p-1 md:p-8">
             <div className="flex w-full max-w-5xl flex-grow flex-col overflow-hidden">
                 {visible && <ChatHeader />}
-                <div className="mb-6 flex-grow overflow-y-auto px-2 md:px-4">
+                <div
+                    ref={messagesContainerRef}
+                    className="mb-6 flex-grow overflow-y-auto px-2 md:px-4"
+                    style={{ scrollBehavior: 'auto' }}
+                >
                     {messages.length > 0 ? (
                         <div className="space-y-4">
                             {messages.map((msg) => (
