@@ -55,6 +55,7 @@ import {
     Accordion,
     AccordionSummary,
     AccordionDetails,
+    Button as MuiButton,
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import AddIcon from '@mui/icons-material/Add';
@@ -4788,8 +4789,9 @@ const MappingScreen: React.FC = () => {
                                                                 </Box>
                                                             ))}
 
-                                                            <Button
+                                                            <MuiButton
                                                                 size="small"
+                                                                variant="outlined"
                                                                 sx={{
                                                                     mt: 1,
                                                                     borderColor: 'white',
@@ -4832,7 +4834,7 @@ const MappingScreen: React.FC = () => {
                                                                 }}
                                                             >
                                                                 Add Variable Mapping
-                                                            </Button>
+                                                            </MuiButton>
                                                         </Box>
                                                     </Paper>
                                                 )}
