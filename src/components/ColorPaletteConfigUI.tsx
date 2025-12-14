@@ -560,3 +560,4 @@ const ColorPaletteConfigUI: React.FC<ColorPaletteConfigUIProps> = ({
 
 export default ColorPaletteConfigUI;
 
+

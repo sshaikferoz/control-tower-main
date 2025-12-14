@@ -285,6 +285,7 @@ export function parseFormattedValue(formatted: string, config?: FormatConfig): n
         thousand: 1000,
         million: 1000000,
         billion: 1000000000,
+        auto: 1, // Should not reach here if auto is handled above, but needed for type safety
     };
 
     const scale = config.scale || 'none';
