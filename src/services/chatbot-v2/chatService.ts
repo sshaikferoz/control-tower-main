@@ -84,6 +84,54 @@ export const generateResponse = async (
     };
 };
 
+export const generateResponseNonStreaming = async (
+    message: string,
+    userInfo: UserInfo
+): Promise<ChatbotResponse> => {
+    let content = '';
+
+    try {
+        const apiResponse = await fetch(
+            `https://scic-chatbot.cml.apps.cdp-ds-prod.aramco.com/api/chat?query=${encodeURIComponent(message)}`,
+            {
+                method: 'GET',
+                headers: {
+                    Accept: 'text/event-stream',
+                    'Content-Type': 'application/json',
+                    'X-Session-Id': userInfo.session_id,
+                    'X-User-Id': userInfo.user_id,
+                },
+            }
+        );
+
+        if (!apiResponse.ok) {
+            throw new Error(`API responded with status: ${apiResponse.status}`);
+        }
+
+        content = await apiResponse.text();
+
+        return {
+            content,
+            metadata: {
+                timestamp: new Date().toISOString(),
+            },
+        };
+    } catch (error) {
+        console.error('Error calling chatbot API (non-streaming):', error);
+        content = `
+            <p>I'm currently having trouble connecting to my knowledge base. Please try again in a moment.</p>
+            <p>In the meantime, you might find helpful information in our FAQ section below.</p>
+          `;
+    }
+
+    return {
+        content,
+        metadata: {
+            timestamp: new Date().toISOString(),
+        },
+    };
+};
+
 export const fetchMatchingFAQs = async (userInfo?: UserInfo): Promise<any[]> => {
     try {
         const headers: Record<string, string> = {

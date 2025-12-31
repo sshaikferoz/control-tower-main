@@ -23,10 +23,12 @@ import { DashboardSectionProps } from '@/types/dashboard';
 import { LazyWidgetContent } from '@/components/widgets/LazyWidgetContent';
 import { WidgetDetailsDialog } from '@/components/dialogs/WidgetDetailsDialog';
 import { DataManager } from '@/services/DataManager';
-import { processWidgetMappings } from '@/helpers/transformHelpers';
+import { processWidgetMappings, fetchAndTransformMultiChartData } from '@/helpers/transformHelpers';
 import { defaultPropsMapping, widgetMapping } from '@/constants/widgetConfig';
 
 import { sapODataService } from '@/services/sapODataService';
+import mirageServer from '@/lib/mirage/mirageServer';
+
 
 const GridLayout = WidthProvider(RGL);
 
@@ -38,7 +40,7 @@ interface ExtendedDashboardSectionProps extends DashboardSectionProps {
     // Dashboard configuration
     dashboardType?: 'Sections' | 'Report';
 }
-
+mirageServer();
 export const DashboardSection: React.FC<ExtendedDashboardSectionProps> = ({
     section,
     index,
@@ -149,12 +151,60 @@ export const DashboardSection: React.FC<ExtendedDashboardSectionProps> = ({
             const mappingConfig = section.fieldMappings?.[widgetId];
             if (!mappingConfig?.reportName) return;
 
+            const reportName = mappingConfig.reportName;
+
+            // Special handling for multi-chart widget - fetch query and transform if mapped
+            // Only proceed if widget is mapped to a query (has reportName and chartConfig)
+            if (widget.name === 'multi-chart' && mappingConfig.chartConfig && mappingConfig.reportName) {
+                try {
+                    setLoadingWidgets((prev) => new Set([...prev, widgetId]));
+                    setErrorReports((prev) => {
+                        const newSet = new Set([...prev]);
+                        newSet.delete(reportName);
+                        return newSet;
+                    });
+
+                    // Use existing props to preserve structure (series, title, chartType, etc.)
+                    const existingProps = widget.props && Object.keys(widget.props).length > 0
+                        ? widget.props
+                        : defaultPropsMapping[widget.name] || {};
+
+                    // Ensure chartConfig has the required structure
+                    if (!mappingConfig.chartConfig.xAxis?.field || !mappingConfig.chartConfig.yAxis?.fields) {
+                        console.warn(`Multi-chart widget ${widgetId} is missing required chartConfig fields`);
+                        return;
+                    }
+
+                    // Fetch the query and transform the data
+                    const transformedProps = await fetchAndTransformMultiChartData(
+                        reportName,
+                        mappingConfig.chartConfig,
+                        existingProps
+                    );
+
+                    setWidgetProps((prev) => ({ ...prev, [widgetId]: transformedProps }));
+                } catch (error) {
+                    console.error(`Error loading data for multi-chart widget ${widgetId}:`, error);
+                    setErrorReports((prev) => new Set([...prev, reportName]));
+                    // Keep existing props on error
+                    if (widget.props && Object.keys(widget.props).length > 0) {
+                        setWidgetProps((prev) => ({ ...prev, [widgetId]: widget.props }));
+                    }
+                } finally {
+                    setLoadingWidgets((prev) => {
+                        const newSet = new Set([...prev]);
+                        newSet.delete(widgetId);
+                        return newSet;
+                    });
+                }
+                return;
+            }
+
+            // For other widgets, use existing logic
             if (widget.props && Object.keys(widget.props).length > 0) {
                 console.log(`Widget ${widgetId} already has saved props, skipping data fetch`);
                 return;
             }
-
-            const reportName = mappingConfig.reportName;
 
             try {
                 setLoadingWidgets((prev) => new Set([...prev, widgetId]));

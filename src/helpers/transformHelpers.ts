@@ -6,6 +6,7 @@ import {
     WidgetMappingConfig,
     ObjectPath,
 } from './types';
+import { parseXMLToJson } from '@/lib/bexQueryXmlToJson';
 
 // Transform the raw response data into a more usable structure
 export function transformFormMetadata(data: FormTransformInputType): TransformedData {
@@ -240,26 +241,26 @@ export function processWidgetMappings(
     // Convert FormStructure to flat array format for filter widget
     if (widgetConfig.filterConfig) {
         const filterData: any[] = [];
-        
+
         // Get all CHA fields from FormStructure
         Object.keys(reportData.FormStructure || {}).forEach((chaField) => {
             const chaValues = Object.keys(reportData.FormStructure[chaField] || {});
-            
+
             chaValues.forEach((chaValue) => {
                 const row: Record<string, any> = {
                     [chaField]: chaValue, // Add CHA field and value
                 };
-                
+
                 // Add all KF fields for this CHA value
                 const kfValues = reportData.FormStructure[chaField][chaValue];
                 Object.keys(kfValues || {}).forEach((kfField) => {
                     row[kfField] = kfValues[kfField];
                 });
-                
+
                 filterData.push(row);
             });
         });
-        
+
         result.data = filterData;
     }
 
@@ -267,30 +268,102 @@ export function processWidgetMappings(
     // Convert FormStructure to flat array format for listener widget
     if (widgetConfig.listenerConfig) {
         const listenerData: any[] = [];
-        
+
         // Get all CHA fields from FormStructure
         Object.keys(reportData.FormStructure || {}).forEach((chaField) => {
             const chaValues = Object.keys(reportData.FormStructure[chaField] || {});
-            
+
             chaValues.forEach((chaValue) => {
                 const row: Record<string, any> = {
                     [chaField]: chaValue, // Add CHA field and value
                 };
-                
+
                 // Add all KF fields for this CHA value
                 const kfValues = reportData.FormStructure[chaField][chaValue];
                 Object.keys(kfValues || {}).forEach((kfField) => {
                     row[kfField] = kfValues[kfField];
                 });
-                
+
                 listenerData.push(row);
             });
         });
-        
+
         result.data = listenerData;
     }
 
     return result;
+}
+
+/**
+ * Fetch and transform data for multi-chart widget
+ * This function fetches the query, parses it, and transforms it using generateMultiChartData
+ * It preserves existing widget props structure and only updates data values
+ *
+ * @param reportName Name of the report/query to fetch
+ * @param chartConfig Chart configuration with xAxis and yAxis
+ * @param existingProps Existing widget props to preserve structure
+ * @returns Transformed multi-chart data
+ */
+export async function fetchAndTransformMultiChartData(
+    reportName: string,
+    chartConfig: {
+        xAxis: { field: string; type: string };
+        yAxis: { fields: string[]; type: string };
+    },
+    existingProps?: {
+        series?: any[];
+        title?: string;
+        chartType?: string;
+        showLegend?: boolean;
+        stacked?: boolean;
+        selectedLabels?: string[];
+        valueFormat?: string;
+        colorPalette?: string[];
+        groupByField?: string;
+    }
+): Promise<{
+    data: any[];
+    series: any[];
+    title: string;
+    chartType: string;
+    showLegend: boolean;
+    stacked: boolean;
+    selectedLabels?: string[];
+    valueFormat: string;
+    colorPalette?: string[];
+    groupByField?: string;
+}> {
+    try {
+        // Fetch the raw XML data
+        const response = await fetch(
+            process.env.NODE_ENV === 'development'
+                ? `/api/sap/bc/bsp/sap/zbw_reporting/execute_report_oo.htm?query=${reportName}`
+                : `/sap/bc/bsp/sap/zbw_reporting/execute_report_oo.htm?query=${reportName}`
+        );
+        const xmlData = await response.text();
+        const parsedResponse = parseXMLToJson(xmlData);
+
+        // Transform to FormStructure format
+        const transformedData = transformFormMetadata(parsedResponse);
+
+        // Generate multi-chart data using the transformer
+        return generateMultiChartData(transformedData, chartConfig, existingProps, parsedResponse);
+    } catch (error) {
+        console.error('Error fetching multi-chart data:', error);
+        // Return default structure on error
+        return {
+            data: [],
+            series: existingProps?.series || [],
+            title: existingProps?.title || 'Multi Chart',
+            chartType: existingProps?.chartType || 'line',
+            showLegend: existingProps?.showLegend !== false,
+            stacked: existingProps?.stacked || false,
+            selectedLabels: existingProps?.selectedLabels,
+            valueFormat: existingProps?.valueFormat || 'non-currency',
+            colorPalette: existingProps?.colorPalette,
+            groupByField: existingProps?.groupByField,
+        };
+    }
 }
 
 // Generate chart data from FormStructure based on mapping
@@ -744,4 +817,224 @@ export function generateQuadrantMetricsData(
     }
 
     return { metrics };
+}
+
+/**
+ * Generate data for multi-chart widget
+ * This function transforms query data into the format required by MultiChart component
+ * It preserves the structure (series, title, chartType, etc.) and only updates data values
+ *
+ * @param formData Transformed data from API
+ * @param chartConfig Chart configuration with xAxis and yAxis
+ * @param existingProps Existing widget props to preserve structure
+ * @param parsedResponse Optional raw parsed response for chartData access
+ * @returns Formatted data for multi-chart widget
+ */
+export function generateMultiChartData(
+    formData: TransformedData,
+    chartConfig: {
+        xAxis: { field: string; type: string };
+        yAxis: { fields: string[]; type: string };
+    },
+    existingProps?: {
+        series?: any[];
+        title?: string;
+        chartType?: string;
+        showLegend?: boolean;
+        stacked?: boolean;
+        selectedLabels?: string[];
+        valueFormat?: string;
+        colorPalette?: string[];
+        groupByField?: string;
+    },
+    parsedResponse?: any
+): {
+    data: any[];
+    series: any[];
+    title: string;
+    chartType: string;
+    showLegend: boolean;
+    stacked: boolean;
+    selectedLabels?: string[];
+    valueFormat: string;
+    colorPalette?: string[];
+    groupByField?: string;
+} {
+    const { xAxis, yAxis } = chartConfig;
+
+    if (!xAxis?.field || !yAxis?.fields || yAxis.fields.length === 0) {
+        console.error('Multi-chart requires xAxis and yAxis fields');
+        return {
+            data: [],
+            series: existingProps?.series || [],
+            title: existingProps?.title || 'Multi Chart',
+            chartType: existingProps?.chartType || 'line',
+            showLegend: existingProps?.showLegend !== false,
+            stacked: existingProps?.stacked || false,
+            selectedLabels: existingProps?.selectedLabels,
+            valueFormat: existingProps?.valueFormat || 'non-currency',
+            colorPalette: existingProps?.colorPalette,
+            groupByField: existingProps?.groupByField,
+        };
+    }
+
+    // Check if there's a Struct field (label contains "Struct" or "struct")
+    const structField = parsedResponse?.header?.find(
+        (h: any) =>
+            (h.label?.toLowerCase().includes('struct') || h.fieldName?.toLowerCase().includes('struct')) &&
+            h.type === 'CHA' &&
+            h.fieldName !== xAxis.field
+    );
+
+    let data: any[] = [];
+    let groupByField: string | undefined = undefined;
+
+    if (structField && parsedResponse?.chartData) {
+        // Group by Struct field - transform data from chartData directly
+        groupByField = structField.fieldName;
+
+        // Get unique x-axis values and group values
+        const xValues = new Set<string>();
+        const groupValues = new Set<string>();
+
+        parsedResponse.chartData.forEach((row: any) => {
+            if (row[xAxis.field] && row[structField.fieldName]) {
+                xValues.add(row[xAxis.field]);
+                groupValues.add(row[structField.fieldName]);
+            }
+        });
+
+        // Build data structure: each x-value has entries for each group
+        data = Array.from(xValues).map((xValue) => {
+            const entry: Record<string, any> = { name: xValue };
+
+            // For each group value, add the series data
+            Array.from(groupValues).forEach((groupValue) => {
+                const row = parsedResponse.chartData.find(
+                    (r: any) => r[xAxis.field] === xValue && r[structField.fieldName] === groupValue
+                );
+
+                if (row) {
+                    yAxis.fields.forEach((kfField: any) => {
+                        const value = row[kfField];
+                        entry[`${groupValue}_${kfField}`] =
+                            value === '' || value === null || value === undefined
+                                ? null
+                                : Number(value) || 0;
+                    });
+                }
+            });
+
+            return entry;
+        });
+
+        // Build series configuration for grouped data
+        const baseSeries = existingProps?.series || [];
+        const series: any[] = [];
+
+        Array.from(groupValues).forEach((groupValue) => {
+            baseSeries.forEach((s: any) => {
+                series.push({
+                    ...s,
+                    name: `${groupValue} - ${s.name}`,
+                    dataKey: `${groupValue}_${s.dataKey}`,
+                });
+            });
+        });
+
+        return {
+            data,
+            series,
+            title: existingProps?.title || 'Multi Chart',
+            chartType: existingProps?.chartType || 'line',
+            showLegend: existingProps?.showLegend !== false,
+            stacked: existingProps?.stacked || false,
+            selectedLabels: existingProps?.selectedLabels || Array.from(groupValues),
+            valueFormat: existingProps?.valueFormat || 'non-currency',
+            colorPalette: existingProps?.colorPalette,
+            groupByField: structField.fieldName,
+        };
+    } else {
+        // No Struct field - use original logic (no grouping)
+        // Use chartData directly if available, otherwise use transformedData
+        if (parsedResponse?.chartData && Array.isArray(parsedResponse.chartData)) {
+            // Use chartData directly - filter out "Overall Result"
+            data = parsedResponse.chartData
+                .filter((row: any) => row[xAxis.field] && row[xAxis.field] !== 'Overall Result')
+                .map((row: any) => {
+                    const entry: Record<string, any> = { name: row[xAxis.field] };
+
+                    // Add all y-axis values
+                    yAxis.fields.forEach((kfField: any) => {
+                        const value = row[kfField];
+                        entry[kfField] = value === '' || value === null || value === undefined
+                            ? null
+                            : Number(value) || 0;
+                    });
+
+                    return entry;
+                });
+        } else {
+            // Fallback to transformedData structure
+            const xValues = Object.keys(formData.FormStructure[xAxis.field] || {}).filter(
+                (key) => key !== 'Overall Result'
+            );
+
+            // Build chart data
+            data = xValues.map((xValue) => {
+                const entry: Record<string, any> = { name: xValue };
+
+                // Check if there's a label field for grouping
+                const labelField = parsedResponse?.header?.find(
+                    (h: any) => h.fieldName.toLowerCase().includes('label') && h.type === 'CHA'
+                );
+
+                if (labelField) {
+                    // Add label to data entry
+                    entry.label =
+                        formData.FormStructure[xAxis.field][xValue][labelField.fieldName] || '';
+                }
+
+                // Add all y-axis values
+                yAxis.fields.forEach((kfField: any) => {
+                    const value = formData.FormStructure[xAxis.field][xValue][kfField];
+                    entry[kfField] = value === '' || value === null || value === undefined
+                        ? null
+                        : Number(value) || 0;
+                });
+
+                return entry;
+            });
+        }
+
+        // Build series configuration - use existing or auto-generate
+        let series = existingProps?.series || [];
+
+        // If series is empty, auto-generate from yAxis fields
+        if (series.length === 0 && yAxis.fields.length > 0) {
+            const defaultColors = ['#8884d8', '#82ca9d', '#ffc658', '#ff7c7c', '#8dd1e1', '#d084d0', '#ffb347', '#87ceeb', '#dda0dd', '#98d8c8'];
+            series = yAxis.fields.map((kfField: any, idx: number) => {
+                const fieldHeader = parsedResponse?.header?.find((h: any) => h.fieldName === kfField);
+                return {
+                    name: fieldHeader?.label || kfField,
+                    dataKey: kfField,
+                    color: defaultColors[idx % defaultColors.length],
+                    type: 'line' as const,
+                };
+            });
+        }
+
+        return {
+            data,
+            series,
+            title: existingProps?.title || 'Multi Chart',
+            chartType: existingProps?.chartType || 'line',
+            showLegend: existingProps?.showLegend !== false,
+            stacked: existingProps?.stacked || false,
+            selectedLabels: existingProps?.selectedLabels || [],
+            valueFormat: existingProps?.valueFormat || 'non-currency',
+            colorPalette: existingProps?.colorPalette,
+            groupByField: undefined,
+        };
+    }
 }

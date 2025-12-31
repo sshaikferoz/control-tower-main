@@ -69,7 +69,7 @@ import InfoIcon from '@mui/icons-material/Info';
 import AssignmentIcon from '@mui/icons-material/Assignment';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import SearchIcon from '@mui/icons-material/Search';
-import { transformFormMetadata, getValueByPath, formatValue } from '@/helpers/transformHelpers';
+import { transformFormMetadata, getValueByPath, formatValue, generateMultiChartData } from '@/helpers/transformHelpers';
 import {
     TransformedData,
     widgetConfigFields,
@@ -3664,92 +3664,40 @@ const MappingScreen: React.FC = () => {
                         return;
                     }
 
-                    // Check if there's a Struct field (label contains "Struct" or "struct")
-                    const structField = parsedResponse.header.find(
-                        (h: any) =>
-                            (h.label?.toLowerCase().includes('struct') || h.fieldName?.toLowerCase().includes('struct')) &&
-                            h.type === 'CHA' &&
-                            h.fieldName !== xAxis.field
+                    // Get existing widget configuration to preserve structure
+                    const existingProps = widgetConfigurations[selectedWidget] || {};
+
+                    // Use the transformer function to generate multi-chart data
+                    // Ensure yAxis has fields array (not field)
+                    const chartConfigForTransformer = {
+                        xAxis: { field: xAxis.field, type: xAxis.type || 'CHA' },
+                        yAxis: { fields: Array.isArray(yAxis.fields) ? yAxis.fields : [], type: yAxis.type || 'KF' },
+                    };
+
+                    const transformedProps = generateMultiChartData(
+                        transformedData,
+                        chartConfigForTransformer,
+                        {
+                            series: config.seriesConfig?.series || existingProps.series,
+                            title: existingProps.title,
+                            chartType: existingProps.chartType,
+                            showLegend: existingProps.showLegend,
+                            stacked: existingProps.stacked,
+                            selectedLabels: existingProps.selectedLabels,
+                            valueFormat: existingProps.valueFormat,
+                            colorPalette: existingProps.colorPalette,
+                            groupByField: existingProps.groupByField,
+                        },
+                        parsedResponse
                     );
 
-                    let data: any[] = [];
-                    let groupByField: string | undefined = undefined;
-
-                    if (structField && parsedResponse.chartData) {
-                        // Group by Struct field - transform data from chartData directly
-                        groupByField = structField.fieldName;
-
-                        // Get unique x-axis values and group values
-                        const xValues = new Set<string>();
-                        const groupValues = new Set<string>();
-
-                        parsedResponse.chartData.forEach((row: any) => {
-                            if (row[xAxis.field] && row[structField.fieldName]) {
-                                xValues.add(row[xAxis.field]);
-                                groupValues.add(row[structField.fieldName]);
-                            }
-                        });
-
-                        // Build data structure: each x-value has entries for each group
-                        data = Array.from(xValues).map((xValue) => {
-                            const entry: Record<string, any> = { name: xValue };
-
-                            // For each group value, add the series data
-                            Array.from(groupValues).forEach((groupValue) => {
-                                const row = parsedResponse.chartData.find(
-                                    (r: any) => r[xAxis.field] === xValue && r[structField.fieldName] === groupValue
-                                );
-
-                                if (row) {
-                                    yAxis.fields.forEach((kfField: any) => {
-                                        const value = row[kfField];
-                                        entry[`${groupValue}_${kfField}`] =
-                                            value === '' || value === null || value === undefined
-                                                ? null
-                                                : Number(value) || 0;
-                                    });
-                                }
-                            });
-
-                            return entry;
-                        });
-
-                        // Build series configuration for grouped data
-                        const baseSeries = config.seriesConfig?.series || [];
-                        const series: any[] = [];
-
-                        Array.from(groupValues).forEach((groupValue) => {
-                            baseSeries.forEach((s: any) => {
-                                series.push({
-                                    ...s,
-                                    name: `${groupValue} - ${s.name}`,
-                                    dataKey: `${groupValue}_${s.dataKey}`,
-                                });
-                            });
-                        });
-
-                        // Calculate total value
-                        const allValues = parsedResponse.chartData
-                            .filter((row: any) => row[xAxis.field] && row[structField.fieldName])
-                            .reduce((sum: number, row: any) => {
-                                return sum + yAxis.fields.reduce((fieldSum: number, kfField: any) => {
-                                    const value = row[kfField];
-                                    return fieldSum + (value === '' || value === null || value === undefined ? 0 : Number(value) || 0);
-                                }, 0);
-                            }, 0);
-                        const totalValue = `${allValues.toLocaleString()}`;
-
-                        const title = widgetConfigurations[selectedWidget]?.title || 'Multi Chart';
-                        const chartType = widgetConfigurations[selectedWidget]?.chartType || 'line';
-                        const showLegend = widgetConfigurations[selectedWidget]?.showLegend !== false;
-                        const stacked = widgetConfigurations[selectedWidget]?.stacked || false;
-                        const selectedLabels =
-                            widgetConfigurations[selectedWidget]?.selectedLabels || Array.from(groupValues);
-                        const valueFormat = widgetConfigurations[selectedWidget]?.valueFormat || 'non-currency';
-                        const colorPalette = widgetConfigurations[selectedWidget]?.colorPalette;
-
-                        previewProps = {
-                            data: parsedResponse.chartData.map((row: any) => ({
+                    // For grouped data, preserve the original data structure with structField and groupKey
+                    if (transformedProps.groupByField && parsedResponse.chartData) {
+                        const structField = parsedResponse.header.find(
+                            (h: any) => h.fieldName === transformedProps.groupByField
+                        );
+                        if (structField) {
+                            transformedProps.data = parsedResponse.chartData.map((row: any) => ({
                                 name: row[xAxis.field],
                                 [structField.fieldName]: row[structField.fieldName],
                                 groupKey: row[structField.fieldName],
@@ -3759,136 +3707,39 @@ const MappingScreen: React.FC = () => {
                                         : Number(row[kfField]) || 0;
                                     return acc;
                                 }, {}),
-                            })),
-                            series: baseSeries,
-                            title,
-                            totalValue,
-                            chartType,
-                            showLegend,
-                            stacked,
-                            selectedLabels,
-                            valueFormat,
-                            colorPalette,
-                            groupByField: structField.fieldName,
-                        };
-                    } else {
-                        // No Struct field - use original logic (no grouping)
-                        // Use chartData directly if available, otherwise use transformedData
-                        let data: any[] = [];
-
-                        if (parsedResponse.chartData && Array.isArray(parsedResponse.chartData)) {
-                            // Use chartData directly - filter out "Overall Result"
-                            data = parsedResponse.chartData
-                                .filter((row: any) => row[xAxis.field] && row[xAxis.field] !== 'Overall Result')
-                                .map((row: any) => {
-                                    const entry: Record<string, any> = { name: row[xAxis.field] };
-
-                                    // Add all y-axis values
-                                    yAxis.fields.forEach((kfField: any) => {
-                                        const value = row[kfField];
-                                        entry[kfField] = value === '' || value === null || value === undefined
-                                            ? null
-                                            : Number(value) || 0;
-                                    });
-
-                                    return entry;
-                                });
-                        } else {
-                            // Fallback to transformedData structure
-                            const xValues = Object.keys(transformedData.FormStructure[xAxis.field] || {}).filter(
-                                (key) => key !== 'Overall Result'
-                            );
-
-                            // Build chart data
-                            data = xValues.map((xValue) => {
-                                const entry: Record<string, any> = { name: xValue };
-
-                                // Check if there's a label field for grouping
-                                const labelField = parsedResponse.header.find(
-                                    (h: any) => h.fieldName.toLowerCase().includes('label') && h.type === 'CHA'
-                                );
-
-                                if (labelField) {
-                                    // Add label to data entry
-                                    entry.label =
-                                        transformedData.FormStructure[xAxis.field][xValue][labelField.fieldName] || '';
-                                }
-
-                                // Add all y-axis values
-                                yAxis.fields.forEach((kfField: any) => {
-                                    const value = transformedData.FormStructure[xAxis.field][xValue][kfField];
-                                    entry[kfField] = value === '' || value === null || value === undefined
-                                        ? null
-                                        : Number(value) || 0;
-                                });
-
-                                return entry;
-                            });
+                            }));
+                            // Use base series for grouped data (not the expanded series from transformer)
+                            transformedProps.series = config.seriesConfig?.series || existingProps.series || [];
                         }
+                    }
 
-                        // Build series configuration - auto-generate if not present
-                        let series = config.seriesConfig?.series || [];
-
-                        // If series is empty, auto-generate from yAxis fields
-                        if (series.length === 0 && yAxis.fields.length > 0) {
-                            const defaultColors = ['#8884d8', '#82ca9d', '#ffc658', '#ff7c7c', '#8dd1e1', '#d084d0', '#ffb347', '#87ceeb', '#dda0dd', '#98d8c8'];
-                            series = yAxis.fields.map((kfField: any, idx: number) => {
-                                const fieldHeader = parsedResponse.header.find((h: any) => h.fieldName === kfField);
-                                return {
-                                    name: fieldHeader?.label || kfField,
-                                    dataKey: kfField,
-                                    color: defaultColors[idx % defaultColors.length],
-                                    type: 'line' as const,
-                                };
-                            });
-                        }
-
-                        // Calculate total value if needed
-                        let totalValue = '';
-                        if (parsedResponse.chartData && Array.isArray(parsedResponse.chartData)) {
-                            const overallRow = parsedResponse.chartData.find(
-                                (row: any) => row[xAxis.field] === 'Overall Result'
-                            );
-                            if (overallRow) {
-                                const total = yAxis.fields.reduce((sum: number, kfField: any) => {
-                                    const value = overallRow[kfField];
-                                    return sum + (value === '' || value === null || value === undefined ? 0 : Number(value) || 0);
-                                }, 0);
-                                totalValue = `${total.toLocaleString()}`;
-                            }
-                        } else if (transformedData.FormStructure[xAxis.field]?.['Overall Result']) {
+                    // Calculate total value if needed
+                    let totalValue = '';
+                    if (parsedResponse.chartData && Array.isArray(parsedResponse.chartData)) {
+                        const overallRow = parsedResponse.chartData.find(
+                            (row: any) => row[xAxis.field] === 'Overall Result'
+                        );
+                        if (overallRow) {
                             const total = yAxis.fields.reduce((sum: number, kfField: any) => {
-                                return (
-                                    sum +
-                                    Number(transformedData.FormStructure[xAxis.field]['Overall Result'][kfField] || 0)
-                                );
+                                const value = overallRow[kfField];
+                                return sum + (value === '' || value === null || value === undefined ? 0 : Number(value) || 0);
                             }, 0);
                             totalValue = `${total.toLocaleString()}`;
                         }
-
-                        const title = widgetConfigurations[selectedWidget]?.title || 'Multi Chart';
-                        const chartType = widgetConfigurations[selectedWidget]?.chartType || 'line';
-                        const showLegend = widgetConfigurations[selectedWidget]?.showLegend !== false;
-                        const stacked = widgetConfigurations[selectedWidget]?.stacked || false;
-                        const selectedLabels = widgetConfigurations[selectedWidget]?.selectedLabels || [];
-                        const valueFormat = widgetConfigurations[selectedWidget]?.valueFormat || 'non-currency';
-                        const colorPalette = widgetConfigurations[selectedWidget]?.colorPalette;
-
-                        previewProps = {
-                            data,
-                            series,
-                            title,
-                            totalValue,
-                            chartType,
-                            showLegend,
-                            stacked,
-                            selectedLabels,
-                            valueFormat,
-                            colorPalette,
-                            // Explicitly set groupByField to undefined for non-grouping case
-                            groupByField: undefined,
-                        };
+                    } else if (transformedData.FormStructure[xAxis.field]?.['Overall Result']) {
+                        const total = yAxis.fields.reduce((sum: number, kfField: any) => {
+                            return (
+                                sum +
+                                Number(transformedData.FormStructure[xAxis.field]['Overall Result'][kfField] || 0)
+                            );
+                        }, 0);
+                        totalValue = `${total.toLocaleString()}`;
                     }
+
+                    previewProps = {
+                        ...transformedProps,
+                        totalValue: totalValue || existingProps.totalValue,
+                    };
 
                     updateWidgetConfiguration(selectedWidget, previewProps);
                 } else if (widgetCategory === 'line') {

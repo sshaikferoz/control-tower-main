@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { fetchMatchingFAQs } from '../../../services/chatbot/chatService';
+import { fetchMatchingFAQs } from '../../../services/chatbot-v2/chatService';
 
 interface FAQItemProps {
     question: string;

@@ -285,6 +285,12 @@ export interface AdminRoleCheckResponse {
     IsAdmin: string;
 }
 
+export interface UIConfigEntry {
+    Id?: string;
+    ConfigName: string;
+    ConfigJson: string;
+}
+
 class SAPODataService {
     private baseUrl =
         process.env.NODE_ENV === 'development'
@@ -1221,6 +1227,103 @@ class SAPODataService {
         } catch (error) {
             console.error('Error getting settings ID:', error);
             return null;
+        }
+    }
+
+    /**
+     * Fetch UI configuration by ConfigName from UIConfigSet
+     */
+    async fetchUIConfig(configName: string): Promise<Record<string, any> | null> {
+        try {
+            const response = await fetch(
+                `${this.baseUrl}/UIConfigSet?$format=json`,
+                {
+                    method: 'GET',
+                    headers: {
+                        Accept: 'application/json',
+                        'Content-Type': 'application/json',
+                    },
+                }
+            );
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const data = await response.json();
+            const results: UIConfigEntry[] = data?.d?.results || [];
+
+            // Filter by ConfigName in JavaScript
+            const entry = results.find((item) => item.ConfigName === configName);
+
+            if (!entry) {
+                return null;
+            }
+
+            const parsed = this.safeJsonParse(entry.ConfigJson);
+            return {
+                ...parsed,
+                _metadata: {
+                    id: entry.Id,
+                    configName: entry.ConfigName,
+                },
+            };
+        } catch (error) {
+            console.error('Error fetching UI config:', error);
+            return null;
+        }
+    }
+
+    /**
+     * Save UI configuration to UIConfigSet
+     */
+    async saveUIConfig(
+        configName: string,
+        configuration: Record<string, any>,
+        existingConfigName?: string
+    ): Promise<Record<string, any>> {
+        try {
+            const isUpdate = !!existingConfigName;
+            const payload = {
+                ConfigName: configName,
+                ConfigJson: JSON.stringify(configuration),
+            };
+
+            const newCSRFToken = await this.getNewCsrfToken(`${this.baseUrl}/UIConfigSet`);
+            const encodedName = encodeURIComponent(configName);
+            const url = isUpdate
+                ? `${this.baseUrl}/UIConfigSet(ConfigName='${encodedName}')`
+                : `${this.baseUrl}/UIConfigSet`;
+
+            const response = await fetch(url, {
+                method: isUpdate ? 'PUT' : 'POST',
+                headers: {
+                    Accept: 'application/json',
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-Token': newCSRFToken,
+                },
+                body: JSON.stringify(payload),
+            });
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
+            }
+
+            const result = response.status === 204 ? null : await response.json();
+            const savedId = result?.d?.Id || existingConfigName || '';
+
+            return {
+                ...configuration,
+                _metadata: {
+                    id: savedId,
+                    configName,
+                },
+            };
+        } catch (error) {
+            console.error('Error saving UI config:', error);
+            throw error;
         }
     }
 
