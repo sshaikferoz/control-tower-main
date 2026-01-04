@@ -303,8 +303,6 @@ export const widgetConfigFields: Record<
         { field: 'stacked', type: 'boolean', path: 'stacked' },
         { field: 'selectedLabels', type: 'array', path: 'selectedLabels' },
     ],
-    'filter-widget': [],
-    'listener-widget': [],
 };
 
 // Define type-safe interfaces matching the component props

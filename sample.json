@@ -1,0 +1,2376 @@
+{
+    "d": {
+        "results": [
+            {
+                "__metadata": {
+                    "id": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "uri": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "type": "ZBW_CT_SCIC_SRV.Hierarchy"
+                },
+                "HierarchyName": "MSC AND CUSTOMER PLANT NEW",
+                "InfoObject": "0PLANT",
+                "ParentNodeId": "00000000",
+                "HasChildren": true,
+                "NodeId": "00000001",
+                "NodeText": "MSC and Customer Plants Hierarchy",
+                "TotalCount": 0,
+                "ValidToDate": ""
+            },
+            {
+                "__metadata": {
+                    "id": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "uri": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "type": "ZBW_CT_SCIC_SRV.Hierarchy"
+                },
+                "HierarchyName": "MSC AND CUSTOMER PLANT NEW",
+                "InfoObject": "0PLANT",
+                "ParentNodeId": "00000001",
+                "HasChildren": true,
+                "NodeId": "00000002",
+                "NodeText": "Material Service Centers - M001 - M009",
+                "TotalCount": 0,
+                "ValidToDate": ""
+            },
+            {
+                "__metadata": {
+                    "id": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "uri": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "type": "ZBW_CT_SCIC_SRV.Hierarchy"
+                },
+                "HierarchyName": "MSC AND CUSTOMER PLANT NEW",
+                "InfoObject": "0PLANT",
+                "ParentNodeId": "00000001",
+                "HasChildren": true,
+                "NodeId": "00000012",
+                "NodeText": "MS Customer Plants",
+                "TotalCount": 0,
+                "ValidToDate": ""
+            },
+            {
+                "__metadata": {
+                    "id": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "uri": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "type": "ZBW_CT_SCIC_SRV.Hierarchy"
+                },
+                "HierarchyName": "MSC AND CUSTOMER PLANT NEW",
+                "InfoObject": "0PLANT",
+                "ParentNodeId": "00000001",
+                "HasChildren": true,
+                "NodeId": "00000125",
+                "NodeText": "M011",
+                "TotalCount": 0,
+                "ValidToDate": ""
+            },
+            {
+                "__metadata": {
+                    "id": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "uri": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "type": "ZBW_CT_SCIC_SRV.Hierarchy"
+                },
+                "HierarchyName": "MSC AND CUSTOMER PLANT NEW",
+                "InfoObject": "0PLANT",
+                "ParentNodeId": "00000001",
+                "HasChildren": true,
+                "NodeId": "00000127",
+                "NodeText": "M010",
+                "TotalCount": 0,
+                "ValidToDate": ""
+            },
+            {
+                "__metadata": {
+                    "id": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "uri": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "type": "ZBW_CT_SCIC_SRV.Hierarchy"
+                },
+                "HierarchyName": "MSC AND CUSTOMER PLANT NEW",
+                "InfoObject": "0PLANT",
+                "ParentNodeId": "00000001",
+                "HasChildren": false,
+                "NodeId": "00000129",
+                "NodeText": "OOK COMPANIES",
+                "TotalCount": 0,
+                "ValidToDate": ""
+            },
+            {
+                "__metadata": {
+                    "id": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "uri": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "type": "ZBW_CT_SCIC_SRV.Hierarchy"
+                },
+                "HierarchyName": "MSC AND CUSTOMER PLANT NEW",
+                "InfoObject": "0PLANT",
+                "ParentNodeId": "00000001",
+                "HasChildren": true,
+                "NodeId": "00000130",
+                "NodeText": "Project Plants",
+                "TotalCount": 0,
+                "ValidToDate": ""
+            },
+            {
+                "__metadata": {
+                    "id": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "uri": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "type": "ZBW_CT_SCIC_SRV.Hierarchy"
+                },
+                "HierarchyName": "MSC AND CUSTOMER PLANT NEW",
+                "InfoObject": "0PLANT",
+                "ParentNodeId": "00000001",
+                "HasChildren": true,
+                "NodeId": "00000140",
+                "NodeText": "SCENARIO 3 PLANTS",
+                "TotalCount": 0,
+                "ValidToDate": ""
+            },
+            {
+                "__metadata": {
+                    "id": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "uri": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "type": "ZBW_CT_SCIC_SRV.Hierarchy"
+                },
+                "HierarchyName": "MSC AND CUSTOMER PLANT NEW",
+                "InfoObject": "0PLANT",
+                "ParentNodeId": "00000002",
+                "HasChildren": false,
+                "NodeId": "00000003",
+                "NodeText": "Tanajib Materials Service Cent",
+                "TotalCount": 0,
+                "ValidToDate": ""
+            },
+            {
+                "__metadata": {
+                    "id": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "uri": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "type": "ZBW_CT_SCIC_SRV.Hierarchy"
+                },
+                "HierarchyName": "MSC AND CUSTOMER PLANT NEW",
+                "InfoObject": "0PLANT",
+                "ParentNodeId": "00000002",
+                "HasChildren": false,
+                "NodeId": "00000004",
+                "NodeText": "Yanbu Materials Service Center",
+                "TotalCount": 0,
+                "ValidToDate": ""
+            },
+            {
+                "__metadata": {
+                    "id": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "uri": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "type": "ZBW_CT_SCIC_SRV.Hierarchy"
+                },
+                "HierarchyName": "MSC AND CUSTOMER PLANT NEW",
+                "InfoObject": "0PLANT",
+                "ParentNodeId": "00000002",
+                "HasChildren": false,
+                "NodeId": "00000005",
+                "NodeText": "Uthmaniyah Materials Service C",
+                "TotalCount": 0,
+                "ValidToDate": ""
+            },
+            {
+                "__metadata": {
+                    "id": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "uri": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "type": "ZBW_CT_SCIC_SRV.Hierarchy"
+                },
+                "HierarchyName": "MSC AND CUSTOMER PLANT NEW",
+                "InfoObject": "0PLANT",
+                "ParentNodeId": "00000002",
+                "HasChildren": false,
+                "NodeId": "00000006",
+                "NodeText": "Riyadh Materials Service Cente",
+                "TotalCount": 0,
+                "ValidToDate": ""
+            },
+            {
+                "__metadata": {
+                    "id": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "uri": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "type": "ZBW_CT_SCIC_SRV.Hierarchy"
+                },
+                "HierarchyName": "MSC AND CUSTOMER PLANT NEW",
+                "InfoObject": "0PLANT",
+                "ParentNodeId": "00000002",
+                "HasChildren": false,
+                "NodeId": "00000007",
+                "NodeText": "Ras Tanura Materials Service C",
+                "TotalCount": 0,
+                "ValidToDate": ""
+            },
+            {
+                "__metadata": {
+                    "id": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "uri": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "type": "ZBW_CT_SCIC_SRV.Hierarchy"
+                },
+                "HierarchyName": "MSC AND CUSTOMER PLANT NEW",
+                "InfoObject": "0PLANT",
+                "ParentNodeId": "00000002",
+                "HasChildren": false,
+                "NodeId": "00000008",
+                "NodeText": "Rabigh Materials Service Cente",
+                "TotalCount": 0,
+                "ValidToDate": ""
+            },
+            {
+                "__metadata": {
+                    "id": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "uri": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "type": "ZBW_CT_SCIC_SRV.Hierarchy"
+                },
+                "HierarchyName": "MSC AND CUSTOMER PLANT NEW",
+                "InfoObject": "0PLANT",
+                "ParentNodeId": "00000002",
+                "HasChildren": false,
+                "NodeId": "00000009",
+                "NodeText": "Jeddah Materials Service Cente",
+                "TotalCount": 0,
+                "ValidToDate": ""
+            },
+            {
+                "__metadata": {
+                    "id": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "uri": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "type": "ZBW_CT_SCIC_SRV.Hierarchy"
+                },
+                "HierarchyName": "MSC AND CUSTOMER PLANT NEW",
+                "InfoObject": "0PLANT",
+                "ParentNodeId": "00000002",
+                "HasChildren": false,
+                "NodeId": "00000010",
+                "NodeText": "Dhahran Materials Service Cent",
+                "TotalCount": 0,
+                "ValidToDate": ""
+            },
+            {
+                "__metadata": {
+                    "id": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "uri": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "type": "ZBW_CT_SCIC_SRV.Hierarchy"
+                },
+                "HierarchyName": "MSC AND CUSTOMER PLANT NEW",
+                "InfoObject": "0PLANT",
+                "ParentNodeId": "00000002",
+                "HasChildren": false,
+                "NodeId": "00000011",
+                "NodeText": "Abqaiq Materials Service Cente",
+                "TotalCount": 0,
+                "ValidToDate": ""
+            },
+            {
+                "__metadata": {
+                    "id": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "uri": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "type": "ZBW_CT_SCIC_SRV.Hierarchy"
+                },
+                "HierarchyName": "MSC AND CUSTOMER PLANT NEW",
+                "InfoObject": "0PLANT",
+                "ParentNodeId": "00000012",
+                "HasChildren": true,
+                "NodeId": "00000013",
+                "NodeText": "M001 Customer Plants",
+                "TotalCount": 0,
+                "ValidToDate": ""
+            },
+            {
+                "__metadata": {
+                    "id": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "uri": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "type": "ZBW_CT_SCIC_SRV.Hierarchy"
+                },
+                "HierarchyName": "MSC AND CUSTOMER PLANT NEW",
+                "InfoObject": "0PLANT",
+                "ParentNodeId": "00000012",
+                "HasChildren": true,
+                "NodeId": "00000025",
+                "NodeText": "M002 Customer Plants",
+                "TotalCount": 0,
+                "ValidToDate": ""
+            },
+            {
+                "__metadata": {
+                    "id": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "uri": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "type": "ZBW_CT_SCIC_SRV.Hierarchy"
+                },
+                "HierarchyName": "MSC AND CUSTOMER PLANT NEW",
+                "InfoObject": "0PLANT",
+                "ParentNodeId": "00000012",
+                "HasChildren": true,
+                "NodeId": "00000038",
+                "NodeText": "M009 Customer Plants",
+                "TotalCount": 0,
+                "ValidToDate": ""
+            },
+            {
+                "__metadata": {
+                    "id": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "uri": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "type": "ZBW_CT_SCIC_SRV.Hierarchy"
+                },
+                "HierarchyName": "MSC AND CUSTOMER PLANT NEW",
+                "InfoObject": "0PLANT",
+                "ParentNodeId": "00000012",
+                "HasChildren": true,
+                "NodeId": "00000046",
+                "NodeText": "M008 Customer Plants",
+                "TotalCount": 0,
+                "ValidToDate": ""
+            },
+            {
+                "__metadata": {
+                    "id": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "uri": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "type": "ZBW_CT_SCIC_SRV.Hierarchy"
+                },
+                "HierarchyName": "MSC AND CUSTOMER PLANT NEW",
+                "InfoObject": "0PLANT",
+                "ParentNodeId": "00000012",
+                "HasChildren": true,
+                "NodeId": "00000060",
+                "NodeText": "M007 Customer Plants",
+                "TotalCount": 0,
+                "ValidToDate": ""
+            },
+            {
+                "__metadata": {
+                    "id": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "uri": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "type": "ZBW_CT_SCIC_SRV.Hierarchy"
+                },
+                "HierarchyName": "MSC AND CUSTOMER PLANT NEW",
+                "InfoObject": "0PLANT",
+                "ParentNodeId": "00000012",
+                "HasChildren": true,
+                "NodeId": "00000075",
+                "NodeText": "M006 Customer Plants",
+                "TotalCount": 0,
+                "ValidToDate": ""
+            },
+            {
+                "__metadata": {
+                    "id": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "uri": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "type": "ZBW_CT_SCIC_SRV.Hierarchy"
+                },
+                "HierarchyName": "MSC AND CUSTOMER PLANT NEW",
+                "InfoObject": "0PLANT",
+                "ParentNodeId": "00000012",
+                "HasChildren": true,
+                "NodeId": "00000091",
+                "NodeText": "M005 Customer Plants",
+                "TotalCount": 0,
+                "ValidToDate": ""
+            },
+            {
+                "__metadata": {
+                    "id": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "uri": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "type": "ZBW_CT_SCIC_SRV.Hierarchy"
+                },
+                "HierarchyName": "MSC AND CUSTOMER PLANT NEW",
+                "InfoObject": "0PLANT",
+                "ParentNodeId": "00000012",
+                "HasChildren": true,
+                "NodeId": "00000105",
+                "NodeText": "M004 Customer Plants",
+                "TotalCount": 0,
+                "ValidToDate": ""
+            },
+            {
+                "__metadata": {
+                    "id": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "uri": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "type": "ZBW_CT_SCIC_SRV.Hierarchy"
+                },
+                "HierarchyName": "MSC AND CUSTOMER PLANT NEW",
+                "InfoObject": "0PLANT",
+                "ParentNodeId": "00000012",
+                "HasChildren": true,
+                "NodeId": "00000113",
+                "NodeText": "M003 Customer Plants",
+                "TotalCount": 0,
+                "ValidToDate": ""
+            },
+            {
+                "__metadata": {
+                    "id": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "uri": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "type": "ZBW_CT_SCIC_SRV.Hierarchy"
+                },
+                "HierarchyName": "MSC AND CUSTOMER PLANT NEW",
+                "InfoObject": "0PLANT",
+                "ParentNodeId": "00000013",
+                "HasChildren": false,
+                "NodeId": "00000014",
+                "NodeText": "Roads & Heavy Equipment (Abqai",
+                "TotalCount": 0,
+                "ValidToDate": ""
+            },
+            {
+                "__metadata": {
+                    "id": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "uri": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "type": "ZBW_CT_SCIC_SRV.Hierarchy"
+                },
+                "HierarchyName": "MSC AND CUSTOMER PLANT NEW",
+                "InfoObject": "0PLANT",
+                "ParentNodeId": "00000013",
+                "HasChildren": false,
+                "NodeId": "00000015",
+                "NodeText": "Transportation (Abqaiq)",
+                "TotalCount": 0,
+                "ValidToDate": ""
+            },
+            {
+                "__metadata": {
+                    "id": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "uri": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "type": "ZBW_CT_SCIC_SRV.Hierarchy"
+                },
+                "HierarchyName": "MSC AND CUSTOMER PLANT NEW",
+                "InfoObject": "0PLANT",
+                "ParentNodeId": "00000013",
+                "HasChildren": false,
+                "NodeId": "00000016",
+                "NodeText": "Southern Area Shops",
+                "TotalCount": 0,
+                "ValidToDate": ""
+            },
+            {
+                "__metadata": {
+                    "id": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "uri": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "type": "ZBW_CT_SCIC_SRV.Hierarchy"
+                },
+                "HierarchyName": "MSC AND CUSTOMER PLANT NEW",
+                "InfoObject": "0PLANT",
+                "ParentNodeId": "00000013",
+                "HasChildren": false,
+                "NodeId": "00000017",
+                "NodeText": "Southern Area Pipelines",
+                "TotalCount": 0,
+                "ValidToDate": ""
+            },
+            {
+                "__metadata": {
+                    "id": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "uri": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "type": "ZBW_CT_SCIC_SRV.Hierarchy"
+                },
+                "HierarchyName": "MSC AND CUSTOMER PLANT NEW",
+                "InfoObject": "0PLANT",
+                "ParentNodeId": "00000013",
+                "HasChildren": false,
+                "NodeId": "00000018",
+                "NodeText": "Abqaiq Plants",
+                "TotalCount": 0,
+                "ValidToDate": ""
+            },
+            {
+                "__metadata": {
+                    "id": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "uri": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "type": "ZBW_CT_SCIC_SRV.Hierarchy"
+                },
+                "HierarchyName": "MSC AND CUSTOMER PLANT NEW",
+                "InfoObject": "0PLANT",
+                "ParentNodeId": "00000013",
+                "HasChildren": false,
+                "NodeId": "00000019",
+                "NodeText": "North Ghawar Producing (Shedgu",
+                "TotalCount": 0,
+                "ValidToDate": ""
+            },
+            {
+                "__metadata": {
+                    "id": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "uri": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "type": "ZBW_CT_SCIC_SRV.Hierarchy"
+                },
+                "HierarchyName": "MSC AND CUSTOMER PLANT NEW",
+                "InfoObject": "0PLANT",
+                "ParentNodeId": "00000013",
+                "HasChildren": false,
+                "NodeId": "00000020",
+                "NodeText": "Sea Water Injection",
+                "TotalCount": 0,
+                "ValidToDate": ""
+            },
+            {
+                "__metadata": {
+                    "id": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "uri": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "type": "ZBW_CT_SCIC_SRV.Hierarchy"
+                },
+                "HierarchyName": "MSC AND CUSTOMER PLANT NEW",
+                "InfoObject": "0PLANT",
+                "ParentNodeId": "00000013",
+                "HasChildren": false,
+                "NodeId": "00000021",
+                "NodeText": "Shaybah Producing",
+                "TotalCount": 0,
+                "ValidToDate": ""
+            },
+            {
+                "__metadata": {
+                    "id": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "uri": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "type": "ZBW_CT_SCIC_SRV.Hierarchy"
+                },
+                "HierarchyName": "MSC AND CUSTOMER PLANT NEW",
+                "InfoObject": "0PLANT",
+                "ParentNodeId": "00000013",
+                "HasChildren": false,
+                "NodeId": "00000022",
+                "NodeText": "North Ghawar Producing",
+                "TotalCount": 0,
+                "ValidToDate": ""
+            },
+            {
+                "__metadata": {
+                    "id": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "uri": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "type": "ZBW_CT_SCIC_SRV.Hierarchy"
+                },
+                "HierarchyName": "MSC AND CUSTOMER PLANT NEW",
+                "InfoObject": "0PLANT",
+                "ParentNodeId": "00000013",
+                "HasChildren": false,
+                "NodeId": "00000023",
+                "NodeText": "Admin Users @ Abqaiq Area",
+                "TotalCount": 0,
+                "ValidToDate": ""
+            },
+            {
+                "__metadata": {
+                    "id": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "uri": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "type": "ZBW_CT_SCIC_SRV.Hierarchy"
+                },
+                "HierarchyName": "MSC AND CUSTOMER PLANT NEW",
+                "InfoObject": "0PLANT",
+                "ParentNodeId": "00000013",
+                "HasChildren": false,
+                "NodeId": "00000024",
+                "NodeText": "Shedgum Gas Plant",
+                "TotalCount": 0,
+                "ValidToDate": ""
+            },
+            {
+                "__metadata": {
+                    "id": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "uri": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "type": "ZBW_CT_SCIC_SRV.Hierarchy"
+                },
+                "HierarchyName": "MSC AND CUSTOMER PLANT NEW",
+                "InfoObject": "0PLANT",
+                "ParentNodeId": "00000025",
+                "HasChildren": false,
+                "NodeId": "00000026",
+                "NodeText": "Gases and Cylinders Management",
+                "TotalCount": 0,
+                "ValidToDate": ""
+            },
+            {
+                "__metadata": {
+                    "id": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "uri": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "type": "ZBW_CT_SCIC_SRV.Hierarchy"
+                },
+                "HierarchyName": "MSC AND CUSTOMER PLANT NEW",
+                "InfoObject": "0PLANT",
+                "ParentNodeId": "00000025",
+                "HasChildren": false,
+                "NodeId": "00000027",
+                "NodeText": "Transp & Equip. Services Dept",
+                "TotalCount": 0,
+                "ValidToDate": ""
+            },
+            {
+                "__metadata": {
+                    "id": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "uri": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "type": "ZBW_CT_SCIC_SRV.Hierarchy"
+                },
+                "HierarchyName": "MSC AND CUSTOMER PLANT NEW",
+                "InfoObject": "0PLANT",
+                "ParentNodeId": "00000025",
+                "HasChildren": false,
+                "NodeId": "00000028",
+                "NodeText": "Transp & Equip. Services Dept",
+                "TotalCount": 0,
+                "ValidToDate": ""
+            },
+            {
+                "__metadata": {
+                    "id": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "uri": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "type": "ZBW_CT_SCIC_SRV.Hierarchy"
+                },
+                "HierarchyName": "MSC AND CUSTOMER PLANT NEW",
+                "InfoObject": "0PLANT",
+                "ParentNodeId": "00000025",
+                "HasChildren": false,
+                "NodeId": "00000029",
+                "NodeText": "Mechanical Svcs Shops Dept",
+                "TotalCount": 0,
+                "ValidToDate": ""
+            },
+            {
+                "__metadata": {
+                    "id": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "uri": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "type": "ZBW_CT_SCIC_SRV.Hierarchy"
+                },
+                "HierarchyName": "MSC AND CUSTOMER PLANT NEW",
+                "InfoObject": "0PLANT",
+                "ParentNodeId": "00000025",
+                "HasChildren": false,
+                "NodeId": "00000030",
+                "NodeText": "East / West Pipelines (Area 3)",
+                "TotalCount": 0,
+                "ValidToDate": ""
+            },
+            {
+                "__metadata": {
+                    "id": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "uri": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "type": "ZBW_CT_SCIC_SRV.Hierarchy"
+                },
+                "HierarchyName": "MSC AND CUSTOMER PLANT NEW",
+                "InfoObject": "0PLANT",
+                "ParentNodeId": "00000025",
+                "HasChildren": false,
+                "NodeId": "00000031",
+                "NodeText": "East / West Pipelines (Area 2)",
+                "TotalCount": 0,
+                "ValidToDate": ""
+            },
+            {
+                "__metadata": {
+                    "id": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "uri": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "type": "ZBW_CT_SCIC_SRV.Hierarchy"
+                },
+                "HierarchyName": "MSC AND CUSTOMER PLANT NEW",
+                "InfoObject": "0PLANT",
+                "ParentNodeId": "00000025",
+                "HasChildren": false,
+                "NodeId": "00000032",
+                "NodeText": "Northern Area Pipelines (Dhahr",
+                "TotalCount": 0,
+                "ValidToDate": ""
+            },
+            {
+                "__metadata": {
+                    "id": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "uri": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "type": "ZBW_CT_SCIC_SRV.Hierarchy"
+                },
+                "HierarchyName": "MSC AND CUSTOMER PLANT NEW",
+                "InfoObject": "0PLANT",
+                "ParentNodeId": "00000025",
+                "HasChildren": false,
+                "NodeId": "00000033",
+                "NodeText": "East / West Pipelines",
+                "TotalCount": 0,
+                "ValidToDate": ""
+            },
+            {
+                "__metadata": {
+                    "id": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "uri": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "type": "ZBW_CT_SCIC_SRV.Hierarchy"
+                },
+                "HierarchyName": "MSC AND CUSTOMER PLANT NEW",
+                "InfoObject": "0PLANT",
+                "ParentNodeId": "00000025",
+                "HasChildren": false,
+                "NodeId": "00000034",
+                "NodeText": "West/Eastern Reg. Distribution",
+                "TotalCount": 0,
+                "ValidToDate": ""
+            },
+            {
+                "__metadata": {
+                    "id": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "uri": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "type": "ZBW_CT_SCIC_SRV.Hierarchy"
+                },
+                "HierarchyName": "MSC AND CUSTOMER PLANT NEW",
+                "InfoObject": "0PLANT",
+                "ParentNodeId": "00000025",
+                "HasChildren": false,
+                "NodeId": "00000035",
+                "NodeText": "Air Fueling Operations (East)",
+                "TotalCount": 0,
+                "ValidToDate": ""
+            },
+            {
+                "__metadata": {
+                    "id": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "uri": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "type": "ZBW_CT_SCIC_SRV.Hierarchy"
+                },
+                "HierarchyName": "MSC AND CUSTOMER PLANT NEW",
+                "InfoObject": "0PLANT",
+                "ParentNodeId": "00000025",
+                "HasChildren": false,
+                "NodeId": "00000036",
+                "NodeText": "Eastern Region Distribution",
+                "TotalCount": 0,
+                "ValidToDate": ""
+            },
+            {
+                "__metadata": {
+                    "id": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "uri": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "type": "ZBW_CT_SCIC_SRV.Hierarchy"
+                },
+                "HierarchyName": "MSC AND CUSTOMER PLANT NEW",
+                "InfoObject": "0PLANT",
+                "ParentNodeId": "00000025",
+                "HasChildren": false,
+                "NodeId": "00000037",
+                "NodeText": "Admin Users @ Dhahran Area",
+                "TotalCount": 0,
+                "ValidToDate": ""
+            },
+            {
+                "__metadata": {
+                    "id": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "uri": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "type": "ZBW_CT_SCIC_SRV.Hierarchy"
+                },
+                "HierarchyName": "MSC AND CUSTOMER PLANT NEW",
+                "InfoObject": "0PLANT",
+                "ParentNodeId": "00000038",
+                "HasChildren": false,
+                "NodeId": "00000039",
+                "NodeText": "Marine (Tanajib)",
+                "TotalCount": 0,
+                "ValidToDate": ""
+            },
+            {
+                "__metadata": {
+                    "id": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "uri": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "type": "ZBW_CT_SCIC_SRV.Hierarchy"
+                },
+                "HierarchyName": "MSC AND CUSTOMER PLANT NEW",
+                "InfoObject": "0PLANT",
+                "ParentNodeId": "00000038",
+                "HasChildren": false,
+                "NodeId": "00000040",
+                "NodeText": "Roads & Heavy Equipment (Tanaj",
+                "TotalCount": 0,
+                "ValidToDate": ""
+            },
+            {
+                "__metadata": {
+                    "id": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "uri": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "type": "ZBW_CT_SCIC_SRV.Hierarchy"
+                },
+                "HierarchyName": "MSC AND CUSTOMER PLANT NEW",
+                "InfoObject": "0PLANT",
+                "ParentNodeId": "00000038",
+                "HasChildren": false,
+                "NodeId": "00000041",
+                "NodeText": "Transportation (Tanajib)",
+                "TotalCount": 0,
+                "ValidToDate": ""
+            },
+            {
+                "__metadata": {
+                    "id": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "uri": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "type": "ZBW_CT_SCIC_SRV.Hierarchy"
+                },
+                "HierarchyName": "MSC AND CUSTOMER PLANT NEW",
+                "InfoObject": "0PLANT",
+                "ParentNodeId": "00000038",
+                "HasChildren": false,
+                "NodeId": "00000042",
+                "NodeText": "Northern Area Pipelines",
+                "TotalCount": 0,
+                "ValidToDate": ""
+            },
+            {
+                "__metadata": {
+                    "id": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "uri": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "type": "ZBW_CT_SCIC_SRV.Hierarchy"
+                },
+                "HierarchyName": "MSC AND CUSTOMER PLANT NEW",
+                "InfoObject": "0PLANT",
+                "ParentNodeId": "00000038",
+                "HasChildren": false,
+                "NodeId": "00000043",
+                "NodeText": "Safaniyah Offshore Producing",
+                "TotalCount": 0,
+                "ValidToDate": ""
+            },
+            {
+                "__metadata": {
+                    "id": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "uri": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "type": "ZBW_CT_SCIC_SRV.Hierarchy"
+                },
+                "HierarchyName": "MSC AND CUSTOMER PLANT NEW",
+                "InfoObject": "0PLANT",
+                "ParentNodeId": "00000038",
+                "HasChildren": false,
+                "NodeId": "00000044",
+                "NodeText": "Safaniyah Onshore Producing",
+                "TotalCount": 0,
+                "ValidToDate": ""
+            },
+            {
+                "__metadata": {
+                    "id": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "uri": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "type": "ZBW_CT_SCIC_SRV.Hierarchy"
+                },
+                "HierarchyName": "MSC AND CUSTOMER PLANT NEW",
+                "InfoObject": "0PLANT",
+                "ParentNodeId": "00000038",
+                "HasChildren": false,
+                "NodeId": "00000045",
+                "NodeText": "Admin Users @ Tanajib Area",
+                "TotalCount": 0,
+                "ValidToDate": ""
+            },
+            {
+                "__metadata": {
+                    "id": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "uri": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "type": "ZBW_CT_SCIC_SRV.Hierarchy"
+                },
+                "HierarchyName": "MSC AND CUSTOMER PLANT NEW",
+                "InfoObject": "0PLANT",
+                "ParentNodeId": "00000046",
+                "HasChildren": false,
+                "NodeId": "00000047",
+                "NodeText": "Roads & Heavy Equipment (Yanbu",
+                "TotalCount": 0,
+                "ValidToDate": ""
+            },
+            {
+                "__metadata": {
+                    "id": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "uri": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "type": "ZBW_CT_SCIC_SRV.Hierarchy"
+                },
+                "HierarchyName": "MSC AND CUSTOMER PLANT NEW",
+                "InfoObject": "0PLANT",
+                "ParentNodeId": "00000046",
+                "HasChildren": false,
+                "NodeId": "00000048",
+                "NodeText": "Transportation (Yanbu)",
+                "TotalCount": 0,
+                "ValidToDate": ""
+            },
+            {
+                "__metadata": {
+                    "id": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "uri": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "type": "ZBW_CT_SCIC_SRV.Hierarchy"
+                },
+                "HierarchyName": "MSC AND CUSTOMER PLANT NEW",
+                "InfoObject": "0PLANT",
+                "ParentNodeId": "00000046",
+                "HasChildren": false,
+                "NodeId": "00000049",
+                "NodeText": "Yanbu Cmnty Svcs",
+                "TotalCount": 0,
+                "ValidToDate": ""
+            },
+            {
+                "__metadata": {
+                    "id": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "uri": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "type": "ZBW_CT_SCIC_SRV.Hierarchy"
+                },
+                "HierarchyName": "MSC AND CUSTOMER PLANT NEW",
+                "InfoObject": "0PLANT",
+                "ParentNodeId": "00000046",
+                "HasChildren": false,
+                "NodeId": "00000050",
+                "NodeText": "Yanbu Area Shops",
+                "TotalCount": 0,
+                "ValidToDate": ""
+            },
+            {
+                "__metadata": {
+                    "id": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "uri": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "type": "ZBW_CT_SCIC_SRV.Hierarchy"
+                },
+                "HierarchyName": "MSC AND CUSTOMER PLANT NEW",
+                "InfoObject": "0PLANT",
+                "ParentNodeId": "00000046",
+                "HasChildren": false,
+                "NodeId": "00000051",
+                "NodeText": "E/W Pipeline Terminal (Yanbu)",
+                "TotalCount": 0,
+                "ValidToDate": ""
+            },
+            {
+                "__metadata": {
+                    "id": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "uri": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "type": "ZBW_CT_SCIC_SRV.Hierarchy"
+                },
+                "HierarchyName": "MSC AND CUSTOMER PLANT NEW",
+                "InfoObject": "0PLANT",
+                "ParentNodeId": "00000046",
+                "HasChildren": false,
+                "NodeId": "00000052",
+                "NodeText": "Yanbu Crude Terminal",
+                "TotalCount": 0,
+                "ValidToDate": ""
+            },
+            {
+                "__metadata": {
+                    "id": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "uri": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "type": "ZBW_CT_SCIC_SRV.Hierarchy"
+                },
+                "HierarchyName": "MSC AND CUSTOMER PLANT NEW",
+                "InfoObject": "0PLANT",
+                "ParentNodeId": "00000046",
+                "HasChildren": false,
+                "NodeId": "00000053",
+                "NodeText": "SSSP Madina Site 7",
+                "TotalCount": 0,
+                "ValidToDate": ""
+            },
+            {
+                "__metadata": {
+                    "id": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "uri": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "type": "ZBW_CT_SCIC_SRV.Hierarchy"
+                },
+                "HierarchyName": "MSC AND CUSTOMER PLANT NEW",
+                "InfoObject": "0PLANT",
+                "ParentNodeId": "00000046",
+                "HasChildren": false,
+                "NodeId": "00000054",
+                "NodeText": "Western Region Distribution (Y",
+                "TotalCount": 0,
+                "ValidToDate": ""
+            },
+            {
+                "__metadata": {
+                    "id": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "uri": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "type": "ZBW_CT_SCIC_SRV.Hierarchy"
+                },
+                "HierarchyName": "MSC AND CUSTOMER PLANT NEW",
+                "InfoObject": "0PLANT",
+                "ParentNodeId": "00000046",
+                "HasChildren": false,
+                "NodeId": "00000055",
+                "NodeText": "Air Fueling Operations (Yanbu)",
+                "TotalCount": 0,
+                "ValidToDate": ""
+            },
+            {
+                "__metadata": {
+                    "id": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "uri": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "type": "ZBW_CT_SCIC_SRV.Hierarchy"
+                },
+                "HierarchyName": "MSC AND CUSTOMER PLANT NEW",
+                "InfoObject": "0PLANT",
+                "ParentNodeId": "00000046",
+                "HasChildren": false,
+                "NodeId": "00000056",
+                "NodeText": "Yanbu Refinery",
+                "TotalCount": 0,
+                "ValidToDate": ""
+            },
+            {
+                "__metadata": {
+                    "id": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "uri": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "type": "ZBW_CT_SCIC_SRV.Hierarchy"
+                },
+                "HierarchyName": "MSC AND CUSTOMER PLANT NEW",
+                "InfoObject": "0PLANT",
+                "ParentNodeId": "00000046",
+                "HasChildren": false,
+                "NodeId": "00000057",
+                "NodeText": "Admin Users @ Yanbu Area",
+                "TotalCount": 0,
+                "ValidToDate": ""
+            },
+            {
+                "__metadata": {
+                    "id": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "uri": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "type": "ZBW_CT_SCIC_SRV.Hierarchy"
+                },
+                "HierarchyName": "MSC AND CUSTOMER PLANT NEW",
+                "InfoObject": "0PLANT",
+                "ParentNodeId": "00000046",
+                "HasChildren": false,
+                "NodeId": "00000058",
+                "NodeText": "Yanbu Gas Plant and FTC",
+                "TotalCount": 0,
+                "ValidToDate": ""
+            },
+            {
+                "__metadata": {
+                    "id": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "uri": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "type": "ZBW_CT_SCIC_SRV.Hierarchy"
+                },
+                "HierarchyName": "MSC AND CUSTOMER PLANT NEW",
+                "InfoObject": "0PLANT",
+                "ParentNodeId": "00000046",
+                "HasChildren": false,
+                "NodeId": "00000059",
+                "NodeText": "Yanbu NGL Fractionation Dept",
+                "TotalCount": 0,
+                "ValidToDate": ""
+            },
+            {
+                "__metadata": {
+                    "id": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "uri": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "type": "ZBW_CT_SCIC_SRV.Hierarchy"
+                },
+                "HierarchyName": "MSC AND CUSTOMER PLANT NEW",
+                "InfoObject": "0PLANT",
+                "ParentNodeId": "00000060",
+                "HasChildren": false,
+                "NodeId": "00000061",
+                "NodeText": "Roads & Heavy Equipment (UTH)",
+                "TotalCount": 0,
+                "ValidToDate": ""
+            },
+            {
+                "__metadata": {
+                    "id": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "uri": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "type": "ZBW_CT_SCIC_SRV.Hierarchy"
+                },
+                "HierarchyName": "MSC AND CUSTOMER PLANT NEW",
+                "InfoObject": "0PLANT",
+                "ParentNodeId": "00000060",
+                "HasChildren": false,
+                "NodeId": "00000062",
+                "NodeText": "Transportation (Uthmaniyah)",
+                "TotalCount": 0,
+                "ValidToDate": ""
+            },
+            {
+                "__metadata": {
+                    "id": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "uri": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "type": "ZBW_CT_SCIC_SRV.Hierarchy"
+                },
+                "HierarchyName": "MSC AND CUSTOMER PLANT NEW",
+                "InfoObject": "0PLANT",
+                "ParentNodeId": "00000060",
+                "HasChildren": false,
+                "NodeId": "00000063",
+                "NodeText": "Southern Area Pipelines (UTH)",
+                "TotalCount": 0,
+                "ValidToDate": ""
+            },
+            {
+                "__metadata": {
+                    "id": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "uri": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "type": "ZBW_CT_SCIC_SRV.Hierarchy"
+                },
+                "HierarchyName": "MSC AND CUSTOMER PLANT NEW",
+                "InfoObject": "0PLANT",
+                "ParentNodeId": "00000060",
+                "HasChildren": false,
+                "NodeId": "00000064",
+                "NodeText": "Seawater Injuction (Mubarraz)",
+                "TotalCount": 0,
+                "ValidToDate": ""
+            },
+            {
+                "__metadata": {
+                    "id": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "uri": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "type": "ZBW_CT_SCIC_SRV.Hierarchy"
+                },
+                "HierarchyName": "MSC AND CUSTOMER PLANT NEW",
+                "InfoObject": "0PLANT",
+                "ParentNodeId": "00000060",
+                "HasChildren": false,
+                "NodeId": "00000065",
+                "NodeText": "SA Production Services",
+                "TotalCount": 0,
+                "ValidToDate": ""
+            },
+            {
+                "__metadata": {
+                    "id": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "uri": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "type": "ZBW_CT_SCIC_SRV.Hierarchy"
+                },
+                "HierarchyName": "MSC AND CUSTOMER PLANT NEW",
+                "InfoObject": "0PLANT",
+                "ParentNodeId": "00000060",
+                "HasChildren": false,
+                "NodeId": "00000066",
+                "NodeText": "SA Well Completion Ops Dept",
+                "TotalCount": 0,
+                "ValidToDate": ""
+            },
+            {
+                "__metadata": {
+                    "id": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "uri": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "type": "ZBW_CT_SCIC_SRV.Hierarchy"
+                },
+                "HierarchyName": "MSC AND CUSTOMER PLANT NEW",
+                "InfoObject": "0PLANT",
+                "ParentNodeId": "00000060",
+                "HasChildren": false,
+                "NodeId": "00000067",
+                "NodeText": "South Ghawar producing (B)",
+                "TotalCount": 0,
+                "ValidToDate": ""
+            },
+            {
+                "__metadata": {
+                    "id": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "uri": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "type": "ZBW_CT_SCIC_SRV.Hierarchy"
+                },
+                "HierarchyName": "MSC AND CUSTOMER PLANT NEW",
+                "InfoObject": "0PLANT",
+                "ParentNodeId": "00000060",
+                "HasChildren": false,
+                "NodeId": "00000068",
+                "NodeText": "South Ghawar producing (A)",
+                "TotalCount": 0,
+                "ValidToDate": ""
+            },
+            {
+                "__metadata": {
+                    "id": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "uri": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "type": "ZBW_CT_SCIC_SRV.Hierarchy"
+                },
+                "HierarchyName": "MSC AND CUSTOMER PLANT NEW",
+                "InfoObject": "0PLANT",
+                "ParentNodeId": "00000060",
+                "HasChildren": false,
+                "NodeId": "00000069",
+                "NodeText": "Admin Users @ UTH / UDH Area",
+                "TotalCount": 0,
+                "ValidToDate": ""
+            },
+            {
+                "__metadata": {
+                    "id": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "uri": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "type": "ZBW_CT_SCIC_SRV.Hierarchy"
+                },
+                "HierarchyName": "MSC AND CUSTOMER PLANT NEW",
+                "InfoObject": "0PLANT",
+                "ParentNodeId": "00000060",
+                "HasChildren": false,
+                "NodeId": "00000070",
+                "NodeText": "Hawiyah NGL Recovery Plant",
+                "TotalCount": 0,
+                "ValidToDate": ""
+            },
+            {
+                "__metadata": {
+                    "id": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "uri": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "type": "ZBW_CT_SCIC_SRV.Hierarchy"
+                },
+                "HierarchyName": "MSC AND CUSTOMER PLANT NEW",
+                "InfoObject": "0PLANT",
+                "ParentNodeId": "00000060",
+                "HasChildren": false,
+                "NodeId": "00000071",
+                "NodeText": "Khursaniyah Gas Plant",
+                "TotalCount": 0,
+                "ValidToDate": ""
+            },
+            {
+                "__metadata": {
+                    "id": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "uri": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "type": "ZBW_CT_SCIC_SRV.Hierarchy"
+                },
+                "HierarchyName": "MSC AND CUSTOMER PLANT NEW",
+                "InfoObject": "0PLANT",
+                "ParentNodeId": "00000060",
+                "HasChildren": false,
+                "NodeId": "00000072",
+                "NodeText": "Haradh Gas Plant",
+                "TotalCount": 0,
+                "ValidToDate": ""
+            },
+            {
+                "__metadata": {
+                    "id": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "uri": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "type": "ZBW_CT_SCIC_SRV.Hierarchy"
+                },
+                "HierarchyName": "MSC AND CUSTOMER PLANT NEW",
+                "InfoObject": "0PLANT",
+                "ParentNodeId": "00000060",
+                "HasChildren": false,
+                "NodeId": "00000073",
+                "NodeText": "Hawiyah Gas Plant",
+                "TotalCount": 0,
+                "ValidToDate": ""
+            },
+            {
+                "__metadata": {
+                    "id": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "uri": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "type": "ZBW_CT_SCIC_SRV.Hierarchy"
+                },
+                "HierarchyName": "MSC AND CUSTOMER PLANT NEW",
+                "InfoObject": "0PLANT",
+                "ParentNodeId": "00000060",
+                "HasChildren": false,
+                "NodeId": "00000074",
+                "NodeText": "Uthmaniyah Gas Plant",
+                "TotalCount": 0,
+                "ValidToDate": ""
+            },
+            {
+                "__metadata": {
+                    "id": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "uri": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "type": "ZBW_CT_SCIC_SRV.Hierarchy"
+                },
+                "HierarchyName": "MSC AND CUSTOMER PLANT NEW",
+                "InfoObject": "0PLANT",
+                "ParentNodeId": "00000075",
+                "HasChildren": false,
+                "NodeId": "00000076",
+                "NodeText": "Roads & Heavy Equipment (Riyad",
+                "TotalCount": 0,
+                "ValidToDate": ""
+            },
+            {
+                "__metadata": {
+                    "id": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "uri": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "type": "ZBW_CT_SCIC_SRV.Hierarchy"
+                },
+                "HierarchyName": "MSC AND CUSTOMER PLANT NEW",
+                "InfoObject": "0PLANT",
+                "ParentNodeId": "00000075",
+                "HasChildren": false,
+                "NodeId": "00000077",
+                "NodeText": "Transportation (Riyadh)",
+                "TotalCount": 0,
+                "ValidToDate": ""
+            },
+            {
+                "__metadata": {
+                    "id": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "uri": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "type": "ZBW_CT_SCIC_SRV.Hierarchy"
+                },
+                "HierarchyName": "MSC AND CUSTOMER PLANT NEW",
+                "InfoObject": "0PLANT",
+                "ParentNodeId": "00000075",
+                "HasChildren": false,
+                "NodeId": "00000078",
+                "NodeText": "Riyadh Cmnty Svcs",
+                "TotalCount": 0,
+                "ValidToDate": ""
+            },
+            {
+                "__metadata": {
+                    "id": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "uri": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "type": "ZBW_CT_SCIC_SRV.Hierarchy"
+                },
+                "HierarchyName": "MSC AND CUSTOMER PLANT NEW",
+                "InfoObject": "0PLANT",
+                "ParentNodeId": "00000075",
+                "HasChildren": false,
+                "NodeId": "00000079",
+                "NodeText": "Riyadh Area Shops",
+                "TotalCount": 0,
+                "ValidToDate": ""
+            },
+            {
+                "__metadata": {
+                    "id": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "uri": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "type": "ZBW_CT_SCIC_SRV.Hierarchy"
+                },
+                "HierarchyName": "MSC AND CUSTOMER PLANT NEW",
+                "InfoObject": "0PLANT",
+                "ParentNodeId": "00000075",
+                "HasChildren": false,
+                "NodeId": "00000080",
+                "NodeText": "SSSP Qaseem Site 3",
+                "TotalCount": 0,
+                "ValidToDate": ""
+            },
+            {
+                "__metadata": {
+                    "id": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "uri": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "type": "ZBW_CT_SCIC_SRV.Hierarchy"
+                },
+                "HierarchyName": "MSC AND CUSTOMER PLANT NEW",
+                "InfoObject": "0PLANT",
+                "ParentNodeId": "00000075",
+                "HasChildren": false,
+                "NodeId": "00000081",
+                "NodeText": "SSSP Riyadh Site 1",
+                "TotalCount": 0,
+                "ValidToDate": ""
+            },
+            {
+                "__metadata": {
+                    "id": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "uri": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "type": "ZBW_CT_SCIC_SRV.Hierarchy"
+                },
+                "HierarchyName": "MSC AND CUSTOMER PLANT NEW",
+                "InfoObject": "0PLANT",
+                "ParentNodeId": "00000075",
+                "HasChildren": false,
+                "NodeId": "00000082",
+                "NodeText": "West/Central Reg. Distribution",
+                "TotalCount": 0,
+                "ValidToDate": ""
+            },
+            {
+                "__metadata": {
+                    "id": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "uri": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "type": "ZBW_CT_SCIC_SRV.Hierarchy"
+                },
+                "HierarchyName": "MSC AND CUSTOMER PLANT NEW",
+                "InfoObject": "0PLANT",
+                "ParentNodeId": "00000075",
+                "HasChildren": false,
+                "NodeId": "00000083",
+                "NodeText": "East/Central Reg. Distribution",
+                "TotalCount": 0,
+                "ValidToDate": ""
+            },
+            {
+                "__metadata": {
+                    "id": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "uri": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "type": "ZBW_CT_SCIC_SRV.Hierarchy"
+                },
+                "HierarchyName": "MSC AND CUSTOMER PLANT NEW",
+                "InfoObject": "0PLANT",
+                "ParentNodeId": "00000075",
+                "HasChildren": false,
+                "NodeId": "00000084",
+                "NodeText": "SSSP Facilities",
+                "TotalCount": 0,
+                "ValidToDate": ""
+            },
+            {
+                "__metadata": {
+                    "id": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "uri": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "type": "ZBW_CT_SCIC_SRV.Hierarchy"
+                },
+                "HierarchyName": "MSC AND CUSTOMER PLANT NEW",
+                "InfoObject": "0PLANT",
+                "ParentNodeId": "00000075",
+                "HasChildren": false,
+                "NodeId": "00000085",
+                "NodeText": "Air Fueling Operations",
+                "TotalCount": 0,
+                "ValidToDate": ""
+            },
+            {
+                "__metadata": {
+                    "id": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "uri": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "type": "ZBW_CT_SCIC_SRV.Hierarchy"
+                },
+                "HierarchyName": "MSC AND CUSTOMER PLANT NEW",
+                "InfoObject": "0PLANT",
+                "ParentNodeId": "00000075",
+                "HasChildren": false,
+                "NodeId": "00000086",
+                "NodeText": "Riyadh Refinery",
+                "TotalCount": 0,
+                "ValidToDate": ""
+            },
+            {
+                "__metadata": {
+                    "id": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "uri": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "type": "ZBW_CT_SCIC_SRV.Hierarchy"
+                },
+                "HierarchyName": "MSC AND CUSTOMER PLANT NEW",
+                "InfoObject": "0PLANT",
+                "ParentNodeId": "00000075",
+                "HasChildren": false,
+                "NodeId": "00000087",
+                "NodeText": "Khursaniyah Producing",
+                "TotalCount": 0,
+                "ValidToDate": ""
+            },
+            {
+                "__metadata": {
+                    "id": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "uri": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "type": "ZBW_CT_SCIC_SRV.Hierarchy"
+                },
+                "HierarchyName": "MSC AND CUSTOMER PLANT NEW",
+                "InfoObject": "0PLANT",
+                "ParentNodeId": "00000075",
+                "HasChildren": false,
+                "NodeId": "00000088",
+                "NodeText": "South Ghawar Producing (Hawtah",
+                "TotalCount": 0,
+                "ValidToDate": ""
+            },
+            {
+                "__metadata": {
+                    "id": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "uri": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "type": "ZBW_CT_SCIC_SRV.Hierarchy"
+                },
+                "HierarchyName": "MSC AND CUSTOMER PLANT NEW",
+                "InfoObject": "0PLANT",
+                "ParentNodeId": "00000075",
+                "HasChildren": false,
+                "NodeId": "00000089",
+                "NodeText": "Khurais Producing Dept",
+                "TotalCount": 0,
+                "ValidToDate": ""
+            },
+            {
+                "__metadata": {
+                    "id": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "uri": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "type": "ZBW_CT_SCIC_SRV.Hierarchy"
+                },
+                "HierarchyName": "MSC AND CUSTOMER PLANT NEW",
+                "InfoObject": "0PLANT",
+                "ParentNodeId": "00000075",
+                "HasChildren": false,
+                "NodeId": "00000090",
+                "NodeText": "Admin Users @ Riyadh Area",
+                "TotalCount": 0,
+                "ValidToDate": ""
+            },
+            {
+                "__metadata": {
+                    "id": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "uri": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "type": "ZBW_CT_SCIC_SRV.Hierarchy"
+                },
+                "HierarchyName": "MSC AND CUSTOMER PLANT NEW",
+                "InfoObject": "0PLANT",
+                "ParentNodeId": "00000091",
+                "HasChildren": false,
+                "NodeId": "00000092",
+                "NodeText": "Roads & Heavy Equipment (RT)",
+                "TotalCount": 0,
+                "ValidToDate": ""
+            },
+            {
+                "__metadata": {
+                    "id": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "uri": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "type": "ZBW_CT_SCIC_SRV.Hierarchy"
+                },
+                "HierarchyName": "MSC AND CUSTOMER PLANT NEW",
+                "InfoObject": "0PLANT",
+                "ParentNodeId": "00000091",
+                "HasChildren": false,
+                "NodeId": "00000093",
+                "NodeText": "Transportation (Ras Tanura)",
+                "TotalCount": 0,
+                "ValidToDate": ""
+            },
+            {
+                "__metadata": {
+                    "id": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "uri": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "type": "ZBW_CT_SCIC_SRV.Hierarchy"
+                },
+                "HierarchyName": "MSC AND CUSTOMER PLANT NEW",
+                "InfoObject": "0PLANT",
+                "ParentNodeId": "00000091",
+                "HasChildren": false,
+                "NodeId": "00000094",
+                "NodeText": "Marine",
+                "TotalCount": 0,
+                "ValidToDate": ""
+            },
+            {
+                "__metadata": {
+                    "id": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "uri": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "type": "ZBW_CT_SCIC_SRV.Hierarchy"
+                },
+                "HierarchyName": "MSC AND CUSTOMER PLANT NEW",
+                "InfoObject": "0PLANT",
+                "ParentNodeId": "00000091",
+                "HasChildren": false,
+                "NodeId": "00000095",
+                "NodeText": "Northern Area Shops",
+                "TotalCount": 0,
+                "ValidToDate": ""
+            },
+            {
+                "__metadata": {
+                    "id": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "uri": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "type": "ZBW_CT_SCIC_SRV.Hierarchy"
+                },
+                "HierarchyName": "MSC AND CUSTOMER PLANT NEW",
+                "InfoObject": "0PLANT",
+                "ParentNodeId": "00000091",
+                "HasChildren": false,
+                "NodeId": "00000096",
+                "NodeText": "Northern Area Pipelines (RT)",
+                "TotalCount": 0,
+                "ValidToDate": ""
+            },
+            {
+                "__metadata": {
+                    "id": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "uri": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "type": "ZBW_CT_SCIC_SRV.Hierarchy"
+                },
+                "HierarchyName": "MSC AND CUSTOMER PLANT NEW",
+                "InfoObject": "0PLANT",
+                "ParentNodeId": "00000091",
+                "HasChildren": false,
+                "NodeId": "00000097",
+                "NodeText": "Juaymah Terminal",
+                "TotalCount": 0,
+                "ValidToDate": ""
+            },
+            {
+                "__metadata": {
+                    "id": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "uri": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "type": "ZBW_CT_SCIC_SRV.Hierarchy"
+                },
+                "HierarchyName": "MSC AND CUSTOMER PLANT NEW",
+                "InfoObject": "0PLANT",
+                "ParentNodeId": "00000091",
+                "HasChildren": false,
+                "NodeId": "00000098",
+                "NodeText": "Terminal Maintenance Dept",
+                "TotalCount": 0,
+                "ValidToDate": ""
+            },
+            {
+                "__metadata": {
+                    "id": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "uri": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "type": "ZBW_CT_SCIC_SRV.Hierarchy"
+                },
+                "HierarchyName": "MSC AND CUSTOMER PLANT NEW",
+                "InfoObject": "0PLANT",
+                "ParentNodeId": "00000091",
+                "HasChildren": false,
+                "NodeId": "00000099",
+                "NodeText": "Ras Tanura Refinery",
+                "TotalCount": 0,
+                "ValidToDate": ""
+            },
+            {
+                "__metadata": {
+                    "id": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "uri": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "type": "ZBW_CT_SCIC_SRV.Hierarchy"
+                },
+                "HierarchyName": "MSC AND CUSTOMER PLANT NEW",
+                "InfoObject": "0PLANT",
+                "ParentNodeId": "00000091",
+                "HasChildren": false,
+                "NodeId": "00000100",
+                "NodeText": "Ras Tanura Producing (Juaymah)",
+                "TotalCount": 0,
+                "ValidToDate": ""
+            },
+            {
+                "__metadata": {
+                    "id": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "uri": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "type": "ZBW_CT_SCIC_SRV.Hierarchy"
+                },
+                "HierarchyName": "MSC AND CUSTOMER PLANT NEW",
+                "InfoObject": "0PLANT",
+                "ParentNodeId": "00000091",
+                "HasChildren": false,
+                "NodeId": "00000101",
+                "NodeText": "Ras Tanura Producing",
+                "TotalCount": 0,
+                "ValidToDate": ""
+            },
+            {
+                "__metadata": {
+                    "id": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "uri": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "type": "ZBW_CT_SCIC_SRV.Hierarchy"
+                },
+                "HierarchyName": "MSC AND CUSTOMER PLANT NEW",
+                "InfoObject": "0PLANT",
+                "ParentNodeId": "00000091",
+                "HasChildren": false,
+                "NodeId": "00000102",
+                "NodeText": "Admin Users @ RT / JUY Area",
+                "TotalCount": 0,
+                "ValidToDate": ""
+            },
+            {
+                "__metadata": {
+                    "id": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "uri": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "type": "ZBW_CT_SCIC_SRV.Hierarchy"
+                },
+                "HierarchyName": "MSC AND CUSTOMER PLANT NEW",
+                "InfoObject": "0PLANT",
+                "ParentNodeId": "00000091",
+                "HasChildren": false,
+                "NodeId": "00000103",
+                "NodeText": "Juaymah NGL Fractionation Dept",
+                "TotalCount": 0,
+                "ValidToDate": ""
+            },
+            {
+                "__metadata": {
+                    "id": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "uri": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "type": "ZBW_CT_SCIC_SRV.Hierarchy"
+                },
+                "HierarchyName": "MSC AND CUSTOMER PLANT NEW",
+                "InfoObject": "0PLANT",
+                "ParentNodeId": "00000091",
+                "HasChildren": false,
+                "NodeId": "00000104",
+                "NodeText": "Berri Gas Plant",
+                "TotalCount": 0,
+                "ValidToDate": ""
+            },
+            {
+                "__metadata": {
+                    "id": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "uri": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "type": "ZBW_CT_SCIC_SRV.Hierarchy"
+                },
+                "HierarchyName": "MSC AND CUSTOMER PLANT NEW",
+                "InfoObject": "0PLANT",
+                "ParentNodeId": "00000105",
+                "HasChildren": false,
+                "NodeId": "00000106",
+                "NodeText": "Marine (Rabigh)",
+                "TotalCount": 0,
+                "ValidToDate": ""
+            },
+            {
+                "__metadata": {
+                    "id": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "uri": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "type": "ZBW_CT_SCIC_SRV.Hierarchy"
+                },
+                "HierarchyName": "MSC AND CUSTOMER PLANT NEW",
+                "InfoObject": "0PLANT",
+                "ParentNodeId": "00000105",
+                "HasChildren": false,
+                "NodeId": "00000107",
+                "NodeText": "Roads & Heavy Equipment (Rabig",
+                "TotalCount": 0,
+                "ValidToDate": ""
+            },
+            {
+                "__metadata": {
+                    "id": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "uri": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "type": "ZBW_CT_SCIC_SRV.Hierarchy"
+                },
+                "HierarchyName": "MSC AND CUSTOMER PLANT NEW",
+                "InfoObject": "0PLANT",
+                "ParentNodeId": "00000105",
+                "HasChildren": false,
+                "NodeId": "00000108",
+                "NodeText": "Transportation (Rabigh)",
+                "TotalCount": 0,
+                "ValidToDate": ""
+            },
+            {
+                "__metadata": {
+                    "id": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "uri": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "type": "ZBW_CT_SCIC_SRV.Hierarchy"
+                },
+                "HierarchyName": "MSC AND CUSTOMER PLANT NEW",
+                "InfoObject": "0PLANT",
+                "ParentNodeId": "00000105",
+                "HasChildren": false,
+                "NodeId": "00000109",
+                "NodeText": "Rabigh Community",
+                "TotalCount": 0,
+                "ValidToDate": ""
+            },
+            {
+                "__metadata": {
+                    "id": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "uri": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "type": "ZBW_CT_SCIC_SRV.Hierarchy"
+                },
+                "HierarchyName": "MSC AND CUSTOMER PLANT NEW",
+                "InfoObject": "0PLANT",
+                "ParentNodeId": "00000105",
+                "HasChildren": false,
+                "NodeId": "00000110",
+                "NodeText": "Rabigh Area Shops",
+                "TotalCount": 0,
+                "ValidToDate": ""
+            },
+            {
+                "__metadata": {
+                    "id": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "uri": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "type": "ZBW_CT_SCIC_SRV.Hierarchy"
+                },
+                "HierarchyName": "MSC AND CUSTOMER PLANT NEW",
+                "InfoObject": "0PLANT",
+                "ParentNodeId": "00000105",
+                "HasChildren": false,
+                "NodeId": "00000111",
+                "NodeText": "Rabigh Refinery",
+                "TotalCount": 0,
+                "ValidToDate": ""
+            },
+            {
+                "__metadata": {
+                    "id": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "uri": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "type": "ZBW_CT_SCIC_SRV.Hierarchy"
+                },
+                "HierarchyName": "MSC AND CUSTOMER PLANT NEW",
+                "InfoObject": "0PLANT",
+                "ParentNodeId": "00000105",
+                "HasChildren": false,
+                "NodeId": "00000112",
+                "NodeText": "Admin Users @ Rabigh Area",
+                "TotalCount": 0,
+                "ValidToDate": ""
+            },
+            {
+                "__metadata": {
+                    "id": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "uri": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "type": "ZBW_CT_SCIC_SRV.Hierarchy"
+                },
+                "HierarchyName": "MSC AND CUSTOMER PLANT NEW",
+                "InfoObject": "0PLANT",
+                "ParentNodeId": "00000113",
+                "HasChildren": false,
+                "NodeId": "00000114",
+                "NodeText": "Jeddah & Rabigh Marine",
+                "TotalCount": 0,
+                "ValidToDate": ""
+            },
+            {
+                "__metadata": {
+                    "id": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "uri": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "type": "ZBW_CT_SCIC_SRV.Hierarchy"
+                },
+                "HierarchyName": "MSC AND CUSTOMER PLANT NEW",
+                "InfoObject": "0PLANT",
+                "ParentNodeId": "00000113",
+                "HasChildren": false,
+                "NodeId": "00000115",
+                "NodeText": "Jeddah & Rabigh R&HE",
+                "TotalCount": 0,
+                "ValidToDate": ""
+            },
+            {
+                "__metadata": {
+                    "id": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "uri": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "type": "ZBW_CT_SCIC_SRV.Hierarchy"
+                },
+                "HierarchyName": "MSC AND CUSTOMER PLANT NEW",
+                "InfoObject": "0PLANT",
+                "ParentNodeId": "00000113",
+                "HasChildren": false,
+                "NodeId": "00000116",
+                "NodeText": "Jeddah & Rabigh Transportation",
+                "TotalCount": 0,
+                "ValidToDate": ""
+            },
+            {
+                "__metadata": {
+                    "id": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "uri": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "type": "ZBW_CT_SCIC_SRV.Hierarchy"
+                },
+                "HierarchyName": "MSC AND CUSTOMER PLANT NEW",
+                "InfoObject": "0PLANT",
+                "ParentNodeId": "00000113",
+                "HasChildren": false,
+                "NodeId": "00000117",
+                "NodeText": "Jeddah Cmnty Svcs",
+                "TotalCount": 0,
+                "ValidToDate": ""
+            },
+            {
+                "__metadata": {
+                    "id": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "uri": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "type": "ZBW_CT_SCIC_SRV.Hierarchy"
+                },
+                "HierarchyName": "MSC AND CUSTOMER PLANT NEW",
+                "InfoObject": "0PLANT",
+                "ParentNodeId": "00000113",
+                "HasChildren": false,
+                "NodeId": "00000118",
+                "NodeText": "WRMSSD Jeddah & Rabigh",
+                "TotalCount": 0,
+                "ValidToDate": ""
+            },
+            {
+                "__metadata": {
+                    "id": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "uri": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "type": "ZBW_CT_SCIC_SRV.Hierarchy"
+                },
+                "HierarchyName": "MSC AND CUSTOMER PLANT NEW",
+                "InfoObject": "0PLANT",
+                "ParentNodeId": "00000113",
+                "HasChildren": false,
+                "NodeId": "00000119",
+                "NodeText": "SSSP Abha Site 6",
+                "TotalCount": 0,
+                "ValidToDate": ""
+            },
+            {
+                "__metadata": {
+                    "id": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "uri": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "type": "ZBW_CT_SCIC_SRV.Hierarchy"
+                },
+                "HierarchyName": "MSC AND CUSTOMER PLANT NEW",
+                "InfoObject": "0PLANT",
+                "ParentNodeId": "00000113",
+                "HasChildren": false,
+                "NodeId": "00000120",
+                "NodeText": "SSSP Jeddah Site 5",
+                "TotalCount": 0,
+                "ValidToDate": ""
+            },
+            {
+                "__metadata": {
+                    "id": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "uri": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "type": "ZBW_CT_SCIC_SRV.Hierarchy"
+                },
+                "HierarchyName": "MSC AND CUSTOMER PLANT NEW",
+                "InfoObject": "0PLANT",
+                "ParentNodeId": "00000113",
+                "HasChildren": false,
+                "NodeId": "00000121",
+                "NodeText": "Air Fueling Operations (West)",
+                "TotalCount": 0,
+                "ValidToDate": ""
+            },
+            {
+                "__metadata": {
+                    "id": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "uri": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "type": "ZBW_CT_SCIC_SRV.Hierarchy"
+                },
+                "HierarchyName": "MSC AND CUSTOMER PLANT NEW",
+                "InfoObject": "0PLANT",
+                "ParentNodeId": "00000113",
+                "HasChildren": false,
+                "NodeId": "00000122",
+                "NodeText": "Western Region Distribution",
+                "TotalCount": 0,
+                "ValidToDate": ""
+            },
+            {
+                "__metadata": {
+                    "id": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "uri": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "type": "ZBW_CT_SCIC_SRV.Hierarchy"
+                },
+                "HierarchyName": "MSC AND CUSTOMER PLANT NEW",
+                "InfoObject": "0PLANT",
+                "ParentNodeId": "00000113",
+                "HasChildren": false,
+                "NodeId": "00000123",
+                "NodeText": "Jeddah Refinery",
+                "TotalCount": 0,
+                "ValidToDate": ""
+            },
+            {
+                "__metadata": {
+                    "id": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "uri": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "type": "ZBW_CT_SCIC_SRV.Hierarchy"
+                },
+                "HierarchyName": "MSC AND CUSTOMER PLANT NEW",
+                "InfoObject": "0PLANT",
+                "ParentNodeId": "00000113",
+                "HasChildren": false,
+                "NodeId": "00000124",
+                "NodeText": "Jed & Rbg Admin Users Plant",
+                "TotalCount": 0,
+                "ValidToDate": ""
+            },
+            {
+                "__metadata": {
+                    "id": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "uri": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "type": "ZBW_CT_SCIC_SRV.Hierarchy"
+                },
+                "HierarchyName": "MSC AND CUSTOMER PLANT NEW",
+                "InfoObject": "0PLANT",
+                "ParentNodeId": "00000125",
+                "HasChildren": false,
+                "NodeId": "00000126",
+                "NodeText": "Surplus Materials Plant",
+                "TotalCount": 0,
+                "ValidToDate": ""
+            },
+            {
+                "__metadata": {
+                    "id": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "uri": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "type": "ZBW_CT_SCIC_SRV.Hierarchy"
+                },
+                "HierarchyName": "MSC AND CUSTOMER PLANT NEW",
+                "InfoObject": "0PLANT",
+                "ParentNodeId": "00000127",
+                "HasChildren": false,
+                "NodeId": "00000128",
+                "NodeText": "MS Material Auction & Reclamat",
+                "TotalCount": 0,
+                "ValidToDate": ""
+            },
+            {
+                "__metadata": {
+                    "id": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "uri": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "type": "ZBW_CT_SCIC_SRV.Hierarchy"
+                },
+                "HierarchyName": "MSC AND CUSTOMER PLANT NEW",
+                "InfoObject": "0PLANT",
+                "ParentNodeId": "00000130",
+                "HasChildren": false,
+                "NodeId": "00000131",
+                "NodeText": "Projects @ Tanajib Area",
+                "TotalCount": 0,
+                "ValidToDate": ""
+            },
+            {
+                "__metadata": {
+                    "id": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "uri": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "type": "ZBW_CT_SCIC_SRV.Hierarchy"
+                },
+                "HierarchyName": "MSC AND CUSTOMER PLANT NEW",
+                "InfoObject": "0PLANT",
+                "ParentNodeId": "00000130",
+                "HasChildren": false,
+                "NodeId": "00000132",
+                "NodeText": "Projects @ Yanbu Area",
+                "TotalCount": 0,
+                "ValidToDate": ""
+            },
+            {
+                "__metadata": {
+                    "id": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "uri": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "type": "ZBW_CT_SCIC_SRV.Hierarchy"
+                },
+                "HierarchyName": "MSC AND CUSTOMER PLANT NEW",
+                "InfoObject": "0PLANT",
+                "ParentNodeId": "00000130",
+                "HasChildren": false,
+                "NodeId": "00000133",
+                "NodeText": "Projects @ UTH / UDH Area",
+                "TotalCount": 0,
+                "ValidToDate": ""
+            },
+            {
+                "__metadata": {
+                    "id": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "uri": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "type": "ZBW_CT_SCIC_SRV.Hierarchy"
+                },
+                "HierarchyName": "MSC AND CUSTOMER PLANT NEW",
+                "InfoObject": "0PLANT",
+                "ParentNodeId": "00000130",
+                "HasChildren": false,
+                "NodeId": "00000134",
+                "NodeText": "Projects @ Riyadh Area",
+                "TotalCount": 0,
+                "ValidToDate": ""
+            },
+            {
+                "__metadata": {
+                    "id": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "uri": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "type": "ZBW_CT_SCIC_SRV.Hierarchy"
+                },
+                "HierarchyName": "MSC AND CUSTOMER PLANT NEW",
+                "InfoObject": "0PLANT",
+                "ParentNodeId": "00000130",
+                "HasChildren": false,
+                "NodeId": "00000135",
+                "NodeText": "Projects @ RT / JUY Area",
+                "TotalCount": 0,
+                "ValidToDate": ""
+            },
+            {
+                "__metadata": {
+                    "id": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "uri": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "type": "ZBW_CT_SCIC_SRV.Hierarchy"
+                },
+                "HierarchyName": "MSC AND CUSTOMER PLANT NEW",
+                "InfoObject": "0PLANT",
+                "ParentNodeId": "00000130",
+                "HasChildren": false,
+                "NodeId": "00000136",
+                "NodeText": "Projects @ Rabigh Area",
+                "TotalCount": 0,
+                "ValidToDate": ""
+            },
+            {
+                "__metadata": {
+                    "id": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "uri": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "type": "ZBW_CT_SCIC_SRV.Hierarchy"
+                },
+                "HierarchyName": "MSC AND CUSTOMER PLANT NEW",
+                "InfoObject": "0PLANT",
+                "ParentNodeId": "00000130",
+                "HasChildren": false,
+                "NodeId": "00000137",
+                "NodeText": "PROJECTS @ Jeddah &Rabigh AREA",
+                "TotalCount": 0,
+                "ValidToDate": ""
+            },
+            {
+                "__metadata": {
+                    "id": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "uri": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "type": "ZBW_CT_SCIC_SRV.Hierarchy"
+                },
+                "HierarchyName": "MSC AND CUSTOMER PLANT NEW",
+                "InfoObject": "0PLANT",
+                "ParentNodeId": "00000130",
+                "HasChildren": false,
+                "NodeId": "00000138",
+                "NodeText": "Projects @ Dhahran  Area",
+                "TotalCount": 0,
+                "ValidToDate": ""
+            },
+            {
+                "__metadata": {
+                    "id": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "uri": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "type": "ZBW_CT_SCIC_SRV.Hierarchy"
+                },
+                "HierarchyName": "MSC AND CUSTOMER PLANT NEW",
+                "InfoObject": "0PLANT",
+                "ParentNodeId": "00000130",
+                "HasChildren": false,
+                "NodeId": "00000139",
+                "NodeText": "Projects @ Abqaiq Area",
+                "TotalCount": 0,
+                "ValidToDate": ""
+            },
+            {
+                "__metadata": {
+                    "id": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "uri": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "type": "ZBW_CT_SCIC_SRV.Hierarchy"
+                },
+                "HierarchyName": "MSC AND CUSTOMER PLANT NEW",
+                "InfoObject": "0PLANT",
+                "ParentNodeId": "00000140",
+                "HasChildren": false,
+                "NodeId": "00000141",
+                "NodeText": "Aviation (Tanajib)",
+                "TotalCount": 0,
+                "ValidToDate": ""
+            },
+            {
+                "__metadata": {
+                    "id": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "uri": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "type": "ZBW_CT_SCIC_SRV.Hierarchy"
+                },
+                "HierarchyName": "MSC AND CUSTOMER PLANT NEW",
+                "InfoObject": "0PLANT",
+                "ParentNodeId": "00000140",
+                "HasChildren": false,
+                "NodeId": "00000142",
+                "NodeText": "Aviation",
+                "TotalCount": 0,
+                "ValidToDate": ""
+            },
+            {
+                "__metadata": {
+                    "id": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "uri": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "type": "ZBW_CT_SCIC_SRV.Hierarchy"
+                },
+                "HierarchyName": "MSC AND CUSTOMER PLANT NEW",
+                "InfoObject": "0PLANT",
+                "ParentNodeId": "00000140",
+                "HasChildren": false,
+                "NodeId": "00000143",
+                "NodeText": "Lubref  II",
+                "TotalCount": 0,
+                "ValidToDate": ""
+            },
+            {
+                "__metadata": {
+                    "id": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "uri": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "type": "ZBW_CT_SCIC_SRV.Hierarchy"
+                },
+                "HierarchyName": "MSC AND CUSTOMER PLANT NEW",
+                "InfoObject": "0PLANT",
+                "ParentNodeId": "00000140",
+                "HasChildren": false,
+                "NodeId": "00000144",
+                "NodeText": "SASREF",
+                "TotalCount": 0,
+                "ValidToDate": ""
+            },
+            {
+                "__metadata": {
+                    "id": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "uri": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "type": "ZBW_CT_SCIC_SRV.Hierarchy"
+                },
+                "HierarchyName": "MSC AND CUSTOMER PLANT NEW",
+                "InfoObject": "0PLANT",
+                "ParentNodeId": "00000140",
+                "HasChildren": false,
+                "NodeId": "00000145",
+                "NodeText": "SAMREF",
+                "TotalCount": 0,
+                "ValidToDate": ""
+            },
+            {
+                "__metadata": {
+                    "id": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "uri": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "type": "ZBW_CT_SCIC_SRV.Hierarchy"
+                },
+                "HierarchyName": "MSC AND CUSTOMER PLANT NEW",
+                "InfoObject": "0PLANT",
+                "ParentNodeId": "00000140",
+                "HasChildren": false,
+                "NodeId": "00000146",
+                "NodeText": "Southern Area CMD (Hasa Area)",
+                "TotalCount": 0,
+                "ValidToDate": ""
+            },
+            {
+                "__metadata": {
+                    "id": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "uri": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "type": "ZBW_CT_SCIC_SRV.Hierarchy"
+                },
+                "HierarchyName": "MSC AND CUSTOMER PLANT NEW",
+                "InfoObject": "0PLANT",
+                "ParentNodeId": "00000140",
+                "HasChildren": false,
+                "NodeId": "00000147",
+                "NodeText": "Southern Area Community (UTH)",
+                "TotalCount": 0,
+                "ValidToDate": ""
+            },
+            {
+                "__metadata": {
+                    "id": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "uri": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "type": "ZBW_CT_SCIC_SRV.Hierarchy"
+                },
+                "HierarchyName": "MSC AND CUSTOMER PLANT NEW",
+                "InfoObject": "0PLANT",
+                "ParentNodeId": "00000140",
+                "HasChildren": false,
+                "NodeId": "00000148",
+                "NodeText": "Northern Area CMD @ Abu Ali",
+                "TotalCount": 0,
+                "ValidToDate": ""
+            },
+            {
+                "__metadata": {
+                    "id": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "uri": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "type": "ZBW_CT_SCIC_SRV.Hierarchy"
+                },
+                "HierarchyName": "MSC AND CUSTOMER PLANT NEW",
+                "InfoObject": "0PLANT",
+                "ParentNodeId": "00000140",
+                "HasChildren": false,
+                "NodeId": "00000149",
+                "NodeText": "Northern Area CMD @ RT Clinic",
+                "TotalCount": 0,
+                "ValidToDate": ""
+            },
+            {
+                "__metadata": {
+                    "id": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "uri": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "type": "ZBW_CT_SCIC_SRV.Hierarchy"
+                },
+                "HierarchyName": "MSC AND CUSTOMER PLANT NEW",
+                "InfoObject": "0PLANT",
+                "ParentNodeId": "00000140",
+                "HasChildren": false,
+                "NodeId": "00000150",
+                "NodeText": "Northern Area Community (Tanaj",
+                "TotalCount": 0,
+                "ValidToDate": ""
+            },
+            {
+                "__metadata": {
+                    "id": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "uri": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "type": "ZBW_CT_SCIC_SRV.Hierarchy"
+                },
+                "HierarchyName": "MSC AND CUSTOMER PLANT NEW",
+                "InfoObject": "0PLANT",
+                "ParentNodeId": "00000140",
+                "HasChildren": false,
+                "NodeId": "00000151",
+                "NodeText": "Dhahran Gardening",
+                "TotalCount": 0,
+                "ValidToDate": ""
+            },
+            {
+                "__metadata": {
+                    "id": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "uri": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "type": "ZBW_CT_SCIC_SRV.Hierarchy"
+                },
+                "HierarchyName": "MSC AND CUSTOMER PLANT NEW",
+                "InfoObject": "0PLANT",
+                "ParentNodeId": "00000140",
+                "HasChildren": false,
+                "NodeId": "00000152",
+                "NodeText": "Dhahran CMD @ Appliance Shop",
+                "TotalCount": 0,
+                "ValidToDate": ""
+            },
+            {
+                "__metadata": {
+                    "id": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "uri": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "type": "ZBW_CT_SCIC_SRV.Hierarchy"
+                },
+                "HierarchyName": "MSC AND CUSTOMER PLANT NEW",
+                "InfoObject": "0PLANT",
+                "ParentNodeId": "00000140",
+                "HasChildren": false,
+                "NodeId": "00000153",
+                "NodeText": "Dhahran CMD @ Medical Faciliti",
+                "TotalCount": 0,
+                "ValidToDate": ""
+            },
+            {
+                "__metadata": {
+                    "id": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "uri": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "type": "ZBW_CT_SCIC_SRV.Hierarchy"
+                },
+                "HierarchyName": "MSC AND CUSTOMER PLANT NEW",
+                "InfoObject": "0PLANT",
+                "ParentNodeId": "00000140",
+                "HasChildren": false,
+                "NodeId": "00000154",
+                "NodeText": "Dhahran CMD @ Core Area",
+                "TotalCount": 0,
+                "ValidToDate": ""
+            },
+            {
+                "__metadata": {
+                    "id": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "uri": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "type": "ZBW_CT_SCIC_SRV.Hierarchy"
+                },
+                "HierarchyName": "MSC AND CUSTOMER PLANT NEW",
+                "InfoObject": "0PLANT",
+                "ParentNodeId": "00000140",
+                "HasChildren": false,
+                "NodeId": "00000155",
+                "NodeText": "Utilities & Tech Support Dept",
+                "TotalCount": 0,
+                "ValidToDate": ""
+            },
+            {
+                "__metadata": {
+                    "id": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "uri": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "type": "ZBW_CT_SCIC_SRV.Hierarchy"
+                },
+                "HierarchyName": "MSC AND CUSTOMER PLANT NEW",
+                "InfoObject": "0PLANT",
+                "ParentNodeId": "00000140",
+                "HasChildren": false,
+                "NodeId": "00000156",
+                "NodeText": "Abq / Udh Cmnty Svcs",
+                "TotalCount": 0,
+                "ValidToDate": ""
+            },
+            {
+                "__metadata": {
+                    "id": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "uri": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "type": "ZBW_CT_SCIC_SRV.Hierarchy"
+                },
+                "HierarchyName": "MSC AND CUSTOMER PLANT NEW",
+                "InfoObject": "0PLANT",
+                "ParentNodeId": "00000140",
+                "HasChildren": false,
+                "NodeId": "00000157",
+                "NodeText": "RT Cmnty Svcs",
+                "TotalCount": 0,
+                "ValidToDate": ""
+            },
+            {
+                "__metadata": {
+                    "id": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "uri": "https://dvb.cloud.com:443/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet(HierarchyName='MSC%20AND%20CUSTOMER%20PLANT%20NEW',InfoObject='0PLANT')",
+                    "type": "ZBW_CT_SCIC_SRV.Hierarchy"
+                },
+                "HierarchyName": "MSC AND CUSTOMER PLANT NEW",
+                "InfoObject": "0PLANT",
+                "ParentNodeId": "00000140",
+                "HasChildren": false,
+                "NodeId": "00000158",
+                "NodeText": "Central Community Svcs Dept",
+                "TotalCount": 0,
+                "ValidToDate": ""
+            }
+        ]
+    }
+}

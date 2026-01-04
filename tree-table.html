@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hierarchy Tree Table</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            /* background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); */
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 14px;
+        }
+
+        .controls {
+            padding: 20px 30px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e0e0e0;
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .search-box {
+            flex: 1;
+            min-width: 250px;
+            position: relative;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 10px 15px 10px 40px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+
+        .search-box input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .search-box::before {
+            content: '🔍';
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 16px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+
+        .table-container {
+            overflow-x: auto;
+            max-height: calc(100vh - 250px);
+            overflow-y: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead {
+            background: #f8f9fa;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        th {
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+            color: #495057;
+            border-bottom: 2px solid #dee2e6;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #e9ecef;
+            font-size: 14px;
+            color: #495057;
+        }
+
+        tbody tr {
+            transition: background-color 0.2s;
+        }
+
+        tbody tr:hover {
+            background-color: #f8f9fa;
+        }
+
+        .tree-cell {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .tree-toggle {
+            width: 20px;
+            height: 20px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: background-color 0.2s;
+            font-size: 12px;
+            color: #667eea;
+            font-weight: bold;
+        }
+
+        .tree-toggle:hover {
+            background-color: #e7e9f5;
+        }
+
+        .tree-toggle.expanded::before {
+            content: '−';
+        }
+
+        .tree-toggle.collapsed::before {
+            content: '+';
+        }
+
+        .tree-indent {
+            display: inline-block;
+            width: 20px;
+        }
+
+        .node-text {
+            font-weight: 500;
+            color: #212529;
+        }
+
+        .has-children {
+            font-weight: 600;
+        }
+
+        .no-children {
+            color: #6c757d;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .badge-yes {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .badge-no {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .stats {
+            padding: 15px 30px;
+            background: #f8f9fa;
+            border-top: 1px solid #e0e0e0;
+            display: flex;
+            gap: 30px;
+            font-size: 13px;
+            color: #6c757d;
+        }
+
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .stat-value {
+            font-weight: 600;
+            color: #495057;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 60px;
+            color: #6c757d;
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <!-- <div class="header">
+            <h1>🌳 Hierarchy Tree Table</h1>
+            <p>MSC AND CUSTOMER PLANT NEW - Interactive Tree View</p>
+        </div> -->
+
+        <div class="controls" style="flex-direction: column; gap: 15px;">
+            <div style="display: flex; gap: 15px; align-items: center; flex-wrap: wrap; width: 100%;">
+                <div style="flex: 1; min-width: 200px;">
+                    <label
+                        style="display: block; margin-bottom: 5px; font-size: 12px; font-weight: 600; color: #495057;">Base
+                        URL</label>
+                    <input type="text" id="baseUrl" placeholder="https://dvb.cloud.com:443"
+                        style="width: 100%; padding: 10px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 14px; transition: border-color 0.3s;"
+                        value="https://ctapitester-a4mel9cxg6.dispatcher.sa1.hana.ondemand.com"
+                        onkeypress="if(event.key === 'Enter') fetchFromAPI()" onfocus="this.style.borderColor='#667eea'"
+                        onblur="this.style.borderColor='#e0e0e0'">
+                </div>
+                <div style="flex: 1; min-width: 200px;">
+                    <label
+                        style="display: block; margin-bottom: 5px; font-size: 12px; font-weight: 600; color: #495057;">Hierarchy
+                        Name</label>
+                    <input type="text" id="hierarchyName" placeholder="MSC AND CUSTOMER PLANT NEW"
+                        style="width: 100%; padding: 10px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 14px; transition: border-color 0.3s;"
+                        value="MSC AND CUSTOMER PLANT NEW" onkeypress="if(event.key === 'Enter') fetchFromAPI()"
+                        onfocus="this.style.borderColor='#667eea'" onblur="this.style.borderColor='#e0e0e0'">
+                </div>
+                <div style="flex: 1; min-width: 150px;">
+                    <label
+                        style="display: block; margin-bottom: 5px; font-size: 12px; font-weight: 600; color: #495057;">Info
+                        Object</label>
+                    <input type="text" id="infoObject" placeholder="0PLANT"
+                        style="width: 100%; padding: 10px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 14px; transition: border-color 0.3s;"
+                        value="0PLANT" onkeypress="if(event.key === 'Enter') fetchFromAPI()"
+                        onfocus="this.style.borderColor='#667eea'" onblur="this.style.borderColor='#e0e0e0'">
+                </div>
+                <div style="display: flex; align-items: flex-end; gap: 10px;">
+                    <button class="btn btn-primary" onclick="fetchFromAPI()" style="white-space: nowrap;">Fetch from
+                        API</button>
+                </div>
+            </div>
+            <div
+                style="display: flex; gap: 15px; align-items: center; flex-wrap: wrap; width: 100%; border-top: 1px solid #e0e0e0; padding-top: 15px;">
+                <div class="search-box" style="flex: 1; min-width: 250px;">
+                    <input type="text" id="searchInput"
+                        placeholder="Search by node text, node ID, or hierarchy name...">
+                </div>
+                <input type="file" id="fileInput" accept=".json" style="display: none;" onchange="loadFile(event)">
+                <button class="btn btn-primary" onclick="document.getElementById('fileInput').click()">Load JSON
+                    File</button>
+                <button class="btn btn-primary" onclick="expandAll()">Expand All</button>
+                <button class="btn btn-secondary" onclick="collapseAll()">Collapse All</button>
+            </div>
+        </div>
+
+        <div class="table-container">
+            <div id="loading" class="loading">
+                <div class="spinner"></div>
+                <p>Loading hierarchy data...</p>
+            </div>
+            <table id="treeTable" class="hidden">
+                <thead>
+                    <tr>
+                        <th style="width: 40%;">Node Text</th>
+                        <th style="width: 12%;">Node ID</th>
+                        <th style="width: 12%;">Parent Node ID</th>
+                        <th style="width: 10%;">Has Children</th>
+                        <th style="width: 10%;">Total Count</th>
+                        <th style="width: 16%;">Valid To Date</th>
+                    </tr>
+                </thead>
+                <tbody id="treeBody">
+                </tbody>
+            </table>
+        </div>
+
+        <div class="stats">
+            <div class="stat-item">
+                <span>Total Nodes:</span>
+                <span class="stat-value" id="totalNodes">0</span>
+            </div>
+            <div class="stat-item">
+                <span>Visible Nodes:</span>
+                <span class="stat-value" id="visibleNodes">0</span>
+            </div>
+            <div class="stat-item">
+                <span>Expanded Levels:</span>
+                <span class="stat-value" id="expandedLevels">0</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let treeData = [];
+        let treeStructure = {};
+        let expandedNodes = new Set();
+        let searchTerm = '';
+
+        // Load JSON data from file
+        function loadFile(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    treeData = data.d.results;
+                    buildTree();
+                    renderTree();
+                    document.getElementById('loading').classList.add('hidden');
+                    document.getElementById('treeTable').classList.remove('hidden');
+                    updateStats();
+                } catch (error) {
+                    console.error('Error parsing JSON:', error);
+                    document.getElementById('loading').innerHTML =
+                        '<p style="color: #dc3545;">Error parsing JSON file. Please check the file format.</p>';
+                }
+            };
+            reader.readAsText(file);
+            document.getElementById('loading').classList.remove('hidden');
+            document.getElementById('treeTable').classList.add('hidden');
+        }
+
+        // Fetch data from SAP OData API
+        async function fetchFromAPI() {
+            const baseUrl = document.getElementById('baseUrl').value.trim();
+            const hierarchyName = document.getElementById('hierarchyName').value.trim();
+            const infoObject = document.getElementById('infoObject').value.trim();
+
+            if (!baseUrl || !hierarchyName || !infoObject) {
+                alert('Please fill in all fields: Base URL, Hierarchy Name, and Info Object');
+                return;
+            }
+
+            // Build the API URL with filter
+            // OData filter syntax: HierarchyName eq 'value' and InfoObject eq 'value'
+            // Encode the filter parameter value (the part after $filter=)
+            const filterValue = `HierarchyName eq '${hierarchyName.replace(/'/g, "''")}' and InfoObject eq '${infoObject.replace(/'/g, "''")}'`;
+            const encodedFilter = encodeURIComponent(filterValue);
+            const apiUrl = `${baseUrl}/sap/opu/odata/sap/ZBW_CT_SCIC_SRV/HierarchySet?$filter=${encodedFilter}`;
+
+            document.getElementById('loading').classList.remove('hidden');
+            document.getElementById('treeTable').classList.add('hidden');
+            document.getElementById('loading').innerHTML =
+                '<div class="spinner"></div><p>Fetching data from API...</p>';
+
+            try {
+                const response = await fetch(apiUrl, {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+
+                if (data.d && data.d.results) {
+                    treeData = data.d.results;
+                    buildTree();
+                    renderTree();
+                    document.getElementById('loading').classList.add('hidden');
+                    document.getElementById('treeTable').classList.remove('hidden');
+                    updateStats();
+
+                    // Update header with current hierarchy name
+                    document.querySelector('.header p').textContent = `${hierarchyName} - Interactive Tree View`;
+                } else {
+                    throw new Error('Invalid response format. Expected data.d.results');
+                }
+            } catch (error) {
+                console.error('Error fetching from API:', error);
+                document.getElementById('loading').innerHTML =
+                    `<p style="color: #dc3545;">Error fetching data from API: ${error.message}</p>
+                     <p style="color: #6c757d; margin-top: 10px; font-size: 12px;">URL: ${apiUrl}</p>`;
+            }
+        }
+
+        // Load JSON data automatically (if available via fetch)
+        async function loadData() {
+            try {
+                const response = await fetch('sample.json');
+                const data = await response.json();
+                treeData = data.d.results;
+                buildTree();
+                renderTree();
+                document.getElementById('loading').classList.add('hidden');
+                document.getElementById('treeTable').classList.remove('hidden');
+                updateStats();
+            } catch (error) {
+                console.error('Error loading data:', error);
+                document.getElementById('loading').innerHTML =
+                    '<p style="color: #6c757d;">Click "Load JSON File" button to load sample.json, or use "Fetch from API" to load data from SAP OData service.</p>';
+            }
+        }
+
+        // Build tree structure from flat list
+        function buildTree() {
+            treeStructure = {};
+            const nodeMap = {};
+
+            // Create map of all nodes
+            treeData.forEach(node => {
+                nodeMap[node.NodeId] = {
+                    ...node,
+                    children: [],
+                    level: 0,
+                    visible: true
+                };
+            });
+
+            // Build tree structure
+            treeData.forEach(node => {
+                const nodeObj = nodeMap[node.NodeId];
+                if (node.ParentNodeId === '00000000' || !nodeMap[node.ParentNodeId]) {
+                    // Root node
+                    if (!treeStructure[node.NodeId]) {
+                        treeStructure[node.NodeId] = nodeObj;
+                    }
+                } else {
+                    // Child node
+                    const parent = nodeMap[node.ParentNodeId];
+                    if (parent) {
+                        parent.children.push(nodeObj);
+                        nodeObj.level = parent.level + 1;
+                    }
+                }
+            });
+
+            // Calculate levels for all nodes
+            function calculateLevels(nodes, level = 0) {
+                nodes.forEach(node => {
+                    node.level = level;
+                    if (node.children.length > 0) {
+                        calculateLevels(node.children, level + 1);
+                    }
+                });
+            }
+
+            Object.values(treeStructure).forEach(root => {
+                calculateLevels([root], 0);
+            });
+        }
+
+        // Render tree table
+        function renderTree() {
+            const tbody = document.getElementById('treeBody');
+            tbody.innerHTML = '';
+
+            function renderNode(node, isRoot = false) {
+                if (!node.visible) return;
+
+                const row = document.createElement('tr');
+                row.dataset.nodeId = node.NodeId;
+                row.dataset.level = node.level;
+                row.dataset.hasChildren = node.HasChildren;
+
+                const indent = node.level * 20;
+                const hasChildren = node.HasChildren && node.children.length > 0;
+                const isExpanded = expandedNodes.has(node.NodeId);
+
+                // Node Text cell
+                const nodeTextCell = document.createElement('td');
+                nodeTextCell.className = 'tree-cell';
+                nodeTextCell.style.paddingLeft = `${15 + indent}px`;
+
+                if (hasChildren) {
+                    const toggle = document.createElement('span');
+                    toggle.className = `tree-toggle ${isExpanded ? 'expanded' : 'collapsed'}`;
+                    toggle.onclick = (e) => {
+                        e.stopPropagation();
+                        toggleNode(node.NodeId);
+                    };
+                    nodeTextCell.appendChild(toggle);
+                } else {
+                    const spacer = document.createElement('span');
+                    spacer.className = 'tree-indent';
+                    nodeTextCell.appendChild(spacer);
+                }
+
+                const textSpan = document.createElement('span');
+                textSpan.className = `node-text ${hasChildren ? 'has-children' : 'no-children'}`;
+                textSpan.textContent = node.NodeText;
+                nodeTextCell.appendChild(textSpan);
+
+                row.appendChild(nodeTextCell);
+
+                // Node ID
+                const nodeIdCell = document.createElement('td');
+                nodeIdCell.textContent = node.NodeId;
+                row.appendChild(nodeIdCell);
+
+                // Parent Node ID
+                const parentIdCell = document.createElement('td');
+                parentIdCell.textContent = node.ParentNodeId;
+                row.appendChild(parentIdCell);
+
+                // Has Children
+                const hasChildrenCell = document.createElement('td');
+                const badge = document.createElement('span');
+                badge.className = `badge ${node.HasChildren ? 'badge-yes' : 'badge-no'}`;
+                badge.textContent = node.HasChildren ? 'Yes' : 'No';
+                hasChildrenCell.appendChild(badge);
+                row.appendChild(hasChildrenCell);
+
+                // Total Count
+                const countCell = document.createElement('td');
+                countCell.textContent = node.TotalCount || '0';
+                row.appendChild(countCell);
+
+                // Valid To Date
+                const dateCell = document.createElement('td');
+                dateCell.textContent = node.ValidToDate || '-';
+                row.appendChild(dateCell);
+
+                tbody.appendChild(row);
+
+                // Render children if expanded
+                if (hasChildren && isExpanded) {
+                    node.children.forEach(child => {
+                        renderNode(child);
+                    });
+                }
+            }
+
+            // Render all root nodes
+            Object.values(treeStructure).forEach(root => {
+                renderNode(root, true);
+            });
+
+            updateStats();
+        }
+
+        // Toggle node expansion
+        function toggleNode(nodeId) {
+            if (expandedNodes.has(nodeId)) {
+                expandedNodes.delete(nodeId);
+            } else {
+                expandedNodes.add(nodeId);
+            }
+            renderTree();
+        }
+
+        // Expand all nodes
+        function expandAll() {
+            function collectNodeIds(nodes) {
+                nodes.forEach(node => {
+                    if (node.HasChildren && node.children.length > 0) {
+                        expandedNodes.add(node.NodeId);
+                        collectNodeIds(node.children);
+                    }
+                });
+            }
+            Object.values(treeStructure).forEach(root => {
+                collectNodeIds([root]);
+            });
+            renderTree();
+        }
+
+        // Collapse all nodes
+        function collapseAll() {
+            expandedNodes.clear();
+            renderTree();
+        }
+
+        // Search functionality
+        document.getElementById('searchInput').addEventListener('input', function (e) {
+            searchTerm = e.target.value.toLowerCase().trim();
+            filterTree();
+        });
+
+        function filterTree() {
+            if (!searchTerm) {
+                // Show all nodes
+                function setVisibility(nodes, parentVisible = true) {
+                    nodes.forEach(node => {
+                        node.visible = parentVisible;
+                        if (node.children.length > 0) {
+                            setVisibility(node.children, node.visible);
+                        }
+                    });
+                }
+                Object.values(treeStructure).forEach(root => {
+                    setVisibility([root], true);
+                });
+            } else {
+                // Filter nodes
+                function filterNodes(nodes, parentVisible = false) {
+                    let hasVisibleChild = false;
+                    nodes.forEach(node => {
+                        const matches =
+                            node.NodeText.toLowerCase().includes(searchTerm) ||
+                            node.NodeId.toLowerCase().includes(searchTerm) ||
+                            node.HierarchyName.toLowerCase().includes(searchTerm);
+
+                        const childVisible = node.children.length > 0 ? filterNodes(node.children, matches) : false;
+                        node.visible = matches || childVisible || parentVisible;
+
+                        if (node.visible) {
+                            hasVisibleChild = true;
+                        }
+                    });
+                    return hasVisibleChild;
+                }
+
+                Object.values(treeStructure).forEach(root => {
+                    filterNodes([root], false);
+                });
+            }
+            renderTree();
+        }
+
+        // Update statistics
+        function updateStats() {
+            const totalNodes = treeData.length;
+            const visibleRows = document.querySelectorAll('#treeBody tr:not(.hidden)').length;
+            const expandedCount = expandedNodes.size;
+
+            document.getElementById('totalNodes').textContent = totalNodes;
+            document.getElementById('visibleNodes').textContent = visibleRows;
+            document.getElementById('expandedLevels').textContent = expandedCount;
+        }
+
+        // Initialize
+        loadData();
+    </script>
+</body>
+
+</html>
+
+
