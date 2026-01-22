@@ -282,7 +282,7 @@ export const defaultPropsMapping: Record<string, any> = {
     },
     'multi-chart-bex': {
         queryName: 'YIMO_INV_TRND_DET_SLOW',
-        title: 'BEX Chart Widget',
+        title: 'Widget Title',
         chartConfig: {
             chartType: 'line',
             xAxisKey: 'Month',

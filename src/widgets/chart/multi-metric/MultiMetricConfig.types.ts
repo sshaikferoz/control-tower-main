@@ -21,7 +21,4 @@ export interface MultiMetricWidgetConfig {
     layout?: 'horizontal' | 'vertical';
     showDividers?: boolean;
     transparentBackground?: boolean; // Disable background and make it transparent
-    showTitle?: boolean;             // Enable/disable the widget title display
-    enableCustomTitle?: boolean;     // When true, use customTitle instead of query-derived/widget title
-    customTitle?: string;            // Optional custom title text for the entire widget
 }

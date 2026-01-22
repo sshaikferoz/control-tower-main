@@ -5,7 +5,6 @@ interface BlankWidgetProps {
     title?: string;
     color?: string;
     setChangeColor?: (color: string) => void;
-    showTitle?: boolean;
     blankWidgetConfig?: BlankWidgetConfig;
 }
 
@@ -13,7 +12,6 @@ const BlankWidget: React.FC<BlankWidgetProps> = ({
     title,
     color,
     setChangeColor,
-    showTitle,
     blankWidgetConfig,
 }) => {
     const [userColor, setUserColor] = useState<string>(color || '#00214E');
@@ -36,23 +34,14 @@ const BlankWidget: React.FC<BlankWidgetProps> = ({
         color: '#ffffff',
     };
 
-    // Determine widget-level title to display
-    const widgetTitle = blankWidgetConfig?.title ?? title;
-
-    const shouldShowTitle =
-        (blankWidgetConfig?.showTitle ??
-            (typeof showTitle === 'boolean' ? showTitle : true)) && !!widgetTitle;
-
     return (
         <div
             className="flex h-full w-full flex-col rounded-xl p-4"
             style={backgroundStyle}
         >
-            {shouldShowTitle && (
-                <div className="mb-2">
-                    <h3 className="text-base font-bold text-white">{widgetTitle}</h3>
-                </div>
-            )}
+            <div className="mb-2">
+                <h3 className="text-base font-bold text-white">{title}</h3>
+            </div>
 
             <div className="flex-1 flex items-center justify-center" />
         </div>

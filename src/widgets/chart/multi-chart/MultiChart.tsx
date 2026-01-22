@@ -360,13 +360,6 @@ const MultiChart: React.FC<MultiChartProps> = ({
         return providedShowLegend;
     }, [chartConfig?.showLegend, providedShowLegend]);
 
-    const showTitle = useMemo(() => {
-        if (chartConfig?.showTitle !== undefined) {
-            return chartConfig.showTitle;
-        }
-        return true; // Default to showing title
-    }, [chartConfig?.showTitle]);
-
     const showGridLines = useMemo(() => {
         if (chartConfig?.showGridLines !== undefined) {
             return chartConfig.showGridLines;
@@ -404,22 +397,9 @@ const MultiChart: React.FC<MultiChartProps> = ({
     }, [bexTransformedData?.groupByField, providedGroupByField]);
 
     const title = useMemo(() => {
-        // 1. If custom title is explicitly enabled in chartConfig, always use it
-        if (chartConfig?.enableCustomTitle) {
-            return chartConfig.customTitle || providedTitle;
-        }
-
-        // 2. Otherwise, prefer query metadata description when available
-        if (bexData && typeof bexData === 'object' && 'metadata' in bexData) {
-            const metadata = (bexData as any).metadata;
-            if (metadata?.description) {
-                return metadata.description;
-            }
-        }
-
-        // 3. Fallback to providedTitle
+        // Use title from configuration if available, otherwise fallback to providedTitle
         return providedTitle;
-    }, [chartConfig?.enableCustomTitle, chartConfig?.customTitle, bexData, providedTitle]);
+    }, [chartConfig?.title, providedTitle]);
 
     const defaultBaseColor = '#00214E';
     const defaultLighterColor = '#0164B0';
@@ -1371,14 +1351,14 @@ const MultiChart: React.FC<MultiChartProps> = ({
                 style={backgroundStyle}
             >
                 {/* Header */}
-                {showTitle && (
-                    <div className="mb-2 flex shrink-0 items-start justify-between">
-                        <div className="flex flex-col items-start gap-[5px]">
-                            <h3 className="text-base font-bold text-white" style={getTitleStyle()}>
-                                {title}
-                            </h3>
-                        </div>
-                        {/* {totalValue && (
+
+                <div className="mb-2 flex shrink-0 items-start justify-between">
+                    <div className="flex flex-col items-start gap-[5px]">
+                        <h3 className="text-base font-bold text-white" style={getTitleStyle()}>
+                            {title}
+                        </h3>
+                    </div>
+                    {/* {totalValue && (
                         <div className="flex flex-col items-center">
                             <span
                                 className="text-xl font-bold whitespace-nowrap text-white"
@@ -1389,8 +1369,9 @@ const MultiChart: React.FC<MultiChartProps> = ({
                             <span className="text-sm font-normal text-white">Total Value</span>
                         </div>
                     )} */}
-                    </div>
-                )}
+                </div>
+
+
 
                 {/* Label filters (if applicable) */}
 

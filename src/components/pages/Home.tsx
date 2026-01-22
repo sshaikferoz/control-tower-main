@@ -209,6 +209,9 @@ export default function Home({
                 'section.originalSection.description',
                 // Widget-level fields
                 'widget.name',
+                'widget.props.blankWidgetConfig.title',
+                'widget.props.title',
+                'widget.props.chartConfig.title',
                 'widget.props.title',
                 'widget.props.name',
                 'widget.props.customTitle',

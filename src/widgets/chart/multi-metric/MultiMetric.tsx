@@ -187,19 +187,6 @@ const MultiMetric: React.FC<MultiMetricProps> = ({
     const layout = multiMetricConfig?.layout || 'horizontal';
     const showDividers = multiMetricConfig?.showDividers ?? true;
 
-    // Determine widget-level title to display
-    const widgetTitle = useMemo(() => {
-        if (!multiMetricConfig) {
-            return title;
-        }
-
-        if (multiMetricConfig.enableCustomTitle) {
-            return multiMetricConfig.customTitle || title;
-        }
-
-        return title;
-    }, [multiMetricConfig?.enableCustomTitle, multiMetricConfig?.customTitle, title]);
-
     if (!multiMetricConfig || !multiMetricConfig.metrics || multiMetricConfig.metrics.length === 0) {
         return (
             <div className="relative h-full w-full">
@@ -224,13 +211,13 @@ const MultiMetric: React.FC<MultiMetricProps> = ({
         <div className="relative h-full w-full">
             <div className="h-full rounded-xl p-4 text-white" style={backgroundStyle}>
                 {/* Widget-level header title */}
-                {multiMetricConfig.showTitle !== false && widgetTitle && (
-                    <div className="mb-2 flex items-start justify-between">
-                        <h3 className="text-base font-bold text-white">
-                            {widgetTitle}
-                        </h3>
-                    </div>
-                )}
+
+                <div className="mb-2 flex items-start justify-between">
+                    <h3 className="text-base font-bold text-white">
+                        {title}
+                    </h3>
+                </div>
+
 
                 <div className={containerClasses}>
                     {multiMetricConfig.metrics.map((metric, index) => (

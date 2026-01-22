@@ -22,7 +22,6 @@ const defaultConfig: MultiMetricWidgetConfig = {
     metrics: [],
     layout: 'horizontal',
     showDividers: true,
-    showTitle: true,
 };
 
 // Collapsible Section Component
@@ -314,45 +313,6 @@ export const MultiMetricConfigPanel: React.FC<MultiMetricConfigPanelProps> = ({
                     id="transparent-background"
                     name="transparent-background"
                 />
-            </CollapsibleSection>
-
-            {/* Display Options */}
-            <CollapsibleSection
-                title="Display Options"
-                defaultOpen={true}
-                icon={<ChartBarIcon className="h-5 w-5" />}
-            >
-                <CustomCheckbox
-                    label="Show Title"
-                    checked={config.showTitle !== false}
-                    onChange={(checked) => handleChange('showTitle', checked)}
-                    description="Display widget title"
-                    id="show-title"
-                    name="show-title"
-                />
-
-                {config.showTitle !== false && (
-                    <div className="ml-2">
-                        <CustomCheckbox
-                            label="Enable Custom Title"
-                            checked={config.enableCustomTitle === true}
-                            onChange={(checked) => handleChange('enableCustomTitle', checked)}
-                            id="enable-custom-title"
-                            name="enable-custom-title"
-                        />
-                        {config.enableCustomTitle && (
-                            <CustomInput
-                                label="Custom Title"
-                                type="text"
-                                value={config.customTitle || ''}
-                                onChange={(value) => handleChange('customTitle', value)}
-                                placeholder="Enter custom title"
-                                id="custom-title"
-                                name="custom-title"
-                            />
-                        )}
-                    </div>
-                )}
             </CollapsibleSection>
 
             {/* Metrics Configuration */}

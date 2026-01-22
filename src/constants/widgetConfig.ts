@@ -25,7 +25,6 @@ const MultiChart = lazy(() => import('@/widgets/MultiChart'));
 const FilterWidget = lazy(() => import('@/widgets/FilterWidget'));
 const ListenerWidget = lazy(() => import('@/widgets/ListenerWidget'));
 const MultiChartWidget = lazy(() => import('@/widgets/chart/multi-chart/MultiChart'));
-const GaugeChart = lazy(() => import('@/widgets/GaugeChart'));
 const BlankWidget = lazy(() => import('@/widgets/blank-widget/BlankWidget'));
 const KpiChart = lazy(() => import('@/widgets/chart/kpi-chart/KpiChart'));
 
@@ -55,7 +54,6 @@ export const widgetMapping: Record<string, React.ComponentType<any>> = {
     'filter-widget': FilterWidget,
     'listener-widget': ListenerWidget,
     'multi-chart-bex': MultiChartWidget,
-    'gauge-chart': GaugeChart,
     'blank-widget': BlankWidget,
     'kpi-chart': KpiChart,
 };

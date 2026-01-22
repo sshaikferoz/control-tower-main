@@ -26,7 +26,6 @@ const defaultConfig: ChartWidgetConfig = {
     stacked: false,
     valueFormat: 'non-currency',
     showLegend: true,
-    showTitle: true,
     showGridLines: true,
     gridLineStyle: 'dashed-short',
     colorPalette: undefined,
@@ -564,19 +563,38 @@ export const ChartConfigPanel: React.FC<ChartConfigPanelProps> = ({
                                     {config.chartType === 'composed' && (
                                         <div>
                                             <label className="mb-2 block text-xs font-medium text-white/70">Series Type</label>
-                                            <div className="flex gap-2">
-                                                {(['line', 'bar', 'area'] as SeriesType[]).map((type) => (
-                                                    <button
-                                                        key={type}
-                                                        onClick={() => handleSeriesTypeChange(series.dataKey, type)}
-                                                        className={`flex-1 rounded-lg border px-3 py-2 text-xs font-medium transition-all ${(series.type || 'line') === type
-                                                            ? 'border-cyan-400 bg-cyan-400/20 text-cyan-400'
-                                                            : 'border-white/20 bg-white/5 text-white/70 hover:border-white/40'
-                                                            }`}
-                                                    >
-                                                        {type.charAt(0).toUpperCase() + type.slice(1)}
-                                                    </button>
-                                                ))}
+                                            <div className="grid grid-cols-3 gap-2">
+                                                {(['line', 'bar', 'area'] as SeriesType[]).map((type) => {
+                                                    const isSelected = (series.type || 'line') === type;
+                                                    const iconColor = isSelected ? 'text-cyan-400' : 'text-white/70';
+
+                                                    return (
+                                                        <button
+                                                            key={type}
+                                                            onClick={() => handleSeriesTypeChange(series.dataKey, type)}
+                                                            className={`flex flex-col items-center justify-center gap-2 rounded-lg border px-3 py-3 text-xs font-medium transition-all ${isSelected
+                                                                ? 'border-cyan-400 bg-cyan-400/20 text-cyan-400'
+                                                                : 'border-white/20 bg-white/5 text-white/70 hover:border-white/40'
+                                                                }`}
+                                                        >
+                                                            {type === 'line' && (
+                                                                <svg className={`h-5 w-5 ${iconColor}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 20l9-9 4 4 8-8" />
+                                                                </svg>
+                                                            )}
+                                                            {type === 'bar' && (
+                                                                <ChartBarIcon className={`h-5 w-5 ${iconColor}`} />
+                                                            )}
+                                                            {type === 'area' && (
+                                                                <svg className={`h-5 w-5 ${iconColor}`} viewBox="0 0 24 24" fill="none">
+                                                                    <path d="M3 20L9 14L13 18L21 10V20H3Z" fill="currentColor" fillOpacity={0.3} />
+                                                                    <path d="M3 20L9 14L13 18L21 10" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+                                                                </svg>
+                                                            )}
+                                                            {/* <span>{type.charAt(0).toUpperCase() + type.slice(1)}</span> */}
+                                                        </button>
+                                                    );
+                                                })}
                                             </div>
                                         </div>
                                     )}
@@ -767,32 +785,6 @@ export const ChartConfigPanel: React.FC<ChartConfigPanelProps> = ({
                         onChange={(checked) => handleChange('showLegend', checked)}
                         description="Display chart legend"
                     />
-
-                    <CustomCheckbox
-                        label="Show Title"
-                        checked={config.showTitle !== false}
-                        onChange={(checked) => handleChange('showTitle', checked)}
-                        description="Display chart title"
-                    />
-
-                    {config.showTitle !== false && (
-                        <div className="ml-8">
-                            <CustomCheckbox
-                                label="Enable Custom Title"
-                                checked={config.enableCustomTitle === true}
-                                onChange={(checked) => handleChange('enableCustomTitle', checked)}
-                            />
-                            {config.enableCustomTitle && (
-                                <CustomInput
-                                    label="Custom Title"
-                                    type="text"
-                                    value={config.customTitle || ''}
-                                    onChange={(value) => handleChange('customTitle', value)}
-                                    placeholder="Enter custom title"
-                                />
-                            )}
-                        </div>
-                    )}
 
                     <CustomCheckbox
                         label="Show Grid Lines"

@@ -33,13 +33,10 @@ import Alert from '@mui/material/Alert';
 import { TypographyConfigUI } from './TypographyConfigUI';
 import { ChartConfigPanel } from '@/widgets/chart/multi-chart/ChartConfigPanel';
 import { ChartWidgetConfig } from '@/widgets/chart/multi-chart/ChartConfig.types';
-import { GaugeConfigPanel } from '@/widgets/chart/gauge-chart/GaugeConfigPanel';
-import { GaugeWidgetConfig } from '@/widgets/chart/gauge-chart/GaugeConfig.types';
 import { MultiMetricConfigPanel } from '@/widgets/chart/multi-metric/MultiMetricConfigPanel';
 import { MultiMetricWidgetConfig } from '@/widgets/chart/multi-metric/MultiMetricConfig.types';
 import { KpiConfigPanel } from '@/widgets/chart/kpi-chart/KpiConfigPanel';
 import { KpiWidgetConfig } from '@/widgets/chart/kpi-chart/KpiConfig.types';
-import { BlankWidgetConfigPanel } from '@/widgets/blank-widget/BlankWidgetConfigPanel';
 import { BlankWidgetConfig } from '@/widgets/blank-widget/BlankWidgetConfig.types';
 import useBexJson from '@/hooks/useBexJson';
 import { TargetReportConfig } from '@/helpers/types';
@@ -110,6 +107,7 @@ const WidgetConfigurationPanel: React.FC<WidgetConfigurationPanelProps> = ({
     const backgroundColor = widgetProps.backgroundColor || '#ffffff';
     const roles: Role[] = widgetProps.roles || [];
     const description: string = widgetProps.description || '';
+    const title: string = widgetProps.title || '';
     const targetReportEnabled = widgetProps.targetReportEnabled !== undefined ? widgetProps.targetReportEnabled : true;
     const targetReport: TargetReportConfig = widgetProps.targetReport || {
         type: 'Bex Query',
@@ -121,7 +119,6 @@ const WidgetConfigurationPanel: React.FC<WidgetConfigurationPanelProps> = ({
     // Check if this is a multi-chart widget
     const isMultiChart = widgetName === 'multi-chart' || widgetName === 'multi-chart-bex';
     const isBexChart = widgetName === 'multi-chart-bex';
-    const isGaugeChart = widgetName === 'gauge-chart';
     const isKpiChart = widgetName === 'kpi-chart';
     const isMultiMetric = widgetName === 'multi-metric';
     const isBlankWidget = widgetName === 'blank-widget';
@@ -138,7 +135,7 @@ const WidgetConfigurationPanel: React.FC<WidgetConfigurationPanelProps> = ({
         queryName,
         {
             parser: 'new',
-            enabled: (isBexChart || isGaugeChart || isKpiChart || isMultiMetric) && !!queryName,
+            enabled: (isBexChart || isKpiChart || isMultiMetric) && !!queryName,
         }
     );
 
@@ -154,19 +151,6 @@ const WidgetConfigurationPanel: React.FC<WidgetConfigurationPanelProps> = ({
         seriesConfig: {
             series: [],
         },
-    };
-
-    // Get gauge config for gauge chart widgets
-    const gaugeConfig: GaugeWidgetConfig = widgetProps.gaugeConfig || {
-        minValue: 0,
-        maxValue: 100,
-        colorRanges: [
-            { min: 0, max: 25, color: '#4CAF50', label: 'Low' },
-            { min: 25, max: 75, color: '#FFC107', label: 'Moderate' },
-            { min: 75, max: 100, color: '#F44336', label: 'High' },
-        ],
-        showLabels: true,
-        valueFormat: 'non-currency',
     };
 
     // Get KPI config for KPI chart widgets
@@ -226,23 +210,6 @@ const WidgetConfigurationPanel: React.FC<WidgetConfigurationPanelProps> = ({
         }
     }, [isMultiChart]);
 
-    // Initialize gaugeConfig if it doesn't exist for gauge-chart widgets
-    useEffect(() => {
-        if (isGaugeChart && !widgetProps.gaugeConfig) {
-            const defaultGaugeConfig: GaugeWidgetConfig = {
-                minValue: 0,
-                maxValue: 100,
-                colorRanges: [
-                    { min: 0, max: 25, color: '#4CAF50', label: 'Low' },
-                    { min: 25, max: 75, color: '#FFC107', label: 'Moderate' },
-                    { min: 75, max: 100, color: '#F44336', label: 'High' },
-                ],
-                showLabels: true,
-                valueFormat: 'non-currency',
-            };
-            updateWidgetProp('gaugeConfig', defaultGaugeConfig);
-        }
-    }, [isGaugeChart, widgetProps.gaugeConfig]);
 
     // Initialize kpiConfig if it doesn't exist for kpi-chart widgets
     useEffect(() => {
@@ -256,7 +223,6 @@ const WidgetConfigurationPanel: React.FC<WidgetConfigurationPanelProps> = ({
                     { min: 75, max: 100, color: '#F44336', label: 'High' },
                 ],
                 showLabels: true,
-                showTitle: true,
                 valueFormat: 'non-currency',
                 kpiType: 'donut',
             };
@@ -278,7 +244,6 @@ const WidgetConfigurationPanel: React.FC<WidgetConfigurationPanelProps> = ({
     useEffect(() => {
         if (isBlankWidget && !widgetProps.blankWidgetConfig) {
             const defaultBlankConfig: BlankWidgetConfig = {
-                showTitle: true,
                 title: '',
             };
             updateWidgetProp('blankWidgetConfig', defaultBlankConfig);
@@ -357,16 +322,10 @@ const WidgetConfigurationPanel: React.FC<WidgetConfigurationPanelProps> = ({
         { value: 'Web Link', label: 'Web Link' },
     ];
 
-    const hasConfigTab = isMultiChart || isGaugeChart || isKpiChart || isMultiMetric || isBlankWidget;
-
-    // Calculate the number of tabs:
-    // 4 base tabs (Typography, Background, Role, Description)
-    // + 1 config tab for multi-chart, gauge-chart, kpi-chart, or multi-metric
-    // + 1 report config tab
-    const tabCount = (isMultiChart || isGaugeChart || isKpiChart || isMultiMetric || isBlankWidget) ? 6 : 5;
+    const hasConfigTab = isMultiChart || isKpiChart || isMultiMetric || isBlankWidget;
 
     return (
-        <div className="flex h-screen w-56 min-w-68 max-w-68 flex-shrink-0 flex-col overflow-auto bg-gradient-to-b from-[#00214E] to-[#0164B0] text-white md:w-64 md:min-w-64 md:max-w-64">
+        <div className="flex h-screen w-56 min-w-56 max-w-56 flex-shrink-0 flex-col overflow-auto bg-gradient-to-b from-[#00214E] to-[#0164B0] text-white md:w-64 md:min-w-64 md:max-w-64">
             <div className="sticky top-0 z-10 bg-gradient-to-b from-[#00214E] to-[#0164B0] p-3 pb-2">
                 <Typography variant="subtitle2" component="h2" gutterBottom className="text-white font-semibold" sx={{ fontSize: '0.75rem' }}>
                     Widget Configuration
@@ -696,6 +655,45 @@ const WidgetConfigurationPanel: React.FC<WidgetConfigurationPanelProps> = ({
                                 p: 2,
                             }}
                         >
+
+
+                            <TextField
+                                label="Title"
+                                fullWidth
+                                size="small"
+                                variant="outlined"
+                                value={title}
+                                onChange={(e) => updateWidgetProp('title', e.target.value)}
+                                placeholder="Enter widget title"
+                                sx={{
+                                    mb: 2,
+                                    '& .MuiOutlinedInput-root': {
+                                        fontSize: '0.7rem',
+                                        color: 'white',
+                                        '& fieldset': {
+                                            borderColor: 'rgba(255, 255, 255, 0.3)',
+                                        },
+                                        '&:hover fieldset': {
+                                            borderColor: 'rgba(255, 255, 255, 0.5)',
+                                        },
+                                        '&.Mui-focused fieldset': {
+                                            borderColor: '#84BD00',
+                                        },
+                                    },
+                                    '& .MuiInputLabel-root': {
+                                        color: 'rgba(255, 255, 255, 0.7)',
+                                        fontSize: '0.7rem',
+                                    },
+                                    '& .MuiInputLabel-root.Mui-focused': {
+                                        color: '#84BD00',
+                                    },
+                                    '& .MuiInputBase-input': {
+                                        color: 'white',
+                                        fontSize: '0.7rem',
+                                    },
+                                }}
+                            />
+
                             <TextField
                                 label="Description"
                                 fullWidth
@@ -855,128 +853,6 @@ const WidgetConfigurationPanel: React.FC<WidgetConfigurationPanelProps> = ({
                     </TabPanel>
                 )}
 
-                {/* Config Tab - Only for gauge-chart widgets */}
-                {isGaugeChart && (
-                    <TabPanel value={activeTab} index={0}>
-                        <Box sx={{ color: 'white' }}>
-                            <Typography variant="subtitle2" sx={{ mb: 0.5, fontWeight: 600, fontSize: '0.75rem' }}>
-                                Gauge Configuration
-                            </Typography>
-                            <Typography variant="caption" sx={{ mb: 2, color: 'rgba(255, 255, 255, 0.7)', fontSize: '0.65rem', display: 'block' }}>
-                                Configure gauge scale, color ranges, and data selection.
-                            </Typography>
-
-                            {/* Query Name Input - Only for BEX gauge charts */}
-                            {isGaugeChart && (
-                                <Box sx={{ mb: 2 }}>
-                                    <TextField
-                                        fullWidth
-                                        size="small"
-                                        label="Query Name (BEX)"
-                                        value={queryName}
-                                        onChange={(e) => updateWidgetProp('queryName', e.target.value)}
-                                        placeholder="Enter BEX query name"
-                                        sx={{
-                                            '& .MuiOutlinedInput-root': {
-                                                color: 'white',
-                                                fontSize: '0.7rem',
-                                                '& fieldset': {
-                                                    borderColor: 'rgba(255, 255, 255, 0.3)',
-                                                },
-                                                '&:hover fieldset': {
-                                                    borderColor: 'rgba(255, 255, 255, 0.5)',
-                                                },
-                                                '&.Mui-focused fieldset': {
-                                                    borderColor: '#84BD00',
-                                                },
-                                            },
-                                            '& .MuiInputLabel-root': {
-                                                color: 'rgba(255, 255, 255, 0.7)',
-                                                fontSize: '0.7rem',
-                                            },
-                                            '& .MuiInputLabel-root.Mui-focused': {
-                                                color: '#84BD00',
-                                            },
-                                        }}
-                                    />
-                                </Box>
-                            )}
-
-                            {!queryName ? (
-                                <Box
-                                    sx={{
-                                        backgroundColor: 'rgba(255, 255, 255, 0.05)',
-                                        borderRadius: 2,
-                                        p: 2,
-                                        textAlign: 'center',
-                                    }}
-                                >
-                                    <Typography variant="caption" sx={{ color: 'rgba(255, 255, 255, 0.5)', fontSize: '0.65rem' }}>
-                                        Please set a query name in the widget props to load BEx data.
-                                    </Typography>
-                                </Box>
-                            ) : bexLoading ? (
-                                <Box
-                                    sx={{
-                                        backgroundColor: 'rgba(255, 255, 255, 0.05)',
-                                        borderRadius: 2,
-                                        p: 2,
-                                        textAlign: 'center',
-                                        display: 'flex',
-                                        flexDirection: 'column',
-                                        alignItems: 'center',
-                                        gap: 2,
-                                    }}
-                                >
-                                    <CircularProgress size={24} sx={{ color: '#84BD00' }} />
-                                    <Typography variant="caption" sx={{ color: 'rgba(255, 255, 255, 0.7)', fontSize: '0.65rem' }}>
-                                        Loading BEx data...
-                                    </Typography>
-                                </Box>
-                            ) : bexError ? (
-                                <Box
-                                    sx={{
-                                        backgroundColor: 'rgba(255, 255, 255, 0.05)',
-                                        borderRadius: 2,
-                                        p: 2,
-                                        textAlign: 'center',
-                                    }}
-                                >
-                                    <Typography variant="caption" sx={{ color: '#E1553F', fontSize: '0.65rem' }}>
-                                        Error loading BEx data: {bexError.message || 'Unknown error'}
-                                    </Typography>
-                                </Box>
-                            ) : bexResponse ? (
-                                <Box
-                                    sx={{
-                                        backgroundColor: 'rgba(255, 255, 255, 0.05)',
-                                        borderRadius: 2,
-                                        p: 2,
-                                    }}
-                                >
-                                    <GaugeConfigPanel
-                                        response={bexResponse}
-                                        value={gaugeConfig}
-                                        onChange={(newConfig) => updateWidgetProp('gaugeConfig', newConfig)}
-                                    />
-                                </Box>
-                            ) : (
-                                <Box
-                                    sx={{
-                                        backgroundColor: 'rgba(255, 255, 255, 0.05)',
-                                        borderRadius: 2,
-                                        p: 2,
-                                        textAlign: 'center',
-                                    }}
-                                >
-                                    <Typography variant="caption" sx={{ color: 'rgba(255, 255, 255, 0.5)', fontSize: '0.65rem' }}>
-                                        BEx response data is required to configure the gauge. Please map the widget to a data source first.
-                                    </Typography>
-                                </Box>
-                            )}
-                        </Box>
-                    </TabPanel>
-                )}
 
                 {/* Config Tab - Only for kpi-chart widgets */}
                 {isKpiChart && (
@@ -1126,44 +1002,6 @@ const WidgetConfigurationPanel: React.FC<WidgetConfigurationPanelProps> = ({
                     </TabPanel>
                 )}
 
-                {/* Config Tab - Only for blank widgets */}
-                {isBlankWidget && (
-                    <TabPanel value={activeTab} index={0}>
-                        <Box sx={{ color: 'white' }}>
-                            <Typography
-                                variant="subtitle2"
-                                sx={{ mb: 0.5, fontWeight: 600, fontSize: '0.75rem' }}
-                            >
-                                Blank Widget Configuration
-                            </Typography>
-                            <Typography
-                                variant="caption"
-                                sx={{
-                                    mb: 2,
-                                    color: 'rgba(255, 255, 255, 0.7)',
-                                    fontSize: '0.65rem',
-                                    display: 'block',
-                                }}
-                            >
-                                Control basic display options like showing the title and setting the
-                                title text for this blank widget.
-                            </Typography>
-
-                            <Box
-                                sx={{
-                                    backgroundColor: 'rgba(255, 255, 255, 0.05)',
-                                    borderRadius: 2,
-                                    p: 2,
-                                }}
-                            >
-                                <BlankWidgetConfigPanel
-                                    value={blankWidgetConfig}
-                                    onChange={handleBlankWidgetConfigChange}
-                                />
-                            </Box>
-                        </Box>
-                    </TabPanel>
-                )}
 
                 {/* Report Config Tab - Available for all widgets */}
                 <TabPanel value={activeTab} index={hasConfigTab ? 5 : 4}>

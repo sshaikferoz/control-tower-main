@@ -60,9 +60,8 @@ export interface ChartWidgetConfig {
 
     valueFormat?: 'currency' | 'non-currency';
     showLegend?: boolean;
-    showTitle?: boolean;          // Enable/disable the title display
-    enableCustomTitle?: boolean;  // When true, use customTitle instead of query-derived title
-    customTitle?: string;         // Optional custom title text
+    // showTitle?: boolean;          // Enable/disable the title display
+    title?: string;              // Title text from configuration
     showGridLines?: boolean;     // Show/hide grid lines behind the chart
     gridLineStyle?: GridLineStyle; // Style of grid lines (solid, dashed, dotted, etc.)
     pointerStyle?: PointerStyle;  // Configuration for pointer (dot) styles

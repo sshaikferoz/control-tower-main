@@ -9,6 +9,7 @@ import { formatNumber as formatNumberUtil } from '@/helpers/numberFormatting';
 /* ---------------------------------- */
 
 interface KpiChartProps {
+    title?: string;
     data?: {
         [key: string]: string | number | undefined;
     }[];
@@ -23,6 +24,7 @@ interface KpiChartProps {
 /* ---------------------------------- */
 
 const KpiChart: React.FC<KpiChartProps> = ({
+    title,
     data: providedData = [],
     kpiConfig,
     queryName,
@@ -51,8 +53,6 @@ const KpiChart: React.FC<KpiChartProps> = ({
     useEffect(() => {
         setCurrentValue(extractedValue);
     }, [extractedValue]);
-
-    const title = (bexData as any)?.metadata?.description;
 
     /* ---------------------------------- */
     /* Helpers */
@@ -273,9 +273,9 @@ const KpiChart: React.FC<KpiChartProps> = ({
             disableHoverListener={!hasDescription}
         >
             <div className="h-full w-full rounded-xl p-4 flex flex-col" style={backgroundStyle}>
-                {kpiConfig.showTitle !== false && (
-                    <h3 className="mb-4 font-bold">{title}</h3>
-                )}
+
+                <h3 className="mb-4 font-bold">{title}</h3>
+
                 <div className="flex-1 flex items-center justify-center">
                     {renderers[kpiConfig.kpiType || 'number']()}
                 </div>

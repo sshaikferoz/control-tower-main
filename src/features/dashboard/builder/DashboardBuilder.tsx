@@ -38,7 +38,6 @@ import MultiChart from '@/widgets/MultiChart';
 import MultiChartBex from '@/widgets/MultiChartBex';
 import FilterWidget from '@/widgets/FilterWidget';
 import ListenerWidget from '@/widgets/ListenerWidget';
-import GaugeChart from '@/widgets/GaugeChart';
 import BlankWidget from '@/widgets/blank-widget/BlankWidget';
 import { getDefaultWidgetProps, getDefaultWidgetSize } from '../config/widgetDefaultProps';
 import { ChartWidgetConfig } from '@/widgets/chart/multi-chart/ChartConfig.types';
@@ -71,7 +70,6 @@ const widgetMapping: Record<string, React.ComponentType<any>> = {
     'multi-chart-bex': MultiChartBex,
     'filter-widget': FilterWidget,
     'listener-widget': ListenerWidget,
-    'gauge-chart': GaugeChart,
     'multi-metric': MultiMetric,
     'blank-widget': BlankWidget,
     'kpi-chart': KpiChart,
