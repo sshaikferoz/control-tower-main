@@ -20,7 +20,7 @@ import LaunchIcon from '@mui/icons-material/Launch';
 import RGL, { WidthProvider } from 'react-grid-layout';
 import MyContractsIcon from '@/assets/MyContractsIcon';
 import { DashboardSectionProps } from '@/types/dashboard';
-import { LazyWidgetContent } from '@/components/widgets/LazyWidgetContent';
+import { LazyWidgetContent } from '@/widgets/LazyWidgetContent';
 import { WidgetDetailsDialog } from '@/components/dialogs/WidgetDetailsDialog';
 import { DataManager } from '@/services/DataManager';
 import { processWidgetMappings, fetchAndTransformMultiChartData } from '@/helpers/transformHelpers';
@@ -549,32 +549,42 @@ export const DashboardSection: React.FC<ExtendedDashboardSectionProps> = ({
                                 onClick={(e) => handleWidgetClick(e, widget)}
                             >
                                 {/* Action buttons for announcements */}
-                                {props.showdescription && (
-                                    <div className="absolute top-2 right-2 z-50 flex space-x-1">
-                                        <Tooltip
-                                            title={widget.description || 'No description available'}
-                                            enterDelay={0}
-                                            leaveDelay={0}
-                                            placement="top"
-                                            arrow
-                                        >
-                                            <IconButton
-                                                onClick={(e) => handleInfoClick(e, widget)}
-                                                size="small"
-                                                data-action-button="true"
-                                                sx={{
-                                                    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-                                                    color: 'white',
-                                                    '&:hover': {
-                                                        backgroundColor: 'rgba(255, 255, 255, 0.3)',
-                                                    },
-                                                }}
+                                {(() => {
+                                    // Check for showInfo in multiple locations
+                                    const targetReport =
+                                        widget.props?.targetReport ||
+                                        widget.fieldMappings?.targetReport ||
+                                        section.fieldMappings?.[widget.id]?.targetReport;
+                                    const showInfo = targetReport?.showInfo || props.showdescription;
+                                    const description = targetReport?.description || widget.description || 'No description available';
+
+                                    return showInfo ? (
+                                        <div className="absolute top-2 right-2 z-50 flex space-x-1">
+                                            <Tooltip
+                                                title={description}
+                                                enterDelay={0}
+                                                leaveDelay={0}
+                                                placement="top"
+                                                arrow
                                             >
-                                                <InfoIcon sx={{ fontSize: 16 }} />
-                                            </IconButton>
-                                        </Tooltip>
-                                    </div>
-                                )}
+                                                <IconButton
+                                                    onClick={(e) => handleInfoClick(e, widget)}
+                                                    size="small"
+                                                    data-action-button="true"
+                                                    sx={{
+                                                        backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                                                        color: 'white',
+                                                        '&:hover': {
+                                                            backgroundColor: 'rgba(255, 255, 255, 0.3)',
+                                                        },
+                                                    }}
+                                                >
+                                                    <InfoIcon sx={{ fontSize: 16 }} />
+                                                </IconButton>
+                                            </Tooltip>
+                                        </div>
+                                    ) : null;
+                                })()}
 
                                 <LazyWidgetContent
                                     widget={widget}
@@ -595,6 +605,8 @@ export const DashboardSection: React.FC<ExtendedDashboardSectionProps> = ({
                         rowHeight={80}
                         isResizable={false}
                         isDraggable={false}
+                        allowOverlap={true}
+                        resizeHandles={[]}
                     >
                         {gridWidgets.map((widget: any) => {
                             const Component = widgetMapping[widget.name];
@@ -627,38 +639,48 @@ export const DashboardSection: React.FC<ExtendedDashboardSectionProps> = ({
                                     key={widget.id}
                                     className={getWidgetClasses(
                                         widget.id,
-                                        'relative rounded-lg bg-transparent shadow-md transition-shadow duration-200 hover:shadow-lg'
+                                        'relative rounded-lg bg-transparent transition-shadow duration-200'
                                     )}
                                     data-widget-id={widget.id}
                                     onClick={(e) => handleWidgetClick(e, widget)}
                                 >
                                     {/* Action buttons overlay */}
-                                    {props.showdescription && (
-                                        <div className="absolute top-2 right-2 z-50 flex space-x-1">
-                                            <Tooltip
-                                                title={widget.description || 'No description available'}
-                                                enterDelay={0}
-                                                leaveDelay={0}
-                                                placement="top"
-                                                arrow
-                                            >
-                                                <IconButton
-                                                    onClick={(e) => handleInfoClick(e, widget)}
-                                                    size="small"
-                                                    data-action-button="true"
-                                                    sx={{
-                                                        backgroundColor: 'rgba(255, 255, 255, 0.2)',
-                                                        color: 'white',
-                                                        '&:hover': {
-                                                            backgroundColor: 'rgba(255, 255, 255, 0.3)',
-                                                        },
-                                                    }}
+                                    {(() => {
+                                        // Check for showInfo in multiple locations
+                                        const targetReport =
+                                            widget.props?.targetReport ||
+                                            widget.fieldMappings?.targetReport ||
+                                            section.fieldMappings?.[widget.id]?.targetReport;
+                                        const showInfo = targetReport?.showInfo || props.showdescription;
+                                        const description = targetReport?.description || widget.description || 'No description available';
+
+                                        return showInfo ? (
+                                            <div className="absolute top-2 right-2 flex space-x-1 z-1000">
+                                                <Tooltip
+                                                    title={description}
+                                                    enterDelay={0}
+                                                    leaveDelay={0}
+                                                    placement="top"
+                                                    arrow
                                                 >
-                                                    <InfoIcon sx={{ fontSize: 16 }} />
-                                                </IconButton>
-                                            </Tooltip>
-                                        </div>
-                                    )}
+                                                    <IconButton
+                                                        onClick={(e) => handleInfoClick(e, widget)}
+                                                        size="small"
+                                                        data-action-button="true"
+                                                        sx={{
+                                                            backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                                                            color: 'white',
+                                                            '&:hover': {
+                                                                backgroundColor: 'rgba(255, 255, 255, 0.3)',
+                                                            },
+                                                        }}
+                                                    >
+                                                        <InfoIcon sx={{ fontSize: 16 }} />
+                                                    </IconButton>
+                                                </Tooltip>
+                                            </div>
+                                        ) : null;
+                                    })()}
 
                                     {/* Widget content - now with click handling */}
                                     <LazyWidgetContent
@@ -679,8 +701,19 @@ export const DashboardSection: React.FC<ExtendedDashboardSectionProps> = ({
                 open={widgetDetailsDialog.open}
                 onClose={handleWidgetDetailsClose}
                 widget={widgetDetailsDialog.widget as any}
-                targetReport={(widgetDetailsDialog.widget as any)?.fieldMappings?.targetReport || undefined}
-                description={(widgetDetailsDialog.widget as any)?.description || ''}
+                targetReport={
+                    (widgetDetailsDialog.widget as any)?.props?.targetReport ||
+                    (widgetDetailsDialog.widget as any)?.fieldMappings?.targetReport ||
+                    section.fieldMappings?.[(widgetDetailsDialog.widget as any)?.id]?.targetReport ||
+                    undefined
+                }
+                description={
+                    (widgetDetailsDialog.widget as any)?.props?.targetReport?.description ||
+                    (widgetDetailsDialog.widget as any)?.fieldMappings?.targetReport?.description ||
+                    section.fieldMappings?.[(widgetDetailsDialog.widget as any)?.id]?.targetReport?.description ||
+                    (widgetDetailsDialog.widget as any)?.description ||
+                    ''
+                }
             />
         </div>
     );

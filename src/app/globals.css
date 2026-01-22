@@ -1,10 +1,13 @@
 @import 'tailwindcss';
 @import 'gridstack/dist/gridstack.min.css';
+@import 'primereact/resources/primereact.min.css';
 @import 'primereact/resources/themes/lara-light-cyan/theme.css';
 @import 'devextreme/dist/css/dx.light.css';
 @import 'react-resizable/css/styles.css';
 
-:root {
+/* Light theme (default) */
+:root,
+:root[data-theme='light'] {
   --background: #ffffff;
   --foreground: #171717;
   --primary1: #83bd01;
@@ -15,9 +18,9 @@
   --font-manifa: 'Manifa2', sans-serif;
 }
 
-/* Dark mode variables */
-:root.dark {
-  --background: #0a0a0a;
+/* Dark theme */
+:root[data-theme='dark'] {
+  /* --background: #0a0a0a; */
   --foreground: #ededed;
   --primary1: #9dd115;
   --primary2: #a396ff;
@@ -26,10 +29,10 @@
   --scrollbar-track: #1a1a1a;
 }
 
-/* Fallback for system preference */
+/* Fallback for system preference (only if no data-theme is set) */
 @media (prefers-color-scheme: dark) {
-  :root:not(.light) {
-    --background: #0a0a0a;
+  :root:not([data-theme]) {
+    --background: none;
     --foreground: #ededed;
     --primary1: #9dd115;
     --primary2: #a396ff;

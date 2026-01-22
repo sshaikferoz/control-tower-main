@@ -26,6 +26,8 @@ export interface UIConfiguration {
     search: {
         enabled: boolean;
         placeholder: string;
+        // Search mode: basic keyword search vs AI-powered semantic search
+        mode?: 'basic' | 'advanced';
     };
     branding: {
         logoUrl: string;
@@ -73,6 +75,7 @@ export const defaultConfiguration: UIConfiguration = {
     search: {
         enabled: false,
         placeholder: 'Search My Contract, Spend, Notification, Localization, KPI',
+        mode: 'advanced',
     },
     branding: {
         logoUrl: '',

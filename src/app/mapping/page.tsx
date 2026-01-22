@@ -5,21 +5,19 @@ import React, { useEffect, useMemo, useState } from 'react';
 import RGL, { WidthProvider, Layout } from 'react-grid-layout';
 import 'react-grid-layout/css/styles.css';
 import 'react-resizable/css/styles.css';
-import MultiMetrics from '@/components/widgets/MultiMetrics';
-import MultiMetricWidget from '@/components/widgets/MultiMetricWidget';
-import PieMetric from '@/components/widgets/PieMetric';
-import SimpleMetric from '@/components/widgets/SimpleMetric';
-import SimpleMetricDate from '@/components/widgets/SimpleMetricDate';
-import SingleLineChart from '@/components/widgets/SingleLineChart';
-import TableMetric from '@/components/widgets/TableMetric';
-import BarMetric from '@/components/widgets/BarMetric';
-import StackedBarChart from '@/components/widgets/StackedBarChart';
-import OrdersLineChart from '@/components/widgets/OrdersLineChart';
-import AnnouncementWidget from '@/components/widgets/Announcement1';
-import DualLineChart from '@/components/widgets/DualLineChart';
-import PieChartWithTotal from '@/components/widgets/PieChartWithTotal';
-import QuadrantMetrics from '@/components/widgets/QuadrantMetrics';
-import MultiChart from '@/components/widgets/MultiChart';
+import PieMetric from '@/widgets/PieMetric';
+import SimpleMetric from '@/widgets/SimpleMetric';
+import SimpleMetricDate from '@/widgets/SimpleMetricDate';
+import SingleLineChart from '@/widgets/SingleLineChart';
+import TableMetric from '@/widgets/TableMetric';
+import BarMetric from '@/widgets/BarMetric';
+import StackedBarChart from '@/widgets/StackedBarChart';
+import OrdersLineChart from '@/widgets/OrdersLineChart';
+import AnnouncementWidget from '@/widgets/Announcement1';
+import DualLineChart from '@/widgets/DualLineChart';
+import PieChartWithTotal from '@/widgets/PieChartWithTotal';
+import QuadrantMetrics from '@/widgets/QuadrantMetrics';
+import MultiChart from '@/widgets/MultiChart';
 import { Button } from 'primereact/button';
 import { Splitter, SplitterPanel } from 'primereact/splitter';
 import { parseXMLToJson } from '@/lib/bexQueryXmlToJson';
@@ -77,11 +75,11 @@ import {
     WidgetMappingConfig,
     MultiMetricItemMapping,
 } from '@/helpers/types';
-import LoansAppTray from '@/components/widgets/LoansAppTray';
+import LoansAppTray from '@/widgets/LoansAppTray';
 import mirageServer from '@/lib/mirage/mirageServer';
 import { sapODataService, LayoutData } from '@/services/sapODataService';
-import GeoSpendMapWidget from '@/components/widgets/GeoSpendMapWidget';
-import NewsFeed from '@/components/widgets/NewsFeed';
+import GeoSpendMapWidget from '@/widgets/GeoSpendMapWidget';
+import NewsFeed from '@/widgets/NewsFeed';
 import { get } from 'http';
 import { title } from 'process';
 import { LoadingScreen } from '@/components/ui/LoadingScreen';
@@ -89,12 +87,12 @@ import { ErrorScreen } from '@/components/ui/ErrorScreen';
 import { useAdminCheck } from '@/hooks/auth/useAdminCheck';
 import { useURLParams } from '@/hooks/ui/useURLParams';
 import * as MUIIcons from '@mui/icons-material';
-import PieChartComponent from '@/components/widgets/PieChart';
-import StackedColumn from '@/components/widgets/ColumnChart';
-import PredictionChart from '@/components/widgets/Prediction';
-import RadarChartComponent from '@/components/widgets/RadarChart';
-import FilterWidget from '@/components/widgets/FilterWidget';
-import ListenerWidget from '@/components/widgets/ListenerWidget';
+import PieChartComponent from '@/widgets/PieChart';
+import StackedColumn from '@/widgets/ColumnChart';
+import PredictionChart from '@/widgets/Prediction';
+import RadarChartComponent from '@/widgets/RadarChart';
+import FilterWidget from '@/widgets/FilterWidget';
+import ListenerWidget from '@/widgets/ListenerWidget';
 import { FormatConfigUI } from '@/components/FormatConfigUI';
 import { applyValueFormat } from '@/helpers/formatConfig';
 import type { FormatConfig } from '@/helpers/formatConfig';
@@ -151,9 +149,7 @@ interface TableColumn {
 if (process.env.NODE_ENV === 'development') mirageServer();
 
 const widgetMapping: Record<string, React.ComponentType<any>> = {
-    'two-metrics': MultiMetrics,
     'two-metrics-piechart': PieMetric,
-    'multi-metric': MultiMetricWidget,
     'one-metric': SimpleMetric,
     'one-metric-date': SimpleMetricDate,
     'two-metrics-linechart': SingleLineChart,

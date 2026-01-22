@@ -116,6 +116,7 @@ export interface TargetReportConfig {
     technicalId: string;
     name: string;
     description: string;
+    showInfo?: boolean;
 }
 
 export interface WidgetMappingConfig {
@@ -172,7 +173,8 @@ export type WidgetTypes =
     | 'radar-chart'
     | 'multi-chart'
     | 'filter-widget'
-    | 'listener-widget';
+    | 'listener-widget'
+    | 'blank-widget';
 
 // Mapping configurations for each widget type
 export const widgetConfigFields: Record<

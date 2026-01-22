@@ -618,7 +618,8 @@ const mirageServer = (environment = 'development') => {
                         return new Response(200, { 'content-typ': 'text/xml' }, otherQueries[query]);
                     case 'YSCM_EXPEDITING_REPORT_DETAIL':
                         return new Response(200, { 'content-typ': 'text/xml' }, otherQueries[query]);
-
+                    case 'YSCM_SUST_SUPP':
+                        return new Response(200, { 'content-typ': 'text/xml' }, otherQueries[query]);
                     default:
                         return new Response(200, { 'content-typ': 'text/xml' }, '');
                 }

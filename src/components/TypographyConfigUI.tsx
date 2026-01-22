@@ -80,10 +80,10 @@ export const TypographyConfigUI: React.FC<TypographyConfigUIProps> = ({
 
     return (
         <Box sx={{ color: 'white' }}>
-            <Typography variant="h6" sx={{ mb: 1 }}>
+            <Typography variant="subtitle2" sx={{ mb: 0.5, fontWeight: 600, fontSize: '0.75rem' }}>
                 Typography Settings
             </Typography>
-            <Typography variant="body2" sx={{ mb: 2, color: '#aaa' }}>
+            <Typography variant="caption" sx={{ mb: 1.5, color: 'rgba(255, 255, 255, 0.7)', fontSize: '0.65rem', display: 'block' }}>
                 Fine-tune typography for each element. Changes instantly affect your widget.
             </Typography>
 
@@ -98,21 +98,26 @@ export const TypographyConfigUI: React.FC<TypographyConfigUIProps> = ({
                         sx={{
                             background: 'rgba(255,255,255,0.05)',
                             color: 'white',
-                            mb: 1.5,
+                            mb: 1,
                             borderRadius: 2,
                             '&:before': { display: 'none' },
                         }}
                     >
                         <AccordionSummary
-                            expandIcon={<ExpandMoreIcon sx={{ color: 'white' }} />}
+                            expandIcon={<ExpandMoreIcon sx={{ color: 'white', fontSize: '1rem' }} />}
                             sx={{
-                                px: 2,
+                                px: 1.5,
+                                py: 0.5,
                                 borderRadius: 2,
+                                minHeight: '36px',
                                 '&:hover': { backgroundColor: 'rgba(255,255,255,0.08)' },
+                                '& .MuiAccordionSummary-content': {
+                                    margin: '8px 0',
+                                },
                             }}
                         >
                             <Box display="flex" alignItems="center" justifyContent="space-between" width="100%">
-                                <Typography sx={{ textTransform: 'capitalize', fontWeight: 500 }}>
+                                <Typography sx={{ textTransform: 'capitalize', fontWeight: 500, fontSize: '0.7rem' }}>
                                     {type} Typography
                                 </Typography>
                                 {isConfigured && (
@@ -121,9 +126,10 @@ export const TypographyConfigUI: React.FC<TypographyConfigUIProps> = ({
                                         sx={{
                                             color: '#84BD00',
                                             backgroundColor: '#84BD0020',
-                                            px: 1,
-                                            py: 0.3,
+                                            px: 0.75,
+                                            py: 0.25,
                                             borderRadius: 1,
+                                            fontSize: '0.6rem',
                                         }}
                                     >
                                         Configured
@@ -132,12 +138,12 @@ export const TypographyConfigUI: React.FC<TypographyConfigUIProps> = ({
                             </Box>
                         </AccordionSummary>
 
-                        <AccordionDetails sx={{ px: 2, pb: 2 }}>
+                        <AccordionDetails sx={{ px: 1.5, pb: 1.5 }}>
                             {/* Preview */}
                             <Box
                                 sx={{
-                                    mb: 2,
-                                    p: 1.5,
+                                    mb: 1.5,
+                                    p: 1,
                                     borderRadius: 1,
                                     backgroundColor: 'rgba(255,255,255,0.08)',
                                     textAlign: config.textAlign || 'left',
@@ -154,23 +160,27 @@ export const TypographyConfigUI: React.FC<TypographyConfigUIProps> = ({
                                 {getPreview(type)}
                             </Box>
 
-                            <Grid container spacing={2}>
+                            <Grid container spacing={1.5}>
                                 {/* Font Family */}
                                 <Grid item xs={12}>
                                     <FormControl fullWidth size="small">
-                                        <InputLabel sx={{ color: 'white' }}>Font Family</InputLabel>
+                                        <InputLabel sx={{ color: 'white', fontSize: '0.7rem' }}>Font Family</InputLabel>
                                         <Select
                                             value={config.fontFamily || ''}
                                             label="Font Family"
                                             onChange={(e) => handleChange(type, 'fontFamily', e.target.value)}
                                             sx={{
                                                 color: 'white',
+                                                fontSize: '0.7rem',
                                                 '& .MuiOutlinedInput-notchedOutline': { borderColor: 'white' },
+                                                '& .MuiSelect-select': {
+                                                    fontSize: '0.7rem',
+                                                },
                                             }}
                                         >
-                                            <MenuItem value="">Default</MenuItem>
+                                            <MenuItem value="" sx={{ fontSize: '0.7rem' }}>Default</MenuItem>
                                             {FONT_FAMILIES.map((f) => (
-                                                <MenuItem key={f} value={f} style={{ fontFamily: f }}>
+                                                <MenuItem key={f} value={f} style={{ fontFamily: f }} sx={{ fontSize: '0.7rem' }}>
                                                     {f.split(',')[0]}
                                                 </MenuItem>
                                             ))}
@@ -181,19 +191,23 @@ export const TypographyConfigUI: React.FC<TypographyConfigUIProps> = ({
                                 {/* Size + Weight */}
                                 <Grid item xs={6}>
                                     <FormControl fullWidth size="small">
-                                        <InputLabel sx={{ color: 'white' }}>Font Size</InputLabel>
+                                        <InputLabel sx={{ color: 'white', fontSize: '0.7rem' }}>Font Size</InputLabel>
                                         <Select
                                             value={config.fontSize || ''}
                                             label="Font Size"
                                             onChange={(e) => handleChange(type, 'fontSize', e.target.value)}
                                             sx={{
                                                 color: 'white',
+                                                fontSize: '0.7rem',
                                                 '& .MuiOutlinedInput-notchedOutline': { borderColor: 'white' },
+                                                '& .MuiSelect-select': {
+                                                    fontSize: '0.7rem',
+                                                },
                                             }}
                                         >
-                                            <MenuItem value="">Default</MenuItem>
+                                            <MenuItem value="" sx={{ fontSize: '0.7rem' }}>Default</MenuItem>
                                             {FONT_SIZES.map((size) => (
-                                                <MenuItem key={size} value={size}>
+                                                <MenuItem key={size} value={size} sx={{ fontSize: '0.7rem' }}>
                                                     {size}
                                                 </MenuItem>
                                             ))}
@@ -203,19 +217,23 @@ export const TypographyConfigUI: React.FC<TypographyConfigUIProps> = ({
 
                                 <Grid item xs={6}>
                                     <FormControl fullWidth size="small">
-                                        <InputLabel sx={{ color: 'white' }}>Font Weight</InputLabel>
+                                        <InputLabel sx={{ color: 'white', fontSize: '0.7rem' }}>Font Weight</InputLabel>
                                         <Select
                                             value={config.fontWeight || ''}
                                             label="Font Weight"
                                             onChange={(e) => handleChange(type, 'fontWeight', e.target.value)}
                                             sx={{
                                                 color: 'white',
+                                                fontSize: '0.7rem',
                                                 '& .MuiOutlinedInput-notchedOutline': { borderColor: 'white' },
+                                                '& .MuiSelect-select': {
+                                                    fontSize: '0.7rem',
+                                                },
                                             }}
                                         >
-                                            <MenuItem value="">Default</MenuItem>
+                                            <MenuItem value="" sx={{ fontSize: '0.7rem' }}>Default</MenuItem>
                                             {FONT_WEIGHTS.map((w) => (
-                                                <MenuItem key={w} value={w}>
+                                                <MenuItem key={w} value={w} sx={{ fontSize: '0.7rem' }}>
                                                     {w}
                                                 </MenuItem>
                                             ))}
@@ -233,9 +251,10 @@ export const TypographyConfigUI: React.FC<TypographyConfigUIProps> = ({
                                         value={config.color || '#ffffff'}
                                         onChange={(e) => handleChange(type, 'color', e.target.value)}
                                         sx={{
-                                            '& input': { height: '40px', cursor: 'pointer' },
-                                            label: { color: 'white' },
+                                            '& input': { height: '36px', cursor: 'pointer' },
+                                            label: { color: 'white', fontSize: '0.7rem' },
                                             '& .MuiOutlinedInput-root': {
+                                                fontSize: '0.7rem',
                                                 '& fieldset': { borderColor: 'white' },
                                                 '&:hover fieldset': { borderColor: 'white' },
                                             },
@@ -246,7 +265,7 @@ export const TypographyConfigUI: React.FC<TypographyConfigUIProps> = ({
                                 {/* Alignment buttons */}
                                 <Grid item xs={12}>
                                     <Box display="flex" alignItems="center" justifyContent="space-between">
-                                        <Typography variant="body2" sx={{ color: '#aaa' }}>
+                                        <Typography variant="caption" sx={{ color: 'rgba(255, 255, 255, 0.7)', fontSize: '0.7rem' }}>
                                             Text Align
                                         </Typography>
                                         <Box>
@@ -256,9 +275,10 @@ export const TypographyConfigUI: React.FC<TypographyConfigUIProps> = ({
                                                     onClick={() => handleChange(type, 'textAlign', 'left')}
                                                     sx={{
                                                         color: config.textAlign === 'left' ? '#84BD00' : 'white',
+                                                        padding: '4px',
                                                     }}
                                                 >
-                                                    <FormatAlignLeftIcon />
+                                                    <FormatAlignLeftIcon sx={{ fontSize: '0.9rem' }} />
                                                 </IconButton>
                                             </Tooltip>
                                             <Tooltip title="Center">
@@ -267,9 +287,10 @@ export const TypographyConfigUI: React.FC<TypographyConfigUIProps> = ({
                                                     onClick={() => handleChange(type, 'textAlign', 'center')}
                                                     sx={{
                                                         color: config.textAlign === 'center' ? '#84BD00' : 'white',
+                                                        padding: '4px',
                                                     }}
                                                 >
-                                                    <FormatAlignCenterIcon />
+                                                    <FormatAlignCenterIcon sx={{ fontSize: '0.9rem' }} />
                                                 </IconButton>
                                             </Tooltip>
                                             <Tooltip title="Right">
@@ -278,9 +299,10 @@ export const TypographyConfigUI: React.FC<TypographyConfigUIProps> = ({
                                                     onClick={() => handleChange(type, 'textAlign', 'right')}
                                                     sx={{
                                                         color: config.textAlign === 'right' ? '#84BD00' : 'white',
+                                                        padding: '4px',
                                                     }}
                                                 >
-                                                    <FormatAlignRightIcon />
+                                                    <FormatAlignRightIcon sx={{ fontSize: '0.9rem' }} />
                                                 </IconButton>
                                             </Tooltip>
                                         </Box>
@@ -297,9 +319,12 @@ export const TypographyConfigUI: React.FC<TypographyConfigUIProps> = ({
                                         onChange={(e) => handleChange(type, 'letterSpacing', e.target.value)}
                                         placeholder="e.g., 1px"
                                         sx={{
-                                            input: { color: 'white' },
-                                            label: { color: 'white' },
-                                            '& .MuiOutlinedInput-root fieldset': { borderColor: 'white' },
+                                            input: { color: 'white', fontSize: '0.7rem' },
+                                            label: { color: 'white', fontSize: '0.7rem' },
+                                            '& .MuiOutlinedInput-root': {
+                                                fontSize: '0.7rem',
+                                                '& fieldset': { borderColor: 'white' },
+                                            },
                                         }}
                                     />
                                 </Grid>
@@ -312,9 +337,12 @@ export const TypographyConfigUI: React.FC<TypographyConfigUIProps> = ({
                                         onChange={(e) => handleChange(type, 'lineHeight', e.target.value)}
                                         placeholder="e.g., 1.5"
                                         sx={{
-                                            input: { color: 'white' },
-                                            label: { color: 'white' },
-                                            '& .MuiOutlinedInput-root fieldset': { borderColor: 'white' },
+                                            input: { color: 'white', fontSize: '0.7rem' },
+                                            label: { color: 'white', fontSize: '0.7rem' },
+                                            '& .MuiOutlinedInput-root': {
+                                                fontSize: '0.7rem',
+                                                '& fieldset': { borderColor: 'white' },
+                                            },
                                         }}
                                     />
                                 </Grid>
@@ -323,18 +351,20 @@ export const TypographyConfigUI: React.FC<TypographyConfigUIProps> = ({
                             {/* Reset */}
                             {isConfigured && (
                                 <>
-                                    <Divider sx={{ my: 2, borderColor: 'rgba(255,255,255,0.1)' }} />
+                                    <Divider sx={{ my: 1.5, borderColor: 'rgba(255,255,255,0.1)' }} />
                                     <Box display="flex" justifyContent="flex-end">
                                         <Tooltip title="Reset to default">
                                             <IconButton
+                                                size="small"
                                                 onClick={() => handleReset(type)}
                                                 sx={{
                                                     color: '#E1553F',
                                                     transition: '0.3s',
+                                                    padding: '4px',
                                                     '&:hover': { backgroundColor: '#E1553F20' },
                                                 }}
                                             >
-                                                <RestartAltIcon />
+                                                <RestartAltIcon sx={{ fontSize: '0.9rem' }} />
                                             </IconButton>
                                         </Tooltip>
                                     </Box>

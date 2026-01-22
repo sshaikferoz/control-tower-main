@@ -39457,6 +39457,12 @@ DAMMAM
 </asx:abap>
 
 `;
+
+
+const YCDEXDB_UNDER_PROC_TOP5_004 = `<?xml version="1.0" encoding="UTF-8" ?><asx:abap xmlns:asx="http://www.sap.com/abapxml" version="1.0"> <asx:error>Invalid Variable Values</asx:error></asx:abap>
+`
+
+const YSCM_SUST_SUPP = `<?xml version="1.0" encoding="UTF-8" ?><asx:abap xmlns:asx="http://www.sap.com/abapxml" version="1.0"> <asx:values><metadata><infoprovider>ZCSFORM</infoprovider><query>YSCM_SUST_SUPP</query><description>Sustainability Avg Score PSCCT</description><author>SID_BWSCM_01</author><changed_by>SID_BWSCM_01</changed_by><changed_on>12/30/2025 13:56:54</changed_on><current_user>SID_BWSCM_01</current_user><load_date></load_date></metadata><META><ZBW_QUERY_OUTPUT_METADATA type ="CHA" ><FIELDNAME>XSLT_4ZCSFORM-TEXT_FIELD_0</FIELDNAME><OUTPUTLEN>000220</OUTPUTLEN><DATATYPE>CHAR</DATATYPE><SCRTEXT_L>Title</SCRTEXT_L><AXIS_TYPE>ROW</AXIS_TYPE><TYPE>CHA</TYPE><DISPLAY_STYLE>2</DISPLAY_STYLE></ZBW_QUERY_OUTPUT_METADATA><ZBW_QUERY_OUTPUT_METADATA type ="KF" ><FIELDNAME>VALUE001</FIELDNAME><OUTPUTLEN>30</OUTPUTLEN><DATATYPE>DEC</DATATYPE><SCRTEXT_L>Score</SCRTEXT_L><AXIS_TYPE>COLUMN</AXIS_TYPE><TYPE>KF</TYPE><DISPLAY_STYLE>1</DISPLAY_STYLE><ELEM>00O2TFPL326GW73E3PNNV4J0J</ELEM></ZBW_QUERY_OUTPUT_METADATA></META> <PAGING_INFO><RECORD_NO>6 </RECORD_NO><TOTAL_REC>6 </TOTAL_REC><PAGE_NO>1 </PAGE_NO></PAGING_INFO><OUTPUT><item><XSLT_4ZCSFORM-TEXT_FIELD_0>Environmental</XSLT_4ZCSFORM-TEXT_FIELD_0><VALUE001>61.00</VALUE001></item><item><XSLT_4ZCSFORM-TEXT_FIELD_0>Governance</XSLT_4ZCSFORM-TEXT_FIELD_0><VALUE001>62.00</VALUE001></item><item><XSLT_4ZCSFORM-TEXT_FIELD_0>Industry Avg Score</XSLT_4ZCSFORM-TEXT_FIELD_0><VALUE001>61.00</VALUE001></item><item><XSLT_4ZCSFORM-TEXT_FIELD_0>Saudi Aramco Avg Score</XSLT_4ZCSFORM-TEXT_FIELD_0><VALUE001>64.00</VALUE001></item><item><XSLT_4ZCSFORM-TEXT_FIELD_0>Social</XSLT_4ZCSFORM-TEXT_FIELD_0><VALUE001>69.00</VALUE001></item><item><XSLT_4ZCSFORM-TEXT_FIELD_0>Overall Result</XSLT_4ZCSFORM-TEXT_FIELD_0><VALUE001>317.00</VALUE001></item></OUTPUT></asx:values></asx:abap>`
 // eslint-disable-next-line import/no-anonymous-default-export
 export default {
     YSCM_CT_TREND_POTEN_SLOW,
@@ -39510,4 +39516,5 @@ export default {
     YSCM_INV_PRED_1,
     YSCM_EXPEDITING_REPORT_DETAIL,
     YSCM_EXT_FORNT_LINE_OTD_REPORT,
+    YSCM_SUST_SUPP
 };

@@ -2,6 +2,8 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
+import Fuse from 'fuse.js';
+import type { FuseResultWithScore } from 'fuse.js';
 import { ProgressSpinner } from 'primereact/progressspinner';
 import { Button } from 'primereact/button';
 import { Toast } from 'primereact/toast';
@@ -139,6 +141,172 @@ export default function Home({
         } finally {
             setConfigurationLoading(false);
         }
+    };
+
+    // Safely flatten any widget/section metadata/value object into a single searchable string
+    const flattenMetadata = (value: any, depth = 0): string => {
+        if (value == null) return '';
+
+        // Avoid going too deep or into huge structures unexpectedly
+        if (depth > 4) return '';
+
+        const valueType = typeof value;
+
+        if (valueType === 'string' || valueType === 'number' || valueType === 'boolean') {
+            return String(value);
+        }
+
+        if (Array.isArray(value)) {
+            return value.map((item) => flattenMetadata(item, depth + 1)).join(' ');
+        }
+
+        if (valueType === 'object') {
+            return Object.values(value)
+                .map((v) => flattenMetadata(v, depth + 1))
+                .join(' ');
+        }
+
+        return '';
+    };
+
+    // Perform a client-side Fuse.js search over current dashboard sections/widgets
+    const performLocalWidgetSearch = (query: string): SearchResult[] => {
+        if (!query || !dashboardData?.sections || dashboardData.sections.length === 0) {
+            return [];
+        }
+
+        type SearchEntity =
+            | {
+                kind: 'section';
+                section: any;
+            }
+            | {
+                kind: 'widget';
+                section: any;
+                widget: any;
+            };
+
+        const entities: SearchEntity[] = [];
+
+        // Initialize Fuse with the raw response objects for sections and widgets
+        dashboardData.sections.forEach((section) => {
+            entities.push({ kind: 'section', section });
+            section.widgets?.forEach((widget: any) => {
+                entities.push({ kind: 'widget', section, widget });
+            });
+        });
+
+        if (entities.length === 0) {
+            return [];
+        }
+
+        const fuse = new Fuse<SearchEntity, Fuse.FuseOptions<SearchEntity>>(entities, {
+            keys: [
+                // Section-level fields
+                'section.sectionName',
+                'section.originalSection.sectionName',
+                'section.originalSection.sectionDescription',
+                'section.originalSection.description',
+                // Widget-level fields
+                'widget.name',
+                'widget.props.title',
+                'widget.props.name',
+                'widget.props.customTitle',
+                'widget.description',
+                'widget.originalWidget.title',
+                'widget.originalWidget.name',
+                'widget.props.targetReport.description',
+            ],
+            includeScore: true,
+            threshold: 0.4,
+        });
+
+        const fuseResults = fuse.search(query).slice(0, 10) as FuseResultWithScore<SearchEntity>[];
+
+        return fuseResults.map((res) => {
+            const { item, score } = res;
+
+            if (item.kind === 'section') {
+                const section = item.section;
+                const sectionName = section.sectionName || section.originalSection?.sectionName || '';
+                const sectionDescription =
+                    section.originalSection?.sectionDescription || section.originalSection?.description || '';
+                const sectionText = `${sectionName} ${sectionDescription}`.trim();
+
+                return {
+                    metadata: {
+                        TabId: tabId,
+                        TabDescription: '',
+                        SectionId: section.id || section.originalSection?.id || '',
+                        SectionName: sectionName,
+                        SectionDescription: sectionDescription,
+                        WidgetId: '',
+                        WidgetType: '',
+                        TechnicalName: '',
+                        WidgetDescription: '',
+                    },
+                    match_text: sectionText,
+                    level: 'section',
+                    ai_title: sectionName || 'Section match',
+                    ai_summary: sectionDescription || `Matched section "${sectionName}" for "${query}".`,
+                    // Fuse score is 0 (best) to 1 (worst); invert so higher is better.
+                    score: typeof score === 'number' ? 1 - score : 0,
+                } as SearchResult;
+            }
+
+            // Widget-level result
+            const section = item.section;
+            const widget = item.widget;
+
+            const sectionName = section.sectionName || section.originalSection?.sectionName || '';
+            const sectionDescription =
+                section.originalSection?.sectionDescription || section.originalSection?.description || '';
+
+            const widgetName = widget.name || '';
+            const widgetTitle =
+                widget.props?.title ||
+                widget.props?.name ||
+                widget.description ||
+                widget.originalWidget?.title ||
+                widget.originalWidget?.name ||
+                widgetName.replace(/-/g, ' ');
+            const widgetDescription =
+                widget.props?.targetReport?.description ||
+                section.fieldMappings?.[widget.id]?.targetReport?.description ||
+                widget.description ||
+                '';
+
+            const mapping = section.fieldMappings?.[widget.id];
+            const technicalName = mapping?.reportName || mapping?.targetReport?.technicalId || '';
+
+            // Flatten all widget props & mapping metadata for match_text/summary (not for Fuse indexing)
+            const propsText = flattenMetadata(widget.props || {});
+            const mappingText = flattenMetadata(mapping || {});
+
+            const combinedText = `${widgetTitle} ${widgetDescription} ${widgetName} ${technicalName} ${propsText} ${mappingText}`.trim();
+
+            return {
+                metadata: {
+                    TabId: tabId,
+                    TabDescription: '',
+                    SectionId: section.id || section.originalSection?.id || '',
+                    SectionName: sectionName,
+                    SectionDescription: sectionDescription,
+                    WidgetId: widget.id,
+                    WidgetType: widgetName,
+                    TechnicalName: technicalName,
+                    WidgetDescription: widgetDescription || widgetTitle,
+                },
+                match_text: combinedText,
+                level: 'widget',
+                ai_title: widgetTitle || widgetName,
+                ai_summary:
+                    widgetDescription ||
+                    `Matched widget "${widgetTitle || widgetName}" in section "${sectionName}" for "${query}".`,
+                // Fuse score is 0 (best) to 1 (worst); invert so higher is better.
+                score: typeof score === 'number' ? 1 - score : 0,
+            } as SearchResult;
+        });
     };
 
     // Handle search selection for highlighting
@@ -427,8 +595,8 @@ export default function Home({
 
         const mappingUrl =
             process.env.NODE_ENV === 'development'
-                ? `/mapping?${sectionParams.toString()}`
-                : `${process.env.NEXT_PUBLIC_BSP_NAME}/mapping.html?${sectionParams.toString()}`;
+                ? `/mapping-new?${sectionParams.toString()}`
+                : `${process.env.NEXT_PUBLIC_BSP_NAME}/mapping-new.html?${sectionParams.toString()}`;
 
         window.location.href = mappingUrl;
     };
@@ -609,7 +777,9 @@ export default function Home({
                         configuration={configuration}
                         onOpenConfigDialog={handleOpenConfigDialog}
                         tabId={tabId}
-                        onSearchSelect={handleSearchSelect} // Pass search selection handler
+                        onSearchSelect={handleSearchSelect}
+                        // Provide local fuzzy search over current dashboard widgets/sections
+                        onLocalSearch={performLocalWidgetSearch}
                     />
 
                     {/* Removed the separate Announcement component since it's now integrated in the header */}

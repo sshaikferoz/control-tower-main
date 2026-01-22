@@ -40,7 +40,8 @@ interface DashboardHeaderProps {
   configuration?: UIConfiguration;
   onOpenConfigDialog?: () => void;
   tabId: any;
-  onSearchSelect?: (result: SearchResult | null) => void; // New prop for search selection
+  onSearchSelect?: (result: SearchResult | null) => void; // Search selection/highlighting
+  onLocalSearch?: (query: string) => SearchResult[]; // Local fuzzy search over widgets
 }
 
 export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
@@ -53,7 +54,8 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
   configuration,
   onOpenConfigDialog,
   tabId,
-  onSearchSelect, // New prop
+  onSearchSelect,
+  onLocalSearch,
 }) => {
   const [isChatOpen, setIsChatOpen] = useState(false);
 
@@ -92,7 +94,9 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
       <Header
         configuration={configuration}
         tabId={tabId}
-        onSearchSelect={onSearchSelect} // Pass the callback to Header
+        onSearchSelect={onSearchSelect}
+        // Provide optional local fuzzy search implementation
+        onLocalSearch={onLocalSearch}
       />
 
       {/* Chat Button - Only render if chatbot is enabled */}

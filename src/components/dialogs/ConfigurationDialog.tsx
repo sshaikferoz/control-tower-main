@@ -578,26 +578,84 @@ export const ConfigurationDialog: React.FC<ConfigurationDialogProps> = ({
                             </div>
 
                             {formData.search.enabled && (
-                                <div>
-                                    <label className="mb-2 block text-sm font-medium text-gray-300">
-                                        Search Placeholder
-                                    </label>
-                                    <input
-                                        type="text"
-                                        value={formData.search.placeholder}
-                                        disabled={isSaving || isResetting}
-                                        onChange={(e) =>
-                                            setFormData({
-                                                ...formData,
-                                                search: { ...formData.search, placeholder: e.target.value },
-                                            })
-                                        }
-                                        placeholder="Enter search placeholder text"
-                                        className="w-full rounded border border-[#3a5a8b] bg-[#2a4a7b] p-3 text-white outline-none focus:border-blue-500 disabled:opacity-50"
-                                    />
-                                    <small className="text-gray-400">
-                                        This text will appear in the search input field
-                                    </small>
+                                <div className="space-y-4">
+                                    <div>
+                                        <label className="mb-2 block text-sm font-medium text-gray-300">
+                                            Search Placeholder
+                                        </label>
+                                        <input
+                                            type="text"
+                                            value={formData.search.placeholder}
+                                            disabled={isSaving || isResetting}
+                                            onChange={(e) =>
+                                                setFormData({
+                                                    ...formData,
+                                                    search: { ...formData.search, placeholder: e.target.value },
+                                                })
+                                            }
+                                            placeholder="Enter search placeholder text"
+                                            className="w-full rounded border border-[#3a5a8b] bg-[#2a4a7b] p-3 text-white outline-none focus:border-blue-500 disabled:opacity-50"
+                                        />
+                                        <small className="text-gray-400">
+                                            This text will appear in the search input field
+                                        </small>
+                                    </div>
+
+                                    <div>
+                                        <label className="mb-2 block text-sm font-medium text-gray-300">
+                                            Search Type
+                                        </label>
+                                        <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+                                            <button
+                                                type="button"
+                                                disabled={isSaving || isResetting}
+                                                onClick={() =>
+                                                    setFormData({
+                                                        ...formData,
+                                                        search: { ...formData.search, mode: 'basic' },
+                                                    })
+                                                }
+                                                className={`flex h-full flex-col items-start rounded border p-3 text-left text-sm transition-colors ${formData.search.mode === 'basic' || !formData.search.mode
+                                                    ? 'border-blue-500 bg-blue-900/40 text-white'
+                                                    : 'border-[#3a5a8b] bg-[#1f3b63] text-gray-200 hover:border-blue-400 hover:bg-blue-900/30'
+                                                    } disabled:opacity-50`}
+                                            >
+                                                <span className="font-semibold">Basic Search</span>
+                                                <span className="mt-1 text-xs text-gray-300">
+                                                    Fast keyword-based search using available widget metadata.
+                                                </span>
+                                            </button>
+
+                                            <button
+                                                type="button"
+                                                disabled={isSaving || isResetting}
+                                                onClick={() =>
+                                                    setFormData({
+                                                        ...formData,
+                                                        search: { ...formData.search, mode: 'advanced' },
+                                                    })
+                                                }
+                                                className={`flex h-full flex-col items-start rounded border p-3 text-left text-sm transition-colors ${formData.search.mode === 'advanced'
+                                                    ? 'border-green-500 bg-green-900/30 text-white'
+                                                    : 'border-[#3a5a8b] bg-[#1f3b63] text-gray-200 hover:border-green-400 hover:bg-green-900/20'
+                                                    } disabled:opacity-50`}
+                                            >
+                                                <span className="flex items-center gap-2 font-semibold">
+                                                    Advanced Search
+                                                    <span className="rounded-full bg-green-600/80 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-white">
+                                                        AI
+                                                    </span>
+                                                </span>
+                                                <span className="mt-1 text-xs text-gray-300">
+                                                    AI-powered semantic search across your dashboard and widget data.
+                                                </span>
+                                            </button>
+                                        </div>
+                                        <small className="mt-2 block text-xs text-gray-400">
+                                            Advanced (AI) search uses the semantic search service; basic search uses simpler
+                                            keyword matching over the same widget data.
+                                        </small>
+                                    </div>
                                 </div>
                             )}
                         </div>

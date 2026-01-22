@@ -1,29 +1,33 @@
 import { lazy } from 'react';
 
 // Lazy load all widget components
-const MultiMetrics = lazy(() => import('@/components/widgets/MultiMetrics'));
-const MultiMetricWidget = lazy(() => import('@/components/widgets/MultiMetricWidget'));
-const PieMetric = lazy(() => import('@/components/widgets/PieMetric'));
-const SimpleMetric = lazy(() => import('@/components/widgets/SimpleMetric'));
-const SimpleMetricDate = lazy(() => import('@/components/widgets/SimpleMetricDate'));
-const SingleLineChart = lazy(() => import('@/components/widgets/SingleLineChart'));
-const TableMetric = lazy(() => import('@/components/widgets/TableMetric'));
-const BarMetric = lazy(() => import('@/components/widgets/BarMetric'));
-const StackedBarChart = lazy(() => import('@/components/widgets/StackedBarChart'));
-const OrdersLineChart = lazy(() => import('@/components/widgets/OrdersLineChart'));
-const DualLineChart = lazy(() => import('@/components/widgets/DualLineChart'));
-const PieChartWithTotal = lazy(() => import('@/components/widgets/PieChartWithTotal'));
-const QuadrantMetrics = lazy(() => import('@/components/widgets/QuadrantMetrics'));
-const LoansAppTray = lazy(() => import('@/components/widgets/LoansAppTray'));
-const NewsFeed = lazy(() => import('@/components/widgets/NewsFeed'));
-const Announcement = lazy(() => import('@/components/widgets/Announcement1'));
-const pieChart = lazy(() => import('@/components/widgets/PieChart'));
-const ColumnChart = lazy(() => import('@/components/widgets/ColumnChart'));
-const PredictionChart = lazy(() => import('@/components/widgets/Prediction'));
-const RadarChartComponent = lazy(() => import('@/components/widgets/RadarChart'));
-const MultiChart = lazy(() => import('@/components/widgets/MultiChart'));
-const FilterWidget = lazy(() => import('@/components/widgets/FilterWidget'));
-const ListenerWidget = lazy(() => import('@/components/widgets/ListenerWidget'));
+const MultiMetrics = lazy(() => import('@/widgets/chart/multi-metric/MultiMetric'));
+const MultiMetricWidget = lazy(() => import('@/widgets/MultiMetricWidget'));
+const PieMetric = lazy(() => import('@/widgets/PieMetric'));
+const SimpleMetric = lazy(() => import('@/widgets/SimpleMetric'));
+const SimpleMetricDate = lazy(() => import('@/widgets/SimpleMetricDate'));
+const SingleLineChart = lazy(() => import('@/widgets/SingleLineChart'));
+const TableMetric = lazy(() => import('@/widgets/TableMetric'));
+const BarMetric = lazy(() => import('@/widgets/BarMetric'));
+const StackedBarChart = lazy(() => import('@/widgets/StackedBarChart'));
+const OrdersLineChart = lazy(() => import('@/widgets/OrdersLineChart'));
+const DualLineChart = lazy(() => import('@/widgets/DualLineChart'));
+const PieChartWithTotal = lazy(() => import('@/widgets/PieChartWithTotal'));
+const QuadrantMetrics = lazy(() => import('@/widgets/QuadrantMetrics'));
+const LoansAppTray = lazy(() => import('@/widgets/LoansAppTray'));
+const NewsFeed = lazy(() => import('@/widgets/NewsFeed'));
+const Announcement = lazy(() => import('@/widgets/Announcement1'));
+const pieChart = lazy(() => import('@/widgets/PieChart'));
+const ColumnChart = lazy(() => import('@/widgets/ColumnChart'));
+const PredictionChart = lazy(() => import('@/widgets/Prediction'));
+const RadarChartComponent = lazy(() => import('@/widgets/RadarChart'));
+const MultiChart = lazy(() => import('@/widgets/MultiChart'));
+const FilterWidget = lazy(() => import('@/widgets/FilterWidget'));
+const ListenerWidget = lazy(() => import('@/widgets/ListenerWidget'));
+const MultiChartWidget = lazy(() => import('@/widgets/chart/multi-chart/MultiChart'));
+const GaugeChart = lazy(() => import('@/widgets/GaugeChart'));
+const BlankWidget = lazy(() => import('@/widgets/blank-widget/BlankWidget'));
+const KpiChart = lazy(() => import('@/widgets/chart/kpi-chart/KpiChart'));
 
 // Component mappings with lazy loading
 export const widgetMapping: Record<string, React.ComponentType<any>> = {
@@ -50,6 +54,10 @@ export const widgetMapping: Record<string, React.ComponentType<any>> = {
     'multi-chart': MultiChart,
     'filter-widget': FilterWidget,
     'listener-widget': ListenerWidget,
+    'multi-chart-bex': MultiChartWidget,
+    'gauge-chart': GaugeChart,
+    'blank-widget': BlankWidget,
+    'kpi-chart': KpiChart,
 };
 
 // Default widget props for when data isn't available
@@ -250,6 +258,9 @@ export const defaultPropsMapping: Record<string, any> = {
     'listener-widget': {
         reportName: '',
         listenToEvent: 'filter-changed',
+    },
+    'blank-widget': {
+        title: 'Blank Widget',
     },
 
 };

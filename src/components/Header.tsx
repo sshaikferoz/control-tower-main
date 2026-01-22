@@ -37,9 +37,11 @@ interface HeaderProps {
     configuration?: UIConfiguration;
     tabId: any;
     onSearchSelect?: (result: SearchResult | null) => void;
+    // Optional callback for client-side fuzzy search over widgets/sections
+    onLocalSearch?: (query: string) => SearchResult[];
 }
 
-const Header: React.FC<HeaderProps> = ({ configuration, tabId, onSearchSelect }) => {
+const Header: React.FC<HeaderProps> = ({ configuration, tabId, onSearchSelect, onLocalSearch }) => {
     const [visible, setVisible] = useState(false);
     const [sectionName, setSectionName] = useState('');
     const [isExpanded, setIsExpanded] = useState(true);
@@ -59,6 +61,7 @@ const Header: React.FC<HeaderProps> = ({ configuration, tabId, onSearchSelect })
     const searchConfig = configuration?.search || {
         enabled: true,
         placeholder: 'Search My Contract, Spend, Notification, Localization, KPI',
+        mode: 'advanced' as const,
     };
 
     const brandingConfig = configuration?.branding || {
@@ -145,6 +148,23 @@ const Header: React.FC<HeaderProps> = ({ configuration, tabId, onSearchSelect })
             return;
         }
 
+        // For basic mode, use client-side fuzzy search over widget data if provided.
+        if (searchConfig.mode === 'basic') {
+            if (onLocalSearch) {
+                const localResults = onLocalSearch(query) || [];
+                setSearchResults(localResults);
+                setShowDropdown(localResults.length > 0);
+                setSelectedIndex(-1);
+            } else {
+                // If no local search is wired, fall back to clearing results
+                setSearchResults([]);
+                setShowDropdown(false);
+            }
+            setIsSearching(false);
+            return;
+        }
+
+        // Advanced (AI) mode - call semantic search API
         setIsSearching(true);
         try {
             const res = await fetch(getSearchEndpoint(), {
@@ -154,11 +174,14 @@ const Header: React.FC<HeaderProps> = ({ configuration, tabId, onSearchSelect })
                 },
                 body: JSON.stringify({
                     query: query,
+                    // Hint to backend which search mode is requested.
+                    // Backend may ignore this field if it doesn't support modes.
+                    mode: searchConfig.mode || 'advanced',
                     tab_id: tabId,
                     top_k: 5,
                 }),
             });
-            const response = await res.json();
+            const response: SearchResponse = await res.json();
 
             setSearchResults(response.results || []);
             setShowDropdown(true);
@@ -207,7 +230,7 @@ const Header: React.FC<HeaderProps> = ({ configuration, tabId, onSearchSelect })
     };
 
     const handleResultSelect = (result: SearchResult) => {
-        setSearchQuery(result.ai_title);
+        // Do not modify the user's query on selection; only apply highlighting/side effects
         setShowDropdown(false);
         setSelectedIndex(-1);
         if (onSearchSelect) onSearchSelect(result);

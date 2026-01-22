@@ -24,26 +24,178 @@ import {
     ResponsiveContainer,
     Cell,
 } from 'recharts';
+import useBexJson from '@/hooks/useBexJson';
+import { transformBexToChart } from './transformBexToChart';
+import { ChartWidgetConfig, LineType, GridLineStyle, PointerStyle } from './ChartConfig.types';
+import { formatNumber as formatNumberUtil } from '@/helpers/numberFormatting';
 
 interface SeriesConfig {
     name: string;
     dataKey: string;
     color: string;
     type?: 'line' | 'bar' | 'area'; // For ComposedChart
+    lineType?: LineType; // Line style for line/area charts
     hide?: boolean; // For legend interactivity
+    barOpacity?: number; // Opacity for bar charts (0-1)
+    barEdgeColor?: string; // Color for the top edge of bars
+    barEdgeWidth?: number; // Width of the top edge of bars (in pixels)
 }
 
+// Helper function to convert lineType to strokeDasharray
+const getStrokeDasharray = (lineType?: LineType): string | undefined => {
+    switch (lineType) {
+        case 'solid':
+            return undefined; // No dash array for solid lines
+        case 'dashed':
+            return '10 5';
+        case 'dotted':
+            return '2 2';
+        case 'dashDot':
+            return '10 5 2 5';
+        default:
+            return undefined;
+    }
+};
+
+// Helper function to convert gridLineStyle to strokeDasharray
+const getGridLineDasharray = (gridLineStyle?: GridLineStyle): string | undefined => {
+    switch (gridLineStyle) {
+        case 'solid':
+            return undefined; // No dash array for solid lines
+        case 'dashed-short':
+            return '3 3';
+        case 'dashed-medium':
+            return '5 5';
+        case 'dashed-long':
+            return '10 5';
+        case 'dotted':
+            return '2 2';
+        case 'dash-dot':
+            return '5 5 1 5';
+        default:
+            return '3 3'; // Default to dashed-short
+    }
+};
+
+// Helper function to build dot props based on pointerStyle configuration
+const getDotProps = (pointerStyle: PointerStyle | undefined, defaultColor: string) => {
+    if (pointerStyle?.showPointers === false) {
+        return false; // Hide pointers
+    }
+
+    const pointerColor = pointerStyle?.pointerColor || defaultColor;
+    const pointerSize = pointerStyle?.pointerSize ?? 4;
+    const pointerStrokeColor = pointerStyle?.pointerStrokeColor;
+    const pointerStrokeWidth = pointerStyle?.pointerStrokeWidth ?? 0;
+
+    return {
+        r: pointerSize,
+        fill: pointerColor,
+        strokeWidth: pointerStrokeWidth,
+        stroke: pointerStrokeColor || undefined,
+    };
+};
+
+// Helper function to build activeDot props based on pointerStyle configuration
+const getActiveDotProps = (pointerStyle: PointerStyle | undefined, defaultColor: string) => {
+    if (pointerStyle?.showPointers === false) {
+        return false; // Hide active pointers
+    }
+
+    const pointerColor = pointerStyle?.pointerColor || defaultColor;
+    const activePointerSize = pointerStyle?.activePointerSize ?? 8;
+    const activePointerStrokeColor = pointerStyle?.activePointerStrokeColor || '#ffffff';
+    const activePointerStrokeWidth = pointerStyle?.activePointerStrokeWidth ?? 2;
+    const showGlow = pointerStyle?.showGlow !== false; // Default to true
+
+    return {
+        r: activePointerSize,
+        fill: pointerColor,
+        stroke: activePointerStrokeColor,
+        strokeWidth: activePointerStrokeWidth,
+        style: showGlow
+            ? {
+                filter: `drop-shadow(0 0 8px ${pointerColor}) drop-shadow(0 0 16px ${pointerColor}80)`,
+                transition: 'all 0.2s ease',
+            }
+            : {
+                transition: 'all 0.2s ease',
+            },
+    };
+};
+
+// Custom Bar Shape Component with opacity and top edge
+const CustomBarShape = (props: any) => {
+    const { fill, x, y, width, height, barOpacity, barEdgeColor, barEdgeWidth } = props;
+    const opacity = barOpacity !== undefined ? barOpacity : 0.6; // Default opacity if not specified
+    const edgeColor = barEdgeColor || fill; // Use provided edge color or default to fill color
+    const edgeWidth = barEdgeWidth !== undefined ? barEdgeWidth : 2; // Default edge width is 2
+
+    // For horizontal bars, adjust coordinates
+    if (props.layout === 'vertical') {
+        // Horizontal bar layout
+        return (
+            <g>
+                <rect
+                    x={x}
+                    y={y}
+                    width={width}
+                    height={height}
+                    fill={fill}
+                    fillOpacity={opacity}
+                    rx={4}
+                    ry={4}
+                />
+                {/* Left edge line (top edge in horizontal layout) */}
+                <line
+                    x1={x}
+                    y1={y}
+                    x2={x}
+                    y2={y + height}
+                    stroke={edgeColor}
+                    strokeWidth={edgeWidth}
+                />
+            </g>
+        );
+    } else {
+        // Vertical bar layout (default)
+        return (
+            <g>
+                <rect
+                    x={x}
+                    y={y}
+                    width={width}
+                    height={height}
+                    fill={fill}
+                    fillOpacity={opacity}
+                    rx={4}
+                    ry={4}
+                />
+                {/* Top edge line */}
+                <line
+                    x1={x}
+                    y1={y}
+                    x2={x + width}
+                    y2={y}
+                    stroke={edgeColor}
+                    strokeWidth={edgeWidth}
+                />
+            </g>
+        );
+    }
+};
+
 interface MultiChartProps {
-    data: {
+    data?: {
         name: string;
         label?: string;
         groupKey?: string; // For grouping by Struct field
         [key: string]: string | number | undefined;
     }[];
-    title: string;
+    title?: string;
     // totalValue?: string;
-    series: SeriesConfig[];
-    chartType: 'line' | 'bar' | 'area' | 'composed' | 'scatter' | 'pie' | 'donut' | 'radar' | 'horizontal-bar';
+    series?: SeriesConfig[];
+    chartType?: 'line' | 'bar' | 'area' | 'composed' | 'scatter' | 'pie' | 'donut' | 'radar' | 'horizontal-bar' | 'table';
     color?: string;
     colorPalette?: string[];
     setChangeColor?: (color: string) => void;
@@ -53,6 +205,9 @@ interface MultiChartProps {
     valueFormat?: 'currency' | 'non-currency';
     typography?: any;
     groupByField?: string; // Field name to group by (e.g., Struct field)
+    // New props for BEX data fetching
+    queryName?: string; // BEX query name to fetch data
+    chartConfig?: ChartWidgetConfig; // Chart configuration for BEX data transformation
 }
 
 const defaultColors = ['#8884d8', '#82ca9d', '#ffc658', '#ff7c7c', '#8dd1e1', '#d084d0', '#ffb347', '#87ceeb', '#dda0dd', '#98d8c8'];
@@ -125,25 +280,146 @@ const PremiumTooltip = ({ active, payload, label, formatter }: any) => {
 
 
 const MultiChart: React.FC<MultiChartProps> = ({
-    data = [],
-    title = 'Chart',
+    data: providedData = [],
+    title: providedTitle = 'Chart',
     // totalValue = '',
-    series = [],
-    chartType = 'line',
+    series: providedSeries = [],
+    chartType: providedChartType = 'line',
     color,
     colorPalette,
     setChangeColor,
     selectedLabels = [],
-    showLegend = true,
-    stacked = false,
-    valueFormat = 'non-currency',
+    showLegend: providedShowLegend = true,
+    stacked: providedStacked = false,
+    valueFormat: providedValueFormat = 'non-currency',
     typography,
-    groupByField,
+    groupByField: providedGroupByField,
+    queryName,
+    chartConfig,
 }) => {
     const [userColor, setUserColor] = useState<string | null>(null);
     const colorInputRef = useRef<HTMLInputElement>(null);
     const [hiddenSeries, setHiddenSeries] = useState<Set<string>>(new Set());
     const chartContainerRef = useRef<HTMLDivElement>(null);
+
+    // Fetch BEX data if queryName is provided
+    const { data: bexData, isLoading: bexLoading, error: bexError } = useBexJson(
+        queryName || '',
+        {
+            parser: 'new',
+            enabled: !!queryName && !!chartConfig,
+        }
+    );
+
+    // Transform BEX data if available
+    const bexTransformedData = useMemo(() => {
+        if (!queryName || !chartConfig || !bexData || bexLoading) {
+            return null;
+        }
+
+        try {
+            const flattenedConfig: ChartWidgetConfig = {
+                ...chartConfig,
+                measures: Array.isArray(chartConfig.measures)
+                    ? chartConfig.measures.flat() as any
+                    : chartConfig.measures,
+            };
+            return transformBexToChart(bexData, flattenedConfig);
+        } catch (error) {
+            console.error('Error transforming BEx data:', error);
+            return null;
+        }
+    }, [bexData, chartConfig, queryName, bexLoading]);
+
+    // Determine which data/series/config to use
+    const data = useMemo(() => {
+        if (bexTransformedData) {
+            return bexTransformedData.data;
+        }
+        return providedData;
+    }, [bexTransformedData, providedData]);
+
+    const series = useMemo(() => {
+        if (bexTransformedData) {
+            return bexTransformedData.series;
+        }
+        return providedSeries;
+    }, [bexTransformedData, providedSeries]);
+
+    const chartType = useMemo(() => {
+        if (chartConfig?.chartType) {
+            return chartConfig.chartType;
+        }
+        return providedChartType;
+    }, [chartConfig?.chartType, providedChartType]);
+
+    const showLegend = useMemo(() => {
+        if (chartConfig?.showLegend !== undefined) {
+            return chartConfig.showLegend;
+        }
+        return providedShowLegend;
+    }, [chartConfig?.showLegend, providedShowLegend]);
+
+    const showTitle = useMemo(() => {
+        if (chartConfig?.showTitle !== undefined) {
+            return chartConfig.showTitle;
+        }
+        return true; // Default to showing title
+    }, [chartConfig?.showTitle]);
+
+    const showGridLines = useMemo(() => {
+        if (chartConfig?.showGridLines !== undefined) {
+            return chartConfig.showGridLines;
+        }
+        return true; // Default to showing grid lines
+    }, [chartConfig?.showGridLines]);
+
+    const gridLineStyle = useMemo(() => {
+        return chartConfig?.gridLineStyle || 'dashed-short';
+    }, [chartConfig?.gridLineStyle]);
+
+    const pointerStyle = useMemo(() => {
+        return chartConfig?.pointerStyle;
+    }, [chartConfig?.pointerStyle]);
+
+    const stacked = useMemo(() => {
+        if (chartConfig?.stacked !== undefined) {
+            return chartConfig.stacked;
+        }
+        return providedStacked;
+    }, [chartConfig?.stacked, providedStacked]);
+
+    const valueFormat = useMemo(() => {
+        if (chartConfig?.valueFormat) {
+            return chartConfig.valueFormat;
+        }
+        return providedValueFormat;
+    }, [chartConfig?.valueFormat, providedValueFormat]);
+
+    const groupByField = useMemo(() => {
+        if (bexTransformedData?.groupByField) {
+            return bexTransformedData.groupByField;
+        }
+        return providedGroupByField;
+    }, [bexTransformedData?.groupByField, providedGroupByField]);
+
+    const title = useMemo(() => {
+        // 1. If custom title is explicitly enabled in chartConfig, always use it
+        if (chartConfig?.enableCustomTitle) {
+            return chartConfig.customTitle || providedTitle;
+        }
+
+        // 2. Otherwise, prefer query metadata description when available
+        if (bexData && typeof bexData === 'object' && 'metadata' in bexData) {
+            const metadata = (bexData as any).metadata;
+            if (metadata?.description) {
+                return metadata.description;
+            }
+        }
+
+        // 3. Fallback to providedTitle
+        return providedTitle;
+    }, [chartConfig?.enableCustomTitle, chartConfig?.customTitle, bexData, providedTitle]);
 
     const defaultBaseColor = '#00214E';
     const defaultLighterColor = '#0164B0';
@@ -165,53 +441,98 @@ const MultiChart: React.FC<MultiChartProps> = ({
 
     const baseColor = userColor || color || defaultBaseColor;
     const lighterColor = baseColor === defaultBaseColor ? defaultLighterColor : `${baseColor}80`;
+    const isTransparent = chartConfig?.transparentBackground === true;
+    const backgroundStyle = isTransparent
+        ? {
+            backgroundColor: 'transparent',
+            color: '#ffffff',
+        }
+        : {
+            backgroundImage: `linear-gradient(to bottom, ${baseColor}, ${lighterColor})`,
+            color: '#ffffff',
+        };
 
-    const backgroundStyle = {
-        backgroundImage: `linear-gradient(to bottom, ${baseColor}, ${lighterColor})`,
-        color: '#ffffff',
-    };
-
-    const groupValues = useMemo(() => {
+    const groupValues = useMemo((): string[] => {
         if (!groupByField) return [];
+
+        // Get all unique group values from data
+        const allGroupValues = Array.from(
+            new Set(
+                data
+                    .map((item: any) => String(item[groupByField] || item.groupKey || ''))
+                    .filter((value: string) => value)
+            )
+        ) as string[];
+
+        // Filter by enabled groups from chartConfig if available
+        if (chartConfig?.groupConfigs) {
+            return allGroupValues.filter((groupValue) => {
+                const groupConfig = chartConfig.groupConfigs![groupValue];
+                // Default to enabled if not specified
+                return groupConfig?.enabled !== false;
+            });
+        }
+
+        // Fallback to selectedLabels if provided
         if (selectedLabels && selectedLabels.length > 0) {
             return selectedLabels;
         }
 
-        return Array.from(
-            new Set(
-                data
-                    .map((item) => String(item[groupByField] || item.groupKey || ''))
-                    .filter((value) => value)
-            )
-        );
-    }, [groupByField, selectedLabels, data]);
+        return allGroupValues;
+    }, [groupByField, selectedLabels, data, chartConfig]);
+
+    // Get group-specific measure colors
+    const groupMeasureColors = useMemo(() => {
+        if (!groupByField || groupValues.length === 0) return new Map<string, Map<string, string>>();
+
+        const measureColorMap = new Map<string, Map<string, string>>();
+        groupValues.forEach((groupValue) => {
+            const groupConfig = chartConfig?.groupConfigs?.[groupValue];
+            const measureColors = new Map<string, string>();
+
+            if (groupConfig?.measureColors) {
+                // Use measure-specific colors from group config
+                Object.entries(groupConfig.measureColors).forEach(([measureKey, color]) => {
+                    measureColors.set(measureKey, color);
+                });
+            }
+
+            measureColorMap.set(groupValue, measureColors);
+        });
+        return measureColorMap;
+    }, [groupByField, groupValues, chartConfig]);
 
     const groupColorMap = useMemo(() => {
         if (!groupByField || groupValues.length === 0) return new Map<string, string>();
 
         return new Map(
-            groupValues.map((groupValue, idx) => [
-                groupValue,
-                paletteColors[idx % paletteColors.length],
-            ])
+            groupValues.map((groupValue) => {
+                const measureColors = groupMeasureColors.get(groupValue);
+                // Use first measure's color as the group color, or fallback to palette
+                if (measureColors && measureColors.size > 0) {
+                    const firstColor = Array.from(measureColors.values())[0];
+                    return [groupValue, firstColor];
+                }
+                return [groupValue, paletteColors[0]];
+            })
         );
-    }, [groupByField, groupValues, paletteColors]);
+    }, [groupByField, groupValues, groupMeasureColors, paletteColors]);
 
     // Transform data based on grouping field (Struct field)
     const transformedData = useMemo(() => {
         if (!groupByField || !data.length) {
             // No grouping - filter by selected labels if applicable
             return selectedLabels && selectedLabels.length > 0
-                ? data.filter((item) => item.label && selectedLabels.includes(item.label as string))
+                ? data.filter((item: any) => (item as any).label && selectedLabels.includes((item as any).label as string))
                 : data;
         }
 
         // Group data by the groupByField (e.g., Struct field)
         const grouped = new Map<string, Map<string, any>>();
 
-        data.forEach((item) => {
-            const groupValue = String(item[groupByField] || item.groupKey || '');
-            const xValue = String(item.name || '');
+        data.forEach((item: any) => {
+            const groupValue = String((item as any)[groupByField] || (item as any).groupKey || '');
+            const xValue = String((item as any).name || '');
 
             if (!grouped.has(groupValue)) {
                 grouped.set(groupValue, new Map());
@@ -231,12 +552,20 @@ const MultiChart: React.FC<MultiChartProps> = ({
             });
         });
 
-        // If selectedLabels is provided, filter by those labels
-        const filteredGroups = selectedLabels && selectedLabels.length > 0
-            ? Array.from(grouped.entries()).filter(([groupValue]) =>
+        // Filter by enabled groups from chartConfig if available, otherwise use selectedLabels
+        let filteredGroups = Array.from(grouped.entries());
+
+        if (chartConfig?.groupConfigs) {
+            filteredGroups = filteredGroups.filter(([groupValue]) => {
+                const groupConfig = chartConfig.groupConfigs![groupValue];
+                // Default to enabled if not specified
+                return groupConfig?.enabled !== false;
+            });
+        } else if (selectedLabels && selectedLabels.length > 0) {
+            filteredGroups = filteredGroups.filter(([groupValue]) =>
                 selectedLabels.includes(groupValue)
-            )
-            : Array.from(grouped.entries());
+            );
+        }
 
         // Transform to array format for chart
         const allXValues = new Set<string>();
@@ -271,20 +600,36 @@ const MultiChart: React.FC<MultiChartProps> = ({
         const newSeries: SeriesConfig[] = [];
 
         groupValues.forEach((groupValue) => {
-            series.forEach((s) => {
+            const measureColors = groupMeasureColors.get(groupValue);
+
+            series.forEach((s, measureIndex) => {
                 const seriesKey = `${groupValue}_${s.dataKey}`;
+                // Get color from measure-specific config, or fallback to series color, or palette
+                let seriesColor: string;
+                if (measureColors && measureColors.has(s.dataKey)) {
+                    seriesColor = measureColors.get(s.dataKey)!;
+                } else if (s.color) {
+                    seriesColor = s.color;
+                } else {
+                    seriesColor = paletteColors[measureIndex % paletteColors.length];
+                }
+
                 newSeries.push({
                     ...s,
-                    name: `${groupValue} - ${s.name}`,
+                    name: `${s.name}`,
                     dataKey: seriesKey,
                     hide: hiddenSeries.has(seriesKey),
-                    color: groupColorMap.get(groupValue) || s.color || paletteColors[0],
+                    color: seriesColor,
+                    lineType: s.lineType, // Preserve lineType when grouping
+                    barOpacity: s.barOpacity, // Preserve barOpacity when grouping
+                    barEdgeColor: s.barEdgeColor || seriesColor, // Use series color if barEdgeColor not set
+                    barEdgeWidth: s.barEdgeWidth, // Preserve barEdgeWidth when grouping
                 });
             });
         });
 
         return newSeries;
-    }, [data, groupByField, series, selectedLabels, hiddenSeries, groupColorMap]);
+    }, [data, groupByField, series, selectedLabels, hiddenSeries, groupMeasureColors, paletteColors]);
 
     // Filter data by selected labels if no grouping
     const filteredData = useMemo(() => {
@@ -293,7 +638,7 @@ const MultiChart: React.FC<MultiChartProps> = ({
         }
 
         return selectedLabels && selectedLabels.length > 0
-            ? data.filter((item) => item.label && selectedLabels.includes(item.label as string))
+            ? data.filter((item: any) => (item as any).label && selectedLabels.includes((item as any).label as string))
             : data;
     }, [groupByField, transformedData, selectedLabels, data]);
 
@@ -317,19 +662,11 @@ const MultiChart: React.FC<MultiChartProps> = ({
     };
 
     const formatNumber = (num: number) => {
-        if (valueFormat === 'currency') {
-            // Currency format: Thousand → M, Million → MM, Billion → B
-            if (num >= 1_000_000_000) return `$${(num / 1_000_000_000).toFixed(1)}B`;
-            if (num >= 1_000_000) return `$${(num / 1_000_000).toFixed(1)}MM`;
-            if (num >= 1_000) return `$${(num / 1_000).toFixed(1)}M`;
-            return num.toString();
-        } else {
-            // Non-currency format: Thousand → K, Million → M, Billion → B
-            if (num >= 1_000_000_000) return `${(num / 1_000_000_000).toFixed(1)}B`;
-            if (num >= 1_000_000) return `${(num / 1_000_000).toFixed(1)}M`;
-            if (num >= 1_000) return `${(num / 1_000).toFixed(1)}K`;
-            return num.toString();
-        }
+        return formatNumberUtil(num, {
+            format: valueFormat || 'non-currency',
+            // Don't specify decimals to match original toString() behavior for currency
+            // For non-currency, it will use default 2 decimals
+        });
     };
 
     // Get series to render (filter out hidden ones)
@@ -346,10 +683,11 @@ const MultiChart: React.FC<MultiChartProps> = ({
         if (!groupByField || groupValues.length === 0) return undefined;
 
         return groupValues.map((groupValue, idx) => {
+            const valueStr = String(groupValue);
             return {
-                id: groupValue,
-                value: groupValue,
-                color: groupColorMap.get(groupValue) || paletteColors[idx % paletteColors.length],
+                id: valueStr,
+                value: valueStr,
+                color: groupColorMap.get(valueStr) || paletteColors[idx % paletteColors.length],
                 type: 'square' as const,
             };
         });
@@ -399,6 +737,7 @@ const MultiChart: React.FC<MultiChartProps> = ({
 
         const premiumTooltipProps = {
             content: <PremiumTooltip formatter={formatNumber} />,
+            shared: false, // Show only the hovered series, not all series at that point
             cursor: { stroke: 'rgba(0, 255, 255, 0.5)', strokeWidth: 2, strokeDasharray: '0' },
             animationDuration: 200,
             contentStyle: {
@@ -414,9 +753,9 @@ const MultiChart: React.FC<MultiChartProps> = ({
 
         const renderPieVariant = (isDonut: boolean): React.ReactElement => {
             const pieSeriesKey = seriesToRender[0]?.dataKey || series[0]?.dataKey || 'value';
-            const pieData = filteredData.map((item, idx) => ({
-                name: item.name,
-                value: Number(item[pieSeriesKey] || 0),
+            const pieData = filteredData.map((item: any, idx: number) => ({
+                name: (item as any).name,
+                value: Number((item as any)[pieSeriesKey] || 0),
                 fill:
                     seriesToRender[idx]?.color ||
                     series[idx]?.color ||
@@ -426,7 +765,7 @@ const MultiChart: React.FC<MultiChartProps> = ({
             const outerRadius = '80%';
             const innerRadius: string | number = isDonut ? '55%' : 0;
 
-            const legendPayload = pieData.map((entry) => ({
+            const legendPayload = pieData.map((entry: any, index: number) => ({
                 value: entry.name,
                 color: entry.fill,
                 type: 'circle' as const,
@@ -449,7 +788,7 @@ const MultiChart: React.FC<MultiChartProps> = ({
                         dataKey="value"
                         paddingAngle={2}
                     >
-                        {pieData.map((entry, index) => (
+                        {pieData.map((entry: any, index: number) => (
                             <Cell
                                 key={`cell-${index}`}
                                 fill={entry.fill}
@@ -502,7 +841,7 @@ const MultiChart: React.FC<MultiChartProps> = ({
             case 'line':
                 return (
                     <LineChart {...commonProps}>
-                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#ffffff30" />
+                        {showGridLines && <CartesianGrid strokeDasharray={getGridLineDasharray(gridLineStyle)} vertical={false} stroke="#ffffff30" />}
                         <XAxis dataKey="name" {...commonAxisProps} />
                         <YAxis {...commonAxisProps} tickFormatter={formatNumber} width={55} />
                         <Tooltip {...premiumTooltipProps} />
@@ -524,21 +863,9 @@ const MultiChart: React.FC<MultiChartProps> = ({
                                     dataKey={s.dataKey}
                                     stroke={color}
                                     strokeWidth={2}
-                                    dot={{
-                                        r: 4,
-                                        fill: color,
-                                        strokeWidth: 0,
-                                    }}
-                                    activeDot={{
-                                        r: 8,
-                                        fill: color,
-                                        stroke: '#ffffff',
-                                        strokeWidth: 2,
-                                        style: {
-                                            filter: `drop-shadow(0 0 8px ${color}) drop-shadow(0 0 16px ${color}80)`,
-                                            transition: 'all 0.2s ease',
-                                        },
-                                    }}
+                                    strokeDasharray={getStrokeDasharray(s.lineType)}
+                                    dot={getDotProps(pointerStyle, color)}
+                                    activeDot={getActiveDotProps(pointerStyle, color)}
                                     name={s.name}
                                     hide={s.hide}
                                 />
@@ -553,7 +880,7 @@ const MultiChart: React.FC<MultiChartProps> = ({
 
                 return (
                     <BarChart {...commonProps} layout={isHorizontal ? 'vertical' : 'horizontal'} barSize={40}>
-                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#ffffff30" />
+                        {showGridLines && <CartesianGrid strokeDasharray={getGridLineDasharray(gridLineStyle)} vertical={false} stroke="#ffffff30" />}
 
                         {isHorizontal ? (
                             <XAxis type="number" {...commonAxisProps} tickFormatter={formatNumber} width={55} />
@@ -577,6 +904,9 @@ const MultiChart: React.FC<MultiChartProps> = ({
                         {seriesToRender.map((s, idx) => {
                             if (s.hide) return null;
                             const color = s.color || paletteColors[idx % paletteColors.length];
+                            const barOpacity = s.barOpacity !== undefined ? s.barOpacity : 0.6;
+                            const barEdgeColor = s.barEdgeColor || color;
+                            const barEdgeWidth = s.barEdgeWidth !== undefined ? s.barEdgeWidth : 2;
                             return (
                                 <Bar
                                     key={`${s.dataKey}-${idx}`}
@@ -586,6 +916,15 @@ const MultiChart: React.FC<MultiChartProps> = ({
                                     name={s.name}
                                     stackId={stacked ? 'stack' : undefined}
                                     hide={s.hide}
+                                    shape={(props: any) => (
+                                        <CustomBarShape
+                                            {...props}
+                                            barOpacity={barOpacity}
+                                            barEdgeColor={barEdgeColor}
+                                            barEdgeWidth={barEdgeWidth}
+                                            layout={isHorizontal ? 'vertical' : 'horizontal'}
+                                        />
+                                    )}
                                     style={{
                                         transition: 'all 0.2s ease',
                                         cursor: 'pointer',
@@ -608,7 +947,7 @@ const MultiChart: React.FC<MultiChartProps> = ({
             case 'area':
                 return (
                     <AreaChart {...commonProps}>
-                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#ffffff30" />
+                        {showGridLines && <CartesianGrid strokeDasharray={getGridLineDasharray(gridLineStyle)} vertical={false} stroke="#ffffff30" />}
                         <XAxis dataKey="name" {...commonAxisProps} />
                         <YAxis {...commonAxisProps} tickFormatter={formatNumber} width={55} />
                         <Tooltip {...premiumTooltipProps} />
@@ -629,26 +968,14 @@ const MultiChart: React.FC<MultiChartProps> = ({
                                     type="monotone"
                                     dataKey={s.dataKey}
                                     stroke={color}
+                                    strokeDasharray={getStrokeDasharray(s.lineType)}
                                     fill={color}
                                     fillOpacity={0.6}
                                     name={s.name}
                                     stackId={stacked ? 'stack' : undefined}
                                     hide={s.hide}
-                                    dot={{
-                                        r: 4,
-                                        fill: color,
-                                        strokeWidth: 0,
-                                    }}
-                                    activeDot={{
-                                        r: 8,
-                                        fill: color,
-                                        stroke: '#ffffff',
-                                        strokeWidth: 2,
-                                        style: {
-                                            filter: `drop-shadow(0 0 8px ${color}) drop-shadow(0 0 16px ${color}80)`,
-                                            transition: 'all 0.2s ease',
-                                        },
-                                    }}
+                                    dot={getDotProps(pointerStyle, color)}
+                                    activeDot={getActiveDotProps(pointerStyle, color)}
                                 />
                             );
                         })}
@@ -658,7 +985,7 @@ const MultiChart: React.FC<MultiChartProps> = ({
             case 'composed':
                 return (
                     <ComposedChart {...commonProps}>
-                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#ffffff30" />
+                        {showGridLines && <CartesianGrid strokeDasharray={getGridLineDasharray(gridLineStyle)} vertical={false} stroke="#ffffff30" />}
                         <XAxis dataKey="name" {...commonAxisProps} />
                         <YAxis {...commonAxisProps} tickFormatter={formatNumber} width={55} />
                         <Tooltip {...premiumTooltipProps} />
@@ -676,6 +1003,9 @@ const MultiChart: React.FC<MultiChartProps> = ({
                             const componentType = s.type || 'line';
 
                             if (componentType === 'bar') {
+                                const barOpacity = s.barOpacity !== undefined ? s.barOpacity : 0.6;
+                                const barEdgeColor = s.barEdgeColor || color;
+                                const barEdgeWidth = s.barEdgeWidth !== undefined ? s.barEdgeWidth : 2;
                                 return (
                                     <Bar
                                         key={`${s.dataKey}-${idx}`}
@@ -684,6 +1014,15 @@ const MultiChart: React.FC<MultiChartProps> = ({
                                         radius={[4, 4, 0, 0]}
                                         name={s.name}
                                         hide={s.hide}
+                                        shape={(props: any) => (
+                                            <CustomBarShape
+                                                {...props}
+                                                barOpacity={barOpacity}
+                                                barEdgeColor={barEdgeColor}
+                                                barEdgeWidth={barEdgeWidth}
+                                                layout="horizontal"
+                                            />
+                                        )}
                                         style={{
                                             transition: 'all 0.2s ease',
                                             cursor: 'pointer',
@@ -706,25 +1045,13 @@ const MultiChart: React.FC<MultiChartProps> = ({
                                         type="monotone"
                                         dataKey={s.dataKey}
                                         stroke={color}
+                                        strokeDasharray={getStrokeDasharray(s.lineType)}
                                         fill={color}
                                         fillOpacity={0.6}
                                         name={s.name}
                                         hide={s.hide}
-                                        dot={{
-                                            r: 4,
-                                            fill: color,
-                                            strokeWidth: 0,
-                                        }}
-                                        activeDot={{
-                                            r: 8,
-                                            fill: color,
-                                            stroke: '#ffffff',
-                                            strokeWidth: 2,
-                                            style: {
-                                                filter: `drop-shadow(0 0 8px ${color}) drop-shadow(0 0 16px ${color}80)`,
-                                                transition: 'all 0.2s ease',
-                                            },
-                                        }}
+                                        dot={getDotProps(pointerStyle, color)}
+                                        activeDot={getActiveDotProps(pointerStyle, color)}
                                     />
                                 );
                             } else {
@@ -735,21 +1062,9 @@ const MultiChart: React.FC<MultiChartProps> = ({
                                         dataKey={s.dataKey}
                                         stroke={color}
                                         strokeWidth={2}
-                                        dot={{
-                                            r: 4,
-                                            fill: color,
-                                            strokeWidth: 0,
-                                        }}
-                                        activeDot={{
-                                            r: 8,
-                                            fill: color,
-                                            stroke: '#ffffff',
-                                            strokeWidth: 2,
-                                            style: {
-                                                filter: `drop-shadow(0 0 8px ${color}) drop-shadow(0 0 16px ${color}80)`,
-                                                transition: 'all 0.2s ease',
-                                            },
-                                        }}
+                                        strokeDasharray={getStrokeDasharray(s.lineType)}
+                                        dot={getDotProps(pointerStyle, color)}
+                                        activeDot={getActiveDotProps(pointerStyle, color)}
                                         name={s.name}
                                         hide={s.hide}
                                     />
@@ -762,7 +1077,7 @@ const MultiChart: React.FC<MultiChartProps> = ({
             case 'scatter':
                 return (
                     <ScatterChart {...commonProps}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="#ffffff30" />
+                        {showGridLines && <CartesianGrid strokeDasharray={getGridLineDasharray(gridLineStyle)} stroke="#ffffff30" />}
                         <XAxis dataKey="name" {...commonAxisProps} />
                         <YAxis {...commonAxisProps} tickFormatter={formatNumber} width={55} />
                         <Tooltip {...premiumTooltipProps} />
@@ -830,7 +1145,7 @@ const MultiChart: React.FC<MultiChartProps> = ({
             case 'radar':
                 return (
                     <RadarChart {...commonProps}>
-                        <PolarGrid stroke="#ffffff50" />
+                        {showGridLines && <PolarGrid stroke="#ffffff50" strokeDasharray={getGridLineDasharray(gridLineStyle)} />}
                         <PolarAngleAxis dataKey="name" tick={{ fill: '#ffffff', fontSize: 12 }} />
                         <PolarRadiusAxis
                             tick={{ fill: '#ffffff', fontSize: 12 }}
@@ -857,31 +1172,197 @@ const MultiChart: React.FC<MultiChartProps> = ({
                                     fill={color}
                                     fillOpacity={0.6}
                                     hide={s.hide}
-                                    dot={{
-                                        r: 4,
-                                        fill: color,
-                                        strokeWidth: 0,
-                                    }}
-                                    activeDot={{
-                                        r: 8,
-                                        fill: color,
-                                        stroke: '#ffffff',
-                                        strokeWidth: 2,
-                                        style: {
-                                            filter: `drop-shadow(0 0 8px ${color}) drop-shadow(0 0 16px ${color}80)`,
-                                            transition: 'all 0.2s ease',
-                                        },
-                                    }}
+                                    dot={getDotProps(pointerStyle, color)}
+                                    activeDot={getActiveDotProps(pointerStyle, color)}
                                 />
                             );
                         })}
                     </RadarChart>
                 );
 
+            case 'table':
+                return (
+                    <div
+                        style={{
+                            width: '100%',
+                            height: '100%',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            overflow: 'hidden',
+                        }}
+                    >
+                        <style>{`
+                            .multi-chart-table {
+                                width: 100%;
+                                border-collapse: collapse;
+                                font-size: 13px;
+                            }
+                            .multi-chart-table thead {
+                                position: sticky;
+                                top: 0;
+                                z-index: 10;
+                            }
+                            .multi-chart-table thead th {
+                                background: rgba(0, 33, 78, 0.8);
+                                color: #ffffff;
+                                font-weight: 600;
+                                padding: 12px 16px;
+                                text-align: left;
+                                border-bottom: 2px solid rgba(255, 255, 255, 0.3);
+                                border-right: 1px solid rgba(255, 255, 255, 0.1);
+                            }
+                            .multi-chart-table thead th:first-child {
+                                border-left: none;
+                            }
+                            .multi-chart-table thead th:last-child {
+                                border-right: none;
+                            }
+                            .multi-chart-table tbody tr {
+                                border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+                                transition: background-color 0.2s ease;
+                            }
+                            .multi-chart-table tbody tr:hover {
+                                background-color: rgba(255, 255, 255, 0.05);
+                            }
+                            .multi-chart-table tbody td {
+                                color: #ffffff;
+                                padding: 10px 16px;
+                                border-right: 1px solid rgba(255, 255, 255, 0.1);
+                            }
+                            .multi-chart-table tbody td:first-child {
+                                font-weight: 500;
+                                border-right: 1px solid rgba(255, 255, 255, 0.2);
+                            }
+                            .multi-chart-table tbody td:not(:first-child) {
+                                text-align: right;
+                                font-family: 'monospace', monospace;
+                            }
+                            .multi-chart-table tbody td:last-child {
+                                border-right: none;
+                            }
+                            .multi-chart-table-wrapper {
+                                overflow-y: auto;
+                                overflow-x: auto;
+                                flex: 1;
+                                width: 100%;
+                            }
+                            .multi-chart-table-wrapper::-webkit-scrollbar {
+                                width: 8px;
+                                height: 8px;
+                            }
+                            .multi-chart-table-wrapper::-webkit-scrollbar-track {
+                                background: rgba(255, 255, 255, 0.05);
+                                border-radius: 4px;
+                            }
+                            .multi-chart-table-wrapper::-webkit-scrollbar-thumb {
+                                background: rgba(255, 255, 255, 0.2);
+                                border-radius: 4px;
+                            }
+                            .multi-chart-table-wrapper::-webkit-scrollbar-thumb:hover {
+                                background: rgba(255, 255, 255, 0.3);
+                            }
+                        `}</style>
+                        <div className="multi-chart-table-wrapper">
+                            <table className="multi-chart-table">
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        {seriesToRender
+                                            .filter((s) => !s.hide)
+                                            .map((s) => (
+                                                <th key={s.dataKey} style={{ color: s.color || '#ffffff' }}>
+                                                    {s.name}
+                                                </th>
+                                            ))}
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {filteredData.length === 0 ? (
+                                        <tr>
+                                            <td colSpan={seriesToRender.filter((s) => !s.hide).length + 1} style={{ textAlign: 'center', padding: '40px' }}>
+                                                No data available
+                                            </td>
+                                        </tr>
+                                    ) : (
+                                        filteredData.map((item: any, rowIdx: number) => (
+                                            <tr key={`row-${rowIdx}`}>
+                                                <td>{item.name || '-'}</td>
+                                                {seriesToRender
+                                                    .filter((s) => !s.hide)
+                                                    .map((s) => {
+                                                        const value = item[s.dataKey];
+                                                        const numValue = value === null || value === undefined || value === '' ? null : Number(value);
+                                                        return (
+                                                            <td key={s.dataKey}>
+                                                                {numValue !== null ? formatNumber(numValue) : '-'}
+                                                            </td>
+                                                        );
+                                                    })}
+                                            </tr>
+                                        ))
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                );
+
             default:
                 return <></>;
         }
     };
+
+    // Show loading state when fetching BEX data
+    if (queryName && chartConfig && bexLoading) {
+        return (
+            <div className="flex h-full w-full flex-col">
+                <div
+                    className="flex flex-1 flex-col overflow-hidden rounded-xl p-4 text-white items-center justify-center"
+                    style={backgroundStyle}
+                >
+                    <div className="text-center">
+                        <div className="mb-4">
+                            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
+                        </div>
+                        <p className="text-sm text-white/80">Loading chart data...</p>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    // Show error state if BEX fetch failed
+    if (queryName && chartConfig && bexError) {
+        return (
+            <div className="flex h-full w-full flex-col">
+                <div
+                    className="flex flex-1 flex-col overflow-hidden rounded-xl p-4 text-white items-center justify-center"
+                    style={backgroundStyle}
+                >
+                    <div className="text-center">
+                        <p className="text-sm text-red-300 mb-2">Error loading chart data</p>
+                        <p className="text-xs text-white/60">{bexError.message || 'Unknown error'}</p>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    // Show message if queryName is provided but no chartConfig
+    if (queryName && !chartConfig) {
+        return (
+            <div className="flex h-full w-full flex-col">
+                <div
+                    className="flex flex-1 flex-col overflow-hidden rounded-xl p-4 text-white items-center justify-center"
+                    style={backgroundStyle}
+                >
+                    <div className="text-center">
+                        <p className="text-sm text-white/80">Chart configuration is required</p>
+                    </div>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="flex h-full w-full flex-col">
@@ -890,13 +1371,14 @@ const MultiChart: React.FC<MultiChartProps> = ({
                 style={backgroundStyle}
             >
                 {/* Header */}
-                <div className="mb-2 flex shrink-0 items-start justify-between">
-                    <div className="flex flex-col items-start gap-[5px]">
-                        <h3 className="text-base font-bold text-white" style={getTitleStyle()}>
-                            {title}
-                        </h3>
-                    </div>
-                    {/* {totalValue && (
+                {showTitle && (
+                    <div className="mb-2 flex shrink-0 items-start justify-between">
+                        <div className="flex flex-col items-start gap-[5px]">
+                            <h3 className="text-base font-bold text-white" style={getTitleStyle()}>
+                                {title}
+                            </h3>
+                        </div>
+                        {/* {totalValue && (
                         <div className="flex flex-col items-center">
                             <span
                                 className="text-xl font-bold whitespace-nowrap text-white"
@@ -907,7 +1389,8 @@ const MultiChart: React.FC<MultiChartProps> = ({
                             <span className="text-sm font-normal text-white">Total Value</span>
                         </div>
                     )} */}
-                </div>
+                    </div>
+                )}
 
                 {/* Label filters (if applicable) */}
 

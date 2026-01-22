@@ -1,6 +1,6 @@
 import React, { useState, useEffect, Suspense } from 'react';
-import { useIntersectionObserver } from '../../hooks/ui/useIntersectionObserver';
-import { WidgetSkeleton } from '../ui/WidgetSkeleton';
+import { useIntersectionObserver } from '../hooks/ui/useIntersectionObserver';
+import { WidgetSkeleton } from '../components/ui/WidgetSkeleton';
 
 interface LazyWidgetContentProps {
     widget: any;
