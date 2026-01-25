@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import { DashboardBuilder } from '@/features/dashboard/builder/DashboardBuilder';
 import type { Widget, LayoutItem } from '@/features/dashboard/dashboard.types';
 
@@ -8,13 +8,15 @@ const DashboardPage: React.FC = () => {
     const [widgets, setWidgets] = useState<Widget[]>([]);
     const [layout, setLayout] = useState<LayoutItem[]>([]);
 
-    // Get section name from URL params
-    const sectionName = useMemo(() => {
+    // Use useState to avoid hydration mismatch - sectionName is set on client side only
+    const [sectionName, setSectionName] = useState<string>('Dashboard');
+
+    // Set section name from URL params on client side only to avoid hydration mismatch
+    useEffect(() => {
         if (typeof window !== 'undefined') {
             const searchParams = new URLSearchParams(window.location.search);
-            return searchParams.get('sectionName') || 'Dashboard';
+            setSectionName(searchParams.get('sectionName') || 'Dashboard');
         }
-        return 'Dashboard';
     }, []);
 
     return (

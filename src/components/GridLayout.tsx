@@ -1,11 +1,8 @@
 'use client';
-import MultiMetrics from '@/widgets/MultiMetrics';
 import PieMetric from '@/widgets/PieMetric';
 import SimpleMetric from '@/widgets/SimpleMetric';
 import SimpleMetricDate from '@/widgets/SimpleMetricDate';
 import SingleLineChart from '@/widgets/SingleLineChart';
-import TableMetric from '@/widgets/TableMetric';
-import { useEffect, useRef } from 'react';
 
 const GridLayout: React.FC = () => {
     const SingleLineChartData = {

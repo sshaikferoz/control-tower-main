@@ -305,6 +305,10 @@ export const widgetConfigFields: Record<
         { field: 'stacked', type: 'boolean', path: 'stacked' },
         { field: 'selectedLabels', type: 'array', path: 'selectedLabels' },
     ],
+    // These widgets don't require data-field mapping, but must be present to satisfy WidgetTypes
+    'filter-widget': [],
+    'listener-widget': [],
+    'blank-widget': [],
 };
 
 // Define type-safe interfaces matching the component props

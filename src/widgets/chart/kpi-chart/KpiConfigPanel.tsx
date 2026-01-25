@@ -1,9 +1,9 @@
 'use client';
 
 import React, { useMemo } from 'react';
+import Grid from '@mui/material/Grid';
 import {
     Typography,
-    Grid,
     TextField,
     Divider,
     Button,
@@ -19,8 +19,7 @@ import {
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
-import { KpiWidgetConfig, KpiType } from './KpiConfig.types';
-import { ColorRange } from '@/widgets/chart/gauge-chart/GaugeConfig.types';
+import { KpiWidgetConfig, KpiType, ColorRange } from './KpiConfig.types';
 
 interface KpiConfigPanelProps {
     response?: any;

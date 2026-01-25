@@ -1,12 +1,12 @@
 'use client';
 
 import React, { useState } from 'react';
+import Grid from '@mui/material/Grid';
 import {
     Box,
     Typography,
     Card,
     CardContent,
-    Grid,
     Button,
     TextField,
     Dialog,

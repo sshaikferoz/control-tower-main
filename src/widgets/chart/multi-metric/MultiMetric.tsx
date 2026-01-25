@@ -94,7 +94,7 @@ const MetricItem: React.FC<{
     }[metric.valueAlignment || 'center'];
 
     // Apply typography styles
-    const titleStyles = applyTypographyStyles('name', typography);
+    const titleStyles = applyTypographyStyles('title', typography);
     const valueStyles = applyTypographyStyles('value', typography);
 
     if (isLoading) {
@@ -254,6 +254,18 @@ const MetricCardWrapper: React.FC<{
         enabled: !!metric.queryName,
     });
 
+    const safeParseNumber = (value: unknown): number | null => {
+        if (value === '' || value === null || value === undefined) return null;
+        if (typeof value === 'number') return Number.isFinite(value) ? value : null;
+        if (typeof value === 'string') {
+            const trimmed = value.trim();
+            if (trimmed === '') return null;
+            const parsed = Number(trimmed);
+            return Number.isFinite(parsed) ? parsed : null;
+        }
+        return null;
+    };
+
     // Extract value from data
     const extractedValue = useMemo(() => {
         if (!metric.valueKey || !bexData) return null;
@@ -265,7 +277,7 @@ const MetricCardWrapper: React.FC<{
         // Extract the single value using valueKey from the first row
         const firstRow = bexChartData[0];
         const value = firstRow[metric.valueKey];
-        return value !== null && value !== undefined ? Number(value) : null;
+        return safeParseNumber(value);
     }, [bexData, metric.valueKey]);
 
     return (

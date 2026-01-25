@@ -344,7 +344,6 @@ class SAPODataService {
                 })
             );
         } catch (error) {
-            console.error('Error fetching menu items:', error);
             throw error;
         }
     }
@@ -410,7 +409,6 @@ class SAPODataService {
 
             return sections;
         } catch (error) {
-            console.error('Error fetching sections:', error);
             throw error;
         }
     }
@@ -430,7 +428,6 @@ class SAPODataService {
                     },
                 }
             );
-            console.log("fetchwidgettriggered", response)
 
 
             if (!response.ok) {
@@ -438,8 +435,6 @@ class SAPODataService {
             }
 
             const data = await response.json();
-            console.log("fetchwidgettriggered-------", response, data)
-            console.log(data.d.results, '----------------------------')
 
 
             return data.d.results?.map(
@@ -460,7 +455,6 @@ class SAPODataService {
                 })
             );
         } catch (error) {
-            console.error('Error fetching widgets:', error);
             throw error;
         }
     }
@@ -492,7 +486,6 @@ class SAPODataService {
 
             return serviceUrlsMap;
         } catch (error) {
-            console.error('Error fetching service URLs:', error);
             throw error;
         }
     }
@@ -517,7 +510,6 @@ class SAPODataService {
 
             return this.serviceUrlsCache.get(serviceType) || null;
         } catch (error) {
-            console.error('Error getting service URL:', error);
             return null;
         }
     }
@@ -560,7 +552,6 @@ class SAPODataService {
                 hasChanges: false,
             };
         } catch (error) {
-            console.error('Error fetching menu item by ID:', error);
             throw error;
         }
     }
@@ -568,7 +559,6 @@ class SAPODataService {
     // Create or update menu item
     async saveMenuItem(menuItem: MenuItem, isUpdate: boolean = false): Promise<MenuItem> {
         try {
-            console.log('Saving menu item:', menuItem, 'isUpdate:', isUpdate);
             // Prepare roles with empty IDs for new roles
             const rolesForPayload = menuItem.roles.map((role) => ({
                 Description: role.Description,
@@ -611,26 +601,21 @@ class SAPODataService {
             }
 
             const result = await response.json();
-            console.log('odata result after generation', result);
             const generatedId = result.d?.Id || menuItem.id;
 
             // Always fetch the complete updated item to get RoleIds for newly added roles
             if (generatedId) {
-                console.log(`Fetching updated item with ID: ${generatedId}...`);
-
                 // Wait a bit for the server to process
                 await new Promise((resolve) => setTimeout(resolve, 500));
 
                 try {
                     const updatedItem = await this.fetchMenuItemById(generatedId);
-                    console.log('Fetched updated item with roles:', updatedItem);
                     return {
                         ...updatedItem,
                         isNew: false,
                         hasChanges: false,
                     };
                 } catch (fetchError) {
-                    console.warn('Failed to fetch updated item, using response data:', fetchError);
                     // Fallback to constructing from response and original data
                     return {
                         ...menuItem,
@@ -649,7 +634,6 @@ class SAPODataService {
                 hasChanges: false,
             };
         } catch (error) {
-            console.error('Error saving menu item:', error);
             throw error;
         }
     }
@@ -680,8 +664,6 @@ class SAPODataService {
                 RolesSecItem: rolesForPayload,
             };
 
-            console.log('Section payload for', isUpdate ? 'update' : 'create', ':', payload);
-
             const newCSRFToken = await this.getNewCsrfToken(`${this.baseUrl}/SectionConfSet`);
             const response = await fetch(`${this.baseUrl}/SectionConfSet`, {
                 method: 'POST',
@@ -700,13 +682,10 @@ class SAPODataService {
             }
 
             const result = await response.json();
-            console.log('Section odata result after', isUpdate ? 'update' : 'creation', result);
             const generatedId = result.d?.Id || section.id;
 
             // If we got a new ID, fetch the complete updated item
             if (generatedId && generatedId !== section.id) {
-                console.log(`Generated new section ID: ${generatedId}, fetching updated item...`);
-
                 // Wait a bit for the server to process
                 await new Promise((resolve) => setTimeout(resolve, 500));
 
@@ -721,7 +700,7 @@ class SAPODataService {
                         };
                     }
                 } catch (fetchError) {
-                    console.warn('Failed to fetch updated section, using response data:', fetchError);
+                    // Fallback to constructing from response and original data
                 }
 
                 // Fallback to constructing from response and original data
@@ -741,7 +720,6 @@ class SAPODataService {
                 hasChanges: false,
             };
         } catch (error) {
-            console.error('Error saving section:', error);
             throw error;
         }
     }
@@ -758,7 +736,6 @@ class SAPODataService {
                 const widget = layoutData.widgets[i];
                 const layoutConfig = layoutData.layout.find((l) => l.i === widget.id);
                 const fieldMapping = layoutData.fieldMappings[widget.id];
-                console.log('widget id', widget.id);
 
                 // Prepare the widget item
                 const widgetItem: WidgetHeadItem = {
@@ -778,7 +755,6 @@ class SAPODataService {
 
                 // Add widget to the collection
                 allWidgets.push(widgetItem);
-                console.log('widgetItem', widget);
                 // Prepare roles for this widget and add to all roles collection
                 const widgetRoles: WidgetHeadRole[] = (widget.roles || [])
                     .map((role: any) => {
@@ -839,11 +815,9 @@ class SAPODataService {
             }
 
             const result = await response.json();
-            console.log('All widgets save result:', result);
 
             return result;
         } catch (error) {
-            console.error('Error saving widget layout:', error);
             throw error;
         }
     }
@@ -890,7 +864,6 @@ class SAPODataService {
                 throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
             }
         } catch (error) {
-            console.error('Error deleting menu item:', error);
             throw error;
         }
     }
@@ -928,7 +901,6 @@ class SAPODataService {
                 throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
             }
         } catch (error) {
-            console.error('Error deleting section:', error);
             throw error;
         }
     }
@@ -950,7 +922,6 @@ class SAPODataService {
 
             return results;
         } catch (error) {
-            console.error('Error batch updating menu items:', error);
             throw error;
         }
     }
@@ -972,7 +943,6 @@ class SAPODataService {
 
             return results;
         } catch (error) {
-            console.error('Error batch updating sections:', error);
             throw error;
         }
     }
@@ -1005,7 +975,6 @@ class SAPODataService {
         try {
             return jsonString ? JSON.parse(jsonString) : {};
         } catch (error) {
-            console.warn('Failed to parse JSON:', jsonString, error);
             return {};
         }
     }
@@ -1033,8 +1002,6 @@ class SAPODataService {
             return data.result || [];
         } catch (error) {
             return [];
-            // console.error('Error fetching news feed:', error);
-            // throw error;
         }
     }
 
@@ -1071,7 +1038,6 @@ class SAPODataService {
             // If no results, user is not admin
             return false;
         } catch (error) {
-            console.error('Error checking admin role:', error);
             // In case of error, default to non-admin for security
             return false;
         }
@@ -1120,7 +1086,6 @@ class SAPODataService {
                         }
                     };
                 } catch (parseError) {
-                    console.warn('Failed to parse ConfigJson, returning default configuration:', parseError);
                     return null;
                 }
             }
@@ -1128,7 +1093,6 @@ class SAPODataService {
             // No settings found for this tab
             return null;
         } catch (error) {
-            console.error('Error fetching settings by tab ID:', error);
             return null;
         }
     }
@@ -1139,7 +1103,6 @@ class SAPODataService {
     async saveSettings(tabId: string, configuration: UIConfiguration, existingId?: string): Promise<UIConfiguration> {
         try {
             const isUpdate = !!existingId;
-            console.log('Saving settings for tabId:', tabId, 'isUpdate:', isUpdate, 'existingId:', existingId);
 
             // Remove metadata from configuration before saving
             const configToSave = { ...configuration };
@@ -1157,8 +1120,6 @@ class SAPODataService {
                 IsVisible: 'X',
                 TabId: tabId,
             };
-
-            console.log('Settings payload for', isUpdate ? 'update' : 'create', ':', payload);
 
             const newCSRFToken = await this.getNewCsrfToken(`${this.baseUrl}/SettingsSet`);
             const response = await fetch(`${this.baseUrl}/SettingsSet`, {
@@ -1178,8 +1139,6 @@ class SAPODataService {
             }
 
             const result = await response.json();
-            console.log('Settings save result:', result);
-
             const savedId = result.d?.Id || existingId;
 
             // Return the configuration with updated metadata
@@ -1192,7 +1151,6 @@ class SAPODataService {
                 }
             };
         } catch (error) {
-            console.error('Error saving settings:', error);
             throw error;
         }
     }
@@ -1225,7 +1183,6 @@ class SAPODataService {
 
             return null;
         } catch (error) {
-            console.error('Error getting settings ID:', error);
             return null;
         }
     }
@@ -1269,7 +1226,6 @@ class SAPODataService {
                 },
             };
         } catch (error) {
-            console.error('Error fetching UI config:', error);
             return null;
         }
     }
@@ -1322,7 +1278,6 @@ class SAPODataService {
                 },
             };
         } catch (error) {
-            console.error('Error saving UI config:', error);
             throw error;
         }
     }

@@ -28,6 +28,7 @@ interface SearchResult {
         SectionName: string;
         SectionDescription: string;
         WidgetId: string;
+        WidgetTitle: string;
         WidgetType: string;
         TechnicalName: string;
         WidgetDescription: string;
@@ -209,9 +210,7 @@ export default function Home({
                 'section.originalSection.description',
                 // Widget-level fields
                 'widget.name',
-                'widget.props.blankWidgetConfig.title',
-                'widget.props.title',
-                'widget.props.chartConfig.title',
+                'widget.title',
                 'widget.props.title',
                 'widget.props.name',
                 'widget.props.customTitle',
@@ -243,6 +242,7 @@ export default function Home({
                         SectionId: section.id || section.originalSection?.id || '',
                         SectionName: sectionName,
                         SectionDescription: sectionDescription,
+                        WidgetTitle: '',
                         WidgetId: '',
                         WidgetType: '',
                         TechnicalName: '',
@@ -296,6 +296,7 @@ export default function Home({
                     SectionName: sectionName,
                     SectionDescription: sectionDescription,
                     WidgetId: widget.id,
+                    WidgetTitle: widgetTitle,
                     WidgetType: widgetName,
                     TechnicalName: technicalName,
                     WidgetDescription: widgetDescription || widgetTitle,
@@ -303,9 +304,7 @@ export default function Home({
                 match_text: combinedText,
                 level: 'widget',
                 ai_title: widgetTitle || widgetName,
-                ai_summary:
-                    widgetDescription ||
-                    `Matched widget "${widgetTitle || widgetName}" in section "${sectionName}" for "${query}".`,
+                ai_summary: '',
                 // Fuse score is 0 (best) to 1 (worst); invert so higher is better.
                 score: typeof score === 'number' ? 1 - score : 0,
             } as SearchResult;
@@ -589,11 +588,11 @@ export default function Home({
         const sectionParams = new URLSearchParams({
             sectionId: section.id,
             sectionName: section.name,
-            sectionDescription: section.description || '',
-            sectionType: section.type,
-            tabId: section.tabId,
-            expanded: isExpanded.toString(),
-            state: section.isNew ? 'create' : 'edit',
+            // sectionDescription: section.description || '',
+            // sectionType: section.type,
+            // tabId: section.tabId,
+            // expanded: isExpanded.toString(),
+            // state: section.isNew ? 'create' : 'edit',
         });
 
         const mappingUrl =

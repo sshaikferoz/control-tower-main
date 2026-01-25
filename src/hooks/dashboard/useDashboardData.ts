@@ -15,11 +15,7 @@ export const useDashboardData = (tabId: string) => {
         const fetchDashboardData = async () => {
             try {
                 setLoading(true);
-                console.log(`Fetching sections for tab ID: ${tabId}`);
-
                 const sections = await sapODataService.fetchSectionsByTabId(tabId);
-                console.log('Fetched sections from SAP:', sections);
-
                 setSapSections(sections);
                 const transformedSections = transformSectionsToUIFormat(sections);
                 setDashboardData({ sections: transformedSections });

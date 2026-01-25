@@ -14,10 +14,6 @@ export function parseXMLToJson(xmlString: string): any {
 
         // Extract chart data
         const chartData = extractChartData(xmlString);
-        console.log('Chart Data:', {
-            header,
-            chartData,
-        });
         return {
             header,
             chartData,
@@ -65,8 +61,6 @@ function extractMetadata(xmlString: string): any[] {
 
         const displayStyleMatch = metadataBlock.match(/<DISPLAY_STYLE>([^<]+)<\/DISPLAY_STYLE>/);
         const displayStyle = displayStyleMatch ? displayStyleMatch[1] : "";
-
-        console.log("Field Name:", fieldName);
 
         return { type, fieldName, label, axisType, displayStyle };
     });

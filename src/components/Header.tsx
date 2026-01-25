@@ -19,6 +19,7 @@ interface SearchResult {
         SectionDescription: string;
         WidgetId: string;
         WidgetType: string;
+        WidgetTitle: string;
         TechnicalName: string;
         WidgetDescription: string;
     };
@@ -198,6 +199,16 @@ const Header: React.FC<HeaderProps> = ({ configuration, tabId, onSearchSelect, o
     const handleSearchChange = (value: string) => {
         setSearchQuery(value);
         if (debounceRef.current) clearTimeout(debounceRef.current);
+
+        // Clear selection/highlighting when input is empty
+        if (!value.trim()) {
+            setSearchResults([]);
+            setShowDropdown(false);
+            setSelectedIndex(-1);
+            if (onSearchSelect) onSearchSelect(null);
+            return;
+        }
+
         debounceRef.current = setTimeout(() => {
             performSearch(value);
         }, 300);
@@ -357,7 +368,7 @@ const Header: React.FC<HeaderProps> = ({ configuration, tabId, onSearchSelect, o
                                 ref={inputRef}
                                 type="text"
                                 placeholder={searchConfig.placeholder}
-                                className="h-[41px] w-full rounded-xl border-0 bg-white/95 px-4 pr-10 pl-12 text-gray-800 placeholder-gray-500 shadow-sm backdrop-blur-sm focus:bg-white focus:ring-2 focus:ring-blue-300 focus:outline-none"
+                                className="h-[41px] w-full rounded-xl border-0 bg-white/95 px-4 pr-10 pl-12 text-gray-800 !placeholder-gray-500 shadow-sm backdrop-blur-sm focus:bg-white focus:ring-2 focus:ring-blue-300 focus:outline-none"
                                 value={searchQuery}
                                 onChange={(e) => handleSearchChange(e.target.value)}
                                 onKeyDown={handleKeyDown}
@@ -398,7 +409,7 @@ const Header: React.FC<HeaderProps> = ({ configuration, tabId, onSearchSelect, o
                                             {/* Section Name */}
                                             <div className="flex items-center gap-2">
                                                 <h3 className="font-semibold text-gray-900">
-                                                    {result.metadata.SectionName}
+                                                    {result.metadata.SectionName} - {result.metadata.WidgetTitle}
                                                 </h3>
                                             </div>
 
@@ -412,7 +423,7 @@ const Header: React.FC<HeaderProps> = ({ configuration, tabId, onSearchSelect, o
                                             {/* Widget Description */}
                                             {result.metadata.WidgetDescription && (
                                                 <div className="text-xs text-gray-600">
-                                                    <span className="font-medium">Widget: </span>
+                                                    <span className="font-medium">Description: </span>
                                                     {result.metadata.WidgetDescription}
                                                 </div>
                                             )}

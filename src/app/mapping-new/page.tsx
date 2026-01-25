@@ -20,21 +20,19 @@ const MappingScreen: React.FC = () => {
     const [loading, setLoading] = useState<boolean>(false);
     const toast = React.useRef<Toast>(null);
 
-    // Get section info from URL params
-    const { sectionName, sectionId, isExpanded } = useMemo(() => {
+    // Use useState to avoid hydration mismatch - these values are set on client side only
+    const [sectionName, setSectionName] = useState<string>('Dashboard');
+    const [sectionId, setSectionId] = useState<string>('');
+    const [isExpanded, setIsExpanded] = useState<string>('false');
+
+    // Set URL params on client side only to avoid hydration mismatch
+    useEffect(() => {
         if (typeof window !== 'undefined') {
             const searchParams = new URLSearchParams(window.location.search);
-            return {
-                sectionName: searchParams.get('sectionName') || 'Dashboard',
-                sectionId: searchParams.get('sectionId') || '',
-                isExpanded: searchParams.get('expanded') || 'false',
-            };
+            setSectionName(searchParams.get('sectionName') || 'Dashboard');
+            setSectionId(searchParams.get('sectionId') || '');
+            setIsExpanded(searchParams.get('expanded') || 'false');
         }
-        return {
-            sectionName: 'Dashboard',
-            sectionId: '',
-            isExpanded: 'false',
-        };
     }, []);
 
     // Load existing widgets from SAP OData service
@@ -296,13 +294,13 @@ const MappingScreen: React.FC = () => {
             // After successful save, remove deleted widgets from the widgets array
             setWidgets((prev) => prev.filter((w) => !w.deleted));
 
-            // // Redirect after a short delay
-            // setTimeout(() => {
-            //     window.location.href =
-            //         process.env.NODE_ENV === 'development'
-            //             ? '/?view=edit'
-            //             : `${process.env.NEXT_PUBLIC_BSP_NAME}/index.html?view=edit`;
-            // }, 2000);
+            // Redirect after a short delay
+            setTimeout(() => {
+                window.location.href =
+                    process.env.NODE_ENV === 'development'
+                        ? '/?view=edit'
+                        : `${process.env.NEXT_PUBLIC_BSP_NAME}/index.html?view=edit`;
+            }, 2000);
         } catch (error) {
             console.error('Error saving layout:', error);
             toast.current?.show({

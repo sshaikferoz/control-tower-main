@@ -47,7 +47,9 @@ const KpiChart: React.FC<KpiChartProps> = ({
         const source = (bexData as any)?.chartData || providedData;
         if (!source?.length) return null;
         const value = source[0][kpiConfig.valueKey];
-        return value !== undefined && value !== null ? Number(value) : null;
+        if (value === '' || value === null || value === undefined) return null;
+        const parsed = typeof value === 'string' ? Number(value.trim()) : Number(value);
+        return Number.isFinite(parsed) ? parsed : null;
     }, [bexData, providedData, kpiConfig]);
 
     useEffect(() => {
@@ -58,11 +60,29 @@ const KpiChart: React.FC<KpiChartProps> = ({
     /* Helpers */
     /* ---------------------------------- */
 
-    const formatNumber = (num: number) =>
-        formatNumberUtil(num, {
+    const formatNumber = (value: unknown): string => {
+        // Defensive: some sources can provide "" or non-numeric strings.
+        if (value === '' || value === null || value === undefined) return '';
+
+        let num: number | null = null;
+        if (typeof value === 'number') {
+            num = value;
+        } else if (typeof value === 'string') {
+            const trimmed = value.trim();
+            if (trimmed === '') return '';
+            const parsed = Number(trimmed);
+            num = Number.isFinite(parsed) ? parsed : null;
+        }
+
+        if (num === null || !Number.isFinite(num)) {
+            return typeof value === 'string' ? value : String(value);
+        }
+
+        return formatNumberUtil(num, {
             format: kpiConfig?.valueFormat || 'non-currency',
             decimals: 2,
         });
+    };
 
     const getColorForValue = (value: number | null) => {
         if (value === null || !kpiConfig?.colorRanges) return '#9CA3AF';
@@ -108,13 +128,22 @@ const KpiChart: React.FC<KpiChartProps> = ({
     );
 
     const renderNumberWithDelta = () => {
-        const delta = providedData?.[1]?.[kpiConfig?.valueKey || ''] as number | undefined;
-        const deltaPct = delta && currentValue ? ((currentValue - delta) / delta) * 100 : 0;
+        const deltaRaw = providedData?.[1]?.[kpiConfig?.valueKey || ''];
+        const delta =
+            deltaRaw === '' || deltaRaw === null || deltaRaw === undefined
+                ? null
+                : Number.isFinite(Number(deltaRaw))
+                    ? Number(deltaRaw)
+                    : null;
+        const deltaPct =
+            delta === null || currentValue === null || delta === 0
+                ? 0
+                : ((currentValue - delta) / delta) * 100;
         const isPositive = deltaPct >= 0;
 
         return (
             <div className="flex flex-col items-center">
-                <span className="text-4xl font-bold">{formatNumber(currentValue ?? 0)}</span>
+                <span className="text-4xl font-bold">{currentValue !== null ? formatNumber(currentValue) : '—'}</span>
                 <span className={`text-sm font-semibold ${isPositive ? 'text-green-300' : 'text-red-300'}`}>
                     {isPositive ? '▲' : '▼'} {Math.abs(deltaPct).toFixed(1)}%
                 </span>

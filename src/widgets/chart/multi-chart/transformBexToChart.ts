@@ -50,7 +50,7 @@ export function transformBexToChart(
     let data = [];
 
     // Always return raw rows. MultiChart can handle grouping via `groupByField`.
-    data = chartData.map((row: any) => ({
+    data = chartData?.map((row: any) => ({
         name: row[xAxisKey],
         ...row,
     }));
@@ -59,6 +59,7 @@ export function transformBexToChart(
         data,
         series,
         groupByField: groupByKey,
+        xAxisLabel: headerText?.[xAxisKey] || xAxisKey, // Return the x-axis label for table header
     };
 }
 

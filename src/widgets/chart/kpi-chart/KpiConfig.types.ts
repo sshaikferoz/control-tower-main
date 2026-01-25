@@ -21,6 +21,7 @@ export interface GaugeWidgetConfig {
     transparentBackground?: boolean; // Disable background and make it transparent
     // BEX query configuration
     queryName?: string;
+    showTitle?: boolean;
 }
 
 

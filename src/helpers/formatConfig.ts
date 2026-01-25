@@ -1,4 +1,3 @@
-
 export type ScaleType = 'none' | 'thousand' | 'million' | 'billion' | 'auto';
 export type RoundingType = 'none' | 'ceil' | 'floor' | 'round';
 

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, Suspense } from 'react';
+import { Tooltip } from '@mui/material';
 import { useIntersectionObserver } from '../hooks/ui/useIntersectionObserver';
 import { WidgetSkeleton } from '../components/ui/WidgetSkeleton';
 
@@ -26,14 +27,21 @@ export const LazyWidgetContent: React.FC<LazyWidgetContentProps> = ({
 
     useEffect(() => {
         if ((isVisible || hasBeenVisible) && !hasTriggeredLoad) {
-            console.log(`Widget ${widget.id} became visible, triggering load`);
             onVisible();
             setHasTriggeredLoad(true);
         }
     }, [isVisible, hasBeenVisible, hasTriggeredLoad, onVisible, widget.id]);
 
-    return (
-        <div ref={setRef} className="h-full w-full">
+    const isKpiChart = widget.name === 'kpi-chart';
+    const hoverClasses = isKpiChart
+        ? 'transition-transform duration-300 ease-in-out hover:scale-105 origin-center'
+        : '';
+
+
+    const description = widget.description || '';
+
+    const content = (
+        <div ref={setRef} className={`h-full w-full ${hoverClasses}`}>
             {isVisible || hasBeenVisible ? (
                 <Suspense fallback={<WidgetSkeleton />}>
                     {isLoading ? <WidgetSkeleton /> : <Component {...props} />}
@@ -43,4 +51,21 @@ export const LazyWidgetContent: React.FC<LazyWidgetContentProps> = ({
             )}
         </div>
     );
+
+    // Wrap with tooltip only for KpiChart widgets with description
+    if (isKpiChart && description) {
+        return (
+            <Tooltip
+                title={description}
+                placement="top"
+                arrow
+                enterDelay={300}
+                leaveDelay={0}
+            >
+                {content}
+            </Tooltip>
+        );
+    }
+
+    return content;
 };

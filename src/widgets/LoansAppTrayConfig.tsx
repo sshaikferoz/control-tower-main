@@ -2,6 +2,7 @@
 // This should be added to the MappingScreen component
 
 import React, { useState, useEffect } from 'react';
+import Grid from '@mui/material/Grid';
 import {
     Box,
     Typography,
@@ -10,7 +11,6 @@ import {
     Select,
     MenuItem,
     TextField,
-    Grid,
     Paper,
     IconButton,
     Dialog,

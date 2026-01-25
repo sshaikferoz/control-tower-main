@@ -150,7 +150,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 };
 
                 const savedItem = await sapODataService.saveMenuItem(newItem, false);
-                console.log(savedItem, 'saveditem', menuItems);
                 // Update the menu items list
                 const updatedItems = [...menuItems, savedItem];
                 onMenuItemsChange(updatedItems);
@@ -332,8 +331,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
                                                     ref={provided.innerRef}
                                                     {...provided.draggableProps}
                                                     className={`group relative flex cursor-pointer items-center rounded px-3 py-2 transition-colors ${selectedItem === item.id
-                                                            ? 'bg-white text-black'
-                                                            : 'text-white hover:bg-[#ffffff30]'
+                                                        ? 'bg-white text-black'
+                                                        : 'text-white hover:bg-[#ffffff30]'
                                                         } ${isSaving ? 'opacity-50' : ''} ${isCollapsed ? 'justify-center' : ''}`}
                                                     onClick={() => !editMode && !isSaving && onItemSelect(item)}
                                                     title={isCollapsed ? item.name : ''}
@@ -394,8 +393,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
                                                                 }}
                                                                 disabled={isSaving}
                                                                 className={`rounded p-1 ${!item.visible
-                                                                        ? 'bg-gray-600 hover:bg-gray-700'
-                                                                        : 'bg-blue-600 hover:bg-blue-700'
+                                                                    ? 'bg-gray-600 hover:bg-gray-700'
+                                                                    : 'bg-blue-600 hover:bg-blue-700'
                                                                     } transition-colors disabled:opacity-50`}
                                                                 title={!item.visible ? 'Show' : 'Hide'}
                                                             >

@@ -7,33 +7,17 @@
 export function ThemeScript() {
   const themeScript = `
     (function() {
-      const THEME_STORAGE_KEY = 'theme-preference';
       const THEME_ATTRIBUTE = 'data-theme';
-      
-      function getInitialTheme() {
-        try {
-          const stored = localStorage.getItem(THEME_STORAGE_KEY);
-          if (stored === 'light' || stored === 'dark') {
-            return stored;
-          }
-        } catch (e) {
-          // localStorage not available
-        }
-        
-        return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      const DARK_THEME = 'dark';
+
+      try {
+        document.documentElement.setAttribute(THEME_ATTRIBUTE, DARK_THEME);
+        // Keep compatibility with components that rely on the "dark" class (e.g. chart theming).
+        document.documentElement.classList.add('dark');
+        document.documentElement.classList.remove('light');
+      } catch (e) {
+        // Ignore errors
       }
-      
-      function setTheme(theme) {
-        try {
-          document.documentElement.setAttribute(THEME_ATTRIBUTE, theme);
-          localStorage.setItem(THEME_STORAGE_KEY, theme);
-        } catch (e) {
-          // Ignore errors
-        }
-      }
-      
-      const theme = getInitialTheme();
-      setTheme(theme);
     })();
   `;
 

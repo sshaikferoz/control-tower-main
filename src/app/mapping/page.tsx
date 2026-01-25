@@ -21,6 +21,7 @@ import MultiChart from '@/widgets/MultiChart';
 import { Button } from 'primereact/button';
 import { Splitter, SplitterPanel } from 'primereact/splitter';
 import { parseXMLToJson } from '@/lib/bexQueryXmlToJson';
+import Grid from '@mui/material/Grid';
 import {
     TextField,
     FormControl,
@@ -38,7 +39,6 @@ import {
     Tab,
     Tabs,
     Chip,
-    Grid,
     Paper,
     IconButton,
     Card,
@@ -888,12 +888,11 @@ const LoansAppTrayConfig: React.FC<LoansAppTrayConfigProps> = ({
                             const IconComponent = (MUIIcons as any)[iconName];
 
                             if (!IconComponent) {
-                                console.log('Icon not found:', iconName);
                                 return null;
                             }
 
                             return (
-                                <Grid item xs={3} sm={2} key={iconName}>
+                                <Grid item={true} xs={3} sm={2} key={iconName}>
                                     <Paper
                                         sx={{
                                             p: 1,
@@ -1316,15 +1315,19 @@ const MappingScreen: React.FC = () => {
         return urlParams?.get('state') === 'edit';
     }, [isAdmin, urlParams]);
 
-    let sectionName = '';
-    let sectionId = '';
-    let isExpanded = '';
-    if (typeof window !== 'undefined') {
-        const searchParams = new URLSearchParams(window.location.search);
-        sectionName = searchParams.get('sectionName') || '';
-        sectionId = searchParams.get('sectionId') || '';
-        isExpanded = searchParams.get('expanded') || '';
-    }
+    // Use useState to avoid hydration mismatch - these values are set on client side only
+    const [sectionName, setSectionName] = useState<string>('');
+    const [sectionId, setSectionId] = useState<string>('');
+    const [isExpanded, setIsExpanded] = useState<string>('');
+
+    // Set URL params on client side only to avoid hydration mismatch
+    useEffect(() => {
+        if (urlParams) {
+            setSectionName(urlParams.get('sectionName') || '');
+            setSectionId(urlParams.get('sectionId') || '');
+            setIsExpanded(urlParams.get('expanded') || '');
+        }
+    }, [urlParams]);
 
     const [widgets, setWidgets] = useState<Widget[]>([]);
     const [layout, setLayout] = useState<LayoutItem[]>([]);

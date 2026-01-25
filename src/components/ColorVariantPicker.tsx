@@ -1,7 +1,8 @@
 'use client';
 
 import React from 'react';
-import { Box, Typography, Card, CardContent, Grid, Accordion, AccordionSummary, AccordionDetails } from '@mui/material';
+import Grid from '@mui/material/Grid';
+import { Box, Typography, Card, CardContent, Accordion, AccordionSummary, AccordionDetails } from '@mui/material';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 

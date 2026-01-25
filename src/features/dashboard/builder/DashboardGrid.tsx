@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import RGL, { WidthProvider } from 'react-grid-layout';
 import 'react-grid-layout/css/styles.css';
 import 'react-resizable/css/styles.css';
@@ -8,11 +8,18 @@ import { Typography } from '@mui/material';
 import { Splitter, SplitterPanel } from 'primereact/splitter';
 import { DashboardProps, Widget, LayoutItem } from '../dashboard.types';
 
+
+
 const GridLayout = WidthProvider(RGL);
 
 interface DashboardGridProps extends DashboardProps {
     renderWidget: (widget: Widget) => React.ReactNode;
     emptyState?: React.ReactNode;
+    onCopyWidget?: (widgetId: string) => void;
+    onPasteWidget?: () => void;
+    onBringToFront?: (widgetId: string) => void;
+    onSendToBack?: (widgetId: string) => void;
+    copiedWidget?: boolean;
 }
 
 export const DashboardGrid: React.FC<DashboardGridProps> = ({
@@ -110,19 +117,19 @@ export const DashboardGrid: React.FC<DashboardGridProps> = ({
                             cols={cols}
                             rowHeight={rowHeight}
                             allowOverlap={true}
-
                             width={1}
                             isResizable={!isViewMode}
                             resizeHandles={['s', 'w', 'e', 'n', 'sw', 'nw', 'se', 'ne']}
                             isDraggable={!isViewMode}
                             onLayoutChange={handleLayoutChange}
+
                         >
                             {visibleWidgets.map((widget) => (
                                 <div
                                     key={widget.id}
                                     className="relative rounded-lg shadow-md transition-all"
                                     style={{
-                                        backgroundColor: 'var(--background)',
+                                        // backgroundColor: 'var(--background)',
                                         border: `2px solid var(${selectedWidget === widget.id ? '--primary1' : '--foreground'})`,
                                         cursor: isViewMode ? 'default' : 'pointer',
                                     }}

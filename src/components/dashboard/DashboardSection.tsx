@@ -40,7 +40,7 @@ interface ExtendedDashboardSectionProps extends DashboardSectionProps {
     // Dashboard configuration
     dashboardType?: 'Sections' | 'Report';
 }
-mirageServer();
+if (process.env.NODE_ENV === 'development') mirageServer();
 export const DashboardSection: React.FC<ExtendedDashboardSectionProps> = ({
     section,
     index,
@@ -126,7 +126,6 @@ export const DashboardSection: React.FC<ExtendedDashboardSectionProps> = ({
         const initialWidgetProps: Record<string, any> = {};
 
         section.widgets?.forEach((widget: any) => {
-            console.log(widget.props, 'widgetpropssss');
             if (widget.props && Object.keys(widget.props).length > 0) {
                 const { configType, widgetCategory, ...cleanProps } = widget.props;
                 initialWidgetProps[widget.id] = cleanProps;
@@ -378,7 +377,7 @@ export const DashboardSection: React.FC<ExtendedDashboardSectionProps> = ({
         e.stopPropagation();
 
         // Check for target report in widget's field mappings first
-        let targetReport = widget.fieldMappings?.targetReport;
+        let targetReport = widget.props?.targetReport;
 
         // If not found, check section-level field mappings
         if (!targetReport) {
@@ -639,7 +638,7 @@ export const DashboardSection: React.FC<ExtendedDashboardSectionProps> = ({
                                     key={widget.id}
                                     className={getWidgetClasses(
                                         widget.id,
-                                        'relative rounded-lg bg-transparent transition-shadow duration-200'
+                                        'relative rounded-lg bg-transparent transition-shadow duration-200 hover:cursor-pointer'
                                     )}
                                     data-widget-id={widget.id}
                                     onClick={(e) => handleWidgetClick(e, widget)}
@@ -655,7 +654,7 @@ export const DashboardSection: React.FC<ExtendedDashboardSectionProps> = ({
                                         const description = targetReport?.description || widget.description || 'No description available';
 
                                         return showInfo ? (
-                                            <div className="absolute top-2 right-2 flex space-x-1 z-1000">
+                                            <div className="absolute top-2 right-2 flex space-x-1 z-10">
                                                 <Tooltip
                                                     title={description}
                                                     enterDelay={0}
@@ -664,6 +663,7 @@ export const DashboardSection: React.FC<ExtendedDashboardSectionProps> = ({
                                                     arrow
                                                 >
                                                     <IconButton
+                                                        z-index={10}
                                                         onClick={(e) => handleInfoClick(e, widget)}
                                                         size="small"
                                                         data-action-button="true"

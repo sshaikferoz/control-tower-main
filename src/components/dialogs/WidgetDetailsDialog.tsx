@@ -1,4 +1,5 @@
 import React from 'react';
+import Grid from '@mui/material/Grid';
 import {
     Dialog,
     DialogTitle,
@@ -9,7 +10,6 @@ import {
     Typography,
     Card,
     CardContent,
-    Grid,
     Box,
     Paper,
 } from '@mui/material';

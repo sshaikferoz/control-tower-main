@@ -281,12 +281,12 @@ export const defaultPropsMapping: Record<string, any> = {
         valueFormat: 'non-currency',
     },
     'multi-chart-bex': {
-        queryName: 'YIMO_INV_TRND_DET_SLOW',
+        queryName: '',
         title: 'Widget Title',
         chartConfig: {
             chartType: 'line',
             xAxisKey: 'Month',
-            measures: ['TotalValue'],
+            measures: [],
             stacked: true,
             valueFormat: 'non-currency',
             showLegend: true,

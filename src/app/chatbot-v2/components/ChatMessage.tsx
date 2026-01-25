@@ -17,6 +17,7 @@ interface ChatMessageProps {
     airesponse: any;
     onRegenerate?: (messageId: string, originalPrompt: string) => void;
     originalPrompt?: string;
+    isLoading?: boolean;
 }
 
 const ChatMessage: React.FC<ChatMessageProps> = ({
@@ -28,6 +29,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
     onRegenerate,
     airesponse,
     originalPrompt,
+    isLoading = false,
 }) => {
     const [showFeedbackDialog, setShowFeedbackDialog] = useState(false);
     const [feedbackSubmitted, setFeedbackSubmitted] = useState(false);
@@ -234,9 +236,18 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
 
             <div className="mb-8 flex flex-col justify-start">
                 <div className="answer-card animate-fade-in isolate flex w-full max-w-[1130px] flex-col items-start gap-[10px] rounded-[24px] bg-[#384F73] p-6 shadow-md">
-                    <div ref={contentRef} className="chat-response-content w-full max-w-none">
-                        <MarkdownRenderer markdown={content} />
-                    </div>
+                    {isLoading && !content ? (
+                        <div className="flex items-center gap-2 px-4 py-2">
+                            <div className="h-3 w-3 animate-bounce rounded-full bg-gray-400 [animation-delay:0s]"></div>
+                            <div className="h-3 w-3 animate-bounce rounded-full bg-gray-400 [animation-delay:0.2s]"></div>
+                            <div className="h-3 w-3 animate-bounce rounded-full bg-gray-400 [animation-delay:0.4s]"></div>
+                            <span className="ml-2 text-sm text-gray-300">...</span>
+                        </div>
+                    ) : (
+                        <div ref={contentRef} className="chat-response-content w-full max-w-none">
+                            <MarkdownRenderer markdown={content} />
+                        </div>
+                    )}
                 </div>
 
                 <div className="mt-4 flex items-center justify-between">

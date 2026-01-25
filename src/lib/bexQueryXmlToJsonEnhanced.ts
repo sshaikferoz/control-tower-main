@@ -208,19 +208,7 @@ export default function parseBExQueryXML(xml: string): ParseResult {
             if (!cur || typeof cur !== 'object') return cum
             return { ...cum, ...cur }
         }, {})
-
-
-    console.log('JSON', {
-        header,
-        chartData,
-        headerKeys,
-        headerText,
-        keyFigureKeys,
-        charKeys,
-        charUniqueValues,
-        metadata: { description, loadDate },
-    }
-    )
+    
     return {
         header,
         chartData,

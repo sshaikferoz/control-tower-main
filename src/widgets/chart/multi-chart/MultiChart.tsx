@@ -326,7 +326,6 @@ const MultiChart: React.FC<MultiChartProps> = ({
             };
             return transformBexToChart(bexData, flattenedConfig);
         } catch (error) {
-            console.error('Error transforming BEx data:', error);
             return null;
         }
     }, [bexData, chartConfig, queryName, bexLoading]);
@@ -395,6 +394,13 @@ const MultiChart: React.FC<MultiChartProps> = ({
         }
         return providedGroupByField;
     }, [bexTransformedData?.groupByField, providedGroupByField]);
+
+    const xAxisLabel = useMemo(() => {
+        if (bexTransformedData?.xAxisLabel) {
+            return bexTransformedData.xAxisLabel;
+        }
+        return 'Name'; // Default fallback
+    }, [bexTransformedData?.xAxisLabel]);
 
     const title = useMemo(() => {
         // Use title from configuration if available, otherwise fallback to providedTitle
@@ -641,7 +647,27 @@ const MultiChart: React.FC<MultiChartProps> = ({
         });
     };
 
-    const formatNumber = (num: number) => {
+    const formatNumber = (value: unknown): string => {
+        // Recharts can pass numbers OR strings (including ""), depending on axis/tooltip internals.
+        // Guard here so we only call the number formatter with a real finite number.
+        if (value === '' || value === null || value === undefined) return '';
+
+        let num: number | null = null;
+
+        if (typeof value === 'number') {
+            num = value;
+        } else if (typeof value === 'string') {
+            const trimmed = value.trim();
+            if (trimmed === '') return '';
+            const parsed = Number(trimmed);
+            num = Number.isFinite(parsed) ? parsed : null;
+        }
+
+        if (num === null || !Number.isFinite(num)) {
+            // If it's a non-numeric string (or something unexpected), don't crash—just display it.
+            return typeof value === 'string' ? value : String(value);
+        }
+
         return formatNumberUtil(num, {
             format: valueFormat || 'non-currency',
             // Don't specify decimals to match original toString() behavior for currency
@@ -1246,7 +1272,7 @@ const MultiChart: React.FC<MultiChartProps> = ({
                             <table className="multi-chart-table">
                                 <thead>
                                     <tr>
-                                        <th>Name</th>
+                                        <th>{xAxisLabel}</th>
                                         {seriesToRender
                                             .filter((s) => !s.hide)
                                             .map((s) => (

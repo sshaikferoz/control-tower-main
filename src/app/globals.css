@@ -1,45 +1,22 @@
 @import 'tailwindcss';
 @import 'gridstack/dist/gridstack.min.css';
 @import 'primereact/resources/primereact.min.css';
-@import 'primereact/resources/themes/lara-light-cyan/theme.css';
-@import 'devextreme/dist/css/dx.light.css';
+@import 'primereact/resources/themes/lara-dark-cyan/theme.css';
+@import 'devextreme/dist/css/dx.dark.css';
 @import 'react-resizable/css/styles.css';
 
-/* Light theme (default) */
+/* Dark theme only */
 :root,
-:root[data-theme='light'] {
-  --background: #ffffff;
-  --foreground: #171717;
-  --primary1: #83bd01;
-  --primary2: #8979ff;
-  --secondary1: #00214e;
-  --scrollbar-thumb: #00214e;
-  --scrollbar-track: transparent;
-  --font-manifa: 'Manifa2', sans-serif;
-}
-
-/* Dark theme */
 :root[data-theme='dark'] {
-  /* --background: #0a0a0a; */
+  --background: #06103a;
   --foreground: #ededed;
   --primary1: #9dd115;
   --primary2: #a396ff;
   --secondary1: #1a4d8f;
+  --border: rgba(255, 255, 255, 0.12);
   --scrollbar-thumb: #1a4d8f;
-  --scrollbar-track: #1a1a1a;
-}
-
-/* Fallback for system preference (only if no data-theme is set) */
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme]) {
-    --background: none;
-    --foreground: #ededed;
-    --primary1: #9dd115;
-    --primary2: #a396ff;
-    --secondary1: #1a4d8f;
-    --scrollbar-thumb: #1a4d8f;
-    --scrollbar-track: #1a1a1a;
-  }
+  --scrollbar-track: #0b1226;
+  --font-manifa: 'Manifa2', sans-serif;
 }
 
 @theme inline {

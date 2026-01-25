@@ -13,17 +13,11 @@ const THEME_ATTRIBUTE = 'data-theme';
  */
 export function getInitialTheme(): Theme {
     if (typeof window === 'undefined') {
-        return 'light';
+        return 'dark';
     }
 
-    // Check localStorage first
-    const stored = localStorage.getItem(THEME_STORAGE_KEY) as Theme | null;
-    if (stored === 'light' || stored === 'dark') {
-        return stored;
-    }
-
-    // Fall back to system preference
-    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    // Dark-only mode (ignore stored/system preference)
+    return 'dark';
 }
 
 /**
@@ -35,8 +29,15 @@ export function setTheme(theme: Theme): void {
     }
 
     const root = document.documentElement;
-    root.setAttribute(THEME_ATTRIBUTE, theme);
-    localStorage.setItem(THEME_STORAGE_KEY, theme);
+    // Dark-only mode: clamp everything to dark
+    root.setAttribute(THEME_ATTRIBUTE, 'dark');
+    root.classList.add('dark');
+    root.classList.remove('light');
+    try {
+        localStorage.setItem(THEME_STORAGE_KEY, 'dark');
+    } catch {
+        // Ignore storage errors
+    }
 }
 
 /**
@@ -44,14 +45,14 @@ export function setTheme(theme: Theme): void {
  */
 export function getTheme(): Theme {
     if (typeof document === 'undefined') {
-        return 'light';
+        return 'dark';
     }
 
     const root = document.documentElement;
     const theme = root.getAttribute(THEME_ATTRIBUTE) as Theme | null;
 
     if (theme === 'light' || theme === 'dark') {
-        return theme;
+        return 'dark';
     }
 
     return getInitialTheme();
@@ -61,10 +62,8 @@ export function getTheme(): Theme {
  * Toggle between light and dark theme
  */
 export function toggleTheme(): Theme {
-    const currentTheme = getTheme();
-    const newTheme: Theme = currentTheme === 'light' ? 'dark' : 'light';
-    setTheme(newTheme);
-    return newTheme;
+    setTheme('dark');
+    return 'dark';
 }
 
 /**
@@ -75,7 +74,6 @@ export function initializeTheme(): void {
         return;
     }
 
-    const theme = getInitialTheme();
-    setTheme(theme);
+    setTheme('dark');
 }
 

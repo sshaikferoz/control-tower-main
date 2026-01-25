@@ -176,9 +176,7 @@ export const DashboardBuilder: React.FC<DashboardBuilderProps> = ({
             x: (layout.length * 2) % cols,
             y: Math.floor(layout.length / (cols / 3)) * 3,
             w,
-            h,
-            minW: 2,
-            minH: 1,
+            h
         };
 
         pushToHistory();
@@ -213,7 +211,17 @@ export const DashboardBuilder: React.FC<DashboardBuilderProps> = ({
     const handleWidgetUpdate = (widgetId: string, props: Record<string, any>) => {
         pushToHistory();
         onWidgetsChange(
-            widgets.map((w) => (w.id === widgetId ? { ...w, props } : w))
+            widgets.map((w) => {
+                if (w.id === widgetId) {
+                    // If description prop is being updated, also update the Description field
+                    const updatedWidget: any = { ...w, props };
+                    if ('description' in props) {
+                        updatedWidget.Description = props.description;
+                    }
+                    return updatedWidget;
+                }
+                return w;
+            })
         );
     };
 

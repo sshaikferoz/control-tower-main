@@ -29,18 +29,20 @@ const initialTheme = getInitialTheme();
 // ============================================
 
 // In a React component:
-function ExampleComponent() {
-  const { theme, toggleTheme, setTheme } = useTheme();
+const ExampleComponent: React.FC = () => {
+    const { theme, toggleTheme, setTheme } = useTheme();
 
-  return (
-    <div>
-      <p>Current theme: {theme}</p>
-      <button onClick={toggleTheme}>Toggle Theme</button>
-      <button onClick={() => setTheme('light')}>Light</button>
-      <button onClick={() => setTheme('dark')}>Dark</button>
-    </div>
-  );
-}
+    return (
+        <div>
+            <p>Current theme: {theme}</p>
+            <button onClick={toggleTheme}>Toggle Theme</button>
+            <button onClick={() => setTheme('light')}>Light</button>
+            <button onClick={() => setTheme('dark')}>Dark</button>
+        </div>
+    );
+};
+
+export default ExampleComponent;
 
 // ============================================
 // CSS Usage
@@ -67,7 +69,7 @@ The theme is controlled by the data-theme attribute on the <html> element:
 import type { Theme } from './theme';
 
 function acceptTheme(theme: Theme) {
-  // theme is 'light' | 'dark'
-  console.log(theme);
+    // theme is 'light' | 'dark'
+    console.log(theme);
 }
 

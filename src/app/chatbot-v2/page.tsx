@@ -201,15 +201,27 @@ const ChatbotInterface: React.FC = () => {
         } catch (error) {
             console.error('Error generating response:', error);
             isStreamingRef.current = false;
-
-            const errorMessage: Message = {
-                id: generateMessageId(),
-                content: 'Sorry, I encountered an error processing your request.',
-                isUser: false,
-                originalPrompt: message,
-                userMessageId: userMessageId,
-            };
-            setMessages((prev) => [...prev, errorMessage]);
+            // Update any placeholder bot message instead of leaving an empty bubble
+            setMessages((prev) => {
+                const last = prev[prev.length - 1];
+                if (last && !last.isUser && last.userMessageId === userMessageId && last.content === '') {
+                    return prev.map((m) =>
+                        m.id === last.id
+                            ? { ...m, content: 'Sorry, I encountered an error processing your request.' }
+                            : m
+                    );
+                }
+                return [
+                    ...prev,
+                    {
+                        id: generateMessageId(),
+                        content: 'Sorry, I encountered an error processing your request.',
+                        isUser: false,
+                        originalPrompt: message,
+                        userMessageId: userMessageId,
+                    },
+                ];
+            });
         } finally {
             setLoading(false);
         }
@@ -221,40 +233,72 @@ const ChatbotInterface: React.FC = () => {
             return;
         }
 
+        const priorBotMessage = messages.find((msg) => msg.id === messageId);
+        const userMessageId = priorBotMessage?.userMessageId;
+
         // Find the message to regenerate and remove it from the list
         setMessages((prev) => prev.filter((msg) => msg.id !== messageId));
         setLoading(true);
 
         try {
-            // Get new response from service
-            const response = await generateResponse(originalPrompt, userInfo);
-
-            // Find the corresponding user message ID
-            const userMessage = messages.find((msg) => msg.content === originalPrompt && msg.isUser);
-
-            // Add new bot response
-            const newBotMessage: Message = {
-                id: generateMessageId(),
-                content: response.content,
+            // Add empty placeholder for regenerated bot response
+            const botMessageId = generateMessageId();
+            const botMessage: Message = {
+                id: botMessageId,
+                content: '',
                 isUser: false,
-                timestamp: response.metadata?.timestamp,
-                originalPrompt: originalPrompt,
-                userMessageId: userMessage?.id,
+                timestamp: new Date().toISOString(),
+                originalPrompt,
+                userMessageId,
             };
+            setMessages((prev) => [...prev, botMessage]);
 
-            setMessages((prev) => [...prev, newBotMessage]);
+            // Stream chunks
+            let accumulated = '';
+            isStreamingRef.current = true;
+            const response = await generateResponse(originalPrompt, userInfo, (chunk) => {
+                accumulated += chunk;
+                setMessages((prev) =>
+                    prev.map((m) => (m.id === botMessageId ? { ...m, content: accumulated } : m))
+                );
+            });
+            isStreamingRef.current = false;
+
+            setAiResponse(response);
+
+            // Final update with metadata timestamp
+            setMessages((prev) =>
+                prev.map((m) =>
+                    m.id === botMessageId
+                        ? { ...m, content: response.content, timestamp: response.metadata?.timestamp }
+                        : m
+                )
+            );
         } catch (error) {
             console.error('Error regenerating response:', error);
+            isStreamingRef.current = false;
 
-            // Add error message
-            const errorMessage: Message = {
-                id: generateMessageId(),
-                content: 'Sorry, I encountered an error regenerating the response.',
-                isUser: false,
-                originalPrompt: originalPrompt,
-            };
-
-            setMessages((prev) => [...prev, errorMessage]);
+            // Update any placeholder bot message instead of leaving an empty bubble
+            setMessages((prev) => {
+                const last = prev[prev.length - 1];
+                if (last && !last.isUser && last.originalPrompt === originalPrompt && last.content === '') {
+                    return prev.map((m) =>
+                        m.id === last.id
+                            ? { ...m, content: 'Sorry, I encountered an error regenerating the response.' }
+                            : m
+                    );
+                }
+                return [
+                    ...prev,
+                    {
+                        id: generateMessageId(),
+                        content: 'Sorry, I encountered an error regenerating the response.',
+                        isUser: false,
+                        originalPrompt: originalPrompt,
+                        userMessageId,
+                    },
+                ];
+            });
         } finally {
             setLoading(false);
         }
@@ -311,9 +355,9 @@ const ChatbotInterface: React.FC = () => {
                                     airesponse={airesponse}
                                     originalPrompt={msg.originalPrompt}
                                     onRegenerate={!msg.isUser ? handleRegenerateResponse : undefined}
+                                    isLoading={loading && !msg.isUser && !msg.content}
                                 />
                             ))}
-                            {loading && messages[messages.length - 1]?.isUser && <ChatbotTyping />}
                             <div ref={messagesEndRef} />
                         </div>
                     ) : (

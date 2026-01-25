@@ -88,9 +88,16 @@ const mirageServer = (environment = 'development') => {
                     entities: endpointId && mockEntities[endpointId] ? mockEntities[endpointId] : [],
                 };
             });
-            // Allow all other requests to pass through to the real backend
+            // Allow all external API requests (full URLs) to pass through
+            // Only intercept local API requests (relative URLs starting with /api)
             this.passthrough((request) => {
-                return !request.url.includes('/api');
+                const url = request.url;
+                // If it's a full URL (starts with http:// or https://), let it pass through
+                if (url.startsWith('http://') || url.startsWith('https://')) {
+                    return true;
+                }
+                // For relative URLs, only pass through if they don't start with /api
+                return !url.startsWith('/api');
             });
             this.get('/properties', (schema, request) => {
                 const endpointId = request.queryParams.endpointId as string;

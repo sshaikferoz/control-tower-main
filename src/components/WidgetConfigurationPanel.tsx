@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
+import Grid from '@mui/material/Grid';
 import {
     Typography,
     Box,
@@ -14,7 +15,6 @@ import {
     IconButton,
     Chip,
     Divider,
-    Grid,
     InputAdornment,
     Tooltip,
     CircularProgress,
@@ -356,8 +356,15 @@ const WidgetConfigurationPanel: React.FC<WidgetConfigurationPanelProps> = ({
                         },
                     }}
                 >
+                    <Tooltip title="Description" placement="top" arrow>
+                        <Tab
+                            icon={<InfoIcon sx={{ fontSize: '1.1rem' }} />}
+                            aria-label="Description"
+                        />
+                    </Tooltip>
+
                     {hasConfigTab && (
-                        <Tooltip title="Config" placement="right" arrow>
+                        <Tooltip title="Config" placement="top" arrow>
                             <Tab
                                 icon={<SettingsIcon sx={{ fontSize: '1.1rem' }} />}
                                 aria-label="Config"
@@ -365,38 +372,31 @@ const WidgetConfigurationPanel: React.FC<WidgetConfigurationPanelProps> = ({
                         </Tooltip>
                     )}
 
-                    <Tooltip title="Typography" placement="right" arrow>
+                    <Tooltip title="Report Config" placement="top" arrow>
+                        <Tab
+                            icon={<AssignmentIcon sx={{ fontSize: '1.1rem' }} />}
+                            aria-label="Report Config"
+                        />
+                    </Tooltip>
+
+                    <Tooltip title="Typography" placement="top" arrow>
                         <Tab
                             icon={<FormatPaintIcon sx={{ fontSize: '1.1rem' }} />}
                             aria-label="Typography"
                         />
                     </Tooltip>
 
-                    <Tooltip title="Background" placement="right" arrow>
+                    <Tooltip title="Background" placement="top" arrow>
                         <Tab
                             icon={<PaletteIcon sx={{ fontSize: '1.1rem' }} />}
                             aria-label="Background"
                         />
                     </Tooltip>
 
-                    <Tooltip title="Role" placement="right" arrow>
+                    <Tooltip title="Role" placement="top" arrow>
                         <Tab
                             icon={<PersonIcon sx={{ fontSize: '1.1rem' }} />}
                             aria-label="Role"
-                        />
-                    </Tooltip>
-
-                    <Tooltip title="Description" placement="right" arrow>
-                        <Tab
-                            icon={<InfoIcon sx={{ fontSize: '1.1rem' }} />}
-                            aria-label="Description"
-                        />
-                    </Tooltip>
-
-                    <Tooltip title="Report Config" placement="right" arrow>
-                        <Tab
-                            icon={<AssignmentIcon sx={{ fontSize: '1.1rem' }} />}
-                            aria-label="Report Config"
                         />
                     </Tooltip>
                 </Tabs>
@@ -404,8 +404,114 @@ const WidgetConfigurationPanel: React.FC<WidgetConfigurationPanelProps> = ({
             </div>
 
             <div className="flex-1 overflow-y-auto px-3 pb-3">
+                {/* Description Tab */}
+                <TabPanel value={activeTab} index={0}>
+                    <Box sx={{ color: 'white' }}>
+                        <Typography variant="subtitle2" sx={{ mb: 0.5, fontWeight: 600, fontSize: '0.75rem' }}>
+                            Widget Description
+                        </Typography>
+                        <Typography
+                            variant="caption"
+                            sx={{
+                                mb: 2,
+                                color: 'rgba(255, 255, 255, 0.7)',
+                                fontSize: '0.65rem',
+                                display: 'block',
+                            }}
+                        >
+                            Provide a short description for this widget. This can be used in details dialogs or help tooltips.
+                        </Typography>
+
+                        <Box
+                            sx={{
+                                backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                                borderRadius: 2,
+                                p: 2,
+                            }}
+                        >
+
+
+                            <TextField
+                                label="Title"
+                                fullWidth
+                                size="small"
+                                variant="outlined"
+                                value={title}
+                                onChange={(e) => updateWidgetProp('title', e.target.value)}
+                                placeholder="Enter widget title"
+                                sx={{
+                                    mb: 2,
+                                    '& .MuiOutlinedInput-root': {
+                                        fontSize: '0.7rem',
+                                        color: 'white',
+                                        '& fieldset': {
+                                            borderColor: 'rgba(255, 255, 255, 0.3)',
+                                        },
+                                        '&:hover fieldset': {
+                                            borderColor: 'rgba(255, 255, 255, 0.5)',
+                                        },
+                                        '&.Mui-focused fieldset': {
+                                            borderColor: '#84BD00',
+                                        },
+                                    },
+                                    '& .MuiInputLabel-root': {
+                                        color: 'rgba(255, 255, 255, 0.7)',
+                                        fontSize: '0.7rem',
+                                    },
+                                    '& .MuiInputLabel-root.Mui-focused': {
+                                        color: '#84BD00',
+                                    },
+                                    '& .MuiInputBase-input': {
+                                        color: 'white',
+                                        fontSize: '0.7rem',
+                                    },
+                                }}
+                            />
+
+                            <TextField
+                                label="Description"
+                                fullWidth
+                                size="small"
+                                multiline
+                                minRows={3}
+                                maxRows={6}
+                                variant="outlined"
+                                value={description}
+                                onChange={(e) => updateWidgetProp('description', e.target.value)}
+                                placeholder="Enter a description that explains what this widget shows or how to use it."
+                                sx={{
+                                    '& .MuiOutlinedInput-root': {
+                                        fontSize: '0.7rem',
+                                        color: 'white',
+                                        '& fieldset': {
+                                            borderColor: 'rgba(255, 255, 255, 0.3)',
+                                        },
+                                        '&:hover fieldset': {
+                                            borderColor: 'rgba(255, 255, 255, 0.5)',
+                                        },
+                                        '&.Mui-focused fieldset': {
+                                            borderColor: '#84BD00',
+                                        },
+                                    },
+                                    '& .MuiInputLabel-root': {
+                                        color: 'rgba(255, 255, 255, 0.7)',
+                                        fontSize: '0.7rem',
+                                    },
+                                    '& .MuiInputLabel-root.Mui-focused': {
+                                        color: '#84BD00',
+                                    },
+                                    '& .MuiInputBase-input': {
+                                        color: 'white',
+                                        fontSize: '0.7rem',
+                                    },
+                                }}
+                            />
+                        </Box>
+                    </Box>
+                </TabPanel>
+
                 {/* Typography Tab */}
-                <TabPanel value={activeTab} index={hasConfigTab ? 1 : 0}>
+                <TabPanel value={activeTab} index={hasConfigTab ? 3 : 2}>
                     <TypographyConfigUI
                         value={typography}
                         onChange={handleTypographyChange}
@@ -413,7 +519,7 @@ const WidgetConfigurationPanel: React.FC<WidgetConfigurationPanelProps> = ({
                 </TabPanel>
 
                 {/* Background Color Tab */}
-                <TabPanel value={activeTab} index={hasConfigTab ? 2 : 1}>
+                <TabPanel value={activeTab} index={hasConfigTab ? 4 : 3}>
                     <Box sx={{ color: 'white' }}>
                         <Typography variant="subtitle2" sx={{ mb: 0.5, fontWeight: 600, fontSize: '0.75rem' }}>
                             Background Color
@@ -471,7 +577,7 @@ const WidgetConfigurationPanel: React.FC<WidgetConfigurationPanelProps> = ({
                 </TabPanel>
 
                 {/* Role Tab */}
-                <TabPanel value={activeTab} index={hasConfigTab ? 3 : 2}>
+                <TabPanel value={activeTab} index={hasConfigTab ? 5 : 4}>
                     <Box sx={{ color: 'white' }}>
                         <Typography variant="subtitle2" sx={{ mb: 0.5, fontWeight: 600, fontSize: '0.75rem' }}>
                             Role Configuration
@@ -630,115 +736,10 @@ const WidgetConfigurationPanel: React.FC<WidgetConfigurationPanelProps> = ({
                     </Box>
                 </TabPanel>
 
-                {/* Description Tab */}
-                <TabPanel value={activeTab} index={hasConfigTab ? 4 : 3}>
-                    <Box sx={{ color: 'white' }}>
-                        <Typography variant="subtitle2" sx={{ mb: 0.5, fontWeight: 600, fontSize: '0.75rem' }}>
-                            Widget Description
-                        </Typography>
-                        <Typography
-                            variant="caption"
-                            sx={{
-                                mb: 2,
-                                color: 'rgba(255, 255, 255, 0.7)',
-                                fontSize: '0.65rem',
-                                display: 'block',
-                            }}
-                        >
-                            Provide a short description for this widget. This can be used in details dialogs or help tooltips.
-                        </Typography>
-
-                        <Box
-                            sx={{
-                                backgroundColor: 'rgba(255, 255, 255, 0.05)',
-                                borderRadius: 2,
-                                p: 2,
-                            }}
-                        >
-
-
-                            <TextField
-                                label="Title"
-                                fullWidth
-                                size="small"
-                                variant="outlined"
-                                value={title}
-                                onChange={(e) => updateWidgetProp('title', e.target.value)}
-                                placeholder="Enter widget title"
-                                sx={{
-                                    mb: 2,
-                                    '& .MuiOutlinedInput-root': {
-                                        fontSize: '0.7rem',
-                                        color: 'white',
-                                        '& fieldset': {
-                                            borderColor: 'rgba(255, 255, 255, 0.3)',
-                                        },
-                                        '&:hover fieldset': {
-                                            borderColor: 'rgba(255, 255, 255, 0.5)',
-                                        },
-                                        '&.Mui-focused fieldset': {
-                                            borderColor: '#84BD00',
-                                        },
-                                    },
-                                    '& .MuiInputLabel-root': {
-                                        color: 'rgba(255, 255, 255, 0.7)',
-                                        fontSize: '0.7rem',
-                                    },
-                                    '& .MuiInputLabel-root.Mui-focused': {
-                                        color: '#84BD00',
-                                    },
-                                    '& .MuiInputBase-input': {
-                                        color: 'white',
-                                        fontSize: '0.7rem',
-                                    },
-                                }}
-                            />
-
-                            <TextField
-                                label="Description"
-                                fullWidth
-                                size="small"
-                                multiline
-                                minRows={3}
-                                maxRows={6}
-                                variant="outlined"
-                                value={description}
-                                onChange={(e) => updateWidgetProp('description', e.target.value)}
-                                placeholder="Enter a description that explains what this widget shows or how to use it."
-                                sx={{
-                                    '& .MuiOutlinedInput-root': {
-                                        fontSize: '0.7rem',
-                                        color: 'white',
-                                        '& fieldset': {
-                                            borderColor: 'rgba(255, 255, 255, 0.3)',
-                                        },
-                                        '&:hover fieldset': {
-                                            borderColor: 'rgba(255, 255, 255, 0.5)',
-                                        },
-                                        '&.Mui-focused fieldset': {
-                                            borderColor: '#84BD00',
-                                        },
-                                    },
-                                    '& .MuiInputLabel-root': {
-                                        color: 'rgba(255, 255, 255, 0.7)',
-                                        fontSize: '0.7rem',
-                                    },
-                                    '& .MuiInputLabel-root.Mui-focused': {
-                                        color: '#84BD00',
-                                    },
-                                    '& .MuiInputBase-input': {
-                                        color: 'white',
-                                        fontSize: '0.7rem',
-                                    },
-                                }}
-                            />
-                        </Box>
-                    </Box>
-                </TabPanel>
 
                 {/* Config Tab - Only for multi-chart widgets */}
                 {isMultiChart && (
-                    <TabPanel value={activeTab} index={0}>
+                    <TabPanel value={activeTab} index={1}>
                         <Box sx={{ color: 'white' }}>
                             <Typography variant="subtitle2" sx={{ mb: 0.5, fontWeight: 600, fontSize: '0.75rem' }}>
                                 Chart Configuration
@@ -856,7 +857,7 @@ const WidgetConfigurationPanel: React.FC<WidgetConfigurationPanelProps> = ({
 
                 {/* Config Tab - Only for kpi-chart widgets */}
                 {isKpiChart && (
-                    <TabPanel value={activeTab} index={0}>
+                    <TabPanel value={activeTab} index={1}>
                         <Box sx={{ color: 'white' }}>
                             <Typography variant="subtitle2" sx={{ mb: 0.5, fontWeight: 600, fontSize: '0.75rem' }}>
                                 KPI Configuration
@@ -977,7 +978,7 @@ const WidgetConfigurationPanel: React.FC<WidgetConfigurationPanelProps> = ({
 
                 {/* Config Tab - Only for multi-metric widgets */}
                 {isMultiMetric && (
-                    <TabPanel value={activeTab} index={0}>
+                    <TabPanel value={activeTab} index={1}>
                         <Box sx={{ color: 'white' }}>
                             <Typography variant="subtitle2" sx={{ mb: 0.5, fontWeight: 600, fontSize: '0.75rem' }}>
                                 Multi Metric Configuration
@@ -1004,7 +1005,7 @@ const WidgetConfigurationPanel: React.FC<WidgetConfigurationPanelProps> = ({
 
 
                 {/* Report Config Tab - Available for all widgets */}
-                <TabPanel value={activeTab} index={hasConfigTab ? 5 : 4}>
+                <TabPanel value={activeTab} index={hasConfigTab ? 2 : 1}>
                     <Box sx={{ color: 'white' }}>
                         <Typography
                             variant="subtitle2"

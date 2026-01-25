@@ -22,7 +22,7 @@ const DashboardWidget = () => {
     const [config, setConfig] = useState<ChartWidgetConfig>({
         chartType: "line",
         xAxisKey: "Month",
-        measures: ['TotalValue'],
+        measures: [''],
         stacked: true,
         valueFormat: "non-currency",
         showLegend: true,
@@ -52,7 +52,7 @@ const DashboardWidget = () => {
             // Construct payload similar to mapping page format
             // Include all props even without data so it can be loaded back correctly
             const widgetId = `multi-chart-${Date.now()}`;
-            
+
             const widgetPayload = {
                 id: widgetId,
                 name: 'multi-chart',

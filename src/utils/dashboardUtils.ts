@@ -3,8 +3,6 @@ import { DashboardSection } from '../types/dashboard';
 
 // Transform SAP sections to UI format
 export const transformSectionsToUIFormat = (sections: Section[]): DashboardSection[] => {
-    console.log('Transforming sections to UI format', sections);
-
     return sections?.filter((section) => !section.deleted)
         .sort((a, b) => a.order - b.order)
         .map((section) => ({
@@ -22,9 +20,9 @@ export const transformSectionsToUIFormat = (sections: Section[]): DashboardSecti
                         y: savedLayout.y ?? Math.floor((index * defaultLayout.w) / 12) * defaultLayout.h,
                         w: savedLayout.w ?? defaultLayout.w,
                         h: savedLayout.h ?? defaultLayout.h,
-                        minW: savedLayout.minW,
+                        minW: savedLayout.minW ?? 1,
                         maxW: savedLayout.maxW,
-                        minH: savedLayout.minH,
+                        minH: savedLayout.minH ?? 1,
                         maxH: savedLayout.maxH,
                         static: savedLayout.static || false,
                     };
@@ -33,7 +31,6 @@ export const transformSectionsToUIFormat = (sections: Section[]): DashboardSecti
                 .filter((widget: any) => !widget.deleted)
                 .reduce(
                     (acc, widget) => {
-                        console.log(acc, widget, 'widget--------------')
                         acc[widget.id] = widget.fieldMappings || {};
                         return acc;
                     },
