@@ -14,8 +14,8 @@
   --primary2: #a396ff;
   --secondary1: #1a4d8f;
   --border: rgba(255, 255, 255, 0.12);
-  --scrollbar-thumb: #1a4d8f;
-  --scrollbar-track: #0b1226;
+  --scrollbar-thumb: rgba(255, 255, 255, 0.2);
+  --scrollbar-track: transparent;
   --font-manifa: 'Manifa2', sans-serif;
 }
 
@@ -68,5 +68,5 @@ body {
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background-color: var(--primary2);
+  background-color: rgba(255, 255, 255, 0.3);
 }

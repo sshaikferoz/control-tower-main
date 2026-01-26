@@ -319,7 +319,7 @@ const MappingScreen: React.FC = () => {
         return (
             <>
                 <Toast ref={toast} />
-                <LoadingScreen title="Loading widgets..." message="Please wait while we load your dashboard configuration." />
+                <LoadingScreen />
             </>
         );
     }

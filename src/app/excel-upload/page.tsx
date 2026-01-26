@@ -632,7 +632,7 @@ export default function ExcelUploadComponent() {
     };
 
     if (adminCheckLoading) {
-        return <LoadingScreen title="Loading..." message="Checking user permissions..." />;
+        return <LoadingScreen />;
     }
 
     if (adminCheckError) {

@@ -1,26 +1,7 @@
 import React from 'react';
-import Grid from '@mui/material/Grid';
-import {
-    Dialog,
-    DialogTitle,
-    DialogContent,
-    DialogActions,
-    Button,
-    IconButton,
-    Typography,
-    Card,
-    CardContent,
-    Box,
-    Paper,
-} from '@mui/material';
-import CloseIcon from '@mui/icons-material/Close';
-import WidgetsIcon from '@mui/icons-material/Widgets';
-import InfoIcon from '@mui/icons-material/Info';
-import AssignmentIcon from '@mui/icons-material/Assignment';
-import OpenInNewIcon from '@mui/icons-material/OpenInNew';
-import DataObjectIcon from '@mui/icons-material/DataObject';
-import LaunchIcon from '@mui/icons-material/Launch'
+import { X, Info, FileText, Database, FileJson, Globe, Link2, ExternalLink } from 'lucide-react';
 import { TargetReportConfig } from '../../types/dashboard';
+import { sapODataService } from '@/services/sapODataService';
 
 interface WidgetDetailsDialogProps {
     open: boolean;
@@ -37,249 +18,177 @@ export const WidgetDetailsDialog: React.FC<WidgetDetailsDialogProps> = ({
     targetReport,
     description,
 }) => {
-    const handleOpenReport = () => {
+    const handleOpenReport = async (targetReport: TargetReportConfig): Promise<void> => {
         if (!targetReport?.technicalId) {
-            alert('No Detailed Report configured for this widget.');
             return;
         }
 
         let reportUrl = '';
 
-        switch (targetReport.type) {
-            case 'Bex Query':
-                reportUrl = `/sap/bc/bsp/sap/zbw_reporting/execute_report_oo.htm?query=${targetReport.technicalId}`;
-                break;
-            case 'Lumira':
-                reportUrl = `/sap/bc/ui5_ui5/ui2/ushell/shells/abap/FioriLaunchpad.html#LumiraViewer-display&/lumira/${targetReport.technicalId}`;
-                break;
-            case 'WAD Template':
-                reportUrl = `/sap/bc/bsp/sap/bw_web_template/webtemplate.htm?template=${targetReport.technicalId}`;
-                break;
-            case 'Web Link':
-                reportUrl = targetReport.technicalId;
-                break;
-            default:
-                alert('Unknown report type.');
-                return;
-        }
+        try {
+            switch (targetReport.type) {
+                case 'Bex Query':
+                    const bexUrl = await sapODataService.getServiceUrl('BexQuery');
+                    reportUrl = bexUrl ? `${bexUrl}${targetReport.technicalId}` : '';
+                    break;
+                case 'Lumira':
+                    const lumiraUrl = await sapODataService.getServiceUrl('Lumira');
+                    reportUrl = lumiraUrl ? `${lumiraUrl}${targetReport.technicalId}` : '';
+                    break;
+                case 'WAD Template':
+                    const wadUrl = await sapODataService.getServiceUrl('WADTemplate');
+                    reportUrl = wadUrl ? `${wadUrl}${targetReport.technicalId}` : '';
+                    break;
+                case 'Web Link':
+                    reportUrl = targetReport.technicalId;
+                    break;
+                default:
+                    alert('Unknown report type.');
+                    return;
+            }
 
-        window.open(reportUrl, '_blank', 'noopener,noreferrer');
+            if (!reportUrl && targetReport.type !== 'Web Link') {
+                alert('Unable to retrieve service URL for this report type.');
+                return;
+            }
+
+            window.open(reportUrl, '_blank', 'noopener,noreferrer');
+        } catch (error) {
+            console.error('Error opening report:', error);
+            alert('Error opening report. Please try again.');
+        }
     };
 
     const getReportTypeIcon = (type: string) => {
+        const iconClass = "h-5 w-5";
         switch (type) {
             case 'Bex Query':
-                return <DataObjectIcon sx={{ color: '#4CAF50' }} />;
+                return <Database className={iconClass} style={{ color: '#4CAF50' }} />;
             case 'Lumira':
-                return <AssignmentIcon sx={{ color: '#2196F3' }} />;
+                return <FileText className={iconClass} style={{ color: '#2196F3' }} />;
             case 'WAD Template':
-                return <WidgetsIcon sx={{ color: '#FF9800' }} />;
+                return <FileJson className={iconClass} style={{ color: '#FF9800' }} />;
             case 'Web Link':
-                return <LaunchIcon sx={{ color: '#9C27B0' }} />;
+                return <Link2 className={iconClass} style={{ color: '#9C27B0' }} />;
             default:
-                return <InfoIcon sx={{ color: '#757575' }} />;
+                return <Info className={iconClass} style={{ color: '#757575' }} />;
         }
     };
 
-    return (
-        <Dialog
-            open={open}
-            onClose={onClose}
-            maxWidth="md"
-            fullWidth
-            PaperProps={{
-                sx: {
-                    bgcolor: '#1a3a6b',
-                    color: 'white',
-                    border: '1px solid #2a4a7b',
-                },
-            }}
-        >
-            <DialogTitle
-                sx={{
-                    color: 'white',
-                    borderBottom: '1px solid #2a4a7b',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                }}
-            >
-                <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                    <WidgetsIcon sx={{ mr: 1, color: '#4CAF50' }} />
-                    Widget Details
-                </Box>
-                <IconButton onClick={onClose} sx={{ color: 'white' }}>
-                    <CloseIcon />
-                </IconButton>
-            </DialogTitle>
+    if (!open) return null;
 
-            <DialogContent sx={{ pt: 3, pb: 2 }}>
-                <Grid container spacing={3}>
+    return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-gradient-to-br from-[#0a1a35] to-[#1a3a6b]/50">
+            <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl border border-[#2a4a7b] bg-[#1a3a6b] p-6 shadow-2xl">
+                {/* Header */}
+                <div className="mb-6 flex items-center justify-between border-b border-[#2a4a7b] pb-4">
+                    <div className="flex items-center gap-3">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#2a4a7b]">
+                            <Info className="h-5 w-5 text-[#4CAF50]" />
+                        </div>
+                        <h2 className="text-xl font-semibold text-white">Widget Details</h2>
+                    </div>
+                    <button
+                        onClick={onClose}
+                        className="text-gray-400 transition-colors hover:text-white"
+                    >
+                        <X className="h-6 w-6" />
+                    </button>
+                </div>
+
+                {/* Content */}
+                <div className="space-y-6">
                     {/* Widget Information */}
-                    <Grid item xs={12}>
-                        <Card
-                            sx={{
-                                bgcolor: '#2a4a7b',
-                                border: '1px solid #3a5a8b',
-                                margin: 1,
-                            }}
-                        >
-                            <CardContent>
-                                <Typography
-                                    variant="h6"
-                                    gutterBottom
-                                    sx={{ color: 'white', display: 'flex', alignItems: 'center' }}
-                                >
-                                    <InfoIcon sx={{ mr: 1, color: '#2196F3' }} />
-                                    Widget Information
-                                </Typography>
-                                <Box sx={{ mt: 2 }}>
-                                    {description && (
-                                        <Box>
-                                            <Typography variant="body2" sx={{ color: '#E3F2FD', mb: 1 }}>
-                                                <strong>Description:</strong>
-                                            </Typography>
-                                            <Paper
-                                                sx={{
-                                                    p: 2,
-                                                    bgcolor: '#3a5a8b',
-                                                    border: '1px solid #4a6a9b',
-                                                }}
-                                            >
-                                                <Typography variant="body2" sx={{ color: 'white', fontStyle: 'italic' }}>
-                                                    {description}
-                                                </Typography>
-                                            </Paper>
-                                        </Box>
-                                    )}
-                                </Box>
-                            </CardContent>
-                        </Card>
-                    </Grid>
+                    {description && (
+                        <div>
+                            <div className="mb-3 flex items-center gap-2">
+                                <Info className="h-5 w-5 text-[#2196F3]" />
+                                <h3 className="text-lg font-medium text-white">Widget Information</h3>
+                            </div>
+                            <div className="rounded-lg border border-[#3a5a8b] bg-[#2a4a7b] p-4">
+                                <p className="text-sm text-gray-300 mb-2 font-medium">Description</p>
+                                <p className="text-white leading-relaxed">{description}</p>
+                            </div>
+                        </div>
+                    )}
 
                     {/* Detailed Report Configuration */}
-                    <Grid item xs={12}>
-                        <Card sx={{ bgcolor: '#2a4a7b', border: '1px solid #3a5a8b' }}>
-                            <CardContent>
-                                <Typography
-                                    variant="h6"
-                                    gutterBottom
-                                    sx={{ color: 'white', display: 'flex', alignItems: 'center' }}
-                                >
-                                    <AssignmentIcon sx={{ mr: 1, color: '#4CAF50' }} />
-                                    Detailed Report Configuration
-                                </Typography>
+                    <div>
+                        <div className="mb-3 flex items-center gap-2">
+                            <FileText className="h-5 w-5 text-[#4CAF50]" />
+                            <h3 className="text-lg font-medium text-white">Detailed Report Configuration</h3>
+                        </div>
 
-                                {targetReport && targetReport.technicalId ? (
-                                    <Box sx={{ mt: 2 }}>
-                                        <Grid container spacing={2}>
-                                            <Grid item xs={12} sm={6}>
-                                                <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                                                    {getReportTypeIcon(targetReport.type)}
-                                                    <Box sx={{ ml: 2 }}>
-                                                        <Typography variant="body2" sx={{ color: '#E3F2FD' }}>
-                                                            <strong>Type:</strong> {targetReport.type}
-                                                        </Typography>
-                                                    </Box>
-                                                </Box>
-                                            </Grid>
+                        {targetReport && targetReport.technicalId ? (
+                            <div className="space-y-4 rounded-lg border border-[#3a5a8b] bg-[#2a4a7b] p-4">
+                                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                                    <div className="flex items-center gap-3">
+                                        {getReportTypeIcon(targetReport.type)}
+                                        <div>
+                                            <p className="text-sm text-gray-300 mb-1">Type</p>
+                                            <p className="text-white font-medium">{targetReport.type}</p>
+                                        </div>
+                                    </div>
 
-                                            <Grid item xs={12} sm={6}>
-                                                <Typography variant="body2" sx={{ color: '#E3F2FD' }}>
-                                                    <strong>Technical ID:</strong>
-                                                </Typography>
-                                                <Paper
-                                                    sx={{
-                                                        p: 1,
-                                                        mt: 0.5,
-                                                        bgcolor: '#3a5a8b',
-                                                        border: '1px solid #4a6a9b',
-                                                    }}
-                                                >
-                                                    <Typography
-                                                        variant="body2"
-                                                        sx={{
-                                                            color: 'white',
-                                                            fontFamily: 'monospace',
-                                                            fontSize: '0.875rem',
-                                                        }}
-                                                    >
-                                                        {targetReport.technicalId}
-                                                    </Typography>
-                                                </Paper>
-                                            </Grid>
+                                    <div>
+                                        <p className="text-sm text-gray-300 mb-1">Technical ID</p>
+                                        <div className="rounded border border-[#4a6a9b] bg-[#3a5a8b] p-2">
+                                            <code className="text-sm text-white font-mono break-all">
+                                                {targetReport.technicalId}
+                                            </code>
+                                        </div>
+                                    </div>
+                                </div>
 
-                                            {targetReport.name && (
-                                                <Grid item xs={12}>
-                                                    <Typography variant="body2" sx={{ color: '#E3F2FD', mb: 1 }}>
-                                                        <strong>Report Name:</strong>
-                                                    </Typography>
-                                                    <Typography variant="body1" sx={{ color: 'white', fontWeight: 500 }}>
-                                                        {targetReport.name}
-                                                    </Typography>
-                                                </Grid>
-                                            )}
-
-                                            {targetReport.description && (
-                                                <Grid item xs={12}>
-                                                    <Typography variant="body2" sx={{ color: '#E3F2FD', mb: 1 }}>
-                                                        <strong>Report Description:</strong>
-                                                    </Typography>
-                                                    <Paper
-                                                        sx={{
-                                                            p: 2,
-                                                            bgcolor: '#3a5a8b',
-                                                            border: '1px solid #4a6a9b',
-                                                        }}
-                                                    >
-                                                        <Typography variant="body2" sx={{ color: 'white', lineHeight: 1.6 }}>
-                                                            {targetReport.description}
-                                                        </Typography>
-                                                    </Paper>
-                                                </Grid>
-                                            )}
-                                        </Grid>
-
-                                        {/* <Box sx={{ mt: 3, textAlign: 'center' }}>
-                      <Button
-                        variant="contained"
-                        size="large"
-                        startIcon={<OpenInNewIcon />}
-                        onClick={handleOpenReport}
-                        sx={{
-                          bgcolor: '#4CAF50',
-                          color: 'white',
-                          '&:hover': { bgcolor: '#45a049' },
-                          px: 4,
-                          py: 1.5,
-                        }}
-                      >
-                        Open Report
-                      </Button>
-                    </Box> */}
-                                    </Box>
-                                ) : (
-                                    <Box sx={{ mt: 2, textAlign: 'center' }}>
-                                        <Typography variant="body2" sx={{ color: '#FFCDD2', fontStyle: 'italic' }}>
-                                            No Detailed Report configured for this widget.
-                                        </Typography>
-                                        <Typography variant="body2" sx={{ color: '#E3F2FD', mt: 1 }}>
-                                            Configure a Detailed Report in the mapping screen to enable the "Open Report"
-                                            functionality.
-                                        </Typography>
-                                    </Box>
+                                {targetReport.name && (
+                                    <div>
+                                        <p className="text-sm text-gray-300 mb-1">Report Name</p>
+                                        <p className="text-white font-medium">{targetReport.name}</p>
+                                    </div>
                                 )}
-                            </CardContent>
-                        </Card>
-                    </Grid>
-                </Grid>
-            </DialogContent>
 
-            <DialogActions sx={{ borderTop: '1px solid #2a4a7b', pt: 2, pb: 2 }}>
-                <Button onClick={onClose} sx={{ color: 'white', borderColor: 'white' }} variant="outlined">
-                    Close
-                </Button>
-            </DialogActions>
-        </Dialog>
+                                {targetReport.description && (
+                                    <div>
+                                        <p className="text-sm text-gray-300 mb-2">Report Description</p>
+                                        <div className="rounded border border-[#4a6a9b] bg-[#3a5a8b] p-3">
+                                            <p className="text-white leading-relaxed">{targetReport.description}</p>
+                                        </div>
+                                    </div>
+                                )}
+
+                                <div className="pt-2 flex justify-end">
+                                    <button
+                                        onClick={() => targetReport && handleOpenReport(targetReport)}
+                                        className="flex items-center gap-2 rounded-lg border border-[#2196F3] bg-transparent px-4 py-2 text-[#2196F3] transition-all hover:bg-[#2196F3] hover:text-white"
+                                    >
+                                        <ExternalLink className="h-4 w-4" />
+                                        <span>Open Report</span>
+                                    </button>
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="rounded-lg border border-[#3a5a8b] bg-[#2a4a7b] p-4 text-center">
+                                <p className="text-sm text-red-300 italic mb-2">
+                                    No Detailed Report configured for this widget.
+                                </p>
+                                <p className="text-sm text-gray-300">
+                                    Configure a Detailed Report in the mapping screen to enable the "Open Report" functionality.
+                                </p>
+                            </div>
+                        )}
+                    </div>
+                </div>
+
+                {/* Footer */}
+                <div className="mt-6 flex justify-end border-t border-[#2a4a7b] pt-4">
+                    <button
+                        onClick={onClose}
+                        className="rounded bg-gray-600 px-4 py-2 text-white transition-colors hover:bg-gray-700"
+                    >
+                        Close
+                    </button>
+                </div>
+            </div>
+        </div>
     );
 };
