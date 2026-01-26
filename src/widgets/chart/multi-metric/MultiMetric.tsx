@@ -3,6 +3,7 @@ import useBexJson from '@/hooks/useBexJson';
 import { MultiMetricWidgetConfig, MultiMetricItem } from './MultiMetricConfig.types';
 import { formatNumber } from '@/helpers/numberFormatting';
 import { applyTypographyStyles } from '@/helpers/typographyHelper';
+import { Skeleton } from '@mui/material';
 
 interface MultiMetricProps {
     multiMetricConfig?: MultiMetricWidgetConfig;
@@ -98,7 +99,32 @@ const MetricItem: React.FC<{
     const valueStyles = applyTypographyStyles('value', typography);
 
     if (isLoading) {
-        return null;
+        // Responsive padding based on widget layout
+        const paddingClasses = layout === 'vertical'
+            ? 'px-2 sm:px-4'
+            : 'px-2 sm:px-4 lg:px-6';
+
+        return (
+            <div className={`flex flex-col items-center justify-center ${paddingClasses} flex-1 min-w-0`}>
+                <Skeleton
+                    variant="text"
+                    width="60%"
+                    height={20}
+                    sx={{
+                        bgcolor: '#0164B0',
+                        mb: 1,
+                    }}
+                />
+                <Skeleton
+                    variant="text"
+                    width="80%"
+                    height={40}
+                    sx={{
+                        bgcolor: '#0164B0',
+                    }}
+                />
+            </div>
+        );
     }
 
     if (error) {

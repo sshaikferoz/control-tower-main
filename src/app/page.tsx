@@ -67,7 +67,8 @@ const Dashboard: React.FC = () => {
 
     // Show error message if there's an error
     if (error || adminCheckError) {
-        return <DashboardError error={error || adminCheckError} />;
+        // return <DashboardError error={error || adminCheckError} />;
+
     }
 
     return (

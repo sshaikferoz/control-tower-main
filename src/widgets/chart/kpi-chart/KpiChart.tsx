@@ -3,6 +3,7 @@ import { Tooltip } from '@mui/material';
 import useBexJson from '@/hooks/useBexJson';
 import { KpiWidgetConfig, KpiType } from './KpiConfig.types';
 import { formatNumber as formatNumberUtil } from '@/helpers/numberFormatting';
+import { WidgetSkeleton } from '@/components/ui/WidgetSkeleton';
 
 /* ---------------------------------- */
 /* Types */
@@ -281,7 +282,7 @@ const KpiChart: React.FC<KpiChartProps> = ({
     /* ---------------------------------- */
 
     if (isLoading)
-        return <div className="flex items-center justify-center h-full text-white">Loading KPI...</div>;
+        return <WidgetSkeleton />;
     if (error)
         return <div className="flex items-center justify-center h-full text-red-300">Error</div>;
     if (!kpiConfig)

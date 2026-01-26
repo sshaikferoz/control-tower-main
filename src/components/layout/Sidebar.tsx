@@ -18,6 +18,7 @@ import {
 import { UserProfile } from './UserProfile';
 import { SidebarItemModal } from '../modals/SidebarItemModal';
 import { LoadingSpinner } from '../ui/LoadingSpinner';
+import { LoadingScreen } from '../ui/LoadingScreen';
 import { Button } from '../ui/Button';
 import PSCLogo from '@/assets/PSCLogo';
 
@@ -283,7 +284,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                             title={editMode ? 'Save Changes' : 'Edit Menu'}
                         >
                             {isSaving ? (
-                                <LoadingSpinner size="sm" />
+                                <LoadingScreen />
                             ) : editMode ? (
                                 <CheckIcon className="h-5 w-5" />
                             ) : (
@@ -312,7 +313,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             <nav className="mt-2 flex-grow overflow-hidden">
                 {isLoading ? (
                     <div className="flex h-32 items-center justify-center">
-                        <LoadingSpinner />
+                        <LoadingScreen />
                     </div>
                 ) : (
                     <DragDropContext onDragEnd={editMode && !isCollapsed ? onDragEnd : () => { }}>

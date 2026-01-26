@@ -1,22 +1,57 @@
 import React from 'react';
-import { LoadingSpinner } from './LoadingSpinner';
+import PSCLogo from '@/assets/PSCLogo';
 
-interface LoadingScreenProps {
-  title?: string;
-  message?: string;
-}
+export const LoadingScreen = () => {
+    return (
+        <div className="loading-screen">
+            {/* Ambient glow */}
+            <div className="ambient-glow" />
 
-export const LoadingScreen: React.FC<LoadingScreenProps> = ({
-  title = 'Loading...',
-  message = 'Please wait while we load your data.',
-}) => (
-  <div className="flex h-screen items-center justify-center bg-gradient-to-br from-[#0a1a35] to-[#1a3a6b]">
-    <div className="rounded-lg border border-[#2a4a7b] bg-[#1a3a6b] p-8">
-      <div className="text-center">
-        <LoadingSpinner size="lg" className="mx-auto mb-4" />
-        <h2 className="mb-2 text-xl font-bold text-white">{title}</h2>
-        <p className="text-gray-300">{message}</p>
-      </div>
-    </div>
-  </div>
-);
+            {/* Logo */}
+            <div className="logo-container logo-rotate">
+                <PSCLogo />
+            </div>
+
+            {/* Local CSS */}
+            <style>{`
+        .loading-screen {
+          position: relative;
+          height: 100%;
+          width: 100%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: #050b1a;
+          overflow: hidden;
+        }
+
+        .ambient-glow {
+          position: absolute;
+          width: 500px;
+          height: 500px;
+          background: rgba(30, 64, 175, 0.2);
+          filter: blur(120px);
+          border-radius: 50%;
+        }
+
+        .logo-rotate {
+          position: relative;
+          z-index: 10;
+          width: 29px;
+          height: 31px;
+          animation: logo-rotate 2.4s linear infinite;
+          transform-origin: center;
+        }
+
+        @keyframes logo-rotate {
+          from {
+            transform: rotate(0deg);
+          }
+          to {
+            transform: rotate(360deg);
+          }
+        }
+      `}</style>
+        </div>
+    );
+};

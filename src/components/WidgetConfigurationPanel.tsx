@@ -153,6 +153,10 @@ const WidgetConfigurationPanel: React.FC<WidgetConfigurationPanelProps> = ({
         },
     };
 
+    // Get y-series domain and break for line charts
+    const ySeriesDomain: [number, number] | undefined = widgetProps.ySeriesDomain;
+    const ySeriesBreak: number | undefined = widgetProps.ySeriesBreak;
+
     // Get KPI config for KPI chart widgets
     const kpiConfig: KpiWidgetConfig = widgetProps.kpiConfig || {
         minValue: 0,
@@ -848,6 +852,160 @@ const WidgetConfigurationPanel: React.FC<WidgetConfigurationPanelProps> = ({
                                     <Typography variant="caption" sx={{ color: 'rgba(255, 255, 255, 0.5)', fontSize: '0.65rem' }}>
                                         BEx response data is required to configure the chart. Please map the widget to a data source first.
                                     </Typography>
+                                </Box>
+                            )}
+
+                            {/* Y-Axis Domain and Break Configuration - For all chart types except table */}
+                            {chartConfig.chartType !== 'table' && (
+                                <Box
+                                    sx={{
+                                        backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                                        borderRadius: 2,
+                                        p: 2,
+                                        mt: 2,
+                                    }}
+                                >
+                                    <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 600, fontSize: '0.75rem' }}>
+                                        Y-Axis Configuration
+                                    </Typography>
+                                    <Typography variant="caption" sx={{ mb: 2, color: 'rgba(255, 255, 255, 0.7)', fontSize: '0.65rem', display: 'block' }}>
+                                        Configure the Y-axis domain range and tick interval for charts. For horizontal bar charts, this applies to the X-axis.
+                                    </Typography>
+
+                                    <Grid container spacing={2}>
+                                        <Grid item xs={6}>
+                                            <TextField
+                                                fullWidth
+                                                size="small"
+                                                label="Y-Axis Min"
+                                                type="number"
+                                                value={ySeriesDomain ? ySeriesDomain[0] : ''}
+                                                onChange={(e) => {
+                                                    const minValue = e.target.value === '' ? undefined : Number(e.target.value);
+                                                    const currentMax = ySeriesDomain ? ySeriesDomain[1] : undefined;
+
+                                                    if (minValue !== undefined && currentMax !== undefined) {
+                                                        // Both values exist, update domain
+                                                        updateWidgetProp('ySeriesDomain', [minValue, currentMax]);
+                                                    } else if (minValue !== undefined) {
+                                                        // Only min provided, set a default max
+                                                        updateWidgetProp('ySeriesDomain', [minValue, minValue + 100]);
+                                                    } else if (currentMax !== undefined) {
+                                                        // Min cleared but max exists, keep max with default min
+                                                        updateWidgetProp('ySeriesDomain', [0, currentMax]);
+                                                    } else {
+                                                        // Both cleared
+                                                        updateWidgetProp('ySeriesDomain', undefined);
+                                                    }
+                                                }}
+                                                placeholder="Min"
+                                                sx={{
+                                                    input: { color: 'white', fontSize: '0.7rem' },
+                                                    label: { color: 'rgba(255, 255, 255, 0.7)', fontSize: '0.7rem' },
+                                                    '& .MuiOutlinedInput-root': {
+                                                        fontSize: '0.7rem',
+                                                        '& fieldset': {
+                                                            borderColor: 'rgba(255, 255, 255, 0.3)',
+                                                        },
+                                                        '&:hover fieldset': {
+                                                            borderColor: 'rgba(255, 255, 255, 0.5)',
+                                                        },
+                                                        '&.Mui-focused fieldset': {
+                                                            borderColor: '#84BD00',
+                                                        },
+                                                    },
+                                                    '& .MuiInputLabel-root.Mui-focused': {
+                                                        color: '#84BD00',
+                                                    },
+                                                }}
+                                            />
+                                        </Grid>
+                                        <Grid item xs={6}>
+                                            <TextField
+                                                fullWidth
+                                                size="small"
+                                                label="Y-Axis Max"
+                                                type="number"
+                                                value={ySeriesDomain ? ySeriesDomain[1] : ''}
+                                                onChange={(e) => {
+                                                    const maxValue = e.target.value === '' ? undefined : Number(e.target.value);
+                                                    const currentMin = ySeriesDomain ? ySeriesDomain[0] : undefined;
+
+                                                    if (currentMin !== undefined && maxValue !== undefined) {
+                                                        // Both values exist, update domain
+                                                        updateWidgetProp('ySeriesDomain', [currentMin, maxValue]);
+                                                    } else if (maxValue !== undefined) {
+                                                        // Only max provided, set default min
+                                                        updateWidgetProp('ySeriesDomain', [0, maxValue]);
+                                                    } else if (currentMin !== undefined) {
+                                                        // Max cleared but min exists, keep min with default max
+                                                        updateWidgetProp('ySeriesDomain', [currentMin, currentMin + 100]);
+                                                    } else {
+                                                        // Both cleared
+                                                        updateWidgetProp('ySeriesDomain', undefined);
+                                                    }
+                                                }}
+                                                placeholder="Max"
+                                                sx={{
+                                                    input: { color: 'white', fontSize: '0.7rem' },
+                                                    label: { color: 'rgba(255, 255, 255, 0.7)', fontSize: '0.7rem' },
+                                                    '& .MuiOutlinedInput-root': {
+                                                        fontSize: '0.7rem',
+                                                        '& fieldset': {
+                                                            borderColor: 'rgba(255, 255, 255, 0.3)',
+                                                        },
+                                                        '&:hover fieldset': {
+                                                            borderColor: 'rgba(255, 255, 255, 0.5)',
+                                                        },
+                                                        '&.Mui-focused fieldset': {
+                                                            borderColor: '#84BD00',
+                                                        },
+                                                    },
+                                                    '& .MuiInputLabel-root.Mui-focused': {
+                                                        color: '#84BD00',
+                                                    },
+                                                }}
+                                            />
+                                        </Grid>
+                                        <Grid item xs={12}>
+                                            <TextField
+                                                fullWidth
+                                                size="small"
+                                                label="Y-Axis Break (Scale Factor)"
+                                                type="number"
+                                                value={ySeriesBreak || ''}
+                                                onChange={(e) => {
+                                                    const breakValue = e.target.value === '' ? undefined : Number(e.target.value);
+                                                    updateWidgetProp('ySeriesBreak', breakValue);
+                                                }}
+                                                placeholder="e.g., 5 for intervals of 5"
+                                                helperText="Interval between Y-axis ticks (e.g., 5 means ticks at 0, 5, 10, 15...)"
+                                                sx={{
+                                                    input: { color: 'white', fontSize: '0.7rem' },
+                                                    label: { color: 'rgba(255, 255, 255, 0.7)', fontSize: '0.7rem' },
+                                                    '& .MuiOutlinedInput-root': {
+                                                        fontSize: '0.7rem',
+                                                        '& fieldset': {
+                                                            borderColor: 'rgba(255, 255, 255, 0.3)',
+                                                        },
+                                                        '&:hover fieldset': {
+                                                            borderColor: 'rgba(255, 255, 255, 0.5)',
+                                                        },
+                                                        '&.Mui-focused fieldset': {
+                                                            borderColor: '#84BD00',
+                                                        },
+                                                    },
+                                                    '& .MuiInputLabel-root.Mui-focused': {
+                                                        color: '#84BD00',
+                                                    },
+                                                    '& .MuiFormHelperText-root': {
+                                                        color: 'rgba(255, 255, 255, 0.5)',
+                                                        fontSize: '0.65rem',
+                                                    },
+                                                }}
+                                            />
+                                        </Grid>
+                                    </Grid>
                                 </Box>
                             )}
                         </Box>

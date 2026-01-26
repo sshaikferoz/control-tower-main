@@ -794,8 +794,6 @@ class SAPODataService {
                 WidgetHeadRolesItem: allRoles,
             };
 
-            console.log('Saving all widgets in single request:', payload);
-
             // Get CSRF token and make the single request
             const newCSRFToken = await this.getNewCsrfToken(`${this.baseUrl}/WidgetHeadSet`);
             const response = await fetch(`${this.baseUrl}/WidgetHeadSet`, {

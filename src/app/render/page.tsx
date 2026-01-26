@@ -7,7 +7,8 @@ import mirageServer from "@/lib/mirage/mirageServer";
 import { Loader } from "lucide-react";
 import { useState, useMemo, useEffect } from "react";
 import React from "react";
-import { Button, Alert, Box, Typography, Card, CardContent } from "@mui/material";
+import { Button, Alert, Box, Typography, Card, CardContent, Skeleton } from "@mui/material";
+import { WidgetSkeleton } from "@/components/ui/WidgetSkeleton";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { useRouter } from "next/navigation";
 
@@ -75,7 +76,7 @@ const RenderSavedConfig = () => {
     }, [savedConfig]);
 
     // Fetch BEx data using the query name from config
-    const { data: bexResponse, isLoading, error: bexError } = useBexJson(queryName, { 
+    const { data: bexResponse, isLoading, error: bexError } = useBexJson(queryName, {
         parser: 'new',
         enabled: !!savedConfig && !!queryName && queryName !== '',
     });
@@ -118,11 +119,18 @@ const RenderSavedConfig = () => {
 
     if (isLoading || !chartResult) {
         return (
-            <div className="flex flex-col items-center justify-center h-screen">
-                <Loader className="animate-spin mb-4" />
-                <Typography variant="body1" color="text.secondary">
-                    Loading chart data...
-                </Typography>
+            <div className="flex flex-col h-screen bg-gray-50">
+                <div className="p-4 border-b bg-white shadow-sm">
+                    <Skeleton
+                        variant="text"
+                        width="40%"
+                        height={32}
+                        sx={{ bgcolor: '#0164B0' }}
+                    />
+                </div>
+                <div className="flex-1 p-4">
+                    <WidgetSkeleton height={600} />
+                </div>
             </div>
         );
     }

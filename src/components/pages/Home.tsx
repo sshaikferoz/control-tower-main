@@ -18,6 +18,7 @@ import { DeleteConfirmationDialog } from '@/components/dialogs/DeleteConfirmatio
 import { ConfigurationDialog } from '@/components/dialogs/ConfigurationDialog';
 import { getNextSectionOrder } from '@/utils/dashboardUtils';
 import { UIConfiguration, defaultConfiguration, ConfigurationManager } from '@/types/configuration';
+import { LoadingScreen } from '@/components/ui/LoadingScreen';
 
 // Define SearchResult interface
 interface SearchResult {
@@ -739,15 +740,7 @@ export default function Home({
     const themeVariables = configManager.getThemeVariables(configuration);
 
     if (loading || configurationLoading) {
-        return (
-            <div
-                className="flex h-screen w-full flex-col items-center justify-center"
-                style={{ backgroundColor: fallbackBackground }}
-            >
-                <ProgressSpinner />
-
-            </div>
-        );
+        return <LoadingScreen />
     }
 
     if (error) {

@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { BlankWidgetConfig } from './BlankWidgetConfig.types';
-
 interface BlankWidgetProps {
     title?: string;
     color?: string;
+    typography?: any;
     setChangeColor?: (color: string) => void;
     blankWidgetConfig?: BlankWidgetConfig;
 }
@@ -11,6 +11,7 @@ interface BlankWidgetProps {
 const BlankWidget: React.FC<BlankWidgetProps> = ({
     title,
     color,
+    typography,
     setChangeColor,
     blankWidgetConfig,
 }) => {
@@ -34,13 +35,22 @@ const BlankWidget: React.FC<BlankWidgetProps> = ({
         color: '#ffffff',
     };
 
+    function getTitleStyle(): React.CSSProperties {
+        return {
+            fontFamily: typography?.title?.fontFamily,
+            fontSize: typography?.title?.fontSize,
+            fontWeight: typography?.title?.fontWeight,
+            color: typography?.title?.color,
+        };
+    }
+
     return (
         <div
             className="flex h-full w-full flex-col rounded-xl p-4"
             style={backgroundStyle}
         >
             <div className="mb-2">
-                <h3 className="text-base font-bold text-white">{title}</h3>
+                <h3 className="text-base font-bold text-white" style={getTitleStyle()}>{title}</h3>
             </div>
 
             <div className="flex-1 flex items-center justify-center" />

@@ -74,6 +74,7 @@ const mockEntities: Record<string, Entity[]> = {
 // MirageJS mock API server
 const mirageServer = (environment = 'development') => {
     return createServer({
+        timing: 1500,
         environment,
         routes() {
             this.namespace = 'api';

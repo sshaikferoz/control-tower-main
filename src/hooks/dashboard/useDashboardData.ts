@@ -22,7 +22,7 @@ export const useDashboardData = (tabId: string) => {
                 setLoading(false);
             } catch (err) {
                 console.error('Error fetching dashboard data:', err);
-                setError('Failed to load dashboard configuration from SAP');
+                // setError('Failed to load dashboard configuration from SAP');
                 setLoading(false);
                 setDashboardData({ sections: [] });
             }

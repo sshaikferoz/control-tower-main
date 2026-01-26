@@ -28,6 +28,7 @@ import useBexJson from '@/hooks/useBexJson';
 import { transformBexToChart } from './transformBexToChart';
 import { ChartWidgetConfig, LineType, GridLineStyle, PointerStyle } from './ChartConfig.types';
 import { formatNumber as formatNumberUtil } from '@/helpers/numberFormatting';
+import { WidgetSkeleton } from '@/components/ui/WidgetSkeleton';
 
 interface SeriesConfig {
     name: string;
@@ -124,6 +125,24 @@ const getActiveDotProps = (pointerStyle: PointerStyle | undefined, defaultColor:
     };
 };
 
+// Helper function to generate y-axis ticks based on domain and break
+const generateYTicks = (domain: [number, number], breakValue: number): number[] => {
+    const [min, max] = domain;
+    const ticks: number[] = [];
+
+    // Start from min and increment by breakValue until we reach or exceed max
+    for (let value = min; value <= max; value += breakValue) {
+        ticks.push(value);
+    }
+
+    // Ensure max is included if it's not already in the ticks
+    if (ticks[ticks.length - 1] !== max) {
+        ticks.push(max);
+    }
+
+    return ticks;
+};
+
 // Custom Bar Shape Component with opacity and top edge
 const CustomBarShape = (props: any) => {
     const { fill, x, y, width, height, barOpacity, barEdgeColor, barEdgeWidth } = props;
@@ -208,6 +227,9 @@ interface MultiChartProps {
     // New props for BEX data fetching
     queryName?: string; // BEX query name to fetch data
     chartConfig?: ChartWidgetConfig; // Chart configuration for BEX data transformation
+    // Y-axis domain and break for line chart type
+    ySeriesDomain?: [number, number]; // Domain range [min, max] for y-axis
+    ySeriesBreak?: number; // Scale factor/break interval for y-axis ticks
 }
 
 const defaultColors = ['#8884d8', '#82ca9d', '#ffc658', '#ff7c7c', '#8dd1e1', '#d084d0', '#ffb347', '#87ceeb', '#dda0dd', '#98d8c8'];
@@ -296,6 +318,8 @@ const MultiChart: React.FC<MultiChartProps> = ({
     groupByField: providedGroupByField,
     queryName,
     chartConfig,
+    ySeriesDomain,
+    ySeriesBreak,
 }) => {
     const [userColor, setUserColor] = useState<string | null>(null);
     const colorInputRef = useRef<HTMLInputElement>(null);
@@ -757,6 +781,11 @@ const MultiChart: React.FC<MultiChartProps> = ({
             },
         };
 
+        // Generate y-axis domain and ticks if ySeriesDomain and ySeriesBreak are provided
+        // Apply to all chart types except table
+        const yAxisDomain = ySeriesDomain ? ySeriesDomain : undefined;
+        const yAxisTicks = ySeriesDomain && ySeriesBreak ? generateYTicks(ySeriesDomain, ySeriesBreak) : undefined;
+
         const renderPieVariant = (isDonut: boolean): React.ReactElement => {
             const pieSeriesKey = seriesToRender[0]?.dataKey || series[0]?.dataKey || 'value';
             const pieData = filteredData.map((item: any, idx: number) => ({
@@ -849,7 +878,13 @@ const MultiChart: React.FC<MultiChartProps> = ({
                     <LineChart {...commonProps}>
                         {showGridLines && <CartesianGrid strokeDasharray={getGridLineDasharray(gridLineStyle)} vertical={false} stroke="#ffffff30" />}
                         <XAxis dataKey="name" {...commonAxisProps} />
-                        <YAxis {...commonAxisProps} tickFormatter={formatNumber} width={55} />
+                        <YAxis
+                            {...commonAxisProps}
+                            tickFormatter={formatNumber}
+                            width={55}
+                            domain={yAxisDomain}
+                            ticks={yAxisTicks}
+                        />
                         <Tooltip {...premiumTooltipProps} />
                         {showLegend && (
                             <Legend
@@ -889,14 +924,27 @@ const MultiChart: React.FC<MultiChartProps> = ({
                         {showGridLines && <CartesianGrid strokeDasharray={getGridLineDasharray(gridLineStyle)} vertical={false} stroke="#ffffff30" />}
 
                         {isHorizontal ? (
-                            <XAxis type="number" {...commonAxisProps} tickFormatter={formatNumber} width={55} />
+                            <XAxis
+                                type="number"
+                                {...commonAxisProps}
+                                tickFormatter={formatNumber}
+                                width={55}
+                                domain={yAxisDomain}
+                                ticks={yAxisTicks}
+                            />
                         ) : (
                             <XAxis dataKey="name" {...commonAxisProps} />
                         )}
                         {isHorizontal ? (
                             <YAxis dataKey="name" type="category" {...commonAxisProps} width={100} />
                         ) : (
-                            <YAxis {...commonAxisProps} tickFormatter={formatNumber} width={55} />
+                            <YAxis
+                                {...commonAxisProps}
+                                tickFormatter={formatNumber}
+                                width={55}
+                                domain={yAxisDomain}
+                                ticks={yAxisTicks}
+                            />
                         )}
                         <Tooltip {...premiumTooltipProps} />
                         {showLegend && (
@@ -993,7 +1041,13 @@ const MultiChart: React.FC<MultiChartProps> = ({
                     <ComposedChart {...commonProps}>
                         {showGridLines && <CartesianGrid strokeDasharray={getGridLineDasharray(gridLineStyle)} vertical={false} stroke="#ffffff30" />}
                         <XAxis dataKey="name" {...commonAxisProps} />
-                        <YAxis {...commonAxisProps} tickFormatter={formatNumber} width={55} />
+                        <YAxis
+                            {...commonAxisProps}
+                            tickFormatter={formatNumber}
+                            width={55}
+                            domain={yAxisDomain}
+                            ticks={yAxisTicks}
+                        />
                         <Tooltip {...premiumTooltipProps} />
                         {showLegend && (
                             <Legend
@@ -1085,7 +1139,13 @@ const MultiChart: React.FC<MultiChartProps> = ({
                     <ScatterChart {...commonProps}>
                         {showGridLines && <CartesianGrid strokeDasharray={getGridLineDasharray(gridLineStyle)} stroke="#ffffff30" />}
                         <XAxis dataKey="name" {...commonAxisProps} />
-                        <YAxis {...commonAxisProps} tickFormatter={formatNumber} width={55} />
+                        <YAxis
+                            {...commonAxisProps}
+                            tickFormatter={formatNumber}
+                            width={55}
+                            domain={yAxisDomain}
+                            ticks={yAxisTicks}
+                        />
                         <Tooltip {...premiumTooltipProps} />
                         {showLegend && (
                             <Legend
@@ -1156,6 +1216,7 @@ const MultiChart: React.FC<MultiChartProps> = ({
                         <PolarRadiusAxis
                             tick={{ fill: '#ffffff', fontSize: 12 }}
                             tickFormatter={formatNumber}
+                            domain={yAxisDomain}
                         />
                         <Tooltip {...premiumTooltipProps} />
                         {showLegend && (
@@ -1320,21 +1381,7 @@ const MultiChart: React.FC<MultiChartProps> = ({
 
     // Show loading state when fetching BEX data
     if (queryName && chartConfig && bexLoading) {
-        return (
-            <div className="flex h-full w-full flex-col">
-                <div
-                    className="flex flex-1 flex-col overflow-hidden rounded-xl p-4 text-white items-center justify-center"
-                    style={backgroundStyle}
-                >
-                    <div className="text-center">
-                        <div className="mb-4">
-                            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
-                        </div>
-                        <p className="text-sm text-white/80">Loading chart data...</p>
-                    </div>
-                </div>
-            </div>
-        );
+        return <WidgetSkeleton />;
     }
 
     // Show error state if BEX fetch failed
