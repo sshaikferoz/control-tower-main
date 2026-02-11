@@ -368,8 +368,8 @@ export const NewsFeed = () => {
                                 onMouseEnter={() => setHoveredCategory(category.id)}
                                 onMouseLeave={() => setHoveredCategory(null)}
                                 className={`rounded-lg border px-4 py-2 text-sm font-medium transition-all duration-200 ${activeCategory === category.id
-                                        ? `${category.color} border-current bg-white/10 shadow-lg`
-                                        : 'border-white/20 text-white/70 hover:border-white/40 hover:text-white'
+                                    ? `${category.color} border-current bg-white/10 shadow-lg`
+                                    : 'border-white/20 text-white/70 hover:border-white/40 hover:text-white'
                                     }`}
                             >
                                 {category.label}
@@ -382,7 +382,7 @@ export const NewsFeed = () => {
 
                             {/* Tooltip */}
                             {hoveredCategory === category.id && (
-                                <div className="absolute top-full left-1/2 z-10 mt-2 -translate-x-1/2 transform rounded-lg border border-white/20 bg-black/90 px-3 py-2 text-xs whitespace-nowrap text-white shadow-xl">
+                                <div className="absolute top-full left-1/2 z-10 left-[10rem] mt-2 -translate-x-1/2 transform rounded-lg border border-white/20 bg-black/90 px-3 py-2 text-xs whitespace-nowrap text-white shadow-xl">
                                     {category.description}
                                     <div className="absolute bottom-full left-1/2 h-0 w-0 -translate-x-1/2 transform border-r-4 border-b-4 border-l-4 border-transparent border-b-black/90"></div>
                                 </div>
@@ -464,8 +464,8 @@ export const NewsFeed = () => {
                                                         key={index}
                                                         onClick={() => setCurrentSlide(index)}
                                                         className={`transition-all duration-200 ${index === currentSlide
-                                                                ? 'h-4 w-4 rounded-lg bg-[#83bd01]'
-                                                                : 'h-2 w-2 rounded bg-[#ffffff] opacity-50 hover:opacity-75'
+                                                            ? 'h-4 w-4 rounded-lg bg-[#83bd01]'
+                                                            : 'h-2 w-2 rounded bg-[#ffffff] opacity-50 hover:opacity-75'
                                                             }`}
                                                     />
                                                 ))}

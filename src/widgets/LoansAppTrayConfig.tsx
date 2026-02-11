@@ -2,7 +2,6 @@
 // This should be added to the MappingScreen component
 
 import React, { useState, useEffect } from 'react';
-import Grid from '@mui/material/Grid';
 import {
     Box,
     Typography,
@@ -180,11 +179,11 @@ const LoansAppTrayConfig: React.FC<LoansAppTrayConfigProps> = ({
                     }}
                 />
                 <Box sx={{ maxHeight: 400, overflow: 'auto' }}>
-                    <Grid container spacing={1}>
+                    <div className="grid grid-cols-4 sm:grid-cols-6 gap-2">
                         {filteredIcons.slice(0, 100).map((iconName) => {
                             const IconComponent = (MUIIcons as any)[iconName];
                             return (
-                                <Grid item xs={3} sm={2} key={iconName}>
+                                <div key={iconName} className="col-span-1">
                                     <Paper
                                         sx={{
                                             p: 1,
@@ -199,10 +198,10 @@ const LoansAppTrayConfig: React.FC<LoansAppTrayConfigProps> = ({
                                             {iconName}
                                         </Typography>
                                     </Paper>
-                                </Grid>
+                                </div>
                             );
                         })}
-                    </Grid>
+                    </div>
                 </Box>
             </DialogContent>
         </Dialog>
@@ -269,9 +268,9 @@ const LoansAppTrayConfig: React.FC<LoansAppTrayConfigProps> = ({
                         </Typography>
                     </AccordionSummary>
                     <AccordionDetails>
-                        <Grid container spacing={2}>
+                        <div className="grid grid-cols-12 gap-4">
                             {/* Label */}
-                            <Grid item xs={12}>
+                            <div className="col-span-12">
                                 <TextField
                                     label="Label"
                                     fullWidth
@@ -287,10 +286,10 @@ const LoansAppTrayConfig: React.FC<LoansAppTrayConfigProps> = ({
                                         },
                                     }}
                                 />
-                            </Grid>
+                            </div>
 
                             {/* Icon Selection */}
-                            <Grid item xs={12} sm={6}>
+                            <div className="col-span-12 sm:col-span-6">
                                 <Box display="flex" alignItems="center" gap={2}>
                                     <Typography sx={{ color: 'white' }}>Icon:</Typography>
                                     {item.iconName && (
@@ -312,10 +311,10 @@ const LoansAppTrayConfig: React.FC<LoansAppTrayConfigProps> = ({
                                         Select Icon
                                     </Button>
                                 </Box>
-                            </Grid>
+                            </div>
 
                             {/* Count Configuration */}
-                            <Grid item xs={12}>
+                            <div className="col-span-12">
                                 <Typography variant="subtitle2" sx={{ color: 'white', mb: 1 }}>
                                     Count Configuration
                                 </Typography>
@@ -411,8 +410,8 @@ const LoansAppTrayConfig: React.FC<LoansAppTrayConfigProps> = ({
                                         />
 
                                         {parsedResponse && (
-                                            <Grid container spacing={2}>
-                                                <Grid item xs={12}>
+                                            <div className="grid grid-cols-12 gap-4">
+                                                <div className="col-span-12">
                                                     <FormControl fullWidth size="small">
                                                         <InputLabel sx={{ color: 'white' }}>CHA Field</InputLabel>
                                                         <Select
@@ -447,11 +446,11 @@ const LoansAppTrayConfig: React.FC<LoansAppTrayConfigProps> = ({
                                                             ))}
                                                         </Select>
                                                     </FormControl>
-                                                </Grid>
+                                                </div>
 
                                                 {fieldMappings[selectedWidget]?.menuItemConfigs?.[item.id]?.queryConfig
                                                     ?.mappedConfig?.chaField && (
-                                                        <Grid item xs={12}>
+                                                        <div className="col-span-12">
                                                             <FormControl fullWidth size="small">
                                                                 <InputLabel sx={{ color: 'white' }}>CHA Value</InputLabel>
                                                                 <Select
@@ -489,14 +488,14 @@ const LoansAppTrayConfig: React.FC<LoansAppTrayConfigProps> = ({
                                                                     ))}
                                                                 </Select>
                                                             </FormControl>
-                                                        </Grid>
+                                                        </div>
                                                     )}
 
                                                 {fieldMappings[selectedWidget]?.menuItemConfigs?.[item.id]?.queryConfig
                                                     ?.mappedConfig?.chaField &&
                                                     fieldMappings[selectedWidget]?.menuItemConfigs?.[item.id]?.queryConfig
                                                         ?.mappedConfig?.chaValue && (
-                                                        <Grid item xs={12}>
+                                                        <div className="col-span-12">
                                                             <FormControl fullWidth size="small">
                                                                 <InputLabel sx={{ color: 'white' }}>KF Field</InputLabel>
                                                                 <Select
@@ -551,9 +550,9 @@ const LoansAppTrayConfig: React.FC<LoansAppTrayConfigProps> = ({
                                                                     ))}
                                                                 </Select>
                                                             </FormControl>
-                                                        </Grid>
+                                                        </div>
                                                     )}
-                                            </Grid>
+                                            </div>
                                         )}
 
                                         {/* Value Preview for Menu Item */}
@@ -607,8 +606,8 @@ const LoansAppTrayConfig: React.FC<LoansAppTrayConfigProps> = ({
                                         </Box>
                                     </Box>
                                 )}
-                            </Grid>
-                        </Grid>
+                            </div>
+                        </div>
                     </AccordionDetails>
                 </Accordion>
             ))}
@@ -687,8 +686,8 @@ const LoansAppTrayConfig: React.FC<LoansAppTrayConfigProps> = ({
                         />
 
                         {parsedResponse && (
-                            <Grid container spacing={2} mt={1}>
-                                <Grid item xs={6}>
+                            <div className="grid grid-cols-12 gap-4 mt-2">
+                                <div className="col-span-6">
                                     <FormControl fullWidth>
                                         <InputLabel sx={{ color: 'white' }}>X-Axis (Categories)</InputLabel>
                                         <Select
@@ -727,9 +726,9 @@ const LoansAppTrayConfig: React.FC<LoansAppTrayConfigProps> = ({
                                             ))}
                                         </Select>
                                     </FormControl>
-                                </Grid>
+                                </div>
 
-                                <Grid item xs={6}>
+                                <div className="col-span-6">
                                     <FormControl fullWidth>
                                         <InputLabel sx={{ color: 'white' }}>Y-Axis (Values)</InputLabel>
                                         <Select
@@ -768,8 +767,8 @@ const LoansAppTrayConfig: React.FC<LoansAppTrayConfigProps> = ({
                                             ))}
                                         </Select>
                                     </FormControl>
-                                </Grid>
-                            </Grid>
+                                </div>
+                            </div>
                         )}
                     </Box>
                 )}

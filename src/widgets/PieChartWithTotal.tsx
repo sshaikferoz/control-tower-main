@@ -2,47 +2,47 @@ import React from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 
 interface PieChartWithTotalProps {
-  data: {
-    name: string;
-    value: number;
-    fill: string;
-  }[];
-  title: string;
-  totalValue: string;
-  subValue: string;
-  variance: string;
+    data: {
+        name: string;
+        value: number;
+        fill: string;
+    }[];
+    title: string;
+    totalValue: string;
+    subValue: string;
+    variance: string;
 }
 
 // Custom tooltip component for better styling
 const CustomTooltip = ({ active, payload }: any) => {
-  if (active && payload && payload.length) {
-    const data = payload[0];
-    return (
-      <div className="rounded-lg border border-gray-600 bg-gray-800 px-3 py-2 text-white shadow-lg">
-        <p className="font-medium">{data.name}</p>
-        <p className="text-sm text-gray-300">{data.value}</p>
-      </div>
-    );
-  }
-  return null;
+    if (active && payload && payload.length) {
+        const data = payload[0];
+        return (
+            <div className="rounded-lg border border-gray-600 bg-gray-800 px-3 py-2 text-white shadow-lg">
+                <p className="font-medium">{data.name}</p>
+                <p className="text-sm text-gray-300">{data.value}</p>
+            </div>
+        );
+    }
+    return null;
 };
 
 const PieChartWithTotal = ({
-  data,
-  title,
-  totalValue,
-  subValue,
-  variance,
+    data,
+    title,
+    totalValue,
+    subValue,
+    variance,
 }: PieChartWithTotalProps) => {
-  return (
-    <div className="h-full w-full">
-      <div className="h-full rounded-xl bg-gradient-to-b from-[#00214E] to-[#0164B0] p-4 text-white">
-        <div className="flex w-full items-center gap-2.5">
-          <h3 className="text-center [font-family:'Ghawar-Hefty',Helvetica] text-base font-bold whitespace-nowrap text-white">
-            {title}
-          </h3>
+    return (
+        <div className="h-full w-full">
+            <div className="h-full rounded-xl bg-gradient-to-b from-[#00214E] to-[#0164B0] p-4 text-white">
+                <div className="flex w-full items-center gap-2.5">
+                    <h3 className="text-center [font-family:'Ghawar-Hefty',Helvetica] text-base font-bold whitespace-nowrap text-white">
+                        {title}
+                    </h3>
 
-          {/* <div className="flex items-center gap-2">
+                    {/* <div className="flex items-center gap-2">
                 <div className="flex items-center">
                 <div className="flex items-center justify-center rounded-lg">
                     <svg
@@ -67,44 +67,44 @@ const PieChartWithTotal = ({
                 </div>
                 </div>
             </div> */}
-        </div>
+                </div>
 
-        <div className="mt-4 flex h-[200px] w-full justify-center">
-          <div className="relative flex flex-col items-center">
-            <div className="h-[140px] w-[140px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={data}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={40}
-                    outerRadius={55}
-                    paddingAngle={1}
-                    dataKey="value"
-                  >
-                    {data.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.fill} style={{ cursor: 'pointer' }} />
-                    ))}
-                  </Pie>
-                  <Tooltip
-                    content={<CustomTooltip />}
-                    cursor={{ fill: 'rgba(255, 255, 255, 0.1)' }}
-                    position={{ x: 0, y: 0 }}
-                    offset={80}
-                    allowEscapeViewBox={{ x: true, y: true }}
-                  />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
+                <div className="mt-4 flex h-[200px] w-full justify-center">
+                    <div className="relative flex flex-col items-center">
+                        <div className="h-[140px] w-[140px]">
+                            <ResponsiveContainer width="100%" height="100%">
+                                <PieChart>
+                                    <Pie
+                                        data={data}
+                                        cx="50%"
+                                        cy="50%"
+                                        innerRadius={40}
+                                        outerRadius={55}
+                                        paddingAngle={1}
+                                        dataKey="value"
+                                    >
+                                        {data.map((entry, index) => (
+                                            <Cell key={`cell-${index}`} fill={entry.fill} style={{ cursor: 'pointer' }} />
+                                        ))}
+                                    </Pie>
+                                    <Tooltip
+                                        content={<CustomTooltip />}
+                                        cursor={{ fill: 'rgba(255, 255, 255, 0.1)' }}
+                                        position={{ x: 0, y: 0 }}
+                                        offset={80}
+                                        allowEscapeViewBox={{ x: true, y: true }}
+                                    />
+                                </PieChart>
+                            </ResponsiveContainer>
+                        </div>
 
-            <div className="absolute top-[50px] w-full text-center">
-              <div className="[font-family:'Ghawar-SmeiBold',Helvetica] text-xl font-bold tracking-[-0.75px] whitespace-nowrap text-white">
-                {totalValue}
-              </div>
-            </div>
+                        <div className="absolute top-[50px] w-full text-center">
+                            <div className="[font-family:'Ghawar-SmeiBold',Helvetica] text-xl font-bold tracking-[-0.75px] whitespace-nowrap text-white">
+                                {totalValue}
+                            </div>
+                        </div>
 
-            {/* <div className="mt-2 flex items-center gap-2.5">
+                        {/* <div className="mt-2 flex items-center gap-2.5">
                 <div className="text-center [font-family:'Ghawar-Hefty',Helvetica] text-lg font-normal text-white">
                     {subValue}
                 </div>
@@ -134,11 +134,11 @@ const PieChartWithTotal = ({
                     </div>
                 </div>
                 </div> */}
-          </div>
+                    </div>
+                </div>
+            </div>
         </div>
-      </div>
-    </div>
-  );
+    );
 };
 
 export default PieChartWithTotal;

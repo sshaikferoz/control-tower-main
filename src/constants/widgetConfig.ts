@@ -22,11 +22,12 @@ const ColumnChart = lazy(() => import('@/widgets/ColumnChart'));
 const PredictionChart = lazy(() => import('@/widgets/Prediction'));
 const RadarChartComponent = lazy(() => import('@/widgets/RadarChart'));
 const MultiChart = lazy(() => import('@/widgets/MultiChart'));
-const FilterWidget = lazy(() => import('@/widgets/FilterWidget'));
+const FilterPanel = lazy(() => import('@/widgets/filter-panel/FilterPanel'));
 const ListenerWidget = lazy(() => import('@/widgets/ListenerWidget'));
 const MultiChartWidget = lazy(() => import('@/widgets/chart/multi-chart/MultiChart'));
 const BlankWidget = lazy(() => import('@/widgets/blank-widget/BlankWidget'));
 const KpiChart = lazy(() => import('@/widgets/chart/kpi-chart/KpiChart'));
+const DashboardMenu = lazy(() => import('@/widgets/dashboard-menu/DashboardMenu'));
 
 // Component mappings with lazy loading
 export const widgetMapping: Record<string, React.ComponentType<any>> = {
@@ -51,11 +52,12 @@ export const widgetMapping: Record<string, React.ComponentType<any>> = {
     'prediction-chart': PredictionChart,
     'radar-chart': RadarChartComponent,
     'multi-chart': MultiChart,
-    'filter-widget': FilterWidget,
+    'filter-panel': FilterPanel,
     'listener-widget': ListenerWidget,
     'multi-chart-bex': MultiChartWidget,
     'blank-widget': BlankWidget,
     'kpi-chart': KpiChart,
+    'dashboard-menu': DashboardMenu
 };
 
 // Default widget props for when data isn't available
@@ -259,6 +261,12 @@ export const defaultPropsMapping: Record<string, any> = {
     },
     'blank-widget': {
         title: 'Blank Widget',
+    },
+    'dashboard-menu': {
+        dashboardMenuConfig: {
+            items: [],
+            layout: 'list',
+        },
     },
 
 };

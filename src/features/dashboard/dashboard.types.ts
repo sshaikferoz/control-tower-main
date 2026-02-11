@@ -1,4 +1,4 @@
-import { Layout } from 'react-grid-layout';
+import type { LayoutItem as GridLayoutItem } from 'react-grid-layout/legacy';
 
 export interface Widget {
     id: string;
@@ -7,9 +7,7 @@ export interface Widget {
     [key: string]: any; // Allow additional widget properties
 }
 
-export interface LayoutItem extends Layout {
-    i: string;
-}
+export interface LayoutItem extends GridLayoutItem {}
 
 export interface DashboardProps {
     widgets: Widget[];
@@ -17,6 +15,7 @@ export interface DashboardProps {
     onLayoutChange?: (layout: LayoutItem[]) => void;
     isViewMode?: boolean;
     selectedWidget?: string | null;
+    selectedWidgetIds?: string[];
     onWidgetClick?: (widgetId: string, event: React.MouseEvent) => void;
     onWidgetRemove?: (widgetId: string) => void;
     sectionName?: string;

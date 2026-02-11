@@ -1,18 +1,6 @@
+'use client';
+
 import React, { useState } from 'react';
-import Grid from '@mui/material/Grid';
-import {
-    Box,
-    FormControl,
-    InputLabel,
-    Select,
-    MenuItem,
-    TextField,
-    Typography,
-    Paper,
-    Chip,
-    Button as MuiButton,
-} from '@mui/material';
-import { Button } from 'primereact/button';
 import {
     FormatConfig,
     FORMAT_PRESETS,
@@ -54,203 +42,161 @@ export const FormatConfigUI: React.FC<FormatConfigUIProps> = ({
     const preview = applyValueFormat(sampleValue, config);
 
     return (
-        <Paper elevation={2} sx={{ p: 2, backgroundColor: '#ffffff20', mb: 2, mt: 2 }}>
-            <Typography variant="subtitle2" gutterBottom sx={{ color: 'white' }}>
-                {label}
-            </Typography>
+        <div className="mt-2 mb-2 rounded-lg border border-white/10 bg-white/10 p-4 text-white">
+            <h3 className="mb-3 text-sm font-semibold text-white">{label}</h3>
 
             {/* Presets */}
-            <Box mb={2}>
-                <Typography variant="caption" sx={{ color: 'white', mb: 1, display: 'block' }}>
+            <div className="mb-4">
+                <span className="mb-1 block text-xs font-medium text-white/80">
                     Quick Presets:
-                </Typography>
-                <Box display="flex" gap={1} flexWrap="wrap">
+                </span>
+                <div className="flex flex-wrap gap-2">
                     {Object.keys(FORMAT_PRESETS).map((presetName) => (
-                        <Chip
+                        <button
                             key={presetName}
-                            label={presetName}
+                            type="button"
                             onClick={() => applyPreset(presetName)}
-                            size="small"
-                            sx={{
-                                backgroundColor: '#ffffff30',
-                                color: 'white',
-                                '&:hover': { backgroundColor: '#ffffff50' },
-                            }}
-                        />
+                            className="rounded-full bg-white/30 px-3 py-1 text-xs font-medium text-white transition-colors hover:bg-white/50"
+                        >
+                            {presetName}
+                        </button>
                     ))}
-                </Box>
-            </Box>
+                </div>
+            </div>
 
             {/* Basic Configuration */}
-            <Grid container spacing={2}>
-                <Grid item xs={12} sm={6}>
-                    <FormControl fullWidth size="small">
-                        <InputLabel sx={{ color: 'white' }}>Scale</InputLabel>
-                        <Select
-                            value={config.scale || 'none'}
-                            onChange={(e) => handleChange({ scale: e.target.value as ScaleType })}
-                            label="Scale"
-                            sx={{
-                                color: 'white',
-                                '& .MuiOutlinedInput-notchedOutline': { borderColor: 'white' },
-                                '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: 'white' },
-                                '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: 'white' },
-                                '& .MuiSvgIcon-root': { color: 'white' },
-                            }}
-                        >
-                            <MenuItem value="none">None (1)</MenuItem>
-                            <MenuItem value="thousand">Thousand (K/M)</MenuItem>
-                            <MenuItem value="million">Million (M/MM)</MenuItem>
-                            <MenuItem value="billion">Billion (B)</MenuItem>
-                            <MenuItem value="auto">Auto (K/M/B)</MenuItem>
-                        </Select>
-                    </FormControl>
-                </Grid>
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                {/* Scale */}
+                <div className="flex flex-col gap-1">
+                    <label className="text-xs font-medium text-white/80">Scale</label>
+                    <select
+                        value={config.scale || 'none'}
+                        onChange={(e) => handleChange({ scale: e.target.value as ScaleType })}
+                        className="w-full rounded-lg border border-white/30 bg-white/5 px-3 py-2 text-sm text-white focus:border-cyan-400 focus:outline-none focus:ring-2 focus:ring-cyan-400/20"
+                    >
+                        <option value="none">None (1)</option>
+                        <option value="thousand">Thousand (K/M)</option>
+                        <option value="million">Million (M/MM)</option>
+                        <option value="billion">Billion (B)</option>
+                        <option value="auto">Auto (K/M/B)</option>
+                    </select>
+                </div>
 
-                <Grid item xs={12} sm={6}>
-                    <TextField
-                        label="Decimals"
+                {/* Decimals */}
+                <div className="flex flex-col gap-1">
+                    <label className="text-xs font-medium text-white/80">Decimals</label>
+                    <input
                         type="number"
-                        fullWidth
-                        size="small"
+                        min={0}
+                        max={10}
                         value={config.decimals ?? 0}
-                        onChange={(e) => handleChange({ decimals: parseInt(e.target.value) || 0 })}
-                        inputProps={{ min: 0, max: 10 }}
-                        sx={{
-                            input: { color: 'white' },
-                            label: { color: 'white' },
-                            '& .MuiOutlinedInput-root': {
-                                '& fieldset': { borderColor: 'white' },
-                                '&:hover fieldset': { borderColor: 'white' },
-                                '&.Mui-focused fieldset': { borderColor: 'white' },
-                            },
-                        }}
+                        onChange={(e) =>
+                            handleChange({
+                                decimals: Number.isNaN(parseInt(e.target.value, 10))
+                                    ? 0
+                                    : parseInt(e.target.value, 10),
+                            })
+                        }
+                        className="w-full rounded-lg border border-white/30 bg-white/5 px-3 py-2 text-sm text-white focus:border-cyan-400 focus:outline-none focus:ring-2 focus:ring-cyan-400/20"
                     />
-                </Grid>
+                </div>
 
-                <Grid item xs={12} sm={6}>
-                    <TextField
-                        label="Prefix"
-                        fullWidth
-                        size="small"
+                {/* Prefix */}
+                <div className="flex flex-col gap-1">
+                    <label className="text-xs font-medium text-white/80">Prefix</label>
+                    <input
+                        type="text"
                         value={config.prefix || ''}
                         onChange={(e) => handleChange({ prefix: e.target.value })}
                         placeholder="e.g., $"
-                        sx={{
-                            input: { color: 'white' },
-                            label: { color: 'white' },
-                            '& .MuiOutlinedInput-root': {
-                                '& fieldset': { borderColor: 'white' },
-                                '&:hover fieldset': { borderColor: 'white' },
-                                '&.Mui-focused fieldset': { borderColor: 'white' },
-                            },
-                        }}
+                        className="w-full rounded-lg border border-white/30 bg-white/5 px-3 py-2 text-sm text-white placeholder:text-white/40 focus:border-cyan-400 focus:outline-none focus:ring-2 focus:ring-cyan-400/20"
                     />
-                </Grid>
+                </div>
 
-                <Grid item xs={12} sm={6}>
-                    <TextField
-                        label="Suffix"
-                        fullWidth
-                        size="small"
+                {/* Suffix */}
+                <div className="flex flex-col gap-1">
+                    <label className="text-xs font-medium text-white/80">Suffix</label>
+                    <input
+                        type="text"
                         value={config.suffix || ''}
                         onChange={(e) => handleChange({ suffix: e.target.value })}
                         placeholder="e.g., %, M, units"
-                        sx={{
-                            input: { color: 'white' },
-                            label: { color: 'white' },
-                            '& .MuiOutlinedInput-root': {
-                                '& fieldset': { borderColor: 'white' },
-                                '&:hover fieldset': { borderColor: 'white' },
-                                '&.Mui-focused fieldset': { borderColor: 'white' },
-                            },
-                        }}
+                        className="w-full rounded-lg border border-white/30 bg-white/5 px-3 py-2 text-sm text-white placeholder:text-white/40 focus:border-cyan-400 focus:outline-none focus:ring-2 focus:ring-cyan-400/20"
                     />
-                </Grid>
-            </Grid>
+                </div>
+            </div>
 
             {/* Advanced Options Toggle */}
-            <Box mt={2}>
-                <MuiButton
-                    size="small"
+            <div className="mt-3">
+                <button
+                    type="button"
                     onClick={() => setShowAdvanced(!showAdvanced)}
-                    sx={{ color: 'white', textTransform: 'none' }}
+                    className="text-xs font-medium text-white/90 transition-colors hover:text-cyan-300"
                 >
                     {showAdvanced ? '▼ Hide' : '▶ Show'} Advanced Options
-                </MuiButton>
-            </Box>
+                </button>
+            </div>
 
             {/* Advanced Configuration */}
             {showAdvanced && (
-                <Grid container spacing={2} mt={1}>
-                    <Grid item xs={12} sm={6}>
-                        <FormControl fullWidth size="small">
-                            <InputLabel sx={{ color: 'white' }}>Rounding</InputLabel>
-                            <Select
-                                value={config.rounding || 'round'}
-                                onChange={(e) => handleChange({ rounding: e.target.value as RoundingType })}
-                                label="Rounding"
-                                sx={{
-                                    color: 'white',
-                                    '& .MuiOutlinedInput-notchedOutline': { borderColor: 'white' },
-                                    '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: 'white' },
-                                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: 'white' },
-                                    '& .MuiSvgIcon-root': { color: 'white' },
-                                }}
-                            >
-                                <MenuItem value="round">Round (Standard)</MenuItem>
-                                <MenuItem value="floor">Floor (Round Down)</MenuItem>
-                                <MenuItem value="ceil">Ceil (Round Up)</MenuItem>
-                                <MenuItem value="none">None</MenuItem>
-                            </Select>
-                        </FormControl>
-                    </Grid>
+                <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
+                    {/* Rounding */}
+                    <div className="flex flex-col gap-1">
+                        <label className="text-xs font-medium text-white/80">Rounding</label>
+                        <select
+                            value={config.rounding || 'round'}
+                            onChange={(e) =>
+                                handleChange({ rounding: e.target.value as RoundingType })
+                            }
+                            className="w-full rounded-lg border border-white/30 bg-white/5 px-3 py-2 text-sm text-white focus:border-cyan-400 focus:outline-none focus:ring-2 focus:ring-cyan-400/20"
+                        >
+                            <option value="round">Round (Standard)</option>
+                            <option value="floor">Floor (Round Down)</option>
+                            <option value="ceil">Ceil (Round Up)</option>
+                            <option value="none">None</option>
+                        </select>
+                    </div>
 
-                    <Grid item xs={12} sm={6}>
-                        <FormControl fullWidth size="small">
-                            <InputLabel sx={{ color: 'white' }}>Show Sign</InputLabel>
-                            <Select
-                                value={config.showSign ? 'yes' : 'no'}
-                                onChange={(e) => handleChange({ showSign: e.target.value === 'yes' })}
-                                label="Show Sign"
-                                sx={{
-                                    color: 'white',
-                                    '& .MuiOutlinedInput-notchedOutline': { borderColor: 'white' },
-                                    '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: 'white' },
-                                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: 'white' },
-                                    '& .MuiSvgIcon-root': { color: 'white' },
-                                }}
-                            >
-                                <MenuItem value="no">No</MenuItem>
-                                <MenuItem value="yes">Yes (+/-)</MenuItem>
-                            </Select>
-                        </FormControl>
-                    </Grid>
-                </Grid>
+                    {/* Show Sign */}
+                    <div className="flex flex-col gap-1">
+                        <label className="text-xs font-medium text-white/80">Show Sign</label>
+                        <select
+                            value={config.showSign ? 'yes' : 'no'}
+                            onChange={(e) =>
+                                handleChange({ showSign: e.target.value === 'yes' })
+                            }
+                            className="w-full rounded-lg border border-white/30 bg-white/5 px-3 py-2 text-sm text-white focus:border-cyan-400 focus:outline-none focus:ring-2 focus:ring-cyan-400/20"
+                        >
+                            <option value="no">No</option>
+                            <option value="yes">Yes (+/-)</option>
+                        </select>
+                    </div>
+                </div>
             )}
 
             {/* Preview */}
-            <Box mt={2} p={2} sx={{ backgroundColor: '#ffffff10', borderRadius: 1 }}>
-                <Typography variant="caption" sx={{ color: 'white', display: 'block', mb: 1 }}>
+            <div className="mt-4 rounded-md bg-white/10 p-3">
+                <div className="mb-1 text-xs text-white/80">
                     Preview ({sampleValue.toLocaleString()}):
-                </Typography>
-                <Typography variant="h6" sx={{ color: '#84BD00', fontWeight: 'bold' }}>
+                </div>
+                <div className="text-lg font-bold text-[#84BD00]">
                     {preview}
-                </Typography>
-            </Box>
+                </div>
+            </div>
 
             {/* Clear Button */}
-            <Box mt={2}>
-                <Button
-                    label="Clear Formatting"
-                    size="small"
-                    outlined
+            <div className="mt-3">
+                <button
+                    type="button"
                     onClick={() => {
                         setConfig({});
                         onChange({});
                     }}
-                />
-            </Box>
-        </Paper>
+                    className="rounded border border-white/40 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-white/10"
+                >
+                    Clear Formatting
+                </button>
+            </div>
+        </div>
     );
 };

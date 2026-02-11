@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useMemo } from 'react';
-import Grid from '@mui/material/Grid';
 import {
     Typography,
     TextField,
@@ -115,8 +114,8 @@ export const KpiConfigPanel: React.FC<KpiConfigPanelProps> = ({
                 <Typography variant="subtitle2" className="mb-4 font-semibold text-sm">
                     Scale Range
                 </Typography>
-                <Grid container spacing={2}>
-                    <Grid item xs={6}>
+                <div className="grid grid-cols-12 gap-4">
+                    <div className="col-span-6">
                         <TextField
                             label="Min Value"
                             type="number"
@@ -144,8 +143,8 @@ export const KpiConfigPanel: React.FC<KpiConfigPanelProps> = ({
                                 },
                             }}
                         />
-                    </Grid>
-                    <Grid item xs={6}>
+                    </div>
+                    <div className="col-span-6">
                         <TextField
                             label="Max Value"
                             type="number"
@@ -173,8 +172,8 @@ export const KpiConfigPanel: React.FC<KpiConfigPanelProps> = ({
                                 },
                             }}
                         />
-                    </Grid>
-                </Grid>
+                    </div>
+                </div>
             </div>
 
             <Divider className="my-4 border-white/20" />
@@ -429,6 +428,38 @@ export const KpiConfigPanel: React.FC<KpiConfigPanelProps> = ({
                         ))}
                     </Select>
                 </FormControl>
+
+                <TextField
+                    label="Listen To Event (Optional)"
+                    value={config.listenToEvent || ''}
+                    onChange={(e) => handleChange('listenToEvent', e.target.value || undefined)}
+                    placeholder="filter-changed"
+                    fullWidth
+                    sx={{
+                        '& .MuiOutlinedInput-root': {
+                            color: 'white',
+                            '& fieldset': {
+                                borderColor: 'rgba(255, 255, 255, 0.3)',
+                            },
+                            '&:hover fieldset': {
+                                borderColor: 'rgba(255, 255, 255, 0.5)',
+                            },
+                            '&.Mui-focused fieldset': {
+                                borderColor: '#00d4ff',
+                            },
+                        },
+                        '& .MuiInputLabel-root': {
+                            color: 'rgba(255, 255, 255, 0.7)',
+                        },
+                        '& .MuiInputLabel-root.Mui-focused': {
+                            color: 'rgba(255, 255, 255, 0.9)',
+                        },
+                        '& .MuiInputBase-input::placeholder': {
+                            color: 'rgba(255, 255, 255, 0.5)',
+                            opacity: 1,
+                        },
+                    }}
+                />
             </div>
 
             <Divider className="my-4 border-white/20" />

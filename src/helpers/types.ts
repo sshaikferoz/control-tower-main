@@ -172,6 +172,7 @@ export type WidgetTypes =
     | 'prediction-chart'
     | 'radar-chart'
     | 'multi-chart'
+    | 'dashboard-menu'
     | 'filter-widget'
     | 'listener-widget'
     | 'blank-widget';
@@ -309,6 +310,7 @@ export const widgetConfigFields: Record<
     'filter-widget': [],
     'listener-widget': [],
     'blank-widget': [],
+    'dashboard-menu': [],
 };
 
 // Define type-safe interfaces matching the component props

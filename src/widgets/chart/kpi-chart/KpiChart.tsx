@@ -3,8 +3,10 @@ import { Tooltip } from '@mui/material';
 import useBexJson from '@/hooks/useBexJson';
 import { KpiWidgetConfig, KpiType } from './KpiConfig.types';
 import { formatNumber as formatNumberUtil } from '@/helpers/numberFormatting';
+import { getCleanTypographyStyles } from '@/helpers/typographyHelper';
 import { WidgetSkeleton } from '@/components/ui/WidgetSkeleton';
-
+import { buildVariableParams } from '@/utils/buildVariableParams';
+import { useAppSelector } from '@/store/hooks';
 /* ---------------------------------- */
 /* Types */
 /* ---------------------------------- */
@@ -18,6 +20,7 @@ interface KpiChartProps {
     queryName?: string;
     backgroundColor?: string;
     typography?: any;
+    listenToEvent?: string;
 }
 
 /* ---------------------------------- */
@@ -30,13 +33,23 @@ const KpiChart: React.FC<KpiChartProps> = ({
     kpiConfig,
     queryName,
     backgroundColor,
+    typography,
 }) => {
     const [currentValue, setCurrentValue] = useState<number | null>(null);
 
     const effectiveQueryName = queryName || kpiConfig?.queryName || '';
+
+    const filterState = useAppSelector((state) => state.filters);
+    const filterVariables = useMemo(() => {
+        if (!kpiConfig?.listenToEvent || filterState.eventName !== kpiConfig?.listenToEvent)
+            return undefined;
+        return buildVariableParams(filterState.variables);
+    }, [filterState.eventName, filterState.variables, kpiConfig?.listenToEvent]);
+
     const { data: bexData, isLoading, error } = useBexJson(effectiveQueryName, {
         parser: 'new',
         enabled: !!effectiveQueryName,
+        variables: filterVariables,
     });
 
     /* ---------------------------------- */
@@ -118,13 +131,17 @@ const KpiChart: React.FC<KpiChartProps> = ({
             color: '#fff',
         };
 
+    const titleStyles = getCleanTypographyStyles('title', typography);
+    const valueStyles = getCleanTypographyStyles('value', typography);
+    const labelStyles = getCleanTypographyStyles('label', typography);
+
     /* ---------------------------------- */
     /* KPI RENDERERS */
     /* ---------------------------------- */
 
     const renderNumber = () => (
         <div className="flex flex-col items-center justify-center flex-1">
-            <span className="text-4xl font-bold">{currentValue !== null ? formatNumber(currentValue) : '—'}</span>
+            <span className="text-4xl font-bold" style={valueStyles}>{currentValue !== null ? formatNumber(currentValue) : '—'}</span>
         </div>
     );
 
@@ -144,8 +161,8 @@ const KpiChart: React.FC<KpiChartProps> = ({
 
         return (
             <div className="flex flex-col items-center">
-                <span className="text-4xl font-bold">{currentValue !== null ? formatNumber(currentValue) : '—'}</span>
-                <span className={`text-sm font-semibold ${isPositive ? 'text-green-300' : 'text-red-300'}`}>
+                <span className="text-4xl font-bold" style={valueStyles}>{currentValue !== null ? formatNumber(currentValue) : '—'}</span>
+                <span className={`text-sm font-semibold ${isPositive ? 'text-green-300' : 'text-red-300'}`} style={labelStyles}>
                     {isPositive ? '▲' : '▼'} {Math.abs(deltaPct).toFixed(1)}%
                 </span>
             </div>
@@ -165,7 +182,7 @@ const KpiChart: React.FC<KpiChartProps> = ({
 
     const renderProgress = () => (
         <div className="w-full flex flex-col gap-2">
-            <span className="text-sm font-semibold">{Math.round(percentage)}%</span>
+            <span className="text-sm font-semibold" style={valueStyles}>{Math.round(percentage)}%</span>
             {renderLinear()}
         </div>
     );
@@ -173,6 +190,13 @@ const KpiChart: React.FC<KpiChartProps> = ({
     const renderDonut = () => {
         const r = 42;
         const c = 2 * Math.PI * r;
+        const textStyle = {
+            fontSize: valueStyles.fontSize || '22px',
+            fontWeight: valueStyles.fontWeight || 'bold',
+            fill: valueStyles.color || color,
+            fontFamily: valueStyles.fontFamily,
+            textAnchor: 'middle' as const,
+        };
         return (
             <svg width="120" height="120">
                 <circle cx="60" cy="60" r={r} stroke="#ffffff30" strokeWidth="10" fill="none" />
@@ -191,10 +215,7 @@ const KpiChart: React.FC<KpiChartProps> = ({
                     x="50%"
                     y="50%"
                     dominantBaseline="middle"
-                    textAnchor="middle"
-                    fontSize="22"
-                    fontWeight="bold"
-                    fill={color}
+                    {...textStyle}
                 >
                     {Math.round(percentage)}%
                 </text>
@@ -207,49 +228,74 @@ const KpiChart: React.FC<KpiChartProps> = ({
     const renderStatus = () => (
         <div className="flex items-center gap-3">
             <span className="w-3 h-3 rounded-full" style={{ backgroundColor: color }} />
-            <span className="text-lg font-semibold">{formatNumber(currentValue ?? 0)}</span>
+            <span className="text-lg font-semibold" style={valueStyles}>{formatNumber(currentValue ?? 0)}</span>
         </div>
     );
 
     const renderBullet = () => {
         const isNegative = currentValue !== null && currentValue < 0;
+        const markerPosition = getPercentage(currentValue);
 
         return (
             <div className="w-full flex flex-col gap-2">
-                {/* Value + Indicator */}
-                <div className="flex items-center justify-end gap-2">
-                    <span
-                        className="text-sm"
-                        style={{
-                            color: color,
-                            transform: isNegative ? 'rotate(180deg)' : undefined,
-                        }}
-                    >
-                        ▼
-                    </span>
-                    <span className="text-sm font-semibold" style={{ color }}>
-                        {currentValue !== null ? formatNumber(currentValue) : '—'}
-                    </span>
-                </div>
+                {/* Bullet Bar + Pointer + Value (all aligned at markerPosition) */}
+                <div className="relative h-6 w-full flex items-end">
+                    {/* Background bar */}
+                    <div className="absolute bottom-0 left-0 right-0 h-2 rounded overflow-hidden bg-white/20">
+                        {/* Color ranges */}
+                        {kpiConfig?.colorRanges?.map((range, index) => {
+                            const left = getPercentage(range.min);
+                            const width = getPercentage(range.max) - left;
 
-                {/* Bullet Bar */}
-                <div className="relative h-2 w-full rounded overflow-hidden bg-white/20">
-                    {kpiConfig?.colorRanges?.map((range, index) => {
-                        const left = getPercentage(range.min);
-                        const width = getPercentage(range.max) - left;
+                            return (
+                                <div
+                                    key={index}
+                                    className="absolute top-0 h-full"
+                                    style={{
+                                        left: `${left}%`,
+                                        width: `${width}%`,
+                                        backgroundColor: range.color,
+                                    }}
+                                />
+                            );
+                        })}
+                    </div>
 
-                        return (
-                            <div
-                                key={index}
-                                className="absolute top-0 h-full"
-                                style={{
-                                    left: `${left}%`,
-                                    width: `${width}%`,
-                                    backgroundColor: range.color,
-                                }}
-                            />
-                        );
-                    })}
+                    {/* Pointer cap exactly at current value */}
+                    {currentValue !== null && (
+                        <div
+                            className="absolute"
+                            style={{
+                                left: `${markerPosition}%`,
+                                transform: 'translateX(-50%)',
+                                // Bring the cap closer to the bar (above for positive, below for negative)
+                                top: isNegative ? undefined : 1,
+                                bottom: isNegative ? 1 : undefined,
+                                width: 0,
+                                height: 0,
+                                borderLeft: '5px solid transparent',
+                                borderRight: '5px solid transparent',
+                                // Flip orientation: for positive values point UP, for negative point DOWN
+                                borderTop: !isNegative ? `6px solid ${color}` : 'none',
+                                borderBottom: isNegative ? `6px solid ${color}` : 'none',
+                            }}
+                        />
+                    )}
+
+                    {/* Numeric value aligned to markerPosition */}
+                    {currentValue !== null && (
+                        <div
+                            className="absolute -top-4 text-xs font-semibold whitespace-nowrap"
+                            style={{
+                                left: `${markerPosition}%`,
+                                transform: 'translateX(-50%)',
+                                color,
+                                ...valueStyles,
+                            }}
+                        >
+                            {formatNumber(currentValue)}
+                        </div>
+                    )}
                 </div>
             </div>
         );
@@ -259,7 +305,7 @@ const KpiChart: React.FC<KpiChartProps> = ({
     const renderIconKpi = () => (
         <div className="flex items-center gap-3">
             <span className="text-3xl">📊</span>
-            <span className="text-xl font-bold">{formatNumber(currentValue ?? 0)}</span>
+            <span className="text-xl font-bold" style={valueStyles}>{formatNumber(currentValue ?? 0)}</span>
         </div>
     );
 
@@ -304,7 +350,7 @@ const KpiChart: React.FC<KpiChartProps> = ({
         >
             <div className="h-full w-full rounded-xl p-4 flex flex-col" style={backgroundStyle}>
 
-                <h3 className="mb-4 font-bold">{title}</h3>
+                <h3 className="mb-4 font-bold" style={titleStyles}>{title}</h3>
 
                 <div className="flex-1 flex items-center justify-center">
                     {renderers[kpiConfig.kpiType || 'number']()}
@@ -322,7 +368,7 @@ const KpiChart: React.FC<KpiChartProps> = ({
                                         className="w-3 h-3 rounded border border-white/30 flex-shrink-0"
                                         style={{ backgroundColor: range.color }}
                                     />
-                                    <span className="text-xs text-white/90 font-medium">
+                                    <span className="text-xs text-white/90 font-medium" style={labelStyles}>
                                         {range.label || `${formatNumber(range.min)} - ${formatNumber(range.max)}`}
                                     </span>
                                 </div>

@@ -1,8 +1,9 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { BlankWidgetConfig } from './BlankWidgetConfig.types';
 interface BlankWidgetProps {
     title?: string;
     color?: string;
+    backgroundColor?: string;
     typography?: any;
     setChangeColor?: (color: string) => void;
     blankWidgetConfig?: BlankWidgetConfig;
@@ -11,23 +12,17 @@ interface BlankWidgetProps {
 const BlankWidget: React.FC<BlankWidgetProps> = ({
     title,
     color,
+    backgroundColor,
     typography,
     setChangeColor,
     blankWidgetConfig,
 }) => {
-    const [userColor, setUserColor] = useState<string>(color || '#00214E');
-
     // Default colors
     const defaultBaseColor = '#00214E';
     const defaultLighterColor = '#0164B0';
 
-    useEffect(() => {
-        if (color && !userColor) {
-            setUserColor(color);
-        }
-    }, [color, userColor]);
-
-    const baseColor = userColor || defaultBaseColor;
+    // Prefer explicit backgroundColor from widget config, then fallback to legacy color prop, then defaults
+    const baseColor = backgroundColor || color || defaultBaseColor;
     const lighterColor = baseColor === defaultBaseColor ? defaultLighterColor : `${baseColor}80`;
 
     const backgroundStyle = {
@@ -41,8 +36,14 @@ const BlankWidget: React.FC<BlankWidgetProps> = ({
             fontSize: typography?.title?.fontSize,
             fontWeight: typography?.title?.fontWeight,
             color: typography?.title?.color,
+            textAlign: typography?.title?.textAlign,
+            textTransform: typography?.title?.textTransform,
+            letterSpacing: typography?.title?.letterSpacing,
+            lineHeight: typography?.title?.lineHeight,
         };
     }
+
+    const titleStyle = typography?.title?.textAlign;
 
     return (
         <div

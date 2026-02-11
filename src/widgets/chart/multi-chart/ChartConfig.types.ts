@@ -57,18 +57,28 @@ export interface ChartWidgetConfig {
 
     measures: string[];          // ["ActualInventory"]
     stacked?: boolean;
-
+    charKeys?: string[];
     valueFormat?: 'currency' | 'non-currency';
     showLegend?: boolean;
     // showTitle?: boolean;          // Enable/disable the title display
     title?: string;              // Title text from configuration
     showGridLines?: boolean;     // Show/hide grid lines behind the chart
     gridLineStyle?: GridLineStyle; // Style of grid lines (solid, dashed, dotted, etc.)
+    showDataLabels?: boolean;   // Show/hide data value labels at each data point (default: false)
     pointerStyle?: PointerStyle;  // Configuration for pointer (dot) styles
     colorPalette?: string[];     // Color palette for chart series (fallback when no groupByKey)
     colorVariantId?: string;     // Selected color variant ID (fallback when no groupByKey)
     transparentBackground?: boolean; // Disable background and make it transparent
     groupConfigs?: Record<string, GroupConfig>; // Group-specific configurations: { groupValue: { enabled, colorPalette, colorVariantId } }
+    listenToEvent?: string; // Event name to listen for filter updates
+
+    /**
+     * Optional formatting options for Y-series numeric values.
+     * Mirrors the precision formatting concept used in other widgets.
+     */
+    ySeriesFormatting?: {
+        decimalPrecision?: number;
+    };
 
     seriesConfig?: {
         series: SeriesConfig[];

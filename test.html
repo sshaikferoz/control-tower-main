@@ -1,0 +1,983 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>XML Tree Selector</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 16px;
+        }
+
+        ul {
+            list-style-type: none;
+            padding-left: 20px;
+        }
+
+        .node {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .node:hover {
+            background-color: #eef;
+        }
+
+        .children {
+            display: none;
+        }
+
+        .expanded>.children {
+            display: block;
+        }
+
+        .toggle {
+            display: inline-block;
+            width: 16px;
+            font-weight: bold;
+        }
+
+        .selected {
+            background-color: #cce5ff;
+            border-radius: 4px;
+        }
+
+        .attr {
+            color: #666;
+            font-size: 12px;
+            margin-left: 6px;
+        }
+
+        .tree-table {
+            border-collapse: collapse;
+            width: 100%;
+            margin-top: 16px;
+        }
+
+        .tree-table th,
+        .tree-table td {
+            border: 1px solid #ccc;
+            padding: 4px 8px;
+            font-size: 12px;
+        }
+
+        .tree-table th {
+            background-color: #f5f5f5;
+            text-align: left;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h2>XML Tree Selection</h2>
+    <div id="tree"></div>
+
+    <h2>XML Tree Table</h2>
+    <table id="tree-table" class="tree-table"></table>
+
+    <script>
+        /* =======================
+           XML PAYLOAD (PASTE)
+           ======================= */
+        const xmlString = `<?xml version="1.0" encoding="iso-8859-1"?>
+<report xmlns:asx="http://www.sap.com/abapxml">
+    <metadata>
+        <infoprovider>ZMPO_PLCT</infoprovider>
+        <query>YPDO_OTD_BUYER_TEST</query>
+        <description>TBD TEST FILTER</description>
+        <author>SID_BWSCM_01</author>
+        <changed_by>SID_BWSCM_01</changed_by>
+        <changed_on>01/26/2026 15:28:13</changed_on>
+        <current_user>SID_BWSCM_01</current_user>
+        <load_date>02/09/2026 02:46:48</load_date>
+    </metadata>
+    <header>
+        <column type="CHA">
+            <techname fieldtype="CHA" display="true" datatype="NUMC" length="000007">CALMONTH</techname>
+            <caption>Cal. year / month</caption>
+        </column>
+    </header>
+    <data>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="JAN 2002" hasChildren="false">JAN 2002</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="DEC 2007" hasChildren="false">DEC 2007</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="JAN 2008" hasChildren="false">JAN 2008</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="FEB 2008" hasChildren="false">FEB 2008</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="MAR 2008" hasChildren="false">MAR 2008</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="APR 2008" hasChildren="false">APR 2008</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="MAY 2008" hasChildren="false">MAY 2008</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="JUN 2008" hasChildren="false">JUN 2008</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="JUL 2008" hasChildren="false">JUL 2008</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="AUG 2008" hasChildren="false">AUG 2008</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="SEP 2008" hasChildren="false">SEP 2008</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="OCT 2008" hasChildren="false">OCT 2008</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="NOV 2008" hasChildren="false">NOV 2008</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="DEC 2008" hasChildren="false">DEC 2008</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="JAN 2009" hasChildren="false">JAN 2009</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="FEB 2009" hasChildren="false">FEB 2009</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="MAR 2009" hasChildren="false">MAR 2009</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="APR 2009" hasChildren="false">APR 2009</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="MAY 2009" hasChildren="false">MAY 2009</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="JUN 2009" hasChildren="false">JUN 2009</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="JUL 2009" hasChildren="false">JUL 2009</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="AUG 2009" hasChildren="false">AUG 2009</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="SEP 2009" hasChildren="false">SEP 2009</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="OCT 2009" hasChildren="false">OCT 2009</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="NOV 2009" hasChildren="false">NOV 2009</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="DEC 2009" hasChildren="false">DEC 2009</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="JAN 2010" hasChildren="false">JAN 2010</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="FEB 2010" hasChildren="false">FEB 2010</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="MAR 2010" hasChildren="false">MAR 2010</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="APR 2010" hasChildren="false">APR 2010</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="MAY 2010" hasChildren="false">MAY 2010</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="JUN 2010" hasChildren="false">JUN 2010</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="JUL 2010" hasChildren="false">JUL 2010</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="AUG 2010" hasChildren="false">AUG 2010</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="SEP 2010" hasChildren="false">SEP 2010</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="OCT 2010" hasChildren="false">OCT 2010</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="NOV 2010" hasChildren="false">NOV 2010</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="DEC 2010" hasChildren="false">DEC 2010</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="JAN 2011" hasChildren="false">JAN 2011</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="FEB 2011" hasChildren="false">FEB 2011</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="MAR 2011" hasChildren="false">MAR 2011</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="APR 2011" hasChildren="false">APR 2011</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="MAY 2011" hasChildren="false">MAY 2011</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="JUN 2011" hasChildren="false">JUN 2011</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="JUL 2011" hasChildren="false">JUL 2011</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="AUG 2011" hasChildren="false">AUG 2011</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="SEP 2011" hasChildren="false">SEP 2011</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="OCT 2011" hasChildren="false">OCT 2011</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="NOV 2011" hasChildren="false">NOV 2011</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="DEC 2011" hasChildren="false">DEC 2011</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="JAN 2012" hasChildren="false">JAN 2012</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="FEB 2012" hasChildren="false">FEB 2012</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="MAR 2012" hasChildren="false">MAR 2012</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="APR 2012" hasChildren="false">APR 2012</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="MAY 2012" hasChildren="false">MAY 2012</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="JUN 2012" hasChildren="false">JUN 2012</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="JUL 2012" hasChildren="false">JUL 2012</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="AUG 2012" hasChildren="false">AUG 2012</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="SEP 2012" hasChildren="false">SEP 2012</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="OCT 2012" hasChildren="false">OCT 2012</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="NOV 2012" hasChildren="false">NOV 2012</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="DEC 2012" hasChildren="false">DEC 2012</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="JAN 2013" hasChildren="false">JAN 2013</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="FEB 2013" hasChildren="false">FEB 2013</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="MAR 2013" hasChildren="false">MAR 2013</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="APR 2013" hasChildren="false">APR 2013</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="MAY 2013" hasChildren="false">MAY 2013</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="JUN 2013" hasChildren="false">JUN 2013</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="JUL 2013" hasChildren="false">JUL 2013</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="AUG 2013" hasChildren="false">AUG 2013</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="SEP 2013" hasChildren="false">SEP 2013</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="OCT 2013" hasChildren="false">OCT 2013</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="NOV 2013" hasChildren="false">NOV 2013</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="DEC 2013" hasChildren="false">DEC 2013</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="JAN 2014" hasChildren="false">JAN 2014</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="FEB 2014" hasChildren="false">FEB 2014</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="MAR 2014" hasChildren="false">MAR 2014</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="APR 2014" hasChildren="false">APR 2014</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="MAY 2014" hasChildren="false">MAY 2014</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="JUN 2014" hasChildren="false">JUN 2014</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="JUL 2014" hasChildren="false">JUL 2014</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="AUG 2014" hasChildren="false">AUG 2014</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="SEP 2014" hasChildren="false">SEP 2014</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="OCT 2014" hasChildren="false">OCT 2014</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="NOV 2014" hasChildren="false">NOV 2014</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="DEC 2014" hasChildren="false">DEC 2014</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="JAN 2015" hasChildren="false">JAN 2015</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="FEB 2015" hasChildren="false">FEB 2015</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="MAR 2015" hasChildren="false">MAR 2015</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="APR 2015" hasChildren="false">APR 2015</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="MAY 2015" hasChildren="false">MAY 2015</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="JUN 2015" hasChildren="false">JUN 2015</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="JUL 2015" hasChildren="false">JUL 2015</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="AUG 2015" hasChildren="false">AUG 2015</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="SEP 2015" hasChildren="false">SEP 2015</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="OCT 2015" hasChildren="false">OCT 2015</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="NOV 2015" hasChildren="false">NOV 2015</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="DEC 2015" hasChildren="false">DEC 2015</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="JAN 2016" hasChildren="false">JAN 2016</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="FEB 2016" hasChildren="false">FEB 2016</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="MAR 2016" hasChildren="false">MAR 2016</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="APR 2016" hasChildren="false">APR 2016</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="MAY 2016" hasChildren="false">MAY 2016</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="JUN 2016" hasChildren="false">JUN 2016</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="JUL 2016" hasChildren="false">JUL 2016</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="AUG 2016" hasChildren="false">AUG 2016</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="SEP 2016" hasChildren="false">SEP 2016</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="OCT 2016" hasChildren="false">OCT 2016</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="NOV 2016" hasChildren="false">NOV 2016</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="DEC 2016" hasChildren="false">DEC 2016</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="JAN 2017" hasChildren="false">JAN 2017</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="FEB 2017" hasChildren="false">FEB 2017</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="MAR 2017" hasChildren="false">MAR 2017</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="APR 2017" hasChildren="false">APR 2017</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="MAY 2017" hasChildren="false">MAY 2017</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="JUN 2017" hasChildren="false">JUN 2017</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="JUL 2017" hasChildren="false">JUL 2017</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="AUG 2017" hasChildren="false">AUG 2017</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="SEP 2017" hasChildren="false">SEP 2017</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="OCT 2017" hasChildren="false">OCT 2017</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="NOV 2017" hasChildren="false">NOV 2017</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="DEC 2017" hasChildren="false">DEC 2017</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="JAN 2018" hasChildren="false">JAN 2018</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="FEB 2018" hasChildren="false">FEB 2018</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="MAR 2018" hasChildren="false">MAR 2018</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="APR 2018" hasChildren="false">APR 2018</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="MAY 2018" hasChildren="false">MAY 2018</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="JUN 2018" hasChildren="false">JUN 2018</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="JUL 2018" hasChildren="false">JUL 2018</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="AUG 2018" hasChildren="false">AUG 2018</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="SEP 2018" hasChildren="false">SEP 2018</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="OCT 2018" hasChildren="false">OCT 2018</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="NOV 2018" hasChildren="false">NOV 2018</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="DEC 2018" hasChildren="false">DEC 2018</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="JAN 2019" hasChildren="false">JAN 2019</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="FEB 2019" hasChildren="false">FEB 2019</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="MAR 2019" hasChildren="false">MAR 2019</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="APR 2019" hasChildren="false">APR 2019</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="MAY 2019" hasChildren="false">MAY 2019</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="JUN 2019" hasChildren="false">JUN 2019</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="JUL 2019" hasChildren="false">JUL 2019</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="AUG 2019" hasChildren="false">AUG 2019</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="SEP 2019" hasChildren="false">SEP 2019</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="OCT 2019" hasChildren="false">OCT 2019</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="NOV 2019" hasChildren="false">NOV 2019</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="DEC 2019" hasChildren="false">DEC 2019</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="JAN 2020" hasChildren="false">JAN 2020</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="FEB 2020" hasChildren="false">FEB 2020</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="MAR 2020" hasChildren="false">MAR 2020</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="APR 2020" hasChildren="false">APR 2020</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="MAY 2020" hasChildren="false">MAY 2020</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="JUN 2020" hasChildren="false">JUN 2020</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="JUL 2020" hasChildren="false">JUL 2020</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="AUG 2020" hasChildren="false">AUG 2020</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="SEP 2020" hasChildren="false">SEP 2020</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="OCT 2020" hasChildren="false">OCT 2020</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="NOV 2020" hasChildren="false">NOV 2020</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="DEC 2020" hasChildren="false">DEC 2020</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="JAN 2021" hasChildren="false">JAN 2021</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="FEB 2021" hasChildren="false">FEB 2021</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="MAR 2021" hasChildren="false">MAR 2021</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="APR 2021" hasChildren="false">APR 2021</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="MAY 2021" hasChildren="false">MAY 2021</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="JUN 2021" hasChildren="false">JUN 2021</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="JUL 2021" hasChildren="false">JUL 2021</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="AUG 2021" hasChildren="false">AUG 2021</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="SEP 2021" hasChildren="false">SEP 2021</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="OCT 2021" hasChildren="false">OCT 2021</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="NOV 2021" hasChildren="false">NOV 2021</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="DEC 2021" hasChildren="false">DEC 2021</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="JAN 2022" hasChildren="false">JAN 2022</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="FEB 2022" hasChildren="false">FEB 2022</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="MAR 2022" hasChildren="false">MAR 2022</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="APR 2022" hasChildren="false">APR 2022</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="MAY 2022" hasChildren="false">MAY 2022</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="JUN 2022" hasChildren="false">JUN 2022</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="JUL 2022" hasChildren="false">JUL 2022</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="AUG 2022" hasChildren="false">AUG 2022</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="SEP 2022" hasChildren="false">SEP 2022</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="OCT 2022" hasChildren="false">OCT 2022</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="NOV 2022" hasChildren="false">NOV 2022</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="DEC 2022" hasChildren="false">DEC 2022</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="JAN 2023" hasChildren="false">JAN 2023</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="FEB 2023" hasChildren="false">FEB 2023</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="MAR 2023" hasChildren="false">MAR 2023</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="APR 2023" hasChildren="false">APR 2023</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="MAY 2023" hasChildren="false">MAY 2023</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="JUN 2023" hasChildren="false">JUN 2023</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="JUL 2023" hasChildren="false">JUL 2023</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="AUG 2023" hasChildren="false">AUG 2023</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="SEP 2023" hasChildren="false">SEP 2023</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="OCT 2023" hasChildren="false">OCT 2023</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="NOV 2023" hasChildren="false">NOV 2023</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="DEC 2023" hasChildren="false">DEC 2023</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="JAN 2024" hasChildren="false">JAN 2024</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="FEB 2024" hasChildren="false">FEB 2024</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="MAR 2024" hasChildren="false">MAR 2024</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="APR 2024" hasChildren="false">APR 2024</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="MAY 2024" hasChildren="false">MAY 2024</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="JUN 2024" hasChildren="false">JUN 2024</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="JUL 2024" hasChildren="false">JUL 2024</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="AUG 2024" hasChildren="false">AUG 2024</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="SEP 2024" hasChildren="false">SEP 2024</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="OCT 2024" hasChildren="false">OCT 2024</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="NOV 2024" hasChildren="false">NOV 2024</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="DEC 2024" hasChildren="false">DEC 2024</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="JAN 2025" hasChildren="false">JAN 2025</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="FEB 2025" hasChildren="false">FEB 2025</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="MAR 2025" hasChildren="false">MAR 2025</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="APR 2025" hasChildren="false">APR 2025</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="MAY 2025" hasChildren="false">MAY 2025</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="JUN 2025" hasChildren="false">JUN 2025</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="JUL 2025" hasChildren="false">JUL 2025</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="AUG 2025" hasChildren="false">AUG 2025</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="SEP 2025" hasChildren="false">SEP 2025</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="OCT 2025" hasChildren="false">OCT 2025</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="NOV 2025" hasChildren="false">NOV 2025</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="DEC 2025" hasChildren="false">DEC 2025</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="JAN 2026" hasChildren="false">JAN 2026</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="FEB 2026" hasChildren="false">FEB 2026</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="Not assigned" hasChildren="false">Not assigned</XSLT_CALMONTH>
+        </row>
+        <row>
+            <XSLT_CALMONTH key="0CALMONTH" txt="Overall Result" hasChildren="false">Overall Result</XSLT_CALMONTH>
+        </row>
+    </data>
+    <error/>
+</report>
+
+
+`;
+
+        /* =======================
+           XML → TREE LOGIC
+           ======================= */
+        const parser = new DOMParser();
+        const xmlDoc = parser.parseFromString(xmlString, "application/xml");
+
+        function createNode(element) {
+            const li = document.createElement("li");
+
+            const nodeDiv = document.createElement("div");
+            nodeDiv.className = "node";
+
+            const toggle = document.createElement("span");
+            toggle.className = "toggle";
+            toggle.textContent = element.children.length ? "▶" : "";
+
+            const label = document.createElement("span");
+            label.textContent = element.tagName;
+
+            nodeDiv.appendChild(toggle);
+            nodeDiv.appendChild(label);
+
+            // Attributes
+            if (element.attributes.length > 0) {
+                const attrSpan = document.createElement("span");
+                attrSpan.className = "attr";
+                const attrs = [];
+                for (let attr of element.attributes) {
+                    attrs.push(`${attr.name}="${attr.value}"`);
+                }
+                attrSpan.textContent = `(${attrs.join(", ")})`;
+                nodeDiv.appendChild(attrSpan);
+            }
+
+            nodeDiv.onclick = (e) => {
+                e.stopPropagation();
+
+                document.querySelectorAll(".selected")
+                    .forEach(n => n.classList.remove("selected"));
+
+                nodeDiv.classList.add("selected");
+
+                if (element.children.length) {
+                    li.classList.toggle("expanded");
+                    toggle.textContent = li.classList.contains("expanded") ? "▼" : "▶";
+                }
+            };
+
+            li.appendChild(nodeDiv);
+
+            if (element.children.length) {
+                const ul = document.createElement("ul");
+                ul.className = "children";
+
+                Array.from(element.children).forEach(child => {
+                    ul.appendChild(createNode(child));
+                });
+
+                li.appendChild(ul);
+            }
+
+            return li;
+        }
+
+        /* =======================
+           RENDER TREE
+           ======================= */
+        const rootUl = document.createElement("ul");
+        rootUl.appendChild(createNode(xmlDoc.documentElement));
+        document.getElementById("tree").appendChild(rootUl);
+
+        /* =======================
+           TREE TABLE (BASED ON CHILDREN)
+           ======================= */
+        const treeTable = document.getElementById("tree-table");
+
+        if (treeTable) {
+            const thead = document.createElement("thead");
+            const headerRow = document.createElement("tr");
+            ["Name", "Attributes", "Value"].forEach(text => {
+                const th = document.createElement("th");
+                th.textContent = text;
+                headerRow.appendChild(th);
+            });
+            thead.appendChild(headerRow);
+            treeTable.appendChild(thead);
+
+            const tbody = document.createElement("tbody");
+            treeTable.appendChild(tbody);
+
+            function addRow(element, level) {
+                const tr = document.createElement("tr");
+                tr.dataset.level = String(level);
+                tr.dataset.hasChildren = element.children.length ? "true" : "false";
+                tr.dataset.expanded = "false";
+
+                const nameTd = document.createElement("td");
+                nameTd.style.paddingLeft = `${level * 16}px`;
+
+                const toggle = document.createElement("span");
+                toggle.className = "toggle";
+                toggle.textContent = element.children.length ? "▶" : "";
+
+                const label = document.createElement("span");
+                label.textContent = element.tagName;
+
+                nameTd.appendChild(toggle);
+                nameTd.appendChild(label);
+
+                const attrsTd = document.createElement("td");
+                if (element.attributes.length > 0) {
+                    const attrs = [];
+                    for (let attr of element.attributes) {
+                        attrs.push(`${attr.name}="${attr.value}"`);
+                    }
+                    attrsTd.textContent = attrs.join(", ");
+                } else {
+                    attrsTd.textContent = "";
+                }
+
+                const valueTd = document.createElement("td");
+                // Only show text content if it is a leaf (no element children)
+                if (!element.children.length) {
+                    const text = element.textContent.trim();
+                    valueTd.textContent = text;
+                } else {
+                    valueTd.textContent = "";
+                }
+
+                tr.appendChild(nameTd);
+                tr.appendChild(attrsTd);
+                tr.appendChild(valueTd);
+
+                tbody.appendChild(tr);
+
+                Array.from(element.children).forEach(child => {
+                    addRow(child, level + 1);
+                });
+            }
+
+            // Build rows in pre-order
+            addRow(xmlDoc.documentElement, 0);
+
+            // Initially show only root row(s)
+            Array.from(tbody.rows).forEach(row => {
+                const level = Number(row.dataset.level || "0");
+                if (level > 0) {
+                    row.style.display = "none";
+                }
+            });
+
+            // Toggle expand / collapse based on children logic
+            treeTable.addEventListener("click", (event) => {
+                const target = event.target;
+                if (!(target instanceof HTMLElement)) return;
+
+                const toggle = target.closest(".toggle");
+                if (!toggle) return;
+
+                const tr = toggle.closest("tr");
+                if (!tr) return;
+
+                const level = Number(tr.dataset.level || "0");
+                const hasChildren = tr.dataset.hasChildren === "true";
+                if (!hasChildren) return;
+
+                const isExpanded = tr.dataset.expanded === "true";
+                tr.dataset.expanded = isExpanded ? "false" : "true";
+                toggle.textContent = isExpanded ? "▶" : "▼";
+
+                const rows = Array.from(tbody.rows);
+                const startIndex = rows.indexOf(tr);
+
+                if (startIndex === -1) return;
+
+                if (!isExpanded) {
+                    // Expanding: show only direct children; deeper levels
+                    // stay hidden until their own parents are expanded.
+                    for (let i = startIndex + 1; i < rows.length; i++) {
+                        const row = rows[i];
+                        const rowLevel = Number(row.dataset.level || "0");
+                        if (rowLevel <= level) break;
+                        if (rowLevel === level + 1) {
+                            row.style.display = "";
+                        }
+                    }
+                } else {
+                    // Collapsing: hide all descendants and reset their toggles/expanded state.
+                    for (let i = startIndex + 1; i < rows.length; i++) {
+                        const row = rows[i];
+                        const rowLevel = Number(row.dataset.level || "0");
+                        if (rowLevel <= level) break;
+                        row.style.display = "none";
+                        row.dataset.expanded = "false";
+
+                        const rowToggle = row.querySelector(".toggle");
+                        if (rowToggle instanceof HTMLElement) {
+                            rowToggle.textContent = row.dataset.hasChildren === "true" ? "▶" : "";
+                        }
+                    }
+                }
+            });
+        }
+    </script>
+
+</body>
+
+</html>

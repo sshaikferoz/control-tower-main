@@ -4,7 +4,8 @@
 @import 'primereact/resources/themes/lara-dark-cyan/theme.css';
 @import 'devextreme/dist/css/dx.dark.css';
 @import 'react-resizable/css/styles.css';
-
+@import 'react-grid-layout/css/styles.css'; 
+@import 'react-resizable/css/styles.css';
 /* Dark theme only */
 :root,
 :root[data-theme='dark'] {

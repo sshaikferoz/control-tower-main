@@ -1,26 +1,7 @@
 'use client';
 
-import React, { useState } from 'react';
-import Grid from '@mui/material/Grid';
-import {
-    Box,
-    Typography,
-    Card,
-    CardContent,
-    Button,
-    TextField,
-    Dialog,
-    DialogTitle,
-    DialogContent,
-    DialogActions,
-    IconButton,
-    Chip,
-    Divider,
-} from '@mui/material';
-import AddIcon from '@mui/icons-material/Add';
-import DeleteIcon from '@mui/icons-material/Delete';
-import EditIcon from '@mui/icons-material/Edit';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import React, { useState, useEffect } from 'react';
+import { PlusIcon, TrashIcon, PencilSquareIcon } from '@heroicons/react/24/outline';
 import { ColorVariant, COLOR_VARIANTS } from './ColorVariantPicker';
 import { HexColorPicker } from 'react-colorful';
 
@@ -65,21 +46,17 @@ const ColorPaletteConfigUI: React.FC<ColorPaletteConfigUIProps> = ({
                 end: '#84B000',
             },
         });
-        // Initialize hex inputs
         const hexInputsInit: Record<number, string> = {};
         defaultColors.forEach((color, index) => {
             hexInputsInit[index] = color;
         });
         setHexInputs(hexInputsInit);
-
-        // Initialize gradient hex inputs
         const gradientHexInit: Record<string, string> = {
             start: '#0033A0',
             middle: '#00A3ED',
             end: '#84B000',
         };
         setGradientHexInputs(gradientHexInit);
-
         setEditingVariant(null);
         setIsCreateDialogOpen(true);
     };
@@ -91,22 +68,17 @@ const ColorPaletteConfigUI: React.FC<ColorPaletteConfigUIProps> = ({
             colors: [...variant.colors],
             gradient: { ...variant.gradient },
         });
-
-        // Initialize hex inputs for colors
         const hexInputsInit: Record<number, string> = {};
         variant.colors.forEach((color, index) => {
             hexInputsInit[index] = color;
         });
         setHexInputs(hexInputsInit);
-
-        // Initialize gradient hex inputs
         const gradientHexInit: Record<string, string> = {
             start: variant.gradient.start,
             middle: variant.gradient.middle,
             end: variant.gradient.end,
         };
         setGradientHexInputs(gradientHexInit);
-
         setIsCreateDialogOpen(true);
     };
 
@@ -126,11 +98,9 @@ const ColorPaletteConfigUI: React.FC<ColorPaletteConfigUIProps> = ({
         };
 
         if (editingVariant) {
-            // Update existing
             const updated = customVariants.map((v) => (v.id === editingVariant.id ? variant : v));
             onChange(updated);
         } else {
-            // Add new
             onChange([...customVariants, variant]);
         }
 
@@ -197,380 +167,292 @@ const ColorPaletteConfigUI: React.FC<ColorPaletteConfigUIProps> = ({
         setNewVariant({ ...newVariant, colors: updatedColors });
     };
 
-    const allVariants = [...COLOR_VARIANTS, ...customVariants];
+    useEffect(() => {
+        if (!isCreateDialogOpen) return;
+        const onEscape = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') handleCancel();
+        };
+        document.addEventListener('keydown', onEscape);
+        return () => document.removeEventListener('keydown', onEscape);
+    }, [isCreateDialogOpen]);
 
     return (
-        <Box sx={{ color: 'white' }}>
-            <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-                <Typography variant="h6">Color Palettes</Typography>
-                <Button
-                    variant="contained"
-                    startIcon={<AddIcon />}
+        <div className="text-white">
+            {/* Header */}
+            <div className="mb-6 flex items-center justify-between">
+                <h2 className="text-lg font-semibold text-white">Color Palettes</h2>
+                <button
+                    type="button"
                     onClick={handleCreateNew}
-                    sx={{
-                        backgroundColor: '#00A3ED',
-                        '&:hover': { backgroundColor: '#0088C7' },
-                    }}
+                    className="flex items-center gap-2 rounded-lg bg-[#00A3ED] px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-[#0088C7]"
                 >
+                    <PlusIcon className="h-5 w-5" />
                     Create New Palette
-                </Button>
-            </Box>
+                </button>
+            </div>
 
-            <Typography variant="body2" sx={{ mb: 3, color: '#aaa' }}>
+            <p className="mb-6 text-sm text-white/70">
                 Manage color palettes available in the mapping screen. Default palettes are shown below, and you can create custom ones.
-            </Typography>
+            </p>
 
             {/* Default Variants Section */}
-            <Box mb={4}>
-                <Typography variant="subtitle1" sx={{ mb: 2, fontWeight: 600 }}>
+            <div className="mb-8">
+                <h3 className="mb-4 text-sm font-semibold text-white">
                     Default Palettes ({COLOR_VARIANTS.length})
-                </Typography>
-                <Grid container spacing={2}>
+                </h3>
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
                     {COLOR_VARIANTS.map((variant) => (
-                        <Grid item xs={12} sm={6} md={4} key={variant.id}>
-                            <Card
-                                sx={{
-                                    backgroundColor: 'rgba(255, 255, 255, 0.05)',
-                                    border: '2px solid rgba(255, 255, 255, 0.2)',
-                                    borderRadius: '8px',
-                                    height: '100%',
-                                    minHeight: '180px',
+                        <div
+                            key={variant.id}
+                            className="flex min-h-[180px] flex-col rounded-lg border-2 border-white/20 bg-white/5 p-4"
+                        >
+                            <div className="mb-3 flex items-center justify-between">
+                                <span className="text-sm font-semibold text-white">{variant.name}</span>
+                                <span className="rounded-full bg-[#84BD00]/20 px-2.5 py-0.5 text-xs font-medium text-[#84BD00]">
+                                    Default
+                                </span>
+                            </div>
+                            <div
+                                className="mb-3 h-10 rounded border border-white/10"
+                                style={{
+                                    background: `linear-gradient(to bottom, ${variant.gradient.start} 0%, ${variant.gradient.middle} 45%, ${variant.gradient.end} 100%)`,
                                 }}
-                            >
-                                <CardContent sx={{ p: 2, display: 'flex', flexDirection: 'column', height: '100%' }}>
-                                    <Box display="flex" alignItems="center" justifyContent="space-between" mb={1.5}>
-                                        <Typography variant="subtitle2" sx={{ color: 'white', fontWeight: 600 }}>
-                                            {variant.name}
-                                        </Typography>
-                                        <Chip label="Default" size="small" sx={{ backgroundColor: '#84BD0020', color: '#84BD00' }} />
-                                    </Box>
-
-                                    {/* Gradient preview */}
-                                    <Box
-                                        sx={{
-                                            height: 40,
-                                            background: `linear-gradient(to bottom, ${variant.gradient.start} 0%, ${variant.gradient.middle} 45%, ${variant.gradient.end} 100%)`,
-                                            borderRadius: '4px',
-                                            marginBottom: 1.5,
-                                            border: '1px solid rgba(255, 255, 255, 0.1)',
-                                        }}
+                            />
+                            <div className="flex flex-1 gap-1">
+                                {variant.colors.map((color, index) => (
+                                    <div
+                                        key={index}
+                                        className="flex-1 rounded border-2 border-white/30"
+                                        style={{ aspectRatio: '1', backgroundColor: color }}
                                     />
-
-                                    {/* Color palette */}
-                                    <Box display="flex" gap={1} alignItems="center" flex={1}>
-                                        {variant.colors.map((color, index) => (
-                                            <Box
-                                                key={index}
-                                                sx={{
-                                                    flex: 1,
-                                                    aspectRatio: '1',
-                                                    backgroundColor: color,
-                                                    borderRadius: '4px',
-                                                    border: '2px solid rgba(255, 255, 255, 0.3)',
-                                                }}
-                                            />
-                                        ))}
-                                    </Box>
-                                </CardContent>
-                            </Card>
-                        </Grid>
+                                ))}
+                            </div>
+                        </div>
                     ))}
-                </Grid>
-            </Box>
+                </div>
+            </div>
 
             {/* Custom Variants Section */}
             {customVariants.length > 0 && (
-                <Box>
-                    <Divider sx={{ my: 3, borderColor: 'rgba(255, 255, 255, 0.1)' }} />
-                    <Typography variant="subtitle1" sx={{ mb: 2, fontWeight: 600 }}>
+                <div>
+                    <div className="my-6 border-t border-white/10" />
+                    <h3 className="mb-4 text-sm font-semibold text-white">
                         Custom Palettes ({customVariants.length})
-                    </Typography>
-                    <Grid container spacing={2}>
+                    </h3>
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
                         {customVariants.map((variant) => (
-                            <Grid item xs={12} sm={6} md={4} key={variant.id}>
-                                <Card
-                                    sx={{
-                                        backgroundColor: 'rgba(255, 255, 255, 0.05)',
-                                        border: '2px solid rgba(0, 212, 255, 0.3)',
-                                        borderRadius: '8px',
-                                        height: '100%',
-                                        minHeight: '180px',
-                                        position: 'relative',
+                            <div
+                                key={variant.id}
+                                className="relative flex min-h-[180px] flex-col rounded-lg border-2 border-cyan-400/30 bg-white/5 p-4"
+                            >
+                                <div className="mb-3 flex items-center justify-between">
+                                    <span className="text-sm font-semibold text-white">{variant.name}</span>
+                                    <div className="flex gap-1">
+                                        <button
+                                            type="button"
+                                            onClick={() => handleEdit(variant)}
+                                            className="rounded p-1.5 text-cyan-400 transition-colors hover:bg-cyan-400/20"
+                                        >
+                                            <PencilSquareIcon className="h-4 w-4" />
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => handleDelete(variant.id)}
+                                            className="rounded p-1.5 text-[#E1553F] transition-colors hover:bg-red-500/20"
+                                        >
+                                            <TrashIcon className="h-4 w-4" />
+                                        </button>
+                                    </div>
+                                </div>
+                                <div
+                                    className="mb-3 h-10 rounded border border-white/10"
+                                    style={{
+                                        background: `linear-gradient(to bottom, ${variant.gradient.start} 0%, ${variant.gradient.middle} 45%, ${variant.gradient.end} 100%)`,
                                     }}
-                                >
-                                    <CardContent sx={{ p: 2, display: 'flex', flexDirection: 'column', height: '100%' }}>
-                                        <Box display="flex" alignItems="center" justifyContent="space-between" mb={1.5}>
-                                            <Typography variant="subtitle2" sx={{ color: 'white', fontWeight: 600 }}>
-                                                {variant.name}
-                                            </Typography>
-                                            <Box display="flex" gap={0.5}>
-                                                <IconButton
-                                                    size="small"
-                                                    onClick={() => handleEdit(variant)}
-                                                    sx={{ color: '#00d4ff' }}
-                                                >
-                                                    <EditIcon fontSize="small" />
-                                                </IconButton>
-                                                <IconButton
-                                                    size="small"
-                                                    onClick={() => handleDelete(variant.id)}
-                                                    sx={{ color: '#E1553F' }}
-                                                >
-                                                    <DeleteIcon fontSize="small" />
-                                                </IconButton>
-                                            </Box>
-                                        </Box>
-
-                                        {/* Gradient preview */}
-                                        <Box
-                                            sx={{
-                                                height: 40,
-                                                background: `linear-gradient(to bottom, ${variant.gradient.start} 0%, ${variant.gradient.middle} 45%, ${variant.gradient.end} 100%)`,
-                                                borderRadius: '4px',
-                                                marginBottom: 1.5,
-                                                border: '1px solid rgba(255, 255, 255, 0.1)',
-                                            }}
+                                />
+                                <div className="flex flex-1 gap-1">
+                                    {variant.colors.map((color, index) => (
+                                        <div
+                                            key={index}
+                                            className="flex-1 rounded border-2 border-white/30"
+                                            style={{ aspectRatio: '1', backgroundColor: color }}
                                         />
-
-                                        {/* Color palette */}
-                                        <Box display="flex" gap={1} alignItems="center" flex={1}>
-                                            {variant.colors.map((color, index) => (
-                                                <Box
-                                                    key={index}
-                                                    sx={{
-                                                        flex: 1,
-                                                        aspectRatio: '1',
-                                                        backgroundColor: color,
-                                                        borderRadius: '4px',
-                                                        border: '2px solid rgba(255, 255, 255, 0.3)',
-                                                    }}
-                                                />
-                                            ))}
-                                        </Box>
-                                    </CardContent>
-                                </Card>
-                            </Grid>
+                                    ))}
+                                </div>
+                            </div>
                         ))}
-                    </Grid>
-                </Box>
+                    </div>
+                </div>
             )}
 
             {/* Create/Edit Dialog */}
-            <Dialog
-                open={isCreateDialogOpen}
-                onClose={handleCancel}
-                maxWidth="md"
-                fullWidth
-                PaperProps={{
-                    sx: {
-                        backgroundColor: '#1a3a6b',
-                        color: 'white',
-                    },
-                }}
-            >
-                <DialogTitle>
-                    {editingVariant ? 'Edit Color Palette' : 'Create New Color Palette'}
-                </DialogTitle>
-                <DialogContent>
-                    <Box sx={{ mt: 2 }}>
-                        <TextField
-                            fullWidth
-                            label="Palette Name"
-                            value={newVariant.name || ''}
-                            onChange={(e) => setNewVariant({ ...newVariant, name: e.target.value })}
-                            sx={{
-                                mb: 3,
-                                '& .MuiOutlinedInput-root': {
-                                    color: 'white',
-                                    '& fieldset': { borderColor: 'rgba(255, 255, 255, 0.3)' },
-                                },
-                                '& label': { color: 'rgba(255, 255, 255, 0.7)' },
-                            }}
-                        />
-
-                        {/* Colors */}
-                        <Typography variant="subtitle2" sx={{ mb: 2, color: 'white' }}>
-                            Colors
-                        </Typography>
-                        <Grid container spacing={2} sx={{ mb: 3 }}>
-                            {newVariant.colors?.map((color, index) => (
-                                <Grid item xs={6} sm={4} md={3} key={index}>
-                                    <Box>
-                                        <Box
-                                            onClick={() => setEditingColorIndex(editingColorIndex === index ? null : index)}
-                                            sx={{
-                                                width: '100%',
-                                                aspectRatio: '1',
-                                                backgroundColor: color,
-                                                borderRadius: '4px',
-                                                border: editingColorIndex === index ? '3px solid #00d4ff' : '2px solid rgba(255, 255, 255, 0.3)',
-                                                cursor: 'pointer',
-                                                mb: 1,
-                                            }}
-                                        />
-                                        {editingColorIndex === index && (
-                                            <Box sx={{ mt: 1 }}>
-                                                <HexColorPicker
-                                                    color={color}
-                                                    onChange={(newColor) => updateColor(index, newColor)}
-                                                />
-
-                                                {/* Hex Input */}
-                                                <TextField
-                                                    fullWidth
-                                                    size="small"
-                                                    label="Hex"
-                                                    value={hexInputs[index] || color}
-                                                    onChange={(e) => handleHexInputChange(index, e.target.value)}
-                                                    sx={{
-                                                        mt: 2,
-                                                        '& .MuiOutlinedInput-root': {
-                                                            color: 'white',
-                                                            '& fieldset': { borderColor: 'rgba(255, 255, 255, 0.3)' },
-                                                        },
-                                                        '& label': { color: 'rgba(255, 255, 255, 0.7)' },
-                                                    }}
-                                                    inputProps={{
-                                                        style: { textTransform: 'uppercase' },
-                                                        maxLength: 7,
-                                                    }}
-                                                />
-                                            </Box>
-                                        )}
-                                        {newVariant.colors && newVariant.colors.length > 1 && (
-                                            <IconButton
-                                                size="small"
-                                                onClick={() => removeColor(index)}
-                                                sx={{ color: '#E1553F', mt: 0.5 }}
-                                            >
-                                                <DeleteIcon fontSize="small" />
-                                            </IconButton>
-                                        )}
-                                    </Box>
-                                </Grid>
-                            ))}
-                            <Grid item xs={6} sm={4} md={3}>
-                                <Button
-                                    fullWidth
-                                    variant="outlined"
-                                    startIcon={<AddIcon />}
-                                    onClick={addColor}
-                                    sx={{
-                                        height: '100%',
-                                        minHeight: '60px',
-                                        borderColor: 'rgba(255, 255, 255, 0.3)',
-                                        color: 'white',
-                                        '&:hover': { borderColor: '#00d4ff' },
-                                    }}
-                                >
-                                    Add Color
-                                </Button>
-                            </Grid>
-                        </Grid>
-
-                        {/* Gradient */}
-                        <Typography variant="subtitle2" sx={{ mb: 2, color: 'white' }}>
-                            Gradient
-                        </Typography>
-                        <Box sx={{ mb: 2 }}>
-                            <Box
-                                sx={{
-                                    height: 60,
-                                    background: `linear-gradient(to right, ${newVariant.gradient?.start || '#000'} 0%, ${newVariant.gradient?.middle || '#000'} 50%, ${newVariant.gradient?.end || '#000'} 100%)`,
-                                    borderRadius: '4px',
-                                    border: '2px solid rgba(255, 255, 255, 0.3)',
-                                    mb: 2,
-                                }}
-                            />
-                            <Grid container spacing={2}>
-                                {(['start', 'middle', 'end'] as const).map((type) => (
-                                    <Grid item xs={4} key={type}>
-                                        <Box>
-                                            <Typography variant="caption" sx={{ color: 'rgba(255, 255, 255, 0.7)', mb: 1, display: 'block' }}>
-                                                {type.charAt(0).toUpperCase() + type.slice(1)}
-                                            </Typography>
-                                            <Box
-                                                onClick={() => setEditingGradientColor(editingGradientColor === type ? null : type)}
-                                                sx={{
-                                                    width: '100%',
-                                                    aspectRatio: '1',
-                                                    backgroundColor: newVariant.gradient?.[type] || '#000',
-                                                    borderRadius: '4px',
-                                                    border: editingGradientColor === type ? '3px solid #00d4ff' : '2px solid rgba(255, 255, 255, 0.3)',
-                                                    cursor: 'pointer',
-                                                    mb: 1,
-                                                }}
-                                            />
-                                            {editingGradientColor === type && (
-                                                <Box sx={{ mt: 1 }}>
-                                                    <HexColorPicker
-                                                        color={newVariant.gradient?.[type] || '#000'}
-                                                        onChange={(newColor) => updateGradientColor(type, newColor)}
-                                                    />
-
-                                                    {/* Hex Input */}
-                                                    <TextField
-                                                        fullWidth
-                                                        size="small"
-                                                        label="Hex"
-                                                        value={gradientHexInputs[type] || newVariant.gradient?.[type] || '#000'}
-                                                        onChange={(e) => handleGradientHexInputChange(type, e.target.value)}
-                                                        sx={{
-                                                            mt: 2,
-                                                            '& .MuiOutlinedInput-root': {
-                                                                color: 'white',
-                                                                '& fieldset': { borderColor: 'rgba(255, 255, 255, 0.3)' },
-                                                            },
-                                                            '& label': { color: 'rgba(255, 255, 255, 0.7)' },
-                                                        }}
-                                                        inputProps={{
-                                                            style: { textTransform: 'uppercase' },
-                                                            maxLength: 7,
-                                                        }}
-                                                    />
-                                                </Box>
-                                            )}
-                                        </Box>
-                                    </Grid>
-                                ))}
-                            </Grid>
-                        </Box>
-                    </Box>
-                </DialogContent>
-                <DialogActions sx={{ p: 2, borderTop: '1px solid rgba(255, 255, 255, 0.1)' }}>
-                    <Button onClick={handleCancel} sx={{ color: 'white' }}>
-                        Cancel
-                    </Button>
-                    <Button
-                        onClick={handleSave}
-                        variant="contained"
-                        disabled={!newVariant.name || !newVariant.colors || newVariant.colors.length === 0}
-                        sx={{
-                            backgroundColor: '#00A3ED',
-                            '&:hover': { backgroundColor: '#0088C7' },
-                        }}
+            {isCreateDialogOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                    <div
+                        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+                        onClick={handleCancel}
+                        aria-hidden
+                    />
+                    <div
+                        className="relative z-10 w-full max-w-2xl max-h-[90vh] flex flex-col rounded-lg border border-white/10 bg-[#1a3a6b] shadow-xl"
+                        role="dialog"
+                        aria-modal="true"
+                        aria-labelledby="dialog-title"
                     >
-                        {editingVariant ? 'Update' : 'Create'}
-                    </Button>
-                </DialogActions>
-            </Dialog>
-        </Box>
+                        <h2 id="dialog-title" className="px-6 py-4 text-lg font-semibold text-white">
+                            {editingVariant ? 'Edit Color Palette' : 'Create New Color Palette'}
+                        </h2>
+                        <div className="flex-1 overflow-y-auto px-6 pb-4">
+                            <div className="mt-2">
+                                <label className="mb-2 block text-xs font-medium text-white/70">
+                                    Palette Name
+                                </label>
+                                <input
+                                    type="text"
+                                    value={newVariant.name || ''}
+                                    onChange={(e) => setNewVariant({ ...newVariant, name: e.target.value })}
+                                    className="mb-6 w-full rounded-lg border border-white/20 bg-white/5 px-4 py-2.5 text-sm text-white placeholder:text-white/40 focus:border-cyan-400 focus:outline-none focus:ring-2 focus:ring-cyan-400/20"
+                                    placeholder="Palette Name"
+                                />
+
+                                <h4 className="mb-3 text-sm font-semibold text-white">Colors</h4>
+                                <div className="mb-6 grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
+                                    {newVariant.colors?.map((color, index) => (
+                                        <div key={index}>
+                                            <button
+                                                type="button"
+                                                onClick={() => setEditingColorIndex(editingColorIndex === index ? null : index)}
+                                                className={`mb-2 w-full rounded border-2 transition-colors ${editingColorIndex === index
+                                                    ? 'border-cyan-400'
+                                                    : 'border-white/30 hover:border-white/50'
+                                                    }`}
+                                                style={{ aspectRatio: '1', backgroundColor: color }}
+                                            />
+                                            {editingColorIndex === index && (
+                                                <div className="mt-2">
+                                                    <HexColorPicker
+                                                        color={color}
+                                                        onChange={(newColor) => updateColor(index, newColor)}
+                                                        className="mb-3"
+                                                    />
+                                                    <label className="mb-1 block text-xs font-medium text-white/70">
+                                                        Hex
+                                                    </label>
+                                                    <input
+                                                        type="text"
+                                                        value={hexInputs[index] || color}
+                                                        onChange={(e) => handleHexInputChange(index, e.target.value)}
+                                                        className="w-full rounded-lg border border-white/20 bg-white/5 px-3 py-2 text-sm uppercase text-white placeholder:text-white/40 focus:border-cyan-400 focus:outline-none focus:ring-2 focus:ring-cyan-400/20"
+                                                        maxLength={7}
+                                                    />
+                                                </div>
+                                            )}
+                                            {newVariant.colors && newVariant.colors.length > 1 && (
+                                                <button
+                                                    type="button"
+                                                    onClick={() => removeColor(index)}
+                                                    className="mt-1 rounded p-1 text-[#E1553F] transition-colors hover:bg-red-500/20"
+                                                >
+                                                    <TrashIcon className="h-4 w-4" />
+                                                </button>
+                                            )}
+                                        </div>
+                                    ))}
+                                    <button
+                                        type="button"
+                                        onClick={addColor}
+                                        className="flex min-h-[60px] flex-col items-center justify-center gap-2 rounded-lg border border-white/30 py-3 text-sm text-white transition-colors hover:border-cyan-400 hover:bg-white/5"
+                                    >
+                                        <PlusIcon className="h-5 w-5" />
+                                        Add Color
+                                    </button>
+                                </div>
+
+                                <h4 className="mb-3 text-sm font-semibold text-white">Gradient</h4>
+                                <div className="mb-4">
+                                    <div
+                                        className="mb-4 h-14 rounded border-2 border-white/30"
+                                        style={{
+                                            background: `linear-gradient(to right, ${newVariant.gradient?.start || '#000'} 0%, ${newVariant.gradient?.middle || '#000'} 50%, ${newVariant.gradient?.end || '#000'} 100%)`,
+                                        }}
+                                    />
+                                    <div className="grid grid-cols-3 gap-4">
+                                        {(['start', 'middle', 'end'] as const).map((type) => (
+                                            <div key={type}>
+                                                <span className="mb-2 block text-xs font-medium text-white/70">
+                                                    {type.charAt(0).toUpperCase() + type.slice(1)}
+                                                </span>
+                                                <button
+                                                    type="button"
+                                                    onClick={() =>
+                                                        setEditingGradientColor(editingGradientColor === type ? null : type)
+                                                    }
+                                                    className={`mb-2 w-full rounded border-2 transition-colors ${editingGradientColor === type
+                                                        ? 'border-cyan-400'
+                                                        : 'border-white/30 hover:border-white/50'
+                                                        }`}
+                                                    style={{
+                                                        aspectRatio: '1',
+                                                        backgroundColor: newVariant.gradient?.[type] || '#000',
+                                                    }}
+                                                />
+                                                {editingGradientColor === type && (
+                                                    <div className="mt-2">
+                                                        <HexColorPicker
+                                                            color={newVariant.gradient?.[type] || '#000'}
+                                                            onChange={(newColor) => updateGradientColor(type, newColor)}
+                                                            className="mb-3"
+                                                        />
+                                                        <label className="mb-1 block text-xs font-medium text-white/70">
+                                                            Hex
+                                                        </label>
+                                                        <input
+                                                            type="text"
+                                                            value={
+                                                                gradientHexInputs[type] ||
+                                                                newVariant.gradient?.[type] ||
+                                                                '#000'
+                                                            }
+                                                            onChange={(e) =>
+                                                                handleGradientHexInputChange(type, e.target.value)
+                                                            }
+                                                            className="w-full rounded-lg border border-white/20 bg-white/5 px-3 py-2 text-sm uppercase text-white placeholder:text-white/40 focus:border-cyan-400 focus:outline-none focus:ring-2 focus:ring-cyan-400/20"
+                                                            maxLength={7}
+                                                        />
+                                                    </div>
+                                                )}
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="flex justify-end gap-2 border-t border-white/10 px-6 py-4">
+                            <button
+                                type="button"
+                                onClick={handleCancel}
+                                className="rounded-lg px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-white/10"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                type="button"
+                                onClick={handleSave}
+                                disabled={
+                                    !newVariant.name ||
+                                    !newVariant.colors ||
+                                    newVariant.colors.length === 0
+                                }
+                                className="rounded-lg bg-[#00A3ED] px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-[#0088C7] disabled:opacity-50 disabled:hover:bg-[#00A3ED]"
+                            >
+                                {editingVariant ? 'Update' : 'Create'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+        </div>
     );
 };
 
 export default ColorPaletteConfigUI;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

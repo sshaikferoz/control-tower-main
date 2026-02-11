@@ -17,7 +17,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import InfoIcon from '@mui/icons-material/Info';
 import SecurityIcon from '@mui/icons-material/Security';
 import LaunchIcon from '@mui/icons-material/Launch';
-import RGL, { WidthProvider } from 'react-grid-layout';
+import RGL, { WidthProvider } from 'react-grid-layout/legacy';
 import MyContractsIcon from '@/assets/MyContractsIcon';
 import { DashboardSectionProps } from '@/types/dashboard';
 import { LazyWidgetContent } from '@/widgets/LazyWidgetContent';
@@ -612,6 +612,9 @@ export const DashboardSection: React.FC<ExtendedDashboardSectionProps> = ({
                             const props = widgetProps[widget.id] || defaultPropsMapping[widget.name] || {};
                             const isLoading = loadingWidgets.has(widget.id);
                             const hasRoles = widget.roles?.length > 0;
+                            const isFilterPanel = widget?.name === 'filter-panel';
+                            // When IsActive is '' on the backend, we get active === false here
+                            const isUnauthorized = widget.active === false;
 
                             if (!Component) {
                                 console.error(`Component not found for widget type: ${widget.name}`);
@@ -638,20 +641,26 @@ export const DashboardSection: React.FC<ExtendedDashboardSectionProps> = ({
                                     key={widget.id}
                                     className={getWidgetClasses(
                                         widget.id,
-                                        'relative rounded-lg bg-transparent transition-shadow duration-200 hover:cursor-pointer'
+                                        isFilterPanel
+                                            ? 'relative rounded-lg bg-transparent transition-shadow duration-200 hover:cursor-pointer'
+                                            : 'relative rounded-lg bg-transparent transition-shadow duration-200'
                                     )}
                                     data-widget-id={widget.id}
-                                    onClick={(e) => handleWidgetClick(e, widget)}
+                                    onClick={(e) =>
+                                        isFilterPanel || isUnauthorized ? null : handleWidgetClick(e, widget)
+                                    }
                                 >
                                     {/* Action buttons overlay */}
                                     {(() => {
+                                        if (isFilterPanel) return null;
                                         // Check for showInfo in multiple locations
                                         const targetReport =
                                             widget.props?.targetReport ||
                                             widget.fieldMappings?.targetReport ||
                                             section.fieldMappings?.[widget.id]?.targetReport;
                                         const showInfo = targetReport?.showInfo || props.showdescription;
-                                        const description = targetReport?.description || widget.description || 'No description available';
+                                        const description =
+                                            targetReport?.description || widget.description || 'No description available';
 
                                         return showInfo ? (
                                             <div className="absolute top-2 right-2 flex space-x-1 z-10">
@@ -683,13 +692,23 @@ export const DashboardSection: React.FC<ExtendedDashboardSectionProps> = ({
                                     })()}
 
                                     {/* Widget content - now with click handling */}
-                                    <LazyWidgetContent
-                                        widget={widget}
-                                        Component={Component}
-                                        props={props}
-                                        onVisible={() => handleWidgetVisible(widget.id)}
-                                        isLoading={isLoading}
-                                    />
+                                    {isUnauthorized ? (
+                                        <div className="flex h-full w-full flex-col rounded-xl bg-gradient-to-b from-[#00214E] to-[#0164B0] p-4 text-white">
+                                            <div className="flex flex-1 items-center justify-center">
+                                                <p className="text-center text-xs opacity-90">
+                                                    You are not authorized to view this widget.
+                                                </p>
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <LazyWidgetContent
+                                            widget={widget}
+                                            Component={Component}
+                                            props={props}
+                                            onVisible={() => handleWidgetVisible(widget.id)}
+                                            isLoading={isLoading}
+                                        />
+                                    )}
                                 </div>
                             );
                         })}

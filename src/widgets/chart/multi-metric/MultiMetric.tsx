@@ -1,9 +1,10 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useEffect, useState } from 'react';
 import useBexJson from '@/hooks/useBexJson';
 import { MultiMetricWidgetConfig, MultiMetricItem } from './MultiMetricConfig.types';
 import { formatNumber } from '@/helpers/numberFormatting';
 import { applyTypographyStyles } from '@/helpers/typographyHelper';
 import { Skeleton } from '@mui/material';
+import { eventBus } from '@/services/EventBus';
 
 interface MultiMetricProps {
     multiMetricConfig?: MultiMetricWidgetConfig;
@@ -95,7 +96,9 @@ const MetricItem: React.FC<{
     }[metric.valueAlignment || 'center'];
 
     // Apply typography styles
-    const titleStyles = applyTypographyStyles('title', typography);
+    // Use "name" for per-metric labels, so widget header ("title")
+    // typography does not affect every metric item.
+    const titleStyles = applyTypographyStyles('label', typography);
     const valueStyles = applyTypographyStyles('value', typography);
 
     if (isLoading) {
@@ -158,9 +161,30 @@ const MetricItem: React.FC<{
                         }`}>
                         <span className={`${valueSizeClasses} font-bold text-white`} style={valueStyles}>
                             {formattedValue}
-                            {metric.unit ? ` ${metric.unit}` : ''}
+                            {metric.unit ? <span className="text-[0.7em] font-normal opacity-90"> {metric.unit}</span> : ''}
                         </span>
                         {metric.enableTrend && trend !== null && <TrendIcon trend={trend} />}
+                    </div>
+                </>
+            ) : metricLayout === 'verticalTitleBelow' ? (
+                // Vertical layout: value on top, title below
+                <>
+                    <div className={`flex items-center gap-2 w-full mb-1 ${valueAlignClass === 'text-center'
+                        ? 'justify-center'
+                        : valueAlignClass === 'text-right'
+                            ? 'justify-end'
+                            : 'justify-start'
+                        }`}>
+                        <span className={`${valueSizeClasses} font-bold text-white`} style={valueStyles}>
+                            {formattedValue}
+                            {metric.unit ? <span className="text-[0.7em] font-normal opacity-90"> {metric.unit}</span> : ''}
+                        </span>
+                        {metric.enableTrend && trend !== null && <TrendIcon trend={trend} />}
+                    </div>
+                    <div className={`${titleAlignClass} w-full`}>
+                        <p className="text-xs sm:text-sm font-medium text-white/90" style={titleStyles}>
+                            {metric.title}
+                        </p>
                     </div>
                 </>
             ) : (
@@ -179,6 +203,7 @@ const MetricItem: React.FC<{
                         }`}>
                         <span className={`${valueSizeClasses} font-bold text-white`} style={valueStyles}>
                             {formattedValue}
+                            {metric.unit ? <span className="text-[0.7em] font-normal opacity-90"> {metric.unit}</span> : ''}
                         </span>
                         {metric.enableTrend && trend !== null && <TrendIcon trend={trend} />}
                     </div>
@@ -213,6 +238,9 @@ const MultiMetric: React.FC<MultiMetricProps> = ({
     const layout = multiMetricConfig?.layout || 'horizontal';
     const showDividers = multiMetricConfig?.showDividers ?? true;
 
+    // Typography for widget-level title (driven by "title" element config)
+    const widgetTitleStyles = applyTypographyStyles('title', typography);
+    const titleStyle = typography?.title?.textAlign;
     if (!multiMetricConfig || !multiMetricConfig.metrics || multiMetricConfig.metrics.length === 0) {
         return (
             <div className="relative h-full w-full">
@@ -239,7 +267,7 @@ const MultiMetric: React.FC<MultiMetricProps> = ({
                 {/* Widget-level header title */}
 
                 <div className="mb-2 flex items-start justify-between">
-                    <h3 className="text-base font-bold text-white">
+                    <h3 className="text-base font-bold text-white w-full" style={widgetTitleStyles} >
                         {title}
                     </h3>
                 </div>
@@ -275,9 +303,78 @@ const MetricCardWrapper: React.FC<{
     typography?: any;
     layout?: 'horizontal' | 'vertical';
 }> = ({ metric, typography, layout = 'horizontal' }) => {
+    const [filterVariables, setFilterVariables] = useState<string | null>(null);
+
+    // Subscribe to filter events if configured
+    useEffect(() => {
+        if (!metric.listenToEvent) return;
+
+        const unsubscribe = eventBus.subscribe(metric.listenToEvent, (eventData: any) => {
+            console.log('MultiMetric received filter event:', eventData);
+
+            // Build variables string from event data and variable mappings
+            if (eventData.variables) {
+                // Use the variables string directly if provided
+                setFilterVariables(eventData.variables);
+            } else if (metric.variableMappings && metric.variableMappings.length > 0) {
+                // Build variables string from mappings
+                const variableParams: string[] = [];
+                let varNum = 1;
+
+                metric.variableMappings.forEach((mapping) => {
+                    const filterValue = eventData[mapping.filterVariableName];
+                    if (filterValue !== undefined && filterValue !== null) {
+                        if (Array.isArray(filterValue)) {
+                            // Multi-select: create multiple variable entries
+                            filterValue.forEach((val) => {
+                                variableParams.push(`VAR_NAME_${varNum}=${mapping.bexVariableName}`);
+                                variableParams.push(`VAR_OPERATOR_${varNum}=EQ`);
+                                variableParams.push(`VAR_VALUE_EXT_${varNum}=${String(val)}`);
+                                varNum++;
+                            });
+                        } else if (typeof filterValue === 'object' && 'from' in filterValue) {
+                            // Range selection
+                            if (filterValue.from) {
+                                variableParams.push(`VAR_NAME_${varNum}=${mapping.bexVariableName}`);
+                                variableParams.push(`VAR_OPERATOR_${varNum}=GE`);
+                                variableParams.push(`VAR_VALUE_EXT_${varNum}=${filterValue.from}`);
+                                varNum++;
+                            }
+                            if (filterValue.to) {
+                                variableParams.push(`VAR_NAME_${varNum}=${mapping.bexVariableName}`);
+                                variableParams.push(`VAR_OPERATOR_${varNum}=LE`);
+                                variableParams.push(`VAR_VALUE_EXT_${varNum}=${filterValue.to}`);
+                                varNum++;
+                            }
+                        } else {
+                            // Single value
+                            variableParams.push(`VAR_NAME_${varNum}=${mapping.bexVariableName}`);
+                            variableParams.push(`VAR_OPERATOR_${varNum}=EQ`);
+                            variableParams.push(`VAR_VALUE_EXT_${varNum}=${String(filterValue)}`);
+                            varNum++;
+                        }
+                    }
+                });
+
+                if (variableParams.length > 0) {
+                    setFilterVariables(variableParams.join('&'));
+                } else {
+                    setFilterVariables(null);
+                }
+            } else {
+                setFilterVariables(null);
+            }
+        });
+
+        return () => {
+            unsubscribe();
+        };
+    }, [metric.listenToEvent, metric.variableMappings]);
+
     const { data: bexData, isLoading, error } = useBexJson(metric.queryName || '', {
         parser: 'new',
         enabled: !!metric.queryName,
+        variables: filterVariables || undefined,
     });
 
     const safeParseNumber = (value: unknown): number | null => {

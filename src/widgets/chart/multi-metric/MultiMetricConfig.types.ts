@@ -1,3 +1,8 @@
+export interface VariableMapping {
+    filterVariableName: string; // Variable name from filter event (e.g., "VAR1")
+    bexVariableName: string; // Variable name to use in BEX query (e.g., "VAR_NAME_1")
+}
+
 export interface MultiMetricItem {
     id: string;
     title: string;
@@ -13,7 +18,10 @@ export interface MultiMetricItem {
     trendValue?: number; // Value to compare against
     invertTrend?: boolean; // If true, reverse the comparison logic
     // Layout for individual metric (how title and value are arranged)
-    metricLayout?: 'horizontal' | 'vertical';
+    metricLayout?: 'horizontal' | 'vertical' | 'verticalTitleBelow';
+    // Event listening configuration
+    listenToEvent?: string; // Event name to listen to (from filter panel)
+    variableMappings?: VariableMapping[]; // Map filter variables to BEX query variables
 }
 
 export interface MultiMetricWidgetConfig {

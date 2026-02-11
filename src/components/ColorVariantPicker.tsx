@@ -1,10 +1,11 @@
 'use client';
 
-import React from 'react';
-import Grid from '@mui/material/Grid';
-import { Box, Typography, Card, CardContent, Accordion, AccordionSummary, AccordionDetails } from '@mui/material';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import React, { useState } from 'react';
+import {
+    ChevronDownIcon,
+    ChevronUpIcon,
+    CheckCircleIcon,
+} from '@heroicons/react/24/outline';
 
 export interface ColorVariant {
     id: string;
@@ -208,6 +209,8 @@ const ColorVariantPicker: React.FC<ColorVariantPickerProps> = ({
     compact = false,
     customVariants = [],
 }) => {
+    const [isOpen, setIsOpen] = useState(true);
+
     // Merge default variants with custom variants
     const allVariants = [...COLOR_VARIANTS, ...customVariants];
 
@@ -222,208 +225,97 @@ const ColorVariantPicker: React.FC<ColorVariantPickerProps> = ({
     };
 
     return (
-        <Box sx={{ width: '100%' }}>
-            <Accordion
-                defaultExpanded={true}
-                sx={{
-                    backgroundColor: 'transparent',
-                    boxShadow: 'none',
-                    '&:before': {
-                        display: 'none',
-                    },
-                    '&.Mui-expanded': {
-                        margin: 0,
-                    },
-                }}
+        <div className="w-full text-white">
+            {/* Header / Accordion toggle */}
+            <button
+                type="button"
+                onClick={() => setIsOpen((prev) => !prev)}
+                className="flex w-full items-center justify-between rounded-lg border border-white/10 bg-white/5 px-4 py-3 text-left transition-colors hover:bg-white/10"
             >
-                <AccordionSummary
-                    expandIcon={<ExpandMoreIcon sx={{ color: 'white' }} />}
-                    sx={{
-                        backgroundColor: 'transparent',
-                        minHeight: '48px',
-                        '&.Mui-expanded': {
-                            minHeight: '48px',
-                        },
-                        '& .MuiAccordionSummary-content': {
-                            margin: '12px 0',
-                            '&.Mui-expanded': {
-                                margin: '12px 0',
-                            },
-                        },
-                    }}
-                >
-                    <Typography
-                        variant="body2"
-                        sx={{
-                            color: 'white',
-                            fontWeight: 500,
-                        }}
-                    >
-                        Color Variant
-                    </Typography>
-                </AccordionSummary>
-                <AccordionDetails sx={{ padding: '16px 0' }}>
-                    <Box
-                        sx={{
-                            height: '400px',
-                            overflowY: 'auto',
-                            overflowX: 'hidden',
-                            paddingRight: '8px',
-                            '&::-webkit-scrollbar': {
-                                width: '8px',
-                            },
-                            '&::-webkit-scrollbar-track': {
-                                backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                                borderRadius: '4px',
-                            },
-                            '&::-webkit-scrollbar-thumb': {
-                                backgroundColor: 'rgba(255, 255, 255, 0.3)',
-                                borderRadius: '4px',
-                                '&:hover': {
-                                    backgroundColor: 'rgba(255, 255, 255, 0.5)',
-                                },
-                            },
-                        }}
-                    >
-                        <Grid container spacing={2}>
-                            {allVariants.map((variant) => {
-                                const isSelected = selectedVariant === variant.id;
-                                const isCustom = customVariants.some((cv) => cv.id === variant.id);
-                                return (
-                                    <Grid item xs={12} sm={6} md={4} key={variant.id}>
-                                        <Card
-                                            sx={{
-                                                height: '100%',
-                                                minHeight: '180px',
-                                                backgroundColor: 'rgba(255, 255, 255, 0.05)',
-                                                border: isSelected
-                                                    ? '2px solid #00d4ff'
-                                                    : '2px solid rgba(255, 255, 255, 0.2)',
-                                                borderRadius: '8px',
-                                                cursor: 'pointer',
-                                                transition: 'all 0.3s ease',
-                                                position: 'relative',
-                                                overflow: 'hidden',
-                                                display: 'flex',
-                                                flexDirection: 'column',
-                                                '&:hover': {
-                                                    borderColor: '#00d4ff',
-                                                    transform: 'translateY(-2px)',
-                                                    boxShadow: '0 4px 12px rgba(0, 212, 255, 0.3)',
-                                                    backgroundColor: 'rgba(255, 255, 255, 0.08)',
-                                                },
-                                            }}
-                                            onClick={() => handleVariantClick(variant)}
-                                        >
-                                            <CardContent
-                                                sx={{
-                                                    p: compact ? 1.5 : 2,
-                                                    display: 'flex',
-                                                    flexDirection: 'column',
-                                                    height: '100%',
-                                                    flex: 1,
-                                                }}
+                <span className="text-sm font-medium text-white">Color Variant</span>
+                {isOpen ? (
+                    <ChevronUpIcon className="h-5 w-5 text-white/70" />
+                ) : (
+                    <ChevronDownIcon className="h-5 w-5 text-white/70" />
+                )}
+            </button>
+
+            {isOpen && (
+                <div className="mt-3 h-[400px] overflow-y-auto pr-2">
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3">
+                        {allVariants.map((variant) => {
+                            const isSelected = selectedVariant === variant.id;
+                            const isCustom = customVariants.some((cv) => cv.id === variant.id);
+
+                            return (
+                                <button
+                                    key={variant.id}
+                                    type="button"
+                                    onClick={() => handleVariantClick(variant)}
+                                    className={`flex min-h-[180px] flex-col rounded-lg border-2 bg-white/5 p-3 text-left transition-all ${isSelected
+                                            ? 'border-cyan-400 shadow-[0_4px_12px_rgba(0,212,255,0.3)]'
+                                            : 'border-white/20 hover:border-cyan-400 hover:bg-white/10 hover:shadow-[0_4px_12px_rgba(0,212,255,0.3)]'
+                                        } ${compact ? 'p-3' : 'p-4'}`}
+                                >
+                                    {/* Header with variant name and checkmark */}
+                                    <div className="mb-3 flex items-center justify-between">
+                                        <div className="flex items-center gap-2">
+                                            <span
+                                                className={`font-semibold text-white ${compact ? 'text-xs sm:text-sm' : 'text-sm sm:text-base'
+                                                    }`}
                                             >
-                                                {/* Header with variant name and checkmark */}
-                                                <Box
-                                                    sx={{
-                                                        display: 'flex',
-                                                        alignItems: 'center',
-                                                        justifyContent: 'space-between',
-                                                        marginBottom: 1.5,
-                                                    }}
-                                                >
-                                                    <Box display="flex" alignItems="center" gap={1}>
-                                                        <Typography
-                                                            variant="subtitle2"
-                                                            sx={{
-                                                                color: 'white',
-                                                                fontWeight: 600,
-                                                                fontSize: compact ? '0.875rem' : '1rem',
-                                                            }}
-                                                        >
-                                                            {variant.name}
-                                                        </Typography>
-                                                        {isCustom && (
-                                                            <Box
-                                                                sx={{
-                                                                    fontSize: '0.65rem',
-                                                                    backgroundColor: '#00d4ff20',
-                                                                    color: '#00d4ff',
-                                                                    px: 0.5,
-                                                                    py: 0.25,
-                                                                    borderRadius: '4px',
-                                                                }}
-                                                            >
-                                                                Custom
-                                                            </Box>
-                                                        )}
-                                                    </Box>
-                                                    {isSelected && (
-                                                        <CheckCircleIcon
-                                                            sx={{
-                                                                color: '#00d4ff',
-                                                                fontSize: compact ? '1.2rem' : '1.5rem',
-                                                            }}
-                                                        />
-                                                    )}
-                                                </Box>
+                                                {variant.name}
+                                            </span>
+                                            {isCustom && (
+                                                <span className="rounded px-1.5 py-0.5 text-[0.65rem] font-medium text-cyan-400 bg-cyan-400/10">
+                                                    Custom
+                                                </span>
+                                            )}
+                                        </div>
+                                        {isSelected && (
+                                            <CheckCircleIcon
+                                                className={`text-cyan-400 ${compact ? 'h-4 w-4' : 'h-5 w-5'
+                                                    }`}
+                                            />
+                                        )}
+                                    </div>
 
-                                                {/* Gradient preview */}
-                                                {showGradient && (
-                                                    <Box
-                                                        sx={{
-                                                            height: compact ? 30 : 40,
-                                                            background: `linear-gradient(to bottom, ${variant.gradient.start} 0%, ${variant.gradient.middle} 45%, ${variant.gradient.end} 100%)`,
-                                                            borderRadius: '4px',
-                                                            marginBottom: 1.5,
-                                                            border: '1px solid rgba(255, 255, 255, 0.1)',
-                                                        }}
-                                                    />
-                                                )}
+                                    {/* Gradient preview */}
+                                    {showGradient && (
+                                        <div
+                                            className="mb-3 rounded border border-white/10"
+                                            style={{
+                                                height: compact ? 30 : 40,
+                                                background: `linear-gradient(to bottom, ${variant.gradient.start} 0%, ${variant.gradient.middle} 45%, ${variant.gradient.end} 100%)`,
+                                            }}
+                                        />
+                                    )}
 
-                                                {/* Color palette */}
-                                                <Box
-                                                    sx={{
-                                                        display: 'flex',
-                                                        gap: 1,
-                                                        alignItems: 'center',
-                                                    }}
-                                                >
-                                                    {variant.colors.map((color, index) => (
-                                                        <Box
-                                                            key={index}
-                                                            onClick={(e) => {
-                                                                e.stopPropagation();
-                                                                handleColorClick(color, variant);
-                                                            }}
-                                                            sx={{
-                                                                flex: 1,
-                                                                aspectRatio: '1',
-                                                                backgroundColor: color,
-                                                                borderRadius: '4px',
-                                                                border: '2px solid rgba(255, 255, 255, 0.3)',
-                                                                cursor: 'pointer',
-                                                                transition: 'all 0.2s ease',
-                                                                '&:hover': {
-                                                                    transform: 'scale(1.1)',
-                                                                    boxShadow: `0 0 8px ${color}80`,
-                                                                    borderColor: '#00d4ff',
-                                                                },
-                                                            }}
-                                                        />
-                                                    ))}
-                                                </Box>
-                                            </CardContent>
-                                        </Card>
-                                    </Grid>
-                                );
-                            })}
-                        </Grid>
-                    </Box>
-                </AccordionDetails>
-            </Accordion>
-        </Box>
+                                    {/* Color palette */}
+                                    <div className="flex items-center gap-1">
+                                        {variant.colors.map((color, index) => (
+                                            <div
+                                                key={index}
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    handleColorClick(color, variant);
+                                                }}
+                                                className="flex-1 cursor-pointer rounded border-2 border-white/30 transition-transform duration-150 hover:scale-110 hover:border-cyan-400"
+                                                style={{
+                                                    aspectRatio: '1',
+                                                    backgroundColor: color,
+                                                    boxShadow: `0 0 0 rgba(0,0,0,0)`,
+                                                }}
+                                            />
+                                        ))}
+                                    </div>
+                                </button>
+                            );
+                        })}
+                    </div>
+                </div>
+            )}
+        </div>
     );
 };
 

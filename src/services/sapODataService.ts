@@ -158,6 +158,18 @@ export interface ServiceUrlsResponse {
     results: ServiceUrl[];
 }
 
+/** Single item for UpdatebyActionSet sort order (To_SortOrder). */
+export interface SortOrderItem {
+    Id: string;
+    SortOrd: string;
+}
+
+/** Payload for UpdatebyActionSet when Action is SORTORDER. To_SortOrder accepts single object or array. */
+export interface UpdatebyActionSetSortOrderPayload {
+    Action: 'SORTORDER';
+    To_SortOrder: SortOrderItem | SortOrderItem[];
+}
+
 export interface MenuItem {
     id: string;
     appid: string;
@@ -576,6 +588,7 @@ class SAPODataService {
                 IsVisible: menuItem.visible ? 'X' : '',
                 Description: menuItem.description,
                 Type: menuItem.type,
+                // SortOrder: menuItem.order,
                 SortOrder: menuItem.order,
                 DelInd: menuItem.deleted ? 'X' : '',
                 Crudflag: isUpdate ? 'U' : 'C',
@@ -903,24 +916,41 @@ class SAPODataService {
         }
     }
 
-    // Batch update multiple menu items (for reordering)
-    async batchUpdateMenuItems(menuItems: MenuItem[]): Promise<MenuItem[]> {
-        try {
-            const results: MenuItem[] = [];
+    /**
+     * Update menu items sort order via UpdatebyActionSet.
+     * To_SortOrder accepts a single object or array of objects.
+     * Call this when the user reorders sidebar items.
+     */
+    async updateMenuItemsSortOrder(
+        items: SortOrderItem | SortOrderItem[]
+    ): Promise<void> {
+        const list = Array.isArray(items) ? items : [items];
+        if (list.length === 0) return;
 
-            // Process each item sequentially to maintain order
-            for (const item of menuItems) {
-                if (item.hasChanges || item.isNew) {
-                    const result = await this.saveMenuItem(item, !item.isNew);
-                    results.push(result);
-                } else {
-                    results.push(item);
-                }
-            }
+        const payload: UpdatebyActionSetSortOrderPayload = {
+            Action: 'SORTORDER',
+            To_SortOrder: list.length === 1 ? list[0] : list,
+        };
 
-            return results;
-        } catch (error) {
-            throw error;
+        const newCSRFToken = await this.getNewCsrfToken(
+            `${this.baseUrl}`
+        );
+        const response = await fetch(`${this.baseUrl}/UpdatebyActionSet`, {
+            method: 'POST',
+            headers: {
+                Accept: 'application/json',
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRF-Token': newCSRFToken,
+            },
+            body: JSON.stringify(payload),
+        });
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(
+                `UpdatebyActionSet (SORTORDER) failed: ${response.status}, ${errorText}`
+            );
         }
     }
 

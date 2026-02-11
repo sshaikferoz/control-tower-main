@@ -3,7 +3,6 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import Fuse from 'fuse.js';
-import type { FuseResultWithScore } from 'fuse.js';
 import { ProgressSpinner } from 'primereact/progressspinner';
 import { Button } from 'primereact/button';
 import { Toast } from 'primereact/toast';
@@ -19,6 +18,9 @@ import { ConfigurationDialog } from '@/components/dialogs/ConfigurationDialog';
 import { getNextSectionOrder } from '@/utils/dashboardUtils';
 import { UIConfiguration, defaultConfiguration, ConfigurationManager } from '@/types/configuration';
 import { LoadingScreen } from '@/components/ui/LoadingScreen';
+import { FilterPanelSidebarProvider } from '@/widgets/filter-panel/FilterPanelSidebarContext';
+import { FilterPanelSidebar } from '@/widgets/filter-panel/FilterPanelSidebar';
+import { TargetReportConfig } from '@/helpers/types';
 
 // Define SearchResult interface
 interface SearchResult {
@@ -39,6 +41,10 @@ interface SearchResult {
     level: string;
     ai_title: string;
     ai_summary: string;
+    /** When level is widget and result is a dashboard menu item: icon type (report / dashboard / user) or icon filename from public/icons. */
+    menuItemIconType?: 'report' | 'dashboard' | 'user' | string;
+    /** When result is a dashboard menu item, target report config so the search UI can show an Open link. */
+    menuItemTargetReport?: TargetReportConfig;
 }
 
 // Helper to derive tab icon URL from configuration
@@ -186,6 +192,12 @@ export default function Home({
                 kind: 'widget';
                 section: any;
                 widget: any;
+            }
+            | {
+                kind: 'menuItem';
+                section: any;
+                widget: any;
+                menuItem: any;
             };
 
         const entities: SearchEntity[] = [];
@@ -195,6 +207,13 @@ export default function Home({
             entities.push({ kind: 'section', section });
             section.widgets?.forEach((widget: any) => {
                 entities.push({ kind: 'widget', section, widget });
+                // Dashboard menu widget: add each menu item as a searchable entity
+                if (widget.name === 'dashboard-menu') {
+                    const items = widget.props?.dashboardMenuConfig?.items || [];
+                    items.forEach((menuItem: any) => {
+                        entities.push({ kind: 'menuItem', section, widget, menuItem });
+                    });
+                }
             });
         });
 
@@ -202,7 +221,7 @@ export default function Home({
             return [];
         }
 
-        const fuse = new Fuse<SearchEntity, Fuse.FuseOptions<SearchEntity>>(entities, {
+        const fuse = new Fuse<SearchEntity>(entities, {
             keys: [
                 // Section-level fields
                 'section.sectionName',
@@ -219,12 +238,18 @@ export default function Home({
                 'widget.originalWidget.title',
                 'widget.originalWidget.name',
                 'widget.props.targetReport.description',
+                // Dashboard menu item fields (inner menu entries)
+                'menuItem.targetReport.name',
+                'menuItem.targetReport.description',
+                'menuItem.targetReport.technicalId',
+                'menuItem.targetReport.type',
             ],
             includeScore: true,
             threshold: 0.4,
         });
 
-        const fuseResults = fuse.search(query).slice(0, 10) as FuseResultWithScore<SearchEntity>[];
+        // Use the correct type for Fuse results
+        const fuseResults = fuse.search(query).slice(0, 10);
 
         return fuseResults.map((res) => {
             const { item, score } = res;
@@ -255,6 +280,44 @@ export default function Home({
                     ai_summary: sectionDescription || `Matched section "${sectionName}" for "${query}".`,
                     // Fuse score is 0 (best) to 1 (worst); invert so higher is better.
                     score: typeof score === 'number' ? 1 - score : 0,
+                } as SearchResult;
+            }
+
+            if (item.kind === 'menuItem') {
+                const section = item.section;
+                const widget = item.widget;
+                const menuItem = item.menuItem;
+                const tr = menuItem?.targetReport || {};
+                const menuItemName = tr.name || 'Untitled report';
+                const menuItemDesc = tr.description || '';
+                const sectionName = section.sectionName || section.originalSection?.sectionName || '';
+                const sectionDescription =
+                    section.originalSection?.sectionDescription || section.originalSection?.description || '';
+                const matchText = [menuItemName, menuItemDesc, tr.technicalId, tr.type].filter(Boolean).join(' ');
+
+                return {
+                    metadata: {
+                        TabId: tabId,
+                        TabDescription: '',
+                        SectionId: section.id || section.originalSection?.id || '',
+                        SectionName: sectionName,
+                        SectionDescription: sectionDescription,
+                        WidgetId: widget.id,
+                        WidgetTitle: widget.props?.title || menuItemName,
+                        WidgetType: widget.name || 'dashboard-menu',
+                        TechnicalName: tr.technicalId || '',
+                        WidgetDescription: menuItemDesc || menuItemName,
+                    },
+                    match_text: matchText,
+                    level: 'widget',
+                    ai_title: menuItemName,
+                    ai_summary: menuItemDesc || `Menu item in "${sectionName}" matching "${query}".`,
+                    score: typeof score === 'number' ? 1 - score : 0,
+                    menuItemIconType: menuItem?.iconType || 'report',
+                    menuItemTargetReport:
+                        menuItem?.targetReport?.technicalId
+                            ? (menuItem.targetReport as TargetReportConfig)
+                            : undefined,
                 } as SearchResult;
             }
 
@@ -761,56 +824,61 @@ export default function Home({
                 {/* Dynamic background based on configuration */}
                 <div className="absolute inset-0" style={backgroundStyle}></div>
 
-                <div className="relative z-10 flex max-h-screen flex-col overflow-y-auto text-white">
-                    <DashboardHeader
-                        isAdmin={isAdmin}
-                        isEditModeAllowed={isEditModeAllowed}
-                        isEditMode={isEditMode}
-                        onToggleEditMode={handleToggleEditMode}
-                        onSaveDashboard={handleSaveDashboard}
-                        onAddSection={handleAddSection}
-                        configuration={configuration}
-                        onOpenConfigDialog={handleOpenConfigDialog}
-                        tabId={tabId}
-                        onSearchSelect={handleSearchSelect}
-                        // Provide local fuzzy search over current dashboard widgets/sections
-                        onLocalSearch={performLocalWidgetSearch}
-                    />
-
-                    {/* Removed the separate Announcement component since it's now integrated in the header */}
-
-                    {!dashboardData?.sections || dashboardData.sections.length === 0 ? (
-                        <div className="flex h-[60vh] flex-col items-center justify-center">
-                            <h5 className="mb-4 text-white text-xl font-semibold">
-                                No dashboard sections found
-                            </h5>
-                            {isEditModeAllowed ? (
-                                <>
-                                    <p className="mb-4 text-white">
-                                        Create a new section by clicking the + button in edit mode
-                                    </p>
-                                    <Button
-                                        label="Create Section"
-                                        icon={<Plus className="w-4 h-4" />}
-                                        onClick={() => setShowNewSectionDialog(true)}
-                                        className="bg-green-500 hover:bg-green-600"
-                                    />
-                                </>
-                            ) : (
-                                <p className="mb-4 text-white">
-                                    Dashboard content will appear here when available
-                                    {isAdmin && !isEditModeAllowed && (
-                                        <span className="mt-2 block text-sm text-gray-300">
-                                            Add ?view=edit to the URL to enable editing features
-                                        </span>
-                                    )}
-                                </p>
-                            )}
+                <FilterPanelSidebarProvider>
+                    <FilterPanelSidebar />
+                    <div className="relative z-10 flex max-h-screen flex-col overflow-y-auto text-white">
+                        <div className="sticky top-0 z-20 flex-shrink-0">
+                            <DashboardHeader
+                            isAdmin={isAdmin}
+                            isEditModeAllowed={isEditModeAllowed}
+                            isEditMode={isEditMode}
+                            onToggleEditMode={handleToggleEditMode}
+                            onSaveDashboard={handleSaveDashboard}
+                            onAddSection={handleAddSection}
+                            configuration={configuration}
+                            onOpenConfigDialog={handleOpenConfigDialog}
+                            tabId={tabId}
+                            onSearchSelect={handleSearchSelect}
+                            // Provide local fuzzy search over current dashboard widgets/sections
+                            onLocalSearch={performLocalWidgetSearch}
+                            />
                         </div>
-                    ) : (
-                        <div className="flex flex-col">{dashboardData?.sections?.map(renderSection)}</div>
-                    )}
-                </div>
+
+                        {/* Removed the separate Announcement component since it's now integrated in the header */}
+
+                        {!dashboardData?.sections || dashboardData.sections.length === 0 ? (
+                            <div className="flex h-[60vh] flex-col items-center justify-center">
+                                <h5 className="mb-4 text-white text-xl font-semibold">
+                                    No dashboard sections found
+                                </h5>
+                                {isEditModeAllowed ? (
+                                    <>
+                                        <p className="mb-4 text-white">
+                                            Create a new section by clicking the + button in edit mode
+                                        </p>
+                                        <Button
+                                            label="Create Section"
+                                            icon={<Plus className="w-4 h-4" />}
+                                            onClick={() => setShowNewSectionDialog(true)}
+                                            className="bg-green-500 hover:bg-green-600"
+                                        />
+                                    </>
+                                ) : (
+                                    <p className="mb-4 text-white">
+                                        Dashboard content will appear here when available
+                                        {isAdmin && !isEditModeAllowed && (
+                                            <span className="mt-2 block text-sm text-gray-300">
+                                                Add ?view=edit to the URL to enable editing features
+                                            </span>
+                                        )}
+                                    </p>
+                                )}
+                            </div>
+                        ) : (
+                            <div className="flex flex-col">{dashboardData?.sections?.map(renderSection)}</div>
+                        )}
+                    </div>
+                </FilterPanelSidebarProvider>
             </div>
 
             {/* Configuration Dialog */}

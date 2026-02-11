@@ -39,6 +39,7 @@ export const widgetSizes: Record<string, { w: number; h: number }> = {
     'filter-widget': { w: 4, h: 4 },
     'listener-widget': { w: 4, h: 4 },
     'blank-widget': { w: 2, h: 2 },
+    'dashboard-menu': { w: 3, h: 3 },
 };
 
 /**
@@ -285,7 +286,7 @@ export const defaultPropsMapping: Record<string, any> = {
         title: 'Widget Title',
         chartConfig: {
             chartType: 'line',
-            xAxisKey: 'Month',
+            xAxisKey: '',
             measures: [],
             stacked: true,
             valueFormat: 'non-currency',
@@ -315,6 +316,13 @@ export const defaultPropsMapping: Record<string, any> = {
     'blank-widget': {
         title: '',
         showTitle: false,
+    },
+    'dashboard-menu': {
+        dashboardMenuConfig: {
+            items: [],
+            displayMode: 'multiple',
+            layout: 'list',
+        },
     },
 };
 

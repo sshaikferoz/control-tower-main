@@ -1,6 +1,71 @@
 //Header.tsx
 'use client';
 import { Search, Loader2, X } from 'lucide-react';
+import { DASHBOARD_MENU_ICONS } from '@/widgets/dashboard-menu/DashboardMenuConfig.types';
+
+const MENU_ICON_IDS: Set<string> = new Set(DASHBOARD_MENU_ICONS.map((i) => i.id));
+
+/** Icon for dashboard menu item search results: DashboardMenu link type (report / dashboard / user) or custom icon from public/icons. */
+function MenuItemResultIcon({ type }: { type: 'report' | 'dashboard' | 'user' | string }) {
+    const iconClass = 'h-4 w-4 flex-shrink-0 text-blue-600';
+
+    // Custom icon from public/icons (e.g. "dashboard-icon.png") – dark on white for visibility in search dropdown
+    if (type && typeof type === 'string' && MENU_ICON_IDS.has(type)) {
+        return (
+            <span className="inline-flex h-7 w-7 items-center justify-center rounded-md bg-blue-50" aria-hidden>
+                <img
+                    src={`${process.env.NEXT_PUBLIC_BSP_NAME}/icons/${type}`}
+                    alt=""
+                    className="h-4 w-4 flex-shrink-0 object-contain brightness-0"
+                />
+            </span>
+        );
+    }
+
+    if (type === 'dashboard') {
+        return (
+            <span className="inline-flex h-7 w-7 items-center justify-center rounded-md bg-blue-50" aria-hidden>
+                <svg className={iconClass} viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="2" y="2" width="5" height="5" rx="1" stroke="currentColor" strokeWidth="1.3" />
+                    <rect x="9" y="2" width="5" height="5" rx="1" stroke="currentColor" strokeWidth="1.3" />
+                    <rect x="2" y="9" width="5" height="5" rx="1" stroke="currentColor" strokeWidth="1.3" />
+                    <rect x="9" y="9" width="5" height="5" rx="1" stroke="currentColor" strokeWidth="1.3" />
+                </svg>
+            </span>
+        );
+    }
+    if (type === 'user') {
+        return (
+            <span className="inline-flex h-7 w-7 items-center justify-center rounded-md bg-blue-50" aria-hidden>
+                <svg className={iconClass} viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="8" cy="5" r="2.5" stroke="currentColor" strokeWidth="1.3" />
+                    <path
+                        d="M3.5 12.5C4.2 10.8 5.9 9.75 8 9.75C10.1 9.75 11.8 10.8 12.5 12.5"
+                        stroke="currentColor"
+                        strokeWidth="1.3"
+                        strokeLinecap="round"
+                    />
+                </svg>
+            </span>
+        );
+    }
+    // default: report
+    return (
+        <span className="inline-flex h-7 w-7 items-center justify-center rounded-md bg-blue-50" aria-hidden>
+            <svg className={iconClass} viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path
+                    d="M5 3.5C5 3.22386 5.22386 3 5.5 3H9.5L11.5 5V12.5C11.5 12.7761 11.2761 13 11 13H5C4.72386 13 4.5 12.7761 4.5 12.5V3.5C4.5 3.22386 4.72386 3 5 3Z"
+                    stroke="currentColor"
+                    strokeWidth="1.3"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                />
+                <path d="M8 7H6.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+                <path d="M9.5 9H6.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+            </svg>
+        </span>
+    );
+}
 import SCMLogo from '@/assets/SCMLogo';
 import { Button } from 'primereact/button';
 import { useState, useEffect, useRef } from 'react';
@@ -9,6 +74,8 @@ import { InputText } from 'primereact/inputtext';
 import { Checkbox } from 'primereact/checkbox';
 import { ChevronLeft, ChevronRight, Play, Pause } from 'lucide-react';
 import { UIConfiguration } from '../types/configuration';
+import { TargetReportConfig } from '@/helpers/types';
+import { openReport } from '@/utils/openReportUtils';
 
 interface SearchResult {
     metadata: {
@@ -28,6 +95,10 @@ interface SearchResult {
     level: string;
     ai_title: string;
     ai_summary: string;
+    /** When result is a dashboard menu item: icon type (report / dashboard / user) or icon filename from public/icons. */
+    menuItemIconType?: 'report' | 'dashboard' | 'user' | string;
+    /** When result is a dashboard menu item with a configured report: open this report from search. */
+    menuItemTargetReport?: TargetReportConfig;
 }
 
 interface SearchResponse {
@@ -398,7 +469,7 @@ const Header: React.FC<HeaderProps> = ({ configuration, tabId, onSearchSelect, o
                                 )}
                                 {searchResults.map((result, index) => (
                                     <div
-                                        key={`${result.metadata.WidgetId}-${index}`}
+                                        key={`${result.metadata.WidgetId}-${result.metadata.SectionId}-${index}`}
                                         className={`cursor-pointer border-b border-gray-100 p-4 transition-colors last:border-b-0 ${selectedIndex === index
                                             ? 'border-l-4 border-l-blue-500 bg-blue-50'
                                             : 'hover:bg-gray-50'
@@ -406,9 +477,12 @@ const Header: React.FC<HeaderProps> = ({ configuration, tabId, onSearchSelect, o
                                         onClick={() => handleResultSelect(result)}
                                     >
                                         <div className="flex flex-col gap-2">
-                                            {/* Section Name */}
+                                            {/* Section Name + optional menu item icon */}
                                             <div className="flex items-center gap-2">
-                                                <h3 className="font-semibold text-gray-900">
+                                                {result.menuItemIconType && (
+                                                    <MenuItemResultIcon type={result.menuItemIconType} />
+                                                )}
+                                                <h3 className="font-semibold text-gray-900 min-w-0">
                                                     {result.metadata.SectionName} - {result.metadata.WidgetTitle}
                                                 </h3>
                                             </div>
@@ -425,6 +499,31 @@ const Header: React.FC<HeaderProps> = ({ configuration, tabId, onSearchSelect, o
                                                 <div className="text-xs text-gray-600">
                                                     <span className="font-medium">Description: </span>
                                                     {result.metadata.WidgetDescription}
+                                                </div>
+                                            )}
+
+                                            {/* Open report link for dashboard menu items */}
+                                            {result.menuItemTargetReport?.technicalId && (
+                                                <div className="mt-2 flex items-center justify-end">
+                                                    <button
+                                                        type="button"
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            openReport(result.menuItemTargetReport!);
+                                                        }}
+                                                        className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-blue-600 hover:bg-blue-50"
+                                                    >
+                                                        Open
+                                                        <svg className="h-3 w-3" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                            <path
+                                                                d="M4 12L12 4M7 4H12V9"
+                                                                stroke="currentColor"
+                                                                strokeWidth="1.5"
+                                                                strokeLinecap="round"
+                                                                strokeLinejoin="round"
+                                                            />
+                                                        </svg>
+                                                    </button>
                                                 </div>
                                             )}
                                         </div>

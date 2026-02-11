@@ -14,13 +14,31 @@ export const useDashboardState = ({
 }: UseDashboardStateProps) => {
     const [selectedMenuItem, setSelectedMenuItem] = useState<MenuItem | null>(null);
 
-    // Default to first menu item when menuItems are loaded
+    // Default to first *visible* (and not deleted) menu item when menuItems are loaded
     useEffect(() => {
-        if (menuItems.length > 0 && !selectedMenuItem && !isStandaloneAllowed) {
-            // Sort menu items by order to ensure we get the first one
-            const sortedMenuItems = [...menuItems].sort((a, b) => (a.order || 0) - (b.order || 0));
-            const firstMenuItem = sortedMenuItems[0];
-            setSelectedMenuItem(firstMenuItem);
+        if (isStandaloneAllowed) return;
+
+        // Only consider items that are not deleted and currently visible in the sidebar
+        const visibleItems = menuItems
+            .filter((item) => !item.deleted && item.visible)
+            .sort((a, b) => (a.order || 0) - (b.order || 0));
+
+        if (visibleItems.length === 0) {
+            // No visible items – clear selection
+            if (selectedMenuItem !== null) {
+                setSelectedMenuItem(null);
+            }
+            return;
+        }
+
+        // If nothing is selected yet OR the currently selected item is no longer visible,
+        // fall back to the first visible item.
+        const isCurrentStillVisible = selectedMenuItem
+            ? visibleItems.some((item) => item.id === selectedMenuItem.id)
+            : false;
+
+        if (!selectedMenuItem || !isCurrentStillVisible) {
+            setSelectedMenuItem(visibleItems[0]);
         }
     }, [menuItems, selectedMenuItem, isStandaloneAllowed]);
 

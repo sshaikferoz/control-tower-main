@@ -1,18 +1,15 @@
 'use client';
 
 import React, { useState } from 'react';
-import RGL, { WidthProvider } from 'react-grid-layout';
 import 'react-grid-layout/css/styles.css';
 import 'react-resizable/css/styles.css';
 import { Typography } from '@mui/material';
 import { Splitter, SplitterPanel } from 'primereact/splitter';
 import { DashboardProps, Widget, LayoutItem } from '../dashboard.types';
-
-
-
+import RGL, { WidthProvider, type Layout } from 'react-grid-layout/legacy';
 const GridLayout = WidthProvider(RGL);
-
 interface DashboardGridProps extends DashboardProps {
+    selectedWidgetIds?: string[];
     renderWidget: (widget: Widget) => React.ReactNode;
     emptyState?: React.ReactNode;
     onCopyWidget?: (widgetId: string) => void;
@@ -28,6 +25,7 @@ export const DashboardGrid: React.FC<DashboardGridProps> = ({
     onLayoutChange,
     isViewMode = false,
     selectedWidget = null,
+    selectedWidgetIds = [],
     onWidgetClick,
     onWidgetRemove,
     sectionName = 'Dashboard',
@@ -36,9 +34,9 @@ export const DashboardGrid: React.FC<DashboardGridProps> = ({
     renderWidget,
     emptyState,
 }) => {
-    const handleLayoutChange = (newLayout: RGL.Layout[]) => {
+    const handleLayoutChange = (newLayout: Layout) => {
         if (onLayoutChange) {
-            onLayoutChange(newLayout as LayoutItem[]);
+            onLayoutChange([...newLayout] as LayoutItem[]);
         }
     };
 
@@ -117,12 +115,10 @@ export const DashboardGrid: React.FC<DashboardGridProps> = ({
                             cols={cols}
                             rowHeight={rowHeight}
                             allowOverlap={true}
-                            width={1}
                             isResizable={!isViewMode}
                             resizeHandles={['s', 'w', 'e', 'n', 'sw', 'nw', 'se', 'ne']}
                             isDraggable={!isViewMode}
                             onLayoutChange={handleLayoutChange}
-
                         >
                             {visibleWidgets.map((widget) => (
                                 <div
@@ -130,7 +126,7 @@ export const DashboardGrid: React.FC<DashboardGridProps> = ({
                                     className="relative rounded-lg shadow-md transition-all"
                                     style={{
                                         // backgroundColor: 'var(--background)',
-                                        border: `2px solid var(${selectedWidget === widget.id ? '--primary1' : '--foreground'})`,
+                                        border: `2px solid var(${selectedWidgetIds.includes(widget.id) || selectedWidget === widget.id ? '--primary1' : '--foreground'})`,
                                         cursor: isViewMode ? 'default' : 'pointer',
                                     }}
 

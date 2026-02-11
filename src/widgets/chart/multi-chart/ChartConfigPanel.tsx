@@ -27,12 +27,14 @@ const defaultConfig: ChartWidgetConfig = {
     valueFormat: 'non-currency',
     showLegend: true,
     showGridLines: true,
+    showDataLabels: false,
     gridLineStyle: 'dashed-short',
     colorPalette: undefined,
     colorVariantId: undefined,
     seriesConfig: {
         series: [],
     },
+    listenToEvent: undefined,
 };
 
 const defaultColors = ['#8884d8', '#82ca9d', '#ffc658', '#ff7c7c', '#8dd1e1', '#d084d0', '#ffb347', '#87ceeb', '#dda0dd', '#98d8c8'];
@@ -327,6 +329,19 @@ export const ChartConfigPanel: React.FC<ChartConfigPanelProps> = ({
         }
     };
 
+    const handleCharKeyToggle = (charKey: string, checked: boolean) => {
+        const currentCharKeys = config.charKeys || [];
+
+        if (checked) {
+            if (!currentCharKeys.includes(charKey)) {
+                handleChange('charKeys', [...currentCharKeys, charKey]);
+            }
+        } else {
+            const newCharKeys = currentCharKeys.filter((k) => k !== charKey);
+            handleChange('charKeys', newCharKeys);
+        }
+    };
+
     const handleSeriesTypeChange = (dataKey: string, type: SeriesType) => {
         const currentSeriesConfig = value.seriesConfig?.series || [];
         const updatedSeries = currentSeriesConfig.map((s) =>
@@ -481,6 +496,40 @@ export const ChartConfigPanel: React.FC<ChartConfigPanelProps> = ({
                                 label: availableFields.headerText[key] || key,
                             })),
                     ]}
+                />
+
+                {config.chartType === 'table' && (
+                    <div className="mt-2">
+                        <label className="mb-2 block text-xs font-medium text-white/70">
+                            Table Dimensions (X-Series Fields)
+                        </label>
+                        <div className="rounded-lg border border-white/10 bg-white/5 p-3">
+                            {availableFields.charKeys.length === 0 ? (
+                                <p className="text-xs text-white/50">
+                                    No characteristic fields available to use as table dimensions.
+                                </p>
+                            ) : (
+                                <div className="space-y-2">
+                                    {availableFields.charKeys.map((key: string) => (
+                                        <CustomCheckbox
+                                            key={key}
+                                            label={availableFields.headerText[key] || key}
+                                            checked={(config.charKeys || []).includes(key)}
+                                            onChange={(checked) => handleCharKeyToggle(key, checked)}
+                                            description={key === config.xAxisKey ? 'Currently used as primary X-Axis field' : undefined}
+                                        />
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                )}
+
+                <CustomInput
+                    label="Listen To Event (Optional)"
+                    value={config.listenToEvent || ''}
+                    onChange={(value) => handleChange('listenToEvent', value || undefined)}
+                    placeholder="filter-changed"
                 />
             </CollapsibleSection>
 
@@ -793,6 +842,15 @@ export const ChartConfigPanel: React.FC<ChartConfigPanelProps> = ({
                         description="Display grid lines on chart"
                     />
 
+                    {(config.chartType === 'line' || config.chartType === 'bar' || config.chartType === 'area' || config.chartType === 'composed' || config.chartType === 'horizontal-bar') && (
+                        <CustomCheckbox
+                            label="Data Labels"
+                            checked={config.showDataLabels !== false}
+                            onChange={(checked) => handleChange('showDataLabels', checked)}
+                            description="Show value labels at each data point"
+                        />
+                    )}
+
                     {config.showGridLines !== false && (
                         <div className="ml-8">
                             <CustomSelect
@@ -961,15 +1019,34 @@ export const ChartConfigPanel: React.FC<ChartConfigPanelProps> = ({
                 defaultOpen={false}
                 icon={<ChartBarIcon className="h-5 w-5" />}
             >
-                <CustomSelect
-                    label="Format"
-                    value={config.valueFormat || 'non-currency'}
-                    onChange={(value) => handleChange('valueFormat', value)}
-                    options={[
-                        { value: 'non-currency', label: 'Non-Currency' },
-                        { value: 'currency', label: 'Currency' },
-                    ]}
-                />
+                <div className="space-y-4">
+                    <CustomSelect
+                        label="Format"
+                        value={config.valueFormat || 'non-currency'}
+                        onChange={(value) => handleChange('valueFormat', value)}
+                        options={[
+                            { value: 'non-currency', label: 'Non-Currency' },
+                            { value: 'currency', label: 'Currency' },
+                        ]}
+                    />
+                    <CustomInput
+                        label="Decimal Precision (Y-Series)"
+                        type="number"
+                        value={config.ySeriesFormatting?.decimalPrecision ?? ''}
+                        onChange={(value) => {
+                            const num = Number(value);
+                            const decimalPrecision = Number.isFinite(num) ? num : undefined;
+                            handleChange('ySeriesFormatting', {
+                                ...(config.ySeriesFormatting || {}),
+                                decimalPrecision,
+                            });
+                        }}
+                        min={0}
+                        max={10}
+                        step={1}
+                        placeholder="Leave empty for default"
+                    />
+                </div>
             </CollapsibleSection>
 
             {/* Color Palette */}

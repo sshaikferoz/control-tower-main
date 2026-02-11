@@ -22,6 +22,7 @@ export interface GaugeWidgetConfig {
     // BEX query configuration
     queryName?: string;
     showTitle?: boolean;
+    listenToEvent?: string;
 }
 
 

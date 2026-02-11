@@ -276,6 +276,7 @@ export const MultiMetricConfigPanel: React.FC<MultiMetricConfigPanelProps> = ({
     // Metric layout options
     const metricLayoutOptions = [
         { value: 'vertical', label: 'Vertical (Title above Value)' },
+        { value: 'verticalTitleBelow', label: 'Vertical (Title below Value)' },
         { value: 'horizontal', label: 'Horizontal (Title beside Value)' },
     ];
 
@@ -582,6 +583,92 @@ const MetricConfigCard: React.FC<{
                         <p className="text-xs text-white/50">
                             Trend colors: Green (up), Red (down), Yellow (equal)
                         </p>
+                    </div>
+                )}
+            </div>
+
+            {/* Event Listening Configuration */}
+            <div className="mb-4 space-y-3 rounded-lg border border-white/10 bg-white/5 p-3">
+                <h5 className="mb-2 text-sm font-semibold text-white">Filter Event Configuration</h5>
+                <CustomInput
+                    label="Listen to Event"
+                    type="text"
+                    value={metric.listenToEvent || ''}
+                    onChange={(value) => onMetricChange(index, 'listenToEvent', value || undefined)}
+                    placeholder="Event name from filter panel (e.g., filter-changed)"
+                    id={`listen-to-event-${index}`}
+                    name={`listen-to-event-${index}`}
+                />
+                <p className="text-xs text-white/50">
+                    Enter the event name emitted by the filter panel widget. Leave empty to disable event listening.
+                </p>
+
+                {metric.listenToEvent && (
+                    <div className="mt-4 space-y-3">
+                        <div className="mb-2 flex items-center justify-between">
+                            <label className="text-xs font-medium text-white/70">Variable Mappings</label>
+                            <button
+                                onClick={() => {
+                                    const currentMappings = metric.variableMappings || [];
+                                    onMetricChange(index, 'variableMappings', [
+                                        ...currentMappings,
+                                        { filterVariableName: '', bexVariableName: '' },
+                                    ]);
+                                }}
+                                className="rounded px-2 py-1 text-xs text-cyan-400 transition-colors hover:bg-cyan-400/10"
+                            >
+                                <PlusIcon className="mr-1 inline h-3 w-3" />
+                                Add Mapping
+                            </button>
+                        </div>
+                        {(metric.variableMappings || []).map((mapping, mapIndex) => (
+                            <div key={mapIndex} className="flex gap-2 rounded border border-white/10 bg-white/5 p-2">
+                                <div className="flex-1">
+                                    <CustomInput
+                                        label="Filter Variable Name"
+                                        type="text"
+                                        value={mapping.filterVariableName}
+                                        onChange={(value) => {
+                                            const updatedMappings = [...(metric.variableMappings || [])];
+                                            updatedMappings[mapIndex] = { ...mapping, filterVariableName: value as string };
+                                            onMetricChange(index, 'variableMappings', updatedMappings);
+                                        }}
+                                        placeholder="Variable name from filter event"
+                                        id={`filter-var-${index}-${mapIndex}`}
+                                        name={`filter-var-${index}-${mapIndex}`}
+                                    />
+                                </div>
+                                <div className="flex-1">
+                                    <CustomInput
+                                        label="BEX Variable Name"
+                                        type="text"
+                                        value={mapping.bexVariableName}
+                                        onChange={(value) => {
+                                            const updatedMappings = [...(metric.variableMappings || [])];
+                                            updatedMappings[mapIndex] = { ...mapping, bexVariableName: value as string };
+                                            onMetricChange(index, 'variableMappings', updatedMappings);
+                                        }}
+                                        placeholder="Variable name for BEX query"
+                                        id={`bex-var-${index}-${mapIndex}`}
+                                        name={`bex-var-${index}-${mapIndex}`}
+                                    />
+                                </div>
+                                <button
+                                    onClick={() => {
+                                        const updatedMappings = (metric.variableMappings || []).filter((_, i) => i !== mapIndex);
+                                        onMetricChange(index, 'variableMappings', updatedMappings.length > 0 ? updatedMappings : undefined);
+                                    }}
+                                    className="mt-6 rounded p-1 text-white/70 transition-colors hover:bg-red-500/20 hover:text-red-400"
+                                >
+                                    <TrashIcon className="h-4 w-4" />
+                                </button>
+                            </div>
+                        ))}
+                        {(!metric.variableMappings || metric.variableMappings.length === 0) && (
+                            <p className="text-xs text-white/50">
+                                Add variable mappings to map filter panel variables to BEX query variables.
+                            </p>
+                        )}
                     </div>
                 )}
             </div>

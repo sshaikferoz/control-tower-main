@@ -44,6 +44,14 @@ import { ChartWidgetConfig } from '@/widgets/chart/multi-chart/ChartConfig.types
 import { transformBexToChart } from '@/widgets/chart/multi-chart/transformBexToChart';
 import MultiMetric from '@/widgets/chart/multi-metric/MultiMetric';
 import KpiChart from '@/widgets/chart/kpi-chart/KpiChart';
+import FilterPanel from '@/widgets/filter-panel/FilterPanel';
+import DashboardMenu from '@/widgets/dashboard-menu/DashboardMenu';
+import { FilterPanelSidebarProvider } from '@/widgets/filter-panel/FilterPanelSidebarContext';
+import { FilterPanelSidebar } from '@/widgets/filter-panel/FilterPanelSidebar';
+
+// Key used for storing the copied widget in localStorage to enable
+// cross-window copy/paste of dashboard widgets
+const GLOBAL_WIDGET_CLIPBOARD_KEY = 'dashboardWidgetClipboard';
 
 
 // Widget mapping - maps widget names to their components
@@ -73,6 +81,8 @@ const widgetMapping: Record<string, React.ComponentType<any>> = {
     'multi-metric': MultiMetric,
     'blank-widget': BlankWidget,
     'kpi-chart': KpiChart,
+    'filter-panel': FilterPanel,
+    'dashboard-menu': DashboardMenu,
 };
 
 interface DashboardBuilderProps extends Omit<DashboardProps, 'isViewMode' | 'selectedWidget' | 'onWidgetClick' | 'onWidgetRemove'> {
@@ -109,7 +119,7 @@ export const DashboardBuilder: React.FC<DashboardBuilderProps> = ({
     saveDisabled = false,
     onWidgetRemove,
 }) => {
-    const [selectedWidget, setSelectedWidget] = useState<string | null>(null);
+    const [selectedWidgetIds, setSelectedWidgetIds] = useState<string[]>([]);
     const [isViewMode, setIsViewMode] = useState<boolean>(false);
     const [copiedWidget, setCopiedWidget] = useState<{
         widget: Widget;
@@ -196,16 +206,57 @@ export const DashboardBuilder: React.FC<DashboardBuilderProps> = ({
         }
 
         // Clear selection if deleted widget was selected
-        if (selectedWidget === widgetId) {
-            setSelectedWidget(null);
+        if (selectedWidgetIds.includes(widgetId)) {
+            setSelectedWidgetIds((prev) => prev.filter((id) => id !== widgetId));
         }
+    };
+
+    // Remove all currently selected widgets with confirmation
+    const removeSelectedWidgets = () => {
+        if (selectedWidgetIds.length === 0) return;
+
+        const count = selectedWidgetIds.length;
+        const confirmed = window.confirm(
+            `Are you sure you want to delete ${count} widget${count > 1 ? 's' : ''}?`
+        );
+        if (!confirmed) return;
+
+        if (onWidgetRemove) {
+            // Delegate removal to external handler for each widget
+            selectedWidgetIds.forEach((id) => onWidgetRemove(id));
+        } else {
+            const toDelete = new Set(selectedWidgetIds);
+            pushToHistory();
+            onWidgetsChange(widgets.filter((w) => !toDelete.has(w.id)));
+            onLayoutChange(layout.filter((l) => !toDelete.has(l.i)));
+        }
+
+        // Clear all selection after deletion
+        setSelectedWidgetIds([]);
     };
 
     // Handle widget click
     const handleWidgetClick = (widgetId: string, event: React.MouseEvent) => {
         event.stopPropagation();
-        setSelectedWidget(widgetId === selectedWidget ? null : widgetId);
+
+        const isMultiSelect = event.metaKey || event.ctrlKey;
+
+        setSelectedWidgetIds((prev) => {
+            if (!isMultiSelect) {
+                // Normal click: single selection
+                return [widgetId];
+            }
+
+            // Ctrl/Cmd click: toggle selection
+            if (prev.includes(widgetId)) {
+                return prev.filter((id) => id !== widgetId);
+            }
+
+            return [...prev, widgetId];
+        });
     };
+
+    const primarySelectedWidget = selectedWidgetIds[selectedWidgetIds.length - 1] || null;
 
     // Handle widget update from configuration panel
     const handleWidgetUpdate = (widgetId: string, props: Record<string, any>) => {
@@ -225,48 +276,145 @@ export const DashboardBuilder: React.FC<DashboardBuilderProps> = ({
         );
     };
 
-    // Copy currently selected widget
+    // Copy currently selected widget(s)
     const handleCopyWidget = () => {
-        if (!selectedWidget) return;
+        if (selectedWidgetIds.length === 0) return;
 
-        const widget = widgets.find((w) => w.id === selectedWidget);
-        const layoutItem = layout.find((l) => l.i === selectedWidget);
+        const selectedSet = new Set(selectedWidgetIds);
+        const widgetsToCopy = widgets.filter((w) => selectedSet.has(w.id));
+        const layoutItemsToCopy = layout.filter((l) => selectedSet.has(l.i));
 
-        if (!widget || !layoutItem) return;
+        if (widgetsToCopy.length === 0 || layoutItemsToCopy.length === 0) return;
 
-        setCopiedWidget({
-            widget: { ...widget },
-            layoutItem: { ...layoutItem },
-        });
+        const clipboardPayload = {
+            widgets: widgetsToCopy.map((w) => ({ ...w })),
+            layoutItems: layoutItemsToCopy.map((l) => ({ ...l })),
+        };
+
+        // Store in local state for in-session paste
+        setCopiedWidget(clipboardPayload as any);
+
+        // Also persist to localStorage to enable cross-window paste
+        try {
+            if (typeof window !== 'undefined' && window.localStorage) {
+                window.localStorage.setItem(
+                    GLOBAL_WIDGET_CLIPBOARD_KEY,
+                    JSON.stringify(clipboardPayload)
+                );
+            }
+        } catch (error) {
+            console.error('Failed to store widget in global clipboard', error);
+        }
     };
 
-    // Paste copied widget as a new widget on the grid
+    // Paste copied widget(s) as new widget(s) on the grid
     const handlePasteWidget = () => {
         if (!copiedWidget) return;
+        const widgetsToPaste =
+            (copiedWidget as any).widgets && Array.isArray((copiedWidget as any).widgets)
+                ? (copiedWidget as any).widgets as Widget[]
+                : [(copiedWidget as any).widget as Widget];
+        const layoutItemsToPaste =
+            (copiedWidget as any).layoutItems && Array.isArray((copiedWidget as any).layoutItems)
+                ? (copiedWidget as any).layoutItems as LayoutItem[]
+                : [(copiedWidget as any).layoutItem as LayoutItem];
 
-        const baseWidget = copiedWidget.widget;
-        const baseLayout = copiedWidget.layoutItem;
+        if (widgetsToPaste.length === 0 || layoutItemsToPaste.length === 0) return;
 
-        const newId = `widget-${Date.now()}`;
+        const newWidgets: Widget[] = [];
+        const newLayoutItems: LayoutItem[] = [];
+        const timestamp = Date.now();
 
-        const newWidget: Widget = {
-            ...baseWidget,
-            id: newId,
-            isNew: true,
-        };
+        widgetsToPaste.forEach((baseWidget, index) => {
+            const baseLayout = layoutItemsToPaste.find((l) => l.i === baseWidget.id);
+            if (!baseLayout) return;
 
-        const newLayoutItem: LayoutItem = {
-            ...baseLayout,
-            i: newId,
-            x: Math.min(baseLayout.x + 1, Math.max(0, cols - baseLayout.w)),
-            y: baseLayout.y,
-        };
+            // Generate new widget id following the same logic as new widget creation,
+            // ensuring it remains a numeric suffix after `widget-` for backend compatibility.
+            const newId = `widget-${timestamp + index}`;
+
+            const newWidget: Widget = {
+                ...baseWidget,
+                id: newId,
+                isNew: true,
+            };
+
+            const newLayoutItem: LayoutItem = {
+                ...baseLayout,
+                i: newId,
+                x: Math.min(baseLayout.x + 1, Math.max(0, cols - baseLayout.w)),
+                y: baseLayout.y,
+            };
+
+            newWidgets.push(newWidget);
+            newLayoutItems.push(newLayoutItem);
+        });
+
+        if (newWidgets.length === 0) return;
 
         pushToHistory();
-        onWidgetsChange([...widgets, newWidget]);
-        onLayoutChange([...layout, newLayoutItem]);
-        setSelectedWidget(newId);
+        onWidgetsChange([...widgets, ...newWidgets]);
+        onLayoutChange([...layout, ...newLayoutItems]);
+        setSelectedWidgetIds(newWidgets.map((w) => w.id));
     };
+
+    // Initialize local copiedWidget state from global clipboard (localStorage)
+    useEffect(() => {
+        try {
+            if (typeof window === 'undefined' || !window.localStorage) return;
+
+            const stored = window.localStorage.getItem(GLOBAL_WIDGET_CLIPBOARD_KEY);
+            if (!stored) return;
+
+            const parsed = JSON.parse(stored);
+            if (parsed?.widgets && parsed?.layoutItems) {
+                setCopiedWidget({
+                    widgets: parsed.widgets,
+                    layoutItems: parsed.layoutItems,
+                } as any);
+            } else if (parsed?.widget && parsed?.layoutItem) {
+                // Backward compatibility with older single-widget clipboard structure
+                setCopiedWidget({
+                    widgets: [parsed.widget],
+                    layoutItems: [parsed.layoutItem],
+                } as any);
+            }
+        } catch (error) {
+            console.error('Failed to read widget from global clipboard', error);
+        }
+    }, []);
+
+    // Keep copiedWidget in sync across browser tabs/windows via the storage event
+    useEffect(() => {
+        if (typeof window === 'undefined') return;
+
+        const handleStorage = (event: StorageEvent) => {
+            if (event.key !== GLOBAL_WIDGET_CLIPBOARD_KEY || !event.newValue) return;
+
+            try {
+                const parsed = JSON.parse(event.newValue);
+                if (parsed?.widgets && parsed?.layoutItems) {
+                    setCopiedWidget({
+                        widgets: parsed.widgets,
+                        layoutItems: parsed.layoutItems,
+                    } as any);
+                } else if (parsed?.widget && parsed?.layoutItem) {
+                    // Backward compatibility with older single-widget clipboard structure
+                    setCopiedWidget({
+                        widgets: [parsed.widget],
+                        layoutItems: [parsed.layoutItem],
+                    } as any);
+                }
+            } catch (error) {
+                console.error('Failed to parse widget from global clipboard storage event', error);
+            }
+        };
+
+        window.addEventListener('storage', handleStorage);
+        return () => {
+            window.removeEventListener('storage', handleStorage);
+        };
+    }, []);
 
     const handleLayoutChange = (newLayout: LayoutItem[]) => {
         pushToHistory();
@@ -290,13 +438,16 @@ export const DashboardBuilder: React.FC<DashboardBuilderProps> = ({
                 if (isEditable) return;
             }
 
-            const isCopyShortcut =
-                (event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'c';
-            const isPasteShortcut =
-                (event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'v';
+            const hasMetaOrCtrl = event.metaKey || event.ctrlKey;
+            const key = event.key.toLowerCase();
+
+            const isCopyShortcut = hasMetaOrCtrl && key === 'c';
+            const isPasteShortcut = hasMetaOrCtrl && key === 'v';
+            const isSelectAllShortcut = hasMetaOrCtrl && key === 'a';
+            const isDeleteKey = key === 'delete' || key === 'backspace';
 
             if (isCopyShortcut) {
-                if (selectedWidget) {
+                if (selectedWidgetIds.length > 0) {
                     event.preventDefault();
                     handleCopyWidget();
                 }
@@ -308,6 +459,24 @@ export const DashboardBuilder: React.FC<DashboardBuilderProps> = ({
                     event.preventDefault();
                     handlePasteWidget();
                 }
+                return;
+            }
+
+            if (isSelectAllShortcut) {
+                // Select all non-deleted widgets
+                const allIds = widgets.filter((w) => !w.deleted).map((w) => w.id);
+                if (allIds.length > 0) {
+                    event.preventDefault();
+                    setSelectedWidgetIds(allIds);
+                }
+                return;
+            }
+
+            if (isDeleteKey) {
+                if (selectedWidgetIds.length > 0) {
+                    event.preventDefault();
+                    removeSelectedWidgets();
+                }
             }
         };
 
@@ -315,7 +484,7 @@ export const DashboardBuilder: React.FC<DashboardBuilderProps> = ({
         return () => {
             window.removeEventListener('keydown', handleKeyDown);
         };
-    }, [isViewMode, selectedWidget, copiedWidget, handleCopyWidget, handlePasteWidget]);
+    }, [isViewMode, selectedWidgetIds, copiedWidget, widgets]);
 
     const defaultRenderWidget = (widget: Widget) => {
         if (renderWidget) {
@@ -347,142 +516,149 @@ export const DashboardBuilder: React.FC<DashboardBuilderProps> = ({
     };
 
     return (
-        <div
-            className="relative flex h-screen w-full overflow-hidden"
-            style={{
-                backgroundColor: 'var(--background)',
-                color: 'var(--foreground)',
-            } as React.CSSProperties}
-        >
+        <FilterPanelSidebarProvider>
+            <div
+                className="relative flex h-screen w-full overflow-hidden"
+                style={{
+                    backgroundColor: 'var(--background)',
+                    color: 'var(--foreground)',
+                } as React.CSSProperties}
+            >
+                <FilterPanelSidebar />
 
+                {/* Sidebar - Only visible in edit mode */}
+                {!isViewMode && (
+                    <div className="h-full flex-shrink-0 bg-white">
+                        <SidebarMapping onItemClick={addWidget} />
+                    </div>
+                )}
 
-            {/* Sidebar - Only visible in edit mode */}
-            {!isViewMode && (
-                <div className="h-full flex-shrink-0 bg-white">
-                    <SidebarMapping onItemClick={addWidget} />
-                </div>
-            )}
-
-            {/* Main Content Area */}
-            <div className="flex-1 min-w-0 overflow-hidden flex flex-col">
-                <div
-                    className="flex items-center justify-between p-5 border-t bg-[#06103a]"
-                    style={{ borderColor: 'var(--border)' }}
-                >
-                    {/* Left Side: View Mode + Theme */}
-                    {showViewModeToggle && (
-                        <div className="flex items-center gap-3">
-                            <Button
-                                className="p-button-rounded p-button-secondary shadow-lg flex items-center justify-center"
-                                onClick={() => setIsViewMode((prev) => !prev)}
-                                tooltip={isViewMode ? 'Exit View Mode' : 'View Mode'}
-                                tooltipOptions={{ position: 'top' }}
-                            >
-                                {isViewMode ? (
-                                    <PencilIcon className="h-5 w-5 text-white" />
-                                ) : (
-                                    <EyeIcon className="h-5 w-5 text-white" />
-                                )}
-                            </Button>
-
-                            <ThemeToggleButton className="shadow-lg" />
-                        </div>
-                    )}
-
-                    {/* Right Side: Copy / Paste / Save */}
-                    {!isViewMode && (
-                        <div className="flex items-center gap-3">
-                            <Button
-                                className="p-button-rounded p-button-secondary shadow-lg flex items-center justify-center"
-                                onClick={handleUndo}
-                                disabled={history.length === 0}
-                                tooltip={history.length ? 'Undo' : 'Nothing to undo'}
-                                tooltipOptions={{ position: 'top' }}
-                            >
-                                <ArrowUturnLeftIcon className="h-5 w-5 text-white" />
-                            </Button>
-                            <Button
-                                className="p-button-rounded p-button-secondary shadow-lg flex items-center justify-center"
-                                onClick={handleRedo}
-                                disabled={future.length === 0}
-                                tooltip={future.length ? 'Redo' : 'Nothing to redo'}
-                                tooltipOptions={{ position: 'top' }}
-                            >
-                                <ArrowUturnRightIcon className="h-5 w-5 text-white" />
-                            </Button>
-                            <Button
-                                className="p-button-rounded p-button-secondary shadow-lg flex items-center justify-center"
-                                onClick={handleCopyWidget}
-                                disabled={!selectedWidget}
-                                tooltip={selectedWidget ? 'Copy Selected Widget' : 'Select a widget to copy'}
-                                tooltipOptions={{ position: 'top' }}
-                            >
-                                <DocumentDuplicateIcon className="h-5 w-5 text-white" />
-                            </Button>
-                            <Button
-                                className="p-button-rounded p-button-secondary shadow-lg flex items-center justify-center"
-                                onClick={handlePasteWidget}
-                                disabled={!copiedWidget}
-                                tooltip={copiedWidget ? 'Paste Copied Widget' : 'Copy a widget first'}
-                                tooltipOptions={{ position: 'top' }}
-                            >
-                                <ClipboardDocumentListIcon className="h-5 w-5 text-white" />
-                            </Button>
-
-                            {onSave && (
+                {/* Main Content Area */}
+                <div className="flex-1 min-w-0 overflow-hidden flex flex-col">
+                    <div
+                        className="flex items-center justify-between p-5 border-t bg-[#06103a]"
+                        style={{ borderColor: 'var(--border)' }}
+                    >
+                        {/* Left Side: View Mode + Theme */}
+                        {showViewModeToggle && (
+                            <div className="flex items-center gap-3">
                                 <Button
-                                    className="p-button-rounded p-button-success shadow-lg flex items-center justify-center"
-                                    onClick={onSave}
-                                    loading={isSaving}
-                                    disabled={isSaving || saveDisabled}
-                                    tooltip="Save"
+                                    className="p-button-rounded p-button-secondary shadow-lg flex items-center justify-center"
+                                    onClick={() => setIsViewMode((prev) => !prev)}
+                                    tooltip={isViewMode ? 'Exit View Mode' : 'View Mode'}
                                     tooltipOptions={{ position: 'top' }}
                                 >
-                                    <ArrowDownOnSquareIcon className="h-5 w-5 text-white" />
+                                    {isViewMode ? (
+                                        <PencilIcon className="h-5 w-5 text-white" />
+                                    ) : (
+                                        <EyeIcon className="h-5 w-5 text-white" />
+                                    )}
                                 </Button>
-                            )}
-                        </div>
-                    )}
-                </div>
+
+                                <ThemeToggleButton className="shadow-lg" />
+                            </div>
+                        )}
+
+                        {/* Right Side: Copy / Paste / Save */}
+                        {!isViewMode && (
+                            <div className="flex items-center gap-3">
+                                {/* <Button
+                                    className="p-button-rounded p-button-secondary shadow-lg flex items-center justify-center"
+                                    onClick={handleUndo}
+                                    disabled={history.length === 0}
+                                    tooltip={history.length ? 'Undo' : 'Nothing to undo'}
+                                    tooltipOptions={{ position: 'top' }}
+                                >
+                                    <ArrowUturnLeftIcon className="h-5 w-5 text-white" />
+                                </Button> */}
+                                {/* <Button
+                                    className="p-button-rounded p-button-secondary shadow-lg flex items-center justify-center"
+                                    onClick={handleRedo}
+                                    disabled={future.length === 0}
+                                    tooltip={future.length ? 'Redo' : 'Nothing to redo'}
+                                    tooltipOptions={{ position: 'top' }}
+                                >
+                                    <ArrowUturnRightIcon className="h-5 w-5 text-white" />
+                                </Button> */}
+                                <Button
+                                    className="p-button-rounded p-button-secondary shadow-lg flex items-center justify-center"
+                                    onClick={handleCopyWidget}
+                                    disabled={selectedWidgetIds.length === 0}
+                                    tooltip={
+                                        selectedWidgetIds.length > 0
+                                            ? 'Copy Selected Widget(s)'
+                                            : 'Select widget(s) to copy'
+                                    }
+                                    tooltipOptions={{ position: 'top' }}
+                                >
+                                    <DocumentDuplicateIcon className="h-5 w-5 text-white" />
+                                </Button>
+                                <Button
+                                    className="p-button-rounded p-button-secondary shadow-lg flex items-center justify-center"
+                                    onClick={handlePasteWidget}
+                                    disabled={!copiedWidget}
+                                    tooltip={copiedWidget ? 'Paste Copied Widget' : 'Copy a widget first'}
+                                    tooltipOptions={{ position: 'top' }}
+                                >
+                                    <ClipboardDocumentListIcon className="h-5 w-5 text-white" />
+                                </Button>
+
+                                {onSave && (
+                                    <Button
+                                        className="p-button-rounded p-button-success shadow-lg flex items-center justify-center"
+                                        onClick={onSave}
+                                        loading={isSaving}
+                                        disabled={isSaving || saveDisabled}
+                                        tooltip="Save"
+                                        tooltipOptions={{ position: 'top' }}
+                                    >
+                                        <ArrowDownOnSquareIcon className="h-5 w-5 text-white" />
+                                    </Button>
+                                )}
+                            </div>
+                        )}
+                    </div>
 
 
-                <div className="flex-1 overflow-auto">
-                    <DashboardGrid
-                        widgets={widgets}
-                        layout={layout}
-                        onLayoutChange={handleLayoutChange}
-                        isViewMode={isViewMode}
-                        selectedWidget={selectedWidget}
-                        onWidgetClick={handleWidgetClick}
-                        onWidgetRemove={removeWidget}
-                        sectionName={sectionName}
-                        cols={cols}
-                        rowHeight={rowHeight}
-                        renderWidget={defaultRenderWidget}
-                        emptyState={emptyState}
-                    />
-                </div>
-
-
-            </div>
-
-            {/* Configuration Panel - Only visible in edit mode */}
-            {!isViewMode && (
-                <div className="flex h-screen w-56 min-w-56 max-w-56 flex-shrink-0 flex-col overflow-auto bg-gradient-to-b from-[#00214E] to-[#0164B0] text-white md:w-64 md:min-w-64 md:max-w-64">
-                    {selectedWidget ? (
-                        <WidgetConfigurationPanel
-                            selectedWidget={selectedWidget}
+                    <div className="flex-1 overflow-auto">
+                        <DashboardGrid
                             widgets={widgets}
-                            onWidgetUpdate={handleWidgetUpdate}
+                            layout={layout}
+                            onLayoutChange={handleLayoutChange}
+                            isViewMode={isViewMode}
+                            selectedWidget={primarySelectedWidget}
+                            selectedWidgetIds={selectedWidgetIds}
+                            onWidgetClick={handleWidgetClick}
+                            onWidgetRemove={removeWidget}
+                            sectionName={sectionName}
+                            cols={cols}
+                            rowHeight={rowHeight}
+                            renderWidget={defaultRenderWidget}
+                            emptyState={emptyState}
                         />
-                    ) : (
-                        <div className="flex h-full items-center justify-center px-4 text-center text-sm text-white/80">
-                            No configuration available. Select a widget to configure its settings.
-                        </div>
-                    )}
+                    </div>
+
+
                 </div>
-            )}
-        </div>
+
+                {/* Configuration Panel - Only visible in edit mode */}
+                {!isViewMode && (
+                    <div className="flex h-screen w-56 min-w-56 max-w-56 flex-shrink-0 flex-col overflow-auto bg-gradient-to-b from-[#00214E] to-[#0164B0] text-white md:w-64 md:min-w-64 md:max-w-64">
+                        {primarySelectedWidget ? (
+                            <WidgetConfigurationPanel
+                                selectedWidget={primarySelectedWidget}
+                                widgets={widgets}
+                                onWidgetUpdate={handleWidgetUpdate}
+                            />
+                        ) : (
+                            <div className="flex h-full items-center justify-center px-4 text-center text-sm text-white/80">
+                                No configuration available. Select a widget to configure its settings.
+                            </div>
+                        )}
+                    </div>
+                )}
+            </div>
+        </FilterPanelSidebarProvider>
     );
 };
 

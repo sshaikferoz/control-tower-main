@@ -21,14 +21,18 @@ import {
     CartesianGrid,
     Tooltip,
     Legend,
+    DefaultLegendContent,
     ResponsiveContainer,
     Cell,
+    LabelList,
 } from 'recharts';
 import useBexJson from '@/hooks/useBexJson';
 import { transformBexToChart } from './transformBexToChart';
 import { ChartWidgetConfig, LineType, GridLineStyle, PointerStyle } from './ChartConfig.types';
 import { formatNumber as formatNumberUtil } from '@/helpers/numberFormatting';
 import { WidgetSkeleton } from '@/components/ui/WidgetSkeleton';
+import { useAppSelector } from '@/store/hooks';
+import { buildVariableParams } from '@/utils/buildVariableParams';
 
 interface SeriesConfig {
     name: string;
@@ -227,12 +231,23 @@ interface MultiChartProps {
     // New props for BEX data fetching
     queryName?: string; // BEX query name to fetch data
     chartConfig?: ChartWidgetConfig; // Chart configuration for BEX data transformation
+    listenToEvent?: string;
     // Y-axis domain and break for line chart type
     ySeriesDomain?: [number, number]; // Domain range [min, max] for y-axis
     ySeriesBreak?: number; // Scale factor/break interval for y-axis ticks
+    /**
+     * Optional formatting options for Y-series numeric values.
+     * Currently supports decimal precision, similar to precision formatting
+     * used in other widgets.
+     */
+    ySeriesFormatting?: {
+        decimalPrecision?: number;
+    };
 }
 
 const defaultColors = ['#8884d8', '#82ca9d', '#ffc658', '#ff7c7c', '#8dd1e1', '#d084d0', '#ffb347', '#87ceeb', '#dda0dd', '#98d8c8'];
+
+
 
 // Premium Custom Tooltip Component
 const PremiumTooltip = ({ active, payload, label, formatter }: any) => {
@@ -320,11 +335,21 @@ const MultiChart: React.FC<MultiChartProps> = ({
     chartConfig,
     ySeriesDomain,
     ySeriesBreak,
+    listenToEvent,
+    ySeriesFormatting: providedYSeriesFormatting,
 }) => {
+    const filterState = useAppSelector((state) => state.filters);
+    const resolvedListenToEvent = listenToEvent || chartConfig?.listenToEvent;
     const [userColor, setUserColor] = useState<string | null>(null);
     const colorInputRef = useRef<HTMLInputElement>(null);
     const [hiddenSeries, setHiddenSeries] = useState<Set<string>>(new Set());
     const chartContainerRef = useRef<HTMLDivElement>(null);
+
+    const filterVariables = useMemo(() => {
+        if (!resolvedListenToEvent || filterState.eventName !== resolvedListenToEvent)
+            return undefined;
+        return buildVariableParams(filterState.variables);
+    }, [filterState.eventName, filterState.variables, resolvedListenToEvent]);
 
     // Fetch BEX data if queryName is provided
     const { data: bexData, isLoading: bexLoading, error: bexError } = useBexJson(
@@ -332,6 +357,7 @@ const MultiChart: React.FC<MultiChartProps> = ({
         {
             parser: 'new',
             enabled: !!queryName && !!chartConfig,
+            variables: filterVariables,
         }
     );
 
@@ -398,6 +424,10 @@ const MultiChart: React.FC<MultiChartProps> = ({
         return chartConfig?.pointerStyle;
     }, [chartConfig?.pointerStyle]);
 
+    const showDataLabels = useMemo(() => {
+        return chartConfig?.showDataLabels === true; // default false
+    }, [chartConfig?.showDataLabels]);
+
     const stacked = useMemo(() => {
         if (chartConfig?.stacked !== undefined) {
             return chartConfig.stacked;
@@ -412,6 +442,13 @@ const MultiChart: React.FC<MultiChartProps> = ({
         return providedValueFormat;
     }, [chartConfig?.valueFormat, providedValueFormat]);
 
+    const ySeriesFormatting = useMemo(() => {
+        if (chartConfig?.ySeriesFormatting) {
+            return chartConfig.ySeriesFormatting;
+        }
+        return providedYSeriesFormatting;
+    }, [chartConfig?.ySeriesFormatting, providedYSeriesFormatting]);
+
     const groupByField = useMemo(() => {
         if (bexTransformedData?.groupByField) {
             return bexTransformedData.groupByField;
@@ -425,6 +462,23 @@ const MultiChart: React.FC<MultiChartProps> = ({
         }
         return 'Name'; // Default fallback
     }, [bexTransformedData?.xAxisLabel]);
+
+    const tableCharKeys = useMemo(() => {
+        if (bexTransformedData?.charKeys && Array.isArray(bexTransformedData.charKeys)) {
+            return bexTransformedData.charKeys as string[];
+        }
+        if (chartConfig?.charKeys && Array.isArray(chartConfig.charKeys)) {
+            return chartConfig.charKeys as string[];
+        }
+        return [] as string[];
+    }, [bexTransformedData?.charKeys, chartConfig?.charKeys]);
+
+    const headerText = useMemo(() => {
+        if (bexTransformedData?.headerText && typeof bexTransformedData.headerText === 'object') {
+            return bexTransformedData.headerText as Record<string, string>;
+        }
+        return {} as Record<string, string>;
+    }, [bexTransformedData?.headerText]);
 
     const title = useMemo(() => {
         // Use title from configuration if available, otherwise fallback to providedTitle
@@ -694,6 +748,8 @@ const MultiChart: React.FC<MultiChartProps> = ({
 
         return formatNumberUtil(num, {
             format: valueFormat || 'non-currency',
+            // Allow optional precision override for Y-series formatting
+            decimalPrecision: ySeriesFormatting?.decimalPrecision,
             // Don't specify decimals to match original toString() behavior for currency
             // For non-currency, it will use default 2 decimals
         });
@@ -756,7 +812,13 @@ const MultiChart: React.FC<MultiChartProps> = ({
     const renderChart = (): React.ReactElement => {
         const commonProps = {
             data: filteredData,
-            margin: { top: 10, right: 20, left: 50, bottom: showLegend ? 35 : 25 },
+            // Extra top/right margin when data labels are shown so labels aren't cut off
+            margin: {
+                top: showDataLabels ? 30 : 10,
+                right: showDataLabels ? 50 : 20,
+                left: 50,
+                bottom: showLegend ? 35 : 25,
+            },
         };
 
         const commonAxisProps = {
@@ -788,7 +850,7 @@ const MultiChart: React.FC<MultiChartProps> = ({
 
         const renderPieVariant = (isDonut: boolean): React.ReactElement => {
             const pieSeriesKey = seriesToRender[0]?.dataKey || series[0]?.dataKey || 'value';
-            const pieData = filteredData.map((item: any, idx: number) => ({
+            const pieData = filteredData?.map((item: any, idx: number) => ({
                 name: (item as any).name,
                 value: Number((item as any)[pieSeriesKey] || 0),
                 fill:
@@ -815,8 +877,8 @@ const MultiChart: React.FC<MultiChartProps> = ({
                         cy="50%"
                         nameKey="name"
                         labelLine={false}
-                        label={({ name, percent }: { name: string; percent: number }) =>
-                            `${name}: ${(percent * 100).toFixed(0)}%`
+                        label={({ name, percent }: { name?: string; percent?: number }) =>
+                            `${name ?? ''}: ${((percent ?? 0) * 100).toFixed(0)}%`
                         }
                         outerRadius={outerRadius}
                         innerRadius={innerRadius}
@@ -865,7 +927,7 @@ const MultiChart: React.FC<MultiChartProps> = ({
                             align="center"
                             height={45}
                             wrapperStyle={{ color: '#ffffff', fontSize: 12, paddingTop: '4px', cursor: 'default' }}
-                            payload={legendPayload}
+                            content={(props) => <DefaultLegendContent {...props} payload={legendPayload} />}
                         />
                     )}
                 </PieChart>
@@ -891,7 +953,7 @@ const MultiChart: React.FC<MultiChartProps> = ({
                                 verticalAlign="bottom"
                                 height={30}
                                 wrapperStyle={{ color: '#ffffff', fontSize: 12, paddingTop: '4px', cursor: 'default' }}
-                                payload={groupLegendPayload}
+                                content={(props) => <DefaultLegendContent {...props} payload={groupLegendPayload} />}
                             />
                         )}
                         {seriesToRender.map((s, idx) => {
@@ -909,7 +971,17 @@ const MultiChart: React.FC<MultiChartProps> = ({
                                     activeDot={getActiveDotProps(pointerStyle, color)}
                                     name={s.name}
                                     hide={s.hide}
-                                />
+                                >
+                                    {showDataLabels && (
+                                        <LabelList
+                                            dataKey={s.dataKey}
+                                            position="top"
+                                            formatter={(v: unknown) => formatNumber(v)}
+                                            fill="#ffffff"
+                                            fontSize={12}
+                                        />
+                                    )}
+                                </Line>
                             );
                         })}
                     </LineChart>
@@ -952,7 +1024,7 @@ const MultiChart: React.FC<MultiChartProps> = ({
                                 verticalAlign="bottom"
                                 height={30}
                                 wrapperStyle={{ color: '#ffffff', fontSize: 12, paddingTop: '4px', cursor: 'default' }}
-                                payload={groupLegendPayload}
+                                content={(props) => <DefaultLegendContent {...props} payload={groupLegendPayload} />}
                             />
                         )}
                         {seriesToRender.map((s, idx) => {
@@ -992,7 +1064,17 @@ const MultiChart: React.FC<MultiChartProps> = ({
                                             transition: 'all 0.2s ease',
                                         },
                                     }}
-                                />
+                                >
+                                    {showDataLabels && (
+                                        <LabelList
+                                            dataKey={s.dataKey}
+                                            position={isHorizontal ? 'right' : 'top'}
+                                            formatter={(v: unknown) => formatNumber(v)}
+                                            fill="#ffffff"
+                                            fontSize={12}
+                                        />
+                                    )}
+                                </Bar>
                             );
                         })}
                     </BarChart>
@@ -1010,7 +1092,7 @@ const MultiChart: React.FC<MultiChartProps> = ({
                                 verticalAlign="bottom"
                                 height={30}
                                 wrapperStyle={{ color: '#ffffff', fontSize: 12, paddingTop: '4px', cursor: 'default' }}
-                                payload={groupLegendPayload}
+                                content={(props) => <DefaultLegendContent {...props} payload={groupLegendPayload} />}
                             />
                         )}
                         {seriesToRender.map((s, idx) => {
@@ -1030,7 +1112,17 @@ const MultiChart: React.FC<MultiChartProps> = ({
                                     hide={s.hide}
                                     dot={getDotProps(pointerStyle, color)}
                                     activeDot={getActiveDotProps(pointerStyle, color)}
-                                />
+                                >
+                                    {showDataLabels && (
+                                        <LabelList
+                                            dataKey={s.dataKey}
+                                            position="top"
+                                            formatter={(v: unknown) => formatNumber(v)}
+                                            fill="#ffffff"
+                                            fontSize={12}
+                                        />
+                                    )}
+                                </Area>
                             );
                         })}
                     </AreaChart>
@@ -1054,7 +1146,7 @@ const MultiChart: React.FC<MultiChartProps> = ({
                                 verticalAlign="bottom"
                                 height={30}
                                 wrapperStyle={{ color: '#ffffff', fontSize: 12, paddingTop: '4px', cursor: 'default' }}
-                                payload={groupLegendPayload}
+                                content={(props) => <DefaultLegendContent {...props} payload={groupLegendPayload} />}
                             />
                         )}
                         {seriesToRender.map((s, idx) => {
@@ -1096,7 +1188,17 @@ const MultiChart: React.FC<MultiChartProps> = ({
                                                 transition: 'all 0.2s ease',
                                             },
                                         }}
-                                    />
+                                    >
+                                        {showDataLabels && (
+                                            <LabelList
+                                                dataKey={s.dataKey}
+                                                position="top"
+                                                formatter={(v: unknown) => formatNumber(v)}
+                                                fill="#ffffff"
+                                                fontSize={12}
+                                            />
+                                        )}
+                                    </Bar>
                                 );
                             } else if (componentType === 'area') {
                                 return (
@@ -1112,7 +1214,17 @@ const MultiChart: React.FC<MultiChartProps> = ({
                                         hide={s.hide}
                                         dot={getDotProps(pointerStyle, color)}
                                         activeDot={getActiveDotProps(pointerStyle, color)}
-                                    />
+                                    >
+                                        {showDataLabels && (
+                                            <LabelList
+                                                dataKey={s.dataKey}
+                                                position="top"
+                                                formatter={(v: unknown) => formatNumber(v)}
+                                                fill="#ffffff"
+                                                fontSize={12}
+                                            />
+                                        )}
+                                    </Area>
                                 );
                             } else {
                                 return (
@@ -1127,7 +1239,17 @@ const MultiChart: React.FC<MultiChartProps> = ({
                                         activeDot={getActiveDotProps(pointerStyle, color)}
                                         name={s.name}
                                         hide={s.hide}
-                                    />
+                                    >
+                                        {showDataLabels && (
+                                            <LabelList
+                                                dataKey={s.dataKey}
+                                                position="top"
+                                                formatter={(v: unknown) => formatNumber(v)}
+                                                fill="#ffffff"
+                                                fontSize={12}
+                                            />
+                                        )}
+                                    </Line>
                                 );
                             }
                         })}
@@ -1152,7 +1274,7 @@ const MultiChart: React.FC<MultiChartProps> = ({
                                 verticalAlign="bottom"
                                 height={30}
                                 wrapperStyle={{ color: '#ffffff', fontSize: 12, paddingTop: '4px', cursor: 'default' }}
-                                payload={groupLegendPayload}
+                                content={(props) => <DefaultLegendContent {...props} payload={groupLegendPayload} />}
                             />
                         )}
                         {seriesToRender.map((s, idx) => {
@@ -1196,7 +1318,17 @@ const MultiChart: React.FC<MultiChartProps> = ({
                                             />
                                         );
                                     }}
-                                />
+                                >
+                                    {showDataLabels && (
+                                        <LabelList
+                                            dataKey={s.dataKey}
+                                            position="top"
+                                            formatter={(v: unknown) => formatNumber(v)}
+                                            fill="#ffffff"
+                                            fontSize={12}
+                                        />
+                                    )}
+                                </Scatter>
                             );
                         })}
                     </ScatterChart>
@@ -1224,7 +1356,7 @@ const MultiChart: React.FC<MultiChartProps> = ({
                                 verticalAlign="bottom"
                                 height={30}
                                 wrapperStyle={{ color: '#ffffff', fontSize: 12, paddingTop: '4px', cursor: 'default' }}
-                                payload={groupLegendPayload}
+                                content={(props) => <DefaultLegendContent {...props} payload={groupLegendPayload} />}
                             />
                         )}
                         {seriesToRender.map((s, idx) => {
@@ -1296,11 +1428,12 @@ const MultiChart: React.FC<MultiChartProps> = ({
                                 padding: 10px 16px;
                                 border-right: 1px solid rgba(255, 255, 255, 0.1);
                             }
-                            .multi-chart-table tbody td:first-child {
+                            .multi-chart-table tbody td.multi-chart-table-xcell {
                                 font-weight: 500;
+                                text-align: left;
                                 border-right: 1px solid rgba(255, 255, 255, 0.2);
                             }
-                            .multi-chart-table tbody td:not(:first-child) {
+                            .multi-chart-table tbody td.multi-chart-table-measure {
                                 text-align: right;
                                 font-family: 'monospace', monospace;
                             }
@@ -1333,7 +1466,12 @@ const MultiChart: React.FC<MultiChartProps> = ({
                             <table className="multi-chart-table">
                                 <thead>
                                     <tr>
-                                        <th>{xAxisLabel}</th>
+                                        {tableCharKeys && tableCharKeys.length > 0 &&
+                                            tableCharKeys.map((key) => (
+                                                <th key={key}>
+                                                    {headerText[key] || key}
+                                                </th>
+                                            ))}
                                         {seriesToRender
                                             .filter((s) => !s.hide)
                                             .map((s) => (
@@ -1344,16 +1482,30 @@ const MultiChart: React.FC<MultiChartProps> = ({
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {filteredData.length === 0 ? (
+                                    {filteredData?.length === 0 ? (
                                         <tr>
-                                            <td colSpan={seriesToRender.filter((s) => !s.hide).length + 1} style={{ textAlign: 'center', padding: '40px' }}>
+                                            <td
+                                                colSpan={
+                                                    seriesToRender.filter((s) => !s.hide).length +
+                                                    (tableCharKeys && tableCharKeys.length > 0 ? tableCharKeys.length : 0)
+                                                }
+                                                style={{ textAlign: 'center', padding: '40px' }}
+                                            >
                                                 No data available
                                             </td>
                                         </tr>
                                     ) : (
-                                        filteredData.map((item: any, rowIdx: number) => (
+                                        filteredData?.map((item: any, rowIdx: number) => (
                                             <tr key={`row-${rowIdx}`}>
-                                                <td>{item.name || '-'}</td>
+                                                {tableCharKeys && tableCharKeys.length > 0 &&
+                                                    tableCharKeys.map((key) => (
+                                                        <td
+                                                            key={key}
+                                                            className="multi-chart-table-xcell"
+                                                        >
+                                                            {(item as any)[key] ?? '-'}
+                                                        </td>
+                                                    ))}
                                                 {seriesToRender
                                                     .filter((s) => !s.hide)
                                                     .map((s) => {
@@ -1450,7 +1602,7 @@ const MultiChart: React.FC<MultiChartProps> = ({
 
 
                 {/* Chart */}
-                <div className="relative min-h-[180px] flex-1" ref={chartContainerRef}>
+                <div className="relative min-h-[180px] flex-1 flex flex-col overflow-hidden" ref={chartContainerRef}>
                     <style>{`
                         .recharts-wrapper {
                             transition: all 0.2s ease;
@@ -1461,21 +1613,26 @@ const MultiChart: React.FC<MultiChartProps> = ({
                         }
                     `}</style>
                     {renderChart && (
-                        <ResponsiveContainer width="100%" height="100%">
-                            {renderChart()}
-                        </ResponsiveContainer>
+                        chartType === 'table'
+                            ? renderChart()
+                            : (
+                                <ResponsiveContainer width="100%" height="100%">
+                                    {renderChart()}
+                                </ResponsiveContainer>
+                            )
                     )}
+
                 </div>
             </div>
 
             {/* Hidden color picker */}
-            <input
+            < input
                 type="color"
                 ref={colorInputRef}
                 onChange={handleColorChange}
                 style={{ display: 'none' }}
             />
-        </div>
+        </div >
     );
 };
 

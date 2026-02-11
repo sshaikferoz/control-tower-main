@@ -7,6 +7,7 @@ import { RoleManagement } from './RoleManagement';
 
 interface SidebarItemModalProps {
   modal: SidebarModalState;
+  menuItems: MenuItem[];
   onClose: () => void;
   onSave: (item: MenuItem) => void;
   isSaving?: boolean;
@@ -14,6 +15,7 @@ interface SidebarItemModalProps {
 
 export const SidebarItemModal: React.FC<SidebarItemModalProps> = ({
   modal,
+  menuItems,
   onClose,
   onSave,
   isSaving = false,
@@ -53,8 +55,16 @@ export const SidebarItemModal: React.FC<SidebarItemModalProps> = ({
     }
   }, [modal.isOpen, modal.item, modal.mode]);
 
+  const isDuplicateAppId =
+    item.appid.trim() !== '' &&
+    menuItems.some(
+      (m) =>
+        m.appid?.trim().toLowerCase() === item.appid.trim().toLowerCase() &&
+        m.id !== item.id
+    );
+
   const handleSave = () => {
-    if (!item.name.trim() || isSaving) return;
+    if (!item.name.trim() || isSaving || isDuplicateAppId) return;
     onSave(item);
   };
 
@@ -93,6 +103,11 @@ export const SidebarItemModal: React.FC<SidebarItemModalProps> = ({
             placeholder="Enter app identifier"
             disabled={isSaving}
           />
+          {isDuplicateAppId && (
+            <p className="text-sm text-amber-400" role="alert">
+              This App ID is already used by another menu item. Please choose a different one.
+            </p>
+          )}
           <div>
             <label className="mb-2 block text-sm font-medium text-gray-300">Description</label>
             <textarea
@@ -142,7 +157,10 @@ export const SidebarItemModal: React.FC<SidebarItemModalProps> = ({
           <Button variant="secondary" onClick={onClose} disabled={isSaving}>
             Cancel
           </Button>
-          <Button onClick={handleSave} disabled={!item.name.trim() || isSaving}>
+          <Button
+            onClick={handleSave}
+            disabled={!item.name.trim() || isSaving || isDuplicateAppId}
+          >
             {isSaving ? 'Saving...' : modal.mode === 'add' ? 'Add Item' : 'Save Changes'}
           </Button>
         </div>

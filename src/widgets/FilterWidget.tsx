@@ -255,6 +255,7 @@ const FilterWidget: React.FC<FilterWidgetProps> = ({
                         varNum += 1;
                     }
                 });
+
             });
 
             if (variableParams.length > 0) {

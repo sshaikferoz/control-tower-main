@@ -45,6 +45,8 @@ export const transformSectionsToUIFormat = (sections: Section[]): DashboardSecti
                     description: widget.description || '',
                     roles: widget.roles || [],
                     fieldMappings: widget.fieldMappings || {},
+                    // Preserve active flag from backend (derived from IsActive)
+                    active: widget.active,
                 })),
             // Include original section data for editing
             originalSection: section,

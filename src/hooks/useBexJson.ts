@@ -22,6 +22,7 @@ type BexQueryResult = EnhancedParseResult | OldParserResult
 // Options for the fetch function
 interface BexQueryOptions {
     parser?: 'new' | 'old'
+    variables?: string // SAP BW variables string (e.g., "VAR_NAME_1=VAR1&VAR_OPERATOR_1=EQ&VAR_VALUE_EXT_1=VALUE1")
     [key: string]: unknown
 }
 
@@ -42,17 +43,35 @@ const fetchBexQuery = async (
     queryName: string,
     options: BexQueryOptions = {}
 ): Promise<BexQueryResult> => {
-    const { data } = await axios.get<string>(
-        process.env.NODE_ENV === 'development'
-            ? `/api/sap/bc/bsp/sap/zbw_reporting/execute_report_oo.htm?query=${queryName}`
-            : `/sap/bc/bsp/sap/zbw_reporting/execute_report_oo.htm?query=${queryName}`
-    )
+    let url = process.env.NODE_ENV === 'development'
+        ? `/api/sap/bc/bsp/sap/zbw_reporting/execute_report_oo.htm?query=${queryName}`
+        : `/sap/bc/bsp/sap/zbw_reporting/execute_report_oo.htm?query=${queryName}`
 
-
-    if (options.parser === 'new') {
-        return bexToJsonFastParser(data)
+    // Append variables if provided
+    if (options.variables) {
+        url += `&variables=${encodeURIComponent(options.variables)}`
     }
-    return parseXMLToJson(data)
+
+    try {
+        const { data } = await axios.get<string>(url)
+
+        if (options.parser === 'new') {
+            return bexToJsonFastParser(data)
+        }
+        return parseXMLToJson(data)
+    } catch (err) {
+        // If the query is not executed or responds with an error,
+        // return an empty result so downstream logic does not break.
+        // We use the "old" parser shape for the fallback because it is the loosest.
+        const message =
+            err instanceof Error ? err.message : 'Failed to execute BEx query'
+
+        return {
+            header: [],
+            chartData: [],
+            error: message,
+        }
+    }
 }
 
 /**
@@ -65,11 +84,11 @@ export default function useBexJson(
     queryName: string = '',
     options: UseBexJsonOptions = {}
 ): UseQueryResult<BexQueryResult, Error> {
-    const { parser, ...queryOptions } = options
+    const { parser, variables, ...queryOptions } = options
 
     return useQuery<BexQueryResult, Error>({
-        queryKey: ['Bex', queryName, parser],
-        queryFn: () => fetchBexQuery(queryName, { parser }),
+        queryKey: ['Bex', queryName, parser, variables],
+        queryFn: () => fetchBexQuery(queryName, { parser, variables }),
         ...queryOptions,
     })
 }

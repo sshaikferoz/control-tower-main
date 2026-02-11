@@ -8,9 +8,18 @@ export function transformBexToChart(
         chartData,
         headerText,
         charUniqueValues,
+        charKeys,
     } = response;
 
-    const { xAxisKey, groupByKey, measures, seriesConfig, colorPalette } = config;
+    const {
+        xAxisKey,
+        groupByKey,
+        measures,
+        seriesConfig,
+        colorPalette,
+        chartType,
+        charKeys: configCharKeys,
+    } = config;
 
     // ---------- SERIES ----------
     let series: any[] = [];
@@ -55,11 +64,20 @@ export function transformBexToChart(
         ...row,
     }));
 
+    // Resolve char keys for table configuration:
+    // - Only expose charKeys when the chart type is 'table'
+    // - Only use the user-selected keys from config.charKeys
+    const resolvedCharKeys =
+        chartType === 'table'
+            ? (configCharKeys ?? [])
+            : undefined;
     return {
         data,
         series,
         groupByField: groupByKey,
-        xAxisLabel: headerText?.[xAxisKey] || xAxisKey, // Return the x-axis label for table header
+        xAxisLabel: headerText?.[xAxisKey] || xAxisKey,
+        ...(chartType === 'table' && { charKeys: resolvedCharKeys }),
+        headerText: headerText ?? {},
     };
 }
 

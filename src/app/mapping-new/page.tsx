@@ -91,7 +91,7 @@ const MappingScreen: React.FC = () => {
                             setWidgets(transformedWidgets);
 
                             // Transform layout
-                            const transformedLayout: LayoutItem[] = activeWidgets.map(
+                            const transformedLayout: any = activeWidgets.map(
                                 (widget: any, index: number) => {
                                     const layoutConfig = widget.layoutConfig || {};
                                     const { w, h } = getDefaultWidgetSize(widget.type);
@@ -200,7 +200,7 @@ const MappingScreen: React.FC = () => {
         setIsSaving(true);
 
         try {
-            const updatedLayout = layout.map((item) => ({
+            const updatedLayout: any = layout.map((item: any) => ({
                 ...item,
                 static: item.static ?? false,
             }));
@@ -252,7 +252,7 @@ const MappingScreen: React.FC = () => {
 
             const layoutData: LayoutData = {
                 sectionName: sectionName,
-                layout: updatedLayout.map((item) => ({
+                layout: updatedLayout.map((item: any) => ({
                     i: item.i,
                     x: item.x,
                     y: item.y,

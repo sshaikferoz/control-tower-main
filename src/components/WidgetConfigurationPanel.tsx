@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import Grid from '@mui/material/Grid';
 import {
     Typography,
     Box,
@@ -35,9 +34,13 @@ import { ChartConfigPanel } from '@/widgets/chart/multi-chart/ChartConfigPanel';
 import { ChartWidgetConfig } from '@/widgets/chart/multi-chart/ChartConfig.types';
 import { MultiMetricConfigPanel } from '@/widgets/chart/multi-metric/MultiMetricConfigPanel';
 import { MultiMetricWidgetConfig } from '@/widgets/chart/multi-metric/MultiMetricConfig.types';
+import { DashboardMenuConfigPanel } from '@/widgets/dashboard-menu/DashboardMenuConfigPanel';
+import { DashboardMenuWidgetConfig } from '@/widgets/dashboard-menu/DashboardMenuConfig.types';
 import { KpiConfigPanel } from '@/widgets/chart/kpi-chart/KpiConfigPanel';
 import { KpiWidgetConfig } from '@/widgets/chart/kpi-chart/KpiConfig.types';
 import { BlankWidgetConfig } from '@/widgets/blank-widget/BlankWidgetConfig.types';
+import { FilterPanelConfigPanel } from '@/widgets/filter-panel/FilterPanelConfigPanel';
+import { FilterPanelWidgetConfig } from '@/widgets/filter-panel/FilterPanelConfig.types';
 import useBexJson from '@/hooks/useBexJson';
 import { TargetReportConfig } from '@/helpers/types';
 
@@ -122,6 +125,8 @@ const WidgetConfigurationPanel: React.FC<WidgetConfigurationPanelProps> = ({
     const isKpiChart = widgetName === 'kpi-chart';
     const isMultiMetric = widgetName === 'multi-metric';
     const isBlankWidget = widgetName === 'blank-widget';
+    const isFilterPanel = widgetName === 'filter-panel';
+    const isDashboardMenu = widgetName === 'dashboard-menu';
 
     // Get queryName for BEX chart widgets
     const queryName =
@@ -183,6 +188,19 @@ const WidgetConfigurationPanel: React.FC<WidgetConfigurationPanelProps> = ({
         title: '',
     };
 
+    // Get dashboard menu config for dashboard-menu widgets
+    const dashboardMenuConfig: DashboardMenuWidgetConfig = widgetProps.dashboardMenuConfig || {
+        items: [],
+        displayMode: 'multiple',
+        layout: 'list',
+    };
+
+    // Get filter panel config for filter panel widgets
+    const filterPanelConfig: FilterPanelWidgetConfig = widgetProps.filterPanelConfig || {
+        eventName: '',
+        components: [],
+    };
+
     // Use loaded BEX data for configuration panel preview only
     const bexResponse = bexData || null;
 
@@ -229,6 +247,7 @@ const WidgetConfigurationPanel: React.FC<WidgetConfigurationPanelProps> = ({
                 showLabels: true,
                 valueFormat: 'non-currency',
                 kpiType: 'donut',
+                listenToEvent: '',
             };
             updateWidgetProp('kpiConfig', defaultKpiConfig);
         }
@@ -253,6 +272,17 @@ const WidgetConfigurationPanel: React.FC<WidgetConfigurationPanelProps> = ({
             updateWidgetProp('blankWidgetConfig', defaultBlankConfig);
         }
     }, [isBlankWidget, widgetProps.blankWidgetConfig]);
+
+    // Initialize filterPanelConfig if it doesn't exist for filter panel widgets
+    useEffect(() => {
+        if (isFilterPanel && !widgetProps.filterPanelConfig) {
+            const defaultFilterPanelConfig: FilterPanelWidgetConfig = {
+                eventName: '',
+                components: [],
+            };
+            updateWidgetProp('filterPanelConfig', defaultFilterPanelConfig);
+        }
+    }, [isFilterPanel, widgetProps.filterPanelConfig]);
 
 
 
@@ -306,6 +336,14 @@ const WidgetConfigurationPanel: React.FC<WidgetConfigurationPanelProps> = ({
         updateWidgetProp('blankWidgetConfig', config);
     };
 
+    const handleDashboardMenuConfigChange = (config: DashboardMenuWidgetConfig) => {
+        updateWidgetProp('dashboardMenuConfig', config);
+    };
+
+    const handleFilterPanelConfigChange = (config: FilterPanelWidgetConfig) => {
+        updateWidgetProp('filterPanelConfig', config);
+    };
+
     const handleTargetReportChange = (field: keyof TargetReportConfig, value: string | boolean) => {
         updateWidgetProp('targetReport', {
             ...targetReport,
@@ -326,7 +364,8 @@ const WidgetConfigurationPanel: React.FC<WidgetConfigurationPanelProps> = ({
         { value: 'Web Link', label: 'Web Link' },
     ];
 
-    const hasConfigTab = isMultiChart || isKpiChart || isMultiMetric || isBlankWidget;
+    const hasConfigTab =
+        isMultiChart || isKpiChart || isMultiMetric || isBlankWidget || isFilterPanel || isDashboardMenu;
 
     return (
         <div className="flex h-screen w-56 min-w-56 max-w-56 flex-shrink-0 flex-col overflow-auto bg-gradient-to-b from-[#00214E] to-[#0164B0] text-white md:w-64 md:min-w-64 md:max-w-64">
@@ -540,8 +579,8 @@ const WidgetConfigurationPanel: React.FC<WidgetConfigurationPanelProps> = ({
                                 mb: 2,
                             }}
                         >
-                            <Grid container spacing={2} alignItems="center">
-                                <Grid item xs={12}>
+                            <div className="grid grid-cols-12 gap-4 items-center">
+                                <div className="col-span-12">
                                     <TextField
                                         fullWidth
                                         label="Background Color"
@@ -574,8 +613,8 @@ const WidgetConfigurationPanel: React.FC<WidgetConfigurationPanelProps> = ({
                                             },
                                         }}
                                     />
-                                </Grid>
-                            </Grid>
+                                </div>
+                            </div>
                         </Box>
                     </Box>
                 </TabPanel>
@@ -872,8 +911,8 @@ const WidgetConfigurationPanel: React.FC<WidgetConfigurationPanelProps> = ({
                                         Configure the Y-axis domain range and tick interval for charts. For horizontal bar charts, this applies to the X-axis.
                                     </Typography>
 
-                                    <Grid container spacing={2}>
-                                        <Grid item xs={6}>
+                                    <div className="grid grid-cols-12 gap-4">
+                                        <div className="col-span-6">
                                             <TextField
                                                 fullWidth
                                                 size="small"
@@ -919,8 +958,8 @@ const WidgetConfigurationPanel: React.FC<WidgetConfigurationPanelProps> = ({
                                                     },
                                                 }}
                                             />
-                                        </Grid>
-                                        <Grid item xs={6}>
+                                        </div>
+                                        <div className="col-span-6">
                                             <TextField
                                                 fullWidth
                                                 size="small"
@@ -966,8 +1005,8 @@ const WidgetConfigurationPanel: React.FC<WidgetConfigurationPanelProps> = ({
                                                     },
                                                 }}
                                             />
-                                        </Grid>
-                                        <Grid item xs={12}>
+                                        </div>
+                                        <div className="col-span-12">
                                             <TextField
                                                 fullWidth
                                                 size="small"
@@ -1004,8 +1043,8 @@ const WidgetConfigurationPanel: React.FC<WidgetConfigurationPanelProps> = ({
                                                     },
                                                 }}
                                             />
-                                        </Grid>
-                                    </Grid>
+                                        </div>
+                                    </div>
                                 </Box>
                             )}
                         </Box>
@@ -1161,6 +1200,60 @@ const WidgetConfigurationPanel: React.FC<WidgetConfigurationPanelProps> = ({
                     </TabPanel>
                 )}
 
+                {/* Config Tab - Only for dashboard-menu widgets */}
+                {isDashboardMenu && (
+                    <TabPanel value={activeTab} index={1}>
+                        <Box sx={{ color: 'white' }}>
+                            <Typography variant="subtitle2" sx={{ mb: 0.5, fontWeight: 600, fontSize: '0.75rem' }}>
+                                Dashboard Menu Configuration
+                            </Typography>
+                            <Typography variant="caption" sx={{ mb: 2, color: 'rgba(255, 255, 255, 0.7)', fontSize: '0.65rem', display: 'block' }}>
+                                Configure the list of menu items. Each item can open a different detailed report.
+                            </Typography>
+
+                            <Box
+                                sx={{
+                                    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                                    borderRadius: 2,
+                                    p: 2,
+                                }}
+                            >
+                                <DashboardMenuConfigPanel
+                                    value={dashboardMenuConfig}
+                                    onChange={handleDashboardMenuConfigChange}
+                                />
+                            </Box>
+                        </Box>
+                    </TabPanel>
+                )}
+
+                {/* Config Tab - Only for filter-panel widgets */}
+                {isFilterPanel && (
+                    <TabPanel value={activeTab} index={1}>
+                        <Box sx={{ color: 'white' }}>
+                            <Typography variant="subtitle2" sx={{ mb: 0.5, fontWeight: 600, fontSize: '0.75rem' }}>
+                                Filter Panel Configuration
+                            </Typography>
+                            <Typography variant="caption" sx={{ mb: 2, color: 'rgba(255, 255, 255, 0.7)', fontSize: '0.65rem', display: 'block' }}>
+                                Configure filter components. Each component can be an input, date picker, or list from BEX query.
+                            </Typography>
+
+                            <Box
+                                sx={{
+                                    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                                    borderRadius: 2,
+                                    p: 2,
+                                }}
+                            >
+                                <FilterPanelConfigPanel
+                                    value={filterPanelConfig}
+                                    onChange={handleFilterPanelConfigChange}
+                                />
+                            </Box>
+                        </Box>
+                    </TabPanel>
+                )}
+
 
                 {/* Report Config Tab - Available for all widgets */}
                 <TabPanel value={activeTab} index={hasConfigTab ? 2 : 1}>
@@ -1235,8 +1328,8 @@ const WidgetConfigurationPanel: React.FC<WidgetConfigurationPanelProps> = ({
                                 pointerEvents: targetReportEnabled ? 'auto' : 'none',
                             }}
                         >
-                            <Grid container spacing={2}>
-                                <Grid item xs={12}>
+                            <div className="grid grid-cols-12 gap-4">
+                                <div className="col-span-12">
                                     <FormControl fullWidth>
                                         <InputLabel
                                             sx={{
@@ -1278,9 +1371,9 @@ const WidgetConfigurationPanel: React.FC<WidgetConfigurationPanelProps> = ({
                                             ))}
                                         </Select>
                                     </FormControl>
-                                </Grid>
+                                </div>
 
-                                <Grid item xs={12}>
+                                <div className="col-span-12">
                                     <TextField
                                         label="Technical ID"
                                         fullWidth
@@ -1310,9 +1403,9 @@ const WidgetConfigurationPanel: React.FC<WidgetConfigurationPanelProps> = ({
                                             },
                                         }}
                                     />
-                                </Grid>
+                                </div>
 
-                                <Grid item xs={12}>
+                                <div className="col-span-12">
                                     <TextField
                                         label="Report Name"
                                         fullWidth
@@ -1342,9 +1435,9 @@ const WidgetConfigurationPanel: React.FC<WidgetConfigurationPanelProps> = ({
                                             },
                                         }}
                                     />
-                                </Grid>
+                                </div>
 
-                                <Grid item xs={12}>
+                                <div className="col-span-12">
                                     <TextField
                                         label="Report Description"
                                         fullWidth
@@ -1383,9 +1476,9 @@ const WidgetConfigurationPanel: React.FC<WidgetConfigurationPanelProps> = ({
                                             },
                                         }}
                                     />
-                                </Grid>
+                                </div>
 
-                                <Grid item xs={12}>
+                                <div className="col-span-12">
                                     <FormControlLabel
                                         control={
                                             <Checkbox
@@ -1406,8 +1499,8 @@ const WidgetConfigurationPanel: React.FC<WidgetConfigurationPanelProps> = ({
                                             </Typography>
                                         }
                                     />
-                                </Grid>
-                            </Grid>
+                                </div>
+                            </div>
                         </Box>
                     </Box>
                 </TabPanel>

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import { MenuItem, SidebarModalState } from '../../types';
 import { useUserInfo } from '../../hooks/auth/useUserInfo';
+import { useAdminCheck } from '../../hooks/auth/useAdminCheck';
 import { sapODataService } from '../../services/sapODataService';
 import {
     MagnifyingGlassIcon,
@@ -11,6 +12,7 @@ import {
     PlusIcon,
     Bars3Icon,
     EyeIcon,
+    EyeSlashIcon,
     TrashIcon,
     ShieldCheckIcon,
     LinkIcon,
@@ -51,6 +53,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
     const [copiedItemId, setCopiedItemId] = useState<string | null>(null);
 
     const { userInfo, userInfoLoading, formatTime } = useUserInfo();
+    const { isAdmin } = useAdminCheck();
 
     useEffect(() => {
         setTempItems([...menuItems]);
@@ -183,14 +186,57 @@ export const Sidebar: React.FC<SidebarProps> = ({
         if (editMode) {
             try {
                 setIsSaving(true);
-                const itemsWithChanges = tempItems.map((item, index) => ({
+                const itemsWithNewOrder = tempItems.map((item, index) => ({
                     ...item,
                     order: index,
-                    hasChanges: item.order !== index || item.hasChanges,
                 }));
 
-                const updatedItems = await sapODataService.batchUpdateMenuItems(itemsWithChanges);
-                onMenuItemsChange(updatedItems);
+                const hasOrderChange =
+                    tempItems.length === menuItems.length &&
+                    tempItems.some(
+                        (item, index) =>
+                            menuItems[index]?.id !== item.id
+                    );
+                if (hasOrderChange) {
+                    const sortOrderPayload = itemsWithNewOrder
+                        .map((item, index) =>
+                            item.isNew
+                                ? null
+                                : { Id: item.id, SortOrd: index.toString() }
+                        )
+                        .filter(
+                            (x): x is { Id: string; SortOrd: string } =>
+                                x !== null
+                        );
+                    if (sortOrderPayload.length > 0) {
+                        await sapODataService.updateMenuItemsSortOrder(
+                            sortOrderPayload
+                        );
+                    }
+                }
+
+                const itemsWithOtherChanges = itemsWithNewOrder.filter(
+                    (item) =>
+                        item.isNew ||
+                        (item.hasChanges &&
+                            (() => {
+                                const orig = menuItems.find(
+                                    (m) => m.id === item.id
+                                );
+                                return (
+                                    !orig ||
+                                    orig.visible !== item.visible ||
+                                    orig.name !== item.name ||
+                                    orig.description !== item.description
+                                );
+                            })())
+                );
+                for (const item of itemsWithOtherChanges) {
+                    await sapODataService.saveMenuItem(item, !item.isNew);
+                }
+
+                const freshItems = await sapODataService.fetchMenuItems();
+                onMenuItemsChange(freshItems);
             } catch (error) {
                 console.error('Error saving changes:', error);
                 alert('Failed to save changes. Please try again.');
@@ -225,11 +271,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
         );
     };
 
-    const filteredItems = editMode
-        ? tempItems.filter((item) => item.name.toLowerCase().includes(search.toLowerCase()))
-        : tempItems
-            .filter((item) => item.visible && !item.deleted)
-            .filter((item) => item.name.toLowerCase().includes(search.toLowerCase()));
+    // Hidden items (and icon) only when admin + view=edit; otherwise show only visible items.
+    const filteredItems = tempItems
+        .filter((item) => !item.deleted)
+        .filter((item) => isEditModeAllowed || item.visible)
+        .filter((item) => item.name.toLowerCase().includes(search.toLowerCase()));
 
     // Get first letter or icon for collapsed state
     const getItemIcon = (item: MenuItem) => {
@@ -256,7 +302,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     <div className="flex flex-row items-center space-x-2">
                         <PSCLogo />
                         <div className="flex flex-col">
-                            <h1 className="text-lg font-semibold">P&SC Intelligence Centre</h1>
+                            <h1 className="text-xs leading-tight font-semibold">P&SC Intelligence Centre</h1>
                         </div>
                     </div>
                 )}
@@ -353,7 +399,15 @@ export const Sidebar: React.FC<SidebarProps> = ({
                                                             {getItemIcon(item)}
                                                         </div>
                                                     ) : (
-                                                        <span className="flex-1">{item.name}</span>
+                                                        <span className="flex flex-1 items-center gap-2">
+                                                            {item.name}
+                                                            {isEditModeAllowed && !item.visible && (
+                                                                <EyeSlashIcon
+                                                                    className="h-4 w-4 shrink-0 text-amber-400"
+                                                                    title="Hidden"
+                                                                />
+                                                            )}
+                                                        </span>
                                                     )}
 
                                                     {/* Copy URL button - only show in display mode and when not collapsed */}
@@ -457,6 +511,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             {/* Sidebar Item Modal */}
             <SidebarItemModal
                 modal={sidebarModal}
+                menuItems={menuItems}
                 onClose={() => setSidebarModal({ isOpen: false, mode: 'add', item: undefined })}
                 onSave={handleSaveItem}
                 isSaving={isSaving}
