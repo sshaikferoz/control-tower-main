@@ -1,12 +1,15 @@
 'use client';
 
-import React, { useState } from 'react';
+import React from 'react';
 import 'react-grid-layout/css/styles.css';
 import 'react-resizable/css/styles.css';
 import { Typography } from '@mui/material';
 import { Splitter, SplitterPanel } from 'primereact/splitter';
 import { DashboardProps, Widget, LayoutItem } from '../dashboard.types';
 import RGL, { WidthProvider, type Layout } from 'react-grid-layout/legacy';
+import { useConfiguration } from '@/hooks/config/useConfiguration';
+import { useBackgroundStyle } from '@/hooks/config/useBackgroundStyle';
+
 const GridLayout = WidthProvider(RGL);
 interface DashboardGridProps extends DashboardProps {
     selectedWidgetIds?: string[];
@@ -34,6 +37,9 @@ export const DashboardGrid: React.FC<DashboardGridProps> = ({
     renderWidget,
     emptyState,
 }) => {
+    const { configuration } = useConfiguration();
+    const backgroundStyle = useBackgroundStyle(configuration);
+
     const handleLayoutChange = (newLayout: Layout) => {
         if (onLayoutChange) {
             onLayoutChange([...newLayout] as LayoutItem[]);
@@ -59,12 +65,7 @@ export const DashboardGrid: React.FC<DashboardGridProps> = ({
     return (
         <Splitter
             className="h-screen w-full overflow-y-auto"
-            style={{
-                backgroundImage: `url('${process.env.NEXT_PUBLIC_BSP_NAME}/background/bg-low.png')`,
-                backgroundSize: 'cover',
-                backgroundPosition: 'center',
-                backgroundRepeat: 'no-repeat',
-            }}
+            style={backgroundStyle}
             layout="vertical"
         >
             <SplitterPanel>

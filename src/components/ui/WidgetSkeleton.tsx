@@ -12,7 +12,7 @@ export const WidgetSkeleton: React.FC<WidgetSkeletonProps> = ({ height = 200 }) 
       width="60%"
       height={24}
       sx={{
-        bgcolor: '#0164B0',
+        bgcolor: 'var(--skeleton-bg)',
         flexShrink: 0,
       }}
     />
@@ -21,7 +21,7 @@ export const WidgetSkeleton: React.FC<WidgetSkeletonProps> = ({ height = 200 }) 
         variant="rectangular"
         width="100%"
         height="100%"
-        sx={{ bgcolor: '#0164B0', borderRadius: '25px' }}
+        sx={{ bgcolor: 'var(--skeleton-bg)', borderRadius: '25px' }}
       />
     </div>
   </div>

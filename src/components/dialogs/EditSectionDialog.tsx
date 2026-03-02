@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, Edit2, Save, XCircle } from 'lucide-react';
 import { Section } from '@/services/sapODataService';
+import { SectionIconPicker } from '@/components/ui/SectionIconPicker';
 
 interface EditSectionDialogProps {
     open: boolean;
@@ -20,6 +21,7 @@ export const EditSectionDialog: React.FC<EditSectionDialogProps> = ({
         description: '',
         type: 'SCM Report',
         visible: true,
+        icon: '',
         roles: [] as any[],
     });
 
@@ -68,6 +70,7 @@ export const EditSectionDialog: React.FC<EditSectionDialogProps> = ({
                 description: section.description,
                 type: section.type,
                 visible: section.visible,
+                icon: section.icon || '',
                 roles: formattedRoles,
             });
         }
@@ -178,6 +181,7 @@ export const EditSectionDialog: React.FC<EditSectionDialogProps> = ({
             description: formData.description,
             type: formData.type,
             visible: formData.visible,
+            icon: formData.icon || undefined,
             roles: formData.roles, // Include all roles (with DelFlag) for backend processing
             hasChanges: true,
         };
@@ -193,6 +197,7 @@ export const EditSectionDialog: React.FC<EditSectionDialogProps> = ({
                 description: section.description,
                 type: section.type,
                 visible: section.visible,
+                icon: section.icon || '',
                 roles: section.roles || [],
             });
         }
@@ -239,18 +244,11 @@ export const EditSectionDialog: React.FC<EditSectionDialogProps> = ({
                         />
                     </div>
 
-                    <div>
-                        <label className="mb-2 block text-sm font-medium text-gray-300">Type*</label>
-                        <select
-                            value={formData.type}
-                            onChange={(e) => setFormData({ ...formData, type: e.target.value })}
-                            className="w-full rounded border border-[#3a5a8b] bg-[#2a4a7b] p-3 text-white outline-none focus:border-blue-500"
-                        >
-                            <option value="SCM Report">SCM Report</option>
-                            <option value="Dashboard">Dashboard</option>
-                            <option value="Analytics">Analytics</option>
-                        </select>
-                    </div>
+                    <SectionIconPicker
+                        label="Icon"
+                        value={formData.icon}
+                        onChange={(iconId) => setFormData({ ...formData, icon: iconId })}
+                    />
 
                     <div className="flex items-center justify-between">
                         <label className="block text-sm font-medium text-gray-300">Visible</label>

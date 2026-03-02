@@ -17,18 +17,11 @@ const BlankWidget: React.FC<BlankWidgetProps> = ({
     setChangeColor,
     blankWidgetConfig,
 }) => {
-    // Default colors
     const defaultBaseColor = '#00214E';
     const defaultLighterColor = '#0164B0';
-
-    // Prefer explicit backgroundColor from widget config, then fallback to legacy color prop, then defaults
     const baseColor = backgroundColor || color || defaultBaseColor;
     const lighterColor = baseColor === defaultBaseColor ? defaultLighterColor : `${baseColor}80`;
-
-    const backgroundStyle = {
-        backgroundImage: `linear-gradient(to bottom, ${baseColor}, ${lighterColor})`,
-        color: '#ffffff',
-    };
+    const accentColor = backgroundColor || color || '#00A3E0';
 
     function getTitleStyle(): React.CSSProperties {
         return {
@@ -43,14 +36,16 @@ const BlankWidget: React.FC<BlankWidgetProps> = ({
         };
     }
 
-    const titleStyle = typography?.title?.textAlign;
-
     return (
         <div
-            className="flex h-full w-full flex-col rounded-xl p-4"
-            style={backgroundStyle}
+            className="blank-widget flex h-full w-full flex-col rounded-xl p-4"
+            style={{
+                backgroundImage: `linear-gradient(to bottom, ${baseColor}, ${lighterColor})`,
+                color: '#ffffff',
+            }}
         >
-            <div className="mb-2">
+            <div className="mb-2 flex items-center gap-2">
+                <div className="h-1 w-1 rounded-full" style={{ background: accentColor }} />
                 <h3 className="text-base font-bold text-white" style={getTitleStyle()}>{title}</h3>
             </div>
 

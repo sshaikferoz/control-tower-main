@@ -114,7 +114,7 @@ const MetricItem: React.FC<{
                     width="60%"
                     height={20}
                     sx={{
-                        bgcolor: '#0164B0',
+                        bgcolor: 'var(--skeleton-bg)',
                         mb: 1,
                     }}
                 />
@@ -123,7 +123,7 @@ const MetricItem: React.FC<{
                     width="80%"
                     height={40}
                     sx={{
-                        bgcolor: '#0164B0',
+                        bgcolor: 'var(--skeleton-bg)',
                     }}
                 />
             </div>
@@ -244,11 +244,11 @@ const MultiMetric: React.FC<MultiMetricProps> = ({
     if (!multiMetricConfig || !multiMetricConfig.metrics || multiMetricConfig.metrics.length === 0) {
         return (
             <div className="relative h-full w-full">
-                <div
-                    className="h-full rounded-xl p-4 flex items-center justify-center"
-                    style={backgroundStyle}
-                >
-                    <p className="text-sm text-white/80">No metrics configured</p>
+            <div
+                className="multi-metric-widget h-full rounded-xl p-4 flex items-center justify-center"
+                style={backgroundStyle}
+            >
+                <p className="text-sm text-white/80">No metrics configured</p>
                 </div>
             </div>
         );
@@ -263,7 +263,7 @@ const MultiMetric: React.FC<MultiMetricProps> = ({
 
     return (
         <div className="relative h-full w-full">
-            <div className="h-full rounded-xl p-4 text-white" style={backgroundStyle}>
+            <div className="multi-metric-widget h-full rounded-xl p-4 text-white" style={backgroundStyle}>
                 {/* Widget-level header title */}
 
                 <div className="mb-2 flex items-start justify-between">
@@ -283,11 +283,11 @@ const MultiMetric: React.FC<MultiMetricProps> = ({
                             />
                             {/* Add divider between metrics in horizontal layout (except last) */}
                             {showDividers && layout === 'horizontal' && index < multiMetricConfig.metrics.length - 1 && (
-                                <div className="hidden sm:block h-16 w-px border-l-2 border-dashed border-white/50" />
+                                <div className="metric-divider hidden sm:block h-16 w-px border-l-2 border-dashed border-white/50" />
                             )}
                             {/* Add divider between metrics in vertical layout (except last) */}
                             {showDividers && layout === 'vertical' && index < multiMetricConfig.metrics.length - 1 && (
-                                <div className="w-full h-px border-t-2 border-dashed border-white/50" />
+                                <div className="metric-divider w-full h-px border-t-2 border-dashed border-white/50" />
                             )}
                         </React.Fragment>
                     ))}

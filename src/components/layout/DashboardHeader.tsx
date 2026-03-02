@@ -91,7 +91,7 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
         return classes.join(' ');
     };
     return (
-        <div className="mb-4 flex w-full items-center justify-between px-8">
+        <div className="flex w-full items-center justify-between px-8">
             <Header
                 configuration={configuration}
                 tabId={tabId}
@@ -105,7 +105,7 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
                 <div className={getPositionClasses()}>
                     <button
                         onClick={openChat}
-                        className="focus:ring-opacity-50 rounded-full p-4 text-white shadow-lg transition-all duration-300 hover:scale-110 hover:cursor-pointer focus:outline-none"
+                        className="rounded-2xl p-2 text-white transition-all duration-300 hover:scale-105 hover:cursor-pointer focus:outline-none focus:ring-0"
                         aria-label="Open chat"
                     >
                         <img src="chatbot/SCAI.png" width={90}></img>
@@ -124,12 +124,15 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
                     <Tooltip title="UI Configuration" placement="top">
                         <span>
                             <IconButton
-                                color="primary"
                                 onClick={onOpenConfigDialog}
-                                className="bg-purple-500"
                                 aria-label="Open Configuration"
+                                sx={{
+                                    backgroundColor: 'var(--primary2)',
+                                    color: 'white',
+                                    '&:hover': { backgroundColor: 'var(--primary2)', opacity: 0.9 },
+                                }}
                             >
-                                <SettingsIcon className="text-white" />
+                                <SettingsIcon sx={{ color: 'inherit' }} />
                             </IconButton>
                         </span>
                     </Tooltip>
@@ -137,19 +140,25 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
                     {isEditMode ? (
                         <>
                             <IconButton
-                                color="primary"
                                 onClick={onAddSection}
-                                className="bg-green-500"
                                 aria-label="Add Section"
+                                sx={{
+                                    backgroundColor: 'var(--primary2)',
+                                    color: 'white',
+                                    '&:hover': { backgroundColor: 'var(--primary2)', opacity: 0.9 },
+                                }}
                             >
-                                <AddIcon className="text-white" />
+                                <AddIcon sx={{ color: 'inherit' }} />
                             </IconButton>
                             <Button
                                 variant="contained"
-                                color="primary"
-                                startIcon={<SaveIcon />}
+                                startIcon={<SaveIcon sx={{ color: 'inherit' }} />}
                                 onClick={onSaveDashboard}
-                                className="bg-blue-500"
+                                sx={{
+                                    backgroundColor: 'var(--secondary1)',
+                                    color: 'white',
+                                    '&:hover': { backgroundColor: 'var(--secondary1)', opacity: 0.9 },
+                                }}
                             >
                                 Save Layout
                             </Button>
@@ -158,12 +167,15 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
                         <Tooltip title="Edit Layout" placement="top">
                             <span>
                                 <IconButton
-                                    color="primary"
                                     onClick={onToggleEditMode}
-                                    className="bg-blue-500"
                                     aria-label="Edit Layout"
+                                    sx={{
+                                        backgroundColor: 'var(--primary2)',
+                                        color: 'white',
+                                        '&:hover': { backgroundColor: 'var(--primary2)', opacity: 0.9 },
+                                    }}
                                 >
-                                    <EditIcon className="text-white" />
+                                    <EditIcon sx={{ color: 'inherit' }} />
                                 </IconButton>
                             </span>
                         </Tooltip>

@@ -1,26 +1,34 @@
 import { useMemo } from 'react';
 import { UIConfiguration } from '../../types/configuration';
+import { useTheme } from '@/contexts/ThemeContext';
 
 export const useBackgroundStyle = (configuration: UIConfiguration) => {
+    const { theme } = useTheme();
     return useMemo(() => {
         if (!configuration.background.enabled) {
             return {
-                background: 'linear-gradient(to bottom right, #0a1a35, #1a3a6b)',
+                background: 'var(--dashboard-bg)',
             };
         }
 
-        const backgroundImage =
-            configuration.background.useBase64 && configuration.background.imageBase64
-                ? configuration.background.imageBase64
-                : configuration.background.imageUrl;
+        const mode = theme ?? configuration.background.mode ?? 'dark';
+        const useLight = mode === 'light';
+        const backgroundImage = useLight
+            ? (configuration.background.useBase64Light ? configuration.background.imageBase64Light : configuration.background.imageUrlLight)
+            : (configuration.background.useBase64 ? configuration.background.imageBase64 : configuration.background.imageUrl);
+
+        const fallbackColor = useLight
+            ? (configuration.background.fallbackColorLight ?? '#F7F8FA')
+            : (configuration.background.fallbackColor ?? '#1a1a2e');
 
         return {
+            backgroundColor: fallbackColor,
             backgroundImage: backgroundImage ? `url('${backgroundImage}')` : undefined,
             backgroundSize: 'cover',
             backgroundPosition: 'center',
             backgroundRepeat: 'no-repeat',
             opacity: configuration.background.opacity / 100,
         };
-    }, [configuration.background]);
+    }, [configuration.background, theme]);
 };
 

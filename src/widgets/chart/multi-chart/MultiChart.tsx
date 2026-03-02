@@ -270,18 +270,18 @@ const PremiumTooltip = ({ active, payload, label, formatter }: any) => {
             <div
                 className="premium-tooltip"
                 style={{
-                    background: 'linear-gradient(135deg, #021c36 0%, #043960 100%)',
-                    border: '1px solid rgba(0, 255, 255, 0.4)',
+                    background: 'var(--chart-tooltip-bg)',
+                    border: '1px solid var(--chart-tooltip-border)',
                     borderRadius: '12px',
                     padding: '12px 16px',
-                    boxShadow: '0 8px 32px rgba(0, 255, 255, 0.2), 0 0 20px rgba(0, 255, 255, 0.1)',
+                    boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
                     backdropFilter: 'blur(10px)',
                     pointerEvents: 'none',
                     animation: 'tooltipFadeIn 0.2s ease-out',
                     transformOrigin: 'bottom center',
                 }}
             >
-                <div style={{ fontWeight: 'bold', fontSize: '14px', color: '#ffffff', marginBottom: '8px', borderBottom: '1px solid rgba(255, 255, 255, 0.2)', paddingBottom: '6px' }}>
+                <div style={{ fontWeight: 'bold', fontSize: '14px', color: 'var(--chart-tooltip-text)', marginBottom: '8px', borderBottom: '1px solid var(--chart-legend-border)', paddingBottom: '6px' }}>
                     {label}
                 </div>
                 {payload.map((entry: any, index: number) => (
@@ -304,8 +304,8 @@ const PremiumTooltip = ({ active, payload, label, formatter }: any) => {
                                 boxShadow: `0 0 8px ${entry.color}80`,
                             }}
                         />
-                        <span style={{ color: '#ffffff', fontWeight: 500 }}>{entry.name}:</span>
-                        <span style={{ color: '#00ffff', fontWeight: 'bold', marginLeft: 'auto' }}>
+                        <span style={{ color: 'var(--chart-tooltip-text)', fontWeight: 500 }}>{entry.name}:</span>
+                        <span style={{ color: 'var(--primary2)', fontWeight: 'bold', marginLeft: 'auto' }}>
                             {formatter ? formatter(entry.value) : entry.value}
                         </span>
                     </div>
@@ -822,15 +822,15 @@ const MultiChart: React.FC<MultiChartProps> = ({
         };
 
         const commonAxisProps = {
-            axisLine: { stroke: '#ffffff50' },
-            tick: { fill: '#ffffff', fontSize: 12 },
-            tickLine: { stroke: '#ffffff50' },
+            axisLine: { stroke: 'var(--chart-axis-line)' },
+            tick: { fill: 'var(--chart-text)', fontSize: 12 },
+            tickLine: { stroke: 'var(--chart-axis-line)' },
         };
 
         const premiumTooltipProps = {
             content: <PremiumTooltip formatter={formatNumber} />,
             shared: false, // Show only the hovered series, not all series at that point
-            cursor: { stroke: 'rgba(0, 255, 255, 0.5)', strokeWidth: 2, strokeDasharray: '0' },
+            cursor: { stroke: 'var(--chart-cursor)', strokeWidth: 2, strokeDasharray: '0' },
             animationDuration: 200,
             contentStyle: {
                 background: 'transparent',
@@ -926,7 +926,7 @@ const MultiChart: React.FC<MultiChartProps> = ({
                             verticalAlign="bottom"
                             align="center"
                             height={45}
-                            wrapperStyle={{ color: '#ffffff', fontSize: 12, paddingTop: '4px', cursor: 'default' }}
+                            wrapperStyle={{ color: 'var(--chart-text)', fontSize: 12, paddingTop: '4px', cursor: 'default' }}
                             content={(props) => <DefaultLegendContent {...props} payload={legendPayload} />}
                         />
                     )}
@@ -938,7 +938,7 @@ const MultiChart: React.FC<MultiChartProps> = ({
             case 'line':
                 return (
                     <LineChart {...commonProps}>
-                        {showGridLines && <CartesianGrid strokeDasharray={getGridLineDasharray(gridLineStyle)} vertical={false} stroke="#ffffff30" />}
+                        {showGridLines && <CartesianGrid strokeDasharray={getGridLineDasharray(gridLineStyle)} vertical={false} stroke="var(--chart-grid)" />}
                         <XAxis dataKey="name" {...commonAxisProps} />
                         <YAxis
                             {...commonAxisProps}
@@ -952,7 +952,7 @@ const MultiChart: React.FC<MultiChartProps> = ({
                             <Legend
                                 verticalAlign="bottom"
                                 height={30}
-                                wrapperStyle={{ color: '#ffffff', fontSize: 12, paddingTop: '4px', cursor: 'default' }}
+                                wrapperStyle={{ color: 'var(--chart-text)', fontSize: 12, paddingTop: '4px', cursor: 'default' }}
                                 content={(props) => <DefaultLegendContent {...props} payload={groupLegendPayload} />}
                             />
                         )}
@@ -977,7 +977,7 @@ const MultiChart: React.FC<MultiChartProps> = ({
                                             dataKey={s.dataKey}
                                             position="top"
                                             formatter={(v: unknown) => formatNumber(v)}
-                                            fill="#ffffff"
+                                            fill="var(--chart-text)"
                                             fontSize={12}
                                         />
                                     )}
@@ -993,7 +993,7 @@ const MultiChart: React.FC<MultiChartProps> = ({
 
                 return (
                     <BarChart {...commonProps} layout={isHorizontal ? 'vertical' : 'horizontal'} barSize={40}>
-                        {showGridLines && <CartesianGrid strokeDasharray={getGridLineDasharray(gridLineStyle)} vertical={false} stroke="#ffffff30" />}
+                        {showGridLines && <CartesianGrid strokeDasharray={getGridLineDasharray(gridLineStyle)} vertical={false} stroke="var(--chart-grid)" />}
 
                         {isHorizontal ? (
                             <XAxis
@@ -1023,7 +1023,7 @@ const MultiChart: React.FC<MultiChartProps> = ({
                             <Legend
                                 verticalAlign="bottom"
                                 height={30}
-                                wrapperStyle={{ color: '#ffffff', fontSize: 12, paddingTop: '4px', cursor: 'default' }}
+                                wrapperStyle={{ color: 'var(--chart-text)', fontSize: 12, paddingTop: '4px', cursor: 'default' }}
                                 content={(props) => <DefaultLegendContent {...props} payload={groupLegendPayload} />}
                             />
                         )}
@@ -1070,7 +1070,7 @@ const MultiChart: React.FC<MultiChartProps> = ({
                                             dataKey={s.dataKey}
                                             position={isHorizontal ? 'right' : 'top'}
                                             formatter={(v: unknown) => formatNumber(v)}
-                                            fill="#ffffff"
+                                            fill="var(--chart-text)"
                                             fontSize={12}
                                         />
                                     )}
@@ -1083,7 +1083,7 @@ const MultiChart: React.FC<MultiChartProps> = ({
             case 'area':
                 return (
                     <AreaChart {...commonProps}>
-                        {showGridLines && <CartesianGrid strokeDasharray={getGridLineDasharray(gridLineStyle)} vertical={false} stroke="#ffffff30" />}
+                        {showGridLines && <CartesianGrid strokeDasharray={getGridLineDasharray(gridLineStyle)} vertical={false} stroke="var(--chart-grid)" />}
                         <XAxis dataKey="name" {...commonAxisProps} />
                         <YAxis {...commonAxisProps} tickFormatter={formatNumber} width={55} />
                         <Tooltip {...premiumTooltipProps} />
@@ -1091,7 +1091,7 @@ const MultiChart: React.FC<MultiChartProps> = ({
                             <Legend
                                 verticalAlign="bottom"
                                 height={30}
-                                wrapperStyle={{ color: '#ffffff', fontSize: 12, paddingTop: '4px', cursor: 'default' }}
+                                wrapperStyle={{ color: 'var(--chart-text)', fontSize: 12, paddingTop: '4px', cursor: 'default' }}
                                 content={(props) => <DefaultLegendContent {...props} payload={groupLegendPayload} />}
                             />
                         )}
@@ -1118,7 +1118,7 @@ const MultiChart: React.FC<MultiChartProps> = ({
                                             dataKey={s.dataKey}
                                             position="top"
                                             formatter={(v: unknown) => formatNumber(v)}
-                                            fill="#ffffff"
+                                            fill="var(--chart-text)"
                                             fontSize={12}
                                         />
                                     )}
@@ -1131,7 +1131,7 @@ const MultiChart: React.FC<MultiChartProps> = ({
             case 'composed':
                 return (
                     <ComposedChart {...commonProps}>
-                        {showGridLines && <CartesianGrid strokeDasharray={getGridLineDasharray(gridLineStyle)} vertical={false} stroke="#ffffff30" />}
+                        {showGridLines && <CartesianGrid strokeDasharray={getGridLineDasharray(gridLineStyle)} vertical={false} stroke="var(--chart-grid)" />}
                         <XAxis dataKey="name" {...commonAxisProps} />
                         <YAxis
                             {...commonAxisProps}
@@ -1145,7 +1145,7 @@ const MultiChart: React.FC<MultiChartProps> = ({
                             <Legend
                                 verticalAlign="bottom"
                                 height={30}
-                                wrapperStyle={{ color: '#ffffff', fontSize: 12, paddingTop: '4px', cursor: 'default' }}
+                                wrapperStyle={{ color: 'var(--chart-text)', fontSize: 12, paddingTop: '4px', cursor: 'default' }}
                                 content={(props) => <DefaultLegendContent {...props} payload={groupLegendPayload} />}
                             />
                         )}
@@ -1194,7 +1194,7 @@ const MultiChart: React.FC<MultiChartProps> = ({
                                                 dataKey={s.dataKey}
                                                 position="top"
                                                 formatter={(v: unknown) => formatNumber(v)}
-                                                fill="#ffffff"
+                                                fill="var(--chart-text)"
                                                 fontSize={12}
                                             />
                                         )}
@@ -1220,7 +1220,7 @@ const MultiChart: React.FC<MultiChartProps> = ({
                                                 dataKey={s.dataKey}
                                                 position="top"
                                                 formatter={(v: unknown) => formatNumber(v)}
-                                                fill="#ffffff"
+                                                fill="var(--chart-text)"
                                                 fontSize={12}
                                             />
                                         )}
@@ -1245,7 +1245,7 @@ const MultiChart: React.FC<MultiChartProps> = ({
                                                 dataKey={s.dataKey}
                                                 position="top"
                                                 formatter={(v: unknown) => formatNumber(v)}
-                                                fill="#ffffff"
+                                                fill="var(--chart-text)"
                                                 fontSize={12}
                                             />
                                         )}
@@ -1259,7 +1259,7 @@ const MultiChart: React.FC<MultiChartProps> = ({
             case 'scatter':
                 return (
                     <ScatterChart {...commonProps}>
-                        {showGridLines && <CartesianGrid strokeDasharray={getGridLineDasharray(gridLineStyle)} stroke="#ffffff30" />}
+                        {showGridLines && <CartesianGrid strokeDasharray={getGridLineDasharray(gridLineStyle)} stroke="var(--chart-grid)" />}
                         <XAxis dataKey="name" {...commonAxisProps} />
                         <YAxis
                             {...commonAxisProps}
@@ -1273,7 +1273,7 @@ const MultiChart: React.FC<MultiChartProps> = ({
                             <Legend
                                 verticalAlign="bottom"
                                 height={30}
-                                wrapperStyle={{ color: '#ffffff', fontSize: 12, paddingTop: '4px', cursor: 'default' }}
+                                wrapperStyle={{ color: 'var(--chart-text)', fontSize: 12, paddingTop: '4px', cursor: 'default' }}
                                 content={(props) => <DefaultLegendContent {...props} payload={groupLegendPayload} />}
                             />
                         )}
@@ -1324,7 +1324,7 @@ const MultiChart: React.FC<MultiChartProps> = ({
                                             dataKey={s.dataKey}
                                             position="top"
                                             formatter={(v: unknown) => formatNumber(v)}
-                                            fill="#ffffff"
+                                            fill="var(--chart-text)"
                                             fontSize={12}
                                         />
                                     )}
@@ -1343,10 +1343,10 @@ const MultiChart: React.FC<MultiChartProps> = ({
             case 'radar':
                 return (
                     <RadarChart {...commonProps}>
-                        {showGridLines && <PolarGrid stroke="#ffffff50" strokeDasharray={getGridLineDasharray(gridLineStyle)} />}
-                        <PolarAngleAxis dataKey="name" tick={{ fill: '#ffffff', fontSize: 12 }} />
+                        {showGridLines && <PolarGrid stroke="var(--chart-axis-line)" strokeDasharray={getGridLineDasharray(gridLineStyle)} />}
+                        <PolarAngleAxis dataKey="name" tick={{ fill: 'var(--chart-text)', fontSize: 12 }} />
                         <PolarRadiusAxis
-                            tick={{ fill: '#ffffff', fontSize: 12 }}
+                            tick={{ fill: 'var(--chart-text)', fontSize: 12 }}
                             tickFormatter={formatNumber}
                             domain={yAxisDomain}
                         />
@@ -1355,7 +1355,7 @@ const MultiChart: React.FC<MultiChartProps> = ({
                             <Legend
                                 verticalAlign="bottom"
                                 height={30}
-                                wrapperStyle={{ color: '#ffffff', fontSize: 12, paddingTop: '4px', cursor: 'default' }}
+                                wrapperStyle={{ color: 'var(--chart-text)', fontSize: 12, paddingTop: '4px', cursor: 'default' }}
                                 content={(props) => <DefaultLegendContent {...props} payload={groupLegendPayload} />}
                             />
                         )}
@@ -1540,12 +1540,12 @@ const MultiChart: React.FC<MultiChartProps> = ({
     if (queryName && chartConfig && bexError) {
         return (
             <div className="flex h-full w-full flex-col">
-                <div
-                    className="flex flex-1 flex-col overflow-hidden rounded-xl p-4 text-white items-center justify-center"
-                    style={backgroundStyle}
-                >
-                    <div className="text-center">
-                        <p className="text-sm text-red-300 mb-2">Error loading chart data</p>
+        <div
+            className="multi-chart-widget flex flex-1 flex-col overflow-hidden rounded-xl p-4 text-white items-center justify-center"
+            style={backgroundStyle}
+        >
+            <div className="text-center">
+                <p className="text-sm text-red-300 mb-2">Error loading chart data</p>
                         <p className="text-xs text-white/60">{bexError.message || 'Unknown error'}</p>
                     </div>
                 </div>
@@ -1557,12 +1557,12 @@ const MultiChart: React.FC<MultiChartProps> = ({
     if (queryName && !chartConfig) {
         return (
             <div className="flex h-full w-full flex-col">
-                <div
-                    className="flex flex-1 flex-col overflow-hidden rounded-xl p-4 text-white items-center justify-center"
-                    style={backgroundStyle}
-                >
-                    <div className="text-center">
-                        <p className="text-sm text-white/80">Chart configuration is required</p>
+        <div
+            className="multi-chart-widget flex flex-1 flex-col overflow-hidden rounded-xl p-4 text-white items-center justify-center"
+            style={backgroundStyle}
+        >
+            <div className="text-center">
+                <p className="text-sm text-white/80">Chart configuration is required</p>
                     </div>
                 </div>
             </div>
@@ -1572,7 +1572,7 @@ const MultiChart: React.FC<MultiChartProps> = ({
     return (
         <div className="flex h-full w-full flex-col">
             <div
-                className="flex flex-1 flex-col overflow-hidden rounded-xl p-4 text-white"
+                className="multi-chart-widget flex flex-1 flex-col overflow-hidden rounded-xl p-4 text-white"
                 style={backgroundStyle}
             >
                 {/* Header */}

@@ -18,7 +18,6 @@ import InfoIcon from '@mui/icons-material/Info';
 import SecurityIcon from '@mui/icons-material/Security';
 import LaunchIcon from '@mui/icons-material/Launch';
 import RGL, { WidthProvider } from 'react-grid-layout/legacy';
-import MyContractsIcon from '@/assets/MyContractsIcon';
 import { DashboardSectionProps } from '@/types/dashboard';
 import { LazyWidgetContent } from '@/widgets/LazyWidgetContent';
 import { WidgetDetailsDialog } from '@/components/dialogs/WidgetDetailsDialog';
@@ -28,9 +27,56 @@ import { defaultPropsMapping, widgetMapping } from '@/constants/widgetConfig';
 
 import { sapODataService } from '@/services/sapODataService';
 import mirageServer from '@/lib/mirage/mirageServer';
-
+import { DASHBOARD_MENU_ICONS } from '@/widgets/dashboard-menu/DashboardMenuConfig.types';
 
 const GridLayout = WidthProvider(RGL);
+const SECTION_ICON_BASE_URL = `${process.env.NEXT_PUBLIC_BSP_NAME || ''}/icons`;
+const MENU_ICON_IDS = new Set<string>(DASHBOARD_MENU_ICONS.map((i) => i.id));
+
+/** Section header icon: shows custom icon from section or default document icon (light/dark themed) */
+const SectionHeaderIcon: React.FC<{ iconId?: string }> = ({ iconId }) => {
+    const isValidIcon = iconId && MENU_ICON_IDS.has(iconId);
+    if (isValidIcon) {
+        return (
+            <span
+                className="mr-1 inline-flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg"
+                style={{ background: 'var(--widget-surface)', color: 'var(--section-icon)' }}
+            >
+                <img
+                    src={`${SECTION_ICON_BASE_URL}/${iconId}`}
+                    alt=""
+                    className="h-5 w-5 object-contain"
+                    style={{ filter: 'var(--section-icon-filter)' }}
+                />
+            </span>
+        );
+    }
+    return (
+        <span
+            className="mr-2 inline-flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg"
+            style={{ background: 'var(--widget-surface)', color: 'var(--section-icon)' }}
+        >
+            <svg className="h-5 w-5" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path
+                    d="M5 3.5C5 3.22386 5.22386 3 5.5 3H9.5L11.5 5V12.5C11.5 12.7761 11.2761 13 11 13H5C4.72386 13 4.5 12.7761 4.5 12.5V3.5C4.5 3.22386 4.72386 3 5 3Z"
+                    stroke="currentColor"
+                    strokeWidth="1.3"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                />
+                <path d="M8 7H6.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+                <path d="M9.5 9H6.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+                <path
+                    d="M10.5 4L9 5.5"
+                    stroke="currentColor"
+                    strokeWidth="1.3"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                />
+            </svg>
+        </span>
+    );
+};
 
 // Updated interface to include highlighting props
 interface ExtendedDashboardSectionProps extends DashboardSectionProps {
@@ -422,11 +468,11 @@ export const DashboardSection: React.FC<ExtendedDashboardSectionProps> = ({
         .filter(Boolean);
     // Generate dynamic classes for section highlighting
     const getSectionClasses = () => {
-        let classes = `mb-8 transition-all duration-300 ease-in-out ${isEditMode ? 'cursor-move rounded-lg border-2 border-dashed border-blue-300' : ''
+        let classes = `transition-all duration-300 ease-in-out ${isEditMode ? 'cursor-move rounded-lg border-2 border-dashed border-blue-300' : ''
             }`;
 
         if (isSectionHighlighted) {
-            classes += ' ring-1 ring-yellow-400 ring-opacity-70 scale-98 bg-[#012452] bg-opacity-10';
+            classes += ' ring-1 ring-yellow-400 ring-opacity-70 scale-98 opacity-95';
         } else if (isSectionDimmed()) {
             classes += ' opacity-40';
         }
@@ -471,15 +517,15 @@ export const DashboardSection: React.FC<ExtendedDashboardSectionProps> = ({
         >
             {/* Hide section header when dashboardType is 'Report' and not in edit mode */}
             {(dashboardType !== 'Report' || isEditMode) && (
-                <div className="m-2 flex items-center gap-2 p-4">
+                <div className="m-2 flex items-center gap-1 p-2">
                     {isEditMode && (
                         <div className="mr-2">
-                            <DragIndicatorIcon className="text-white" />
+                            <DragIndicatorIcon sx={{ color: 'var(--section-title)' }} />
                         </div>
                     )}
-                    {/* <MyContractsIcon /> */}
-                    <p className="text-[#fff]">{section.sectionName}</p>
-                    <div className="h-px flex-grow bg-[#E8E9EE80]"></div>
+                    <SectionHeaderIcon iconId={section.originalSection?.icon} />
+                    <p className="text-[var(--section-title)]">{section.sectionName}</p>
+                    <div className="h-px flex-grow" style={{ background: 'var(--section-line)' }}></div>
 
                     {isEditMode && (
                         <>
@@ -488,7 +534,7 @@ export const DashboardSection: React.FC<ExtendedDashboardSectionProps> = ({
                                 size="small"
                                 aria-label="section actions"
                                 sx={{
-                                    color: 'white',
+                                    color: 'var(--section-title)',
                                     '&:hover': {
                                         backgroundColor: 'rgba(255, 255, 255, 0.1)',
                                     },
@@ -523,7 +569,7 @@ export const DashboardSection: React.FC<ExtendedDashboardSectionProps> = ({
                             </Menu>
                         </>
                     )}
-                    <span className="cursor-pointer text-white" onClick={toggleExpanded}>
+                    <span className="cursor-pointer text-[var(--section-title)]" onClick={toggleExpanded}>
                         {isExpanded ? '▼' : '►'}
                     </span>
                 </div>
@@ -538,13 +584,18 @@ export const DashboardSection: React.FC<ExtendedDashboardSectionProps> = ({
                         const Component = widgetMapping[widget.name];
                         const props = widgetProps[widget.id] || defaultPropsMapping[widget.name] || {};
                         const isLoading = loadingWidgets.has(widget.id);
+                        const isTransparentWidget =
+                            props.chartConfig?.transparentBackground === true ||
+                            props.kpiConfig?.transparentBackground === true ||
+                            props.multiMetricConfig?.transparentBackground === true;
 
                         if (!Component) return null;
 
                         return (
                             <div
                                 key={widget.id}
-                                className={getWidgetClasses(widget.id, 'relative mb-4 rounded-lg p-4 shadow-md')}
+                                className={getWidgetClasses(widget.id, `relative mb-2 rounded-xl overflow-hidden${isTransparentWidget ? ' transparent' : ''}`)}
+                                style={!isTransparentWidget ? { background: 'var(--widget-bg)', boxShadow: 'var(--widget-shadow)' } : {}}
                                 onClick={(e) => handleWidgetClick(e, widget)}
                             >
                                 {/* Action buttons for announcements */}
@@ -615,6 +666,10 @@ export const DashboardSection: React.FC<ExtendedDashboardSectionProps> = ({
                             const isFilterPanel = widget?.name === 'filter-panel';
                             // When IsActive is '' on the backend, we get active === false here
                             const isUnauthorized = widget.active === false;
+                            const isTransparentWidget =
+                                props.chartConfig?.transparentBackground === true ||
+                                props.kpiConfig?.transparentBackground === true ||
+                                props.multiMetricConfig?.transparentBackground === true;
 
                             if (!Component) {
                                 console.error(`Component not found for widget type: ${widget.name}`);
@@ -641,10 +696,11 @@ export const DashboardSection: React.FC<ExtendedDashboardSectionProps> = ({
                                     key={widget.id}
                                     className={getWidgetClasses(
                                         widget.id,
-                                        isFilterPanel
-                                            ? 'relative rounded-lg bg-transparent transition-shadow duration-200 hover:cursor-pointer'
-                                            : 'relative rounded-lg bg-transparent transition-shadow duration-200'
+                                        `${isFilterPanel
+                                            ? 'relative rounded-xl transition-shadow duration-200 hover:cursor-pointer overflow-hidden'
+                                            : 'relative rounded-xl transition-shadow duration-200 overflow-hidden'}${isTransparentWidget ? ' transparent' : ''}`
                                     )}
+                                    style={!isFilterPanel && !isTransparentWidget ? { background: 'var(--widget-bg)', boxShadow: 'var(--widget-shadow)' } : {}}
                                     data-widget-id={widget.id}
                                     onClick={(e) =>
                                         isFilterPanel || isUnauthorized ? null : handleWidgetClick(e, widget)
@@ -693,7 +749,7 @@ export const DashboardSection: React.FC<ExtendedDashboardSectionProps> = ({
 
                                     {/* Widget content - now with click handling */}
                                     {isUnauthorized ? (
-                                        <div className="flex h-full w-full flex-col rounded-xl bg-gradient-to-b from-[#00214E] to-[#0164B0] p-4 text-white">
+                                        <div className="flex h-full w-full flex-col rounded-xl bg-[var(--widget-bg)] p-4" style={{ color: 'var(--text-neutral)' }}>
                                             <div className="flex flex-1 items-center justify-center">
                                                 <p className="text-center text-xs opacity-90">
                                                     You are not authorized to view this widget.

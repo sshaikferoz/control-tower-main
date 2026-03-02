@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { DashboardBuilder } from '@/features/dashboard';
 import type { Widget, LayoutItem } from '@/features/dashboard';
 import mirageServer from '@/lib/mirage/mirageServer';
@@ -9,6 +9,8 @@ import { sapODataService, LayoutData } from '@/services/sapODataService';
 import type { LayoutWidget } from '@/services/sapODataService';
 import { getDefaultWidgetSize } from '@/features/dashboard/config/widgetDefaultProps';
 import { LoadingScreen } from '@/components/ui/LoadingScreen';
+import { useConfiguration } from '@/hooks/config/useConfiguration';
+import { useBackgroundStyle } from '@/hooks/config/useBackgroundStyle';
 
 if (process.env.NODE_ENV === 'development') mirageServer();
 
@@ -19,6 +21,9 @@ const MappingScreen: React.FC = () => {
     const [isSaving, setIsSaving] = useState<boolean>(false);
     const [loading, setLoading] = useState<boolean>(false);
     const toast = React.useRef<Toast>(null);
+
+    const { configuration } = useConfiguration();
+    const backgroundStyle = useBackgroundStyle(configuration);
 
     // Use useState to avoid hydration mismatch - these values are set on client side only
     const [sectionName, setSectionName] = useState<string>('Dashboard');
@@ -317,17 +322,20 @@ const MappingScreen: React.FC = () => {
     // Show loading state while fetching widgets
     if (loading) {
         return (
-            <>
+            <div className="relative min-h-screen w-full">
+                <div className="absolute inset-0" style={backgroundStyle} aria-hidden />
                 <Toast ref={toast} />
                 <LoadingScreen />
-            </>
+            </div>
         );
     }
 
     return (
-        <>
+        <div className="relative min-h-screen w-full">
+            <div className="absolute inset-0" style={backgroundStyle} aria-hidden />
             <Toast ref={toast} />
-            <DashboardBuilder
+            <div className="relative z-10" style={{ color: 'var(--foreground)' }}>
+                <DashboardBuilder
                 widgets={widgets}
                 layout={layout}
                 onWidgetsChange={setWidgets}
@@ -339,8 +347,10 @@ const MappingScreen: React.FC = () => {
                 isSaving={isSaving}
                 saveDisabled={!sectionId}
                 onWidgetRemove={removeWidget}
+                transparentBackground
             />
-        </>
+            </div>
+        </div>
     );
 };
 

@@ -17,6 +17,7 @@ import { DeleteConfirmationDialog } from '@/components/dialogs/DeleteConfirmatio
 import { ConfigurationDialog } from '@/components/dialogs/ConfigurationDialog';
 import { getNextSectionOrder } from '@/utils/dashboardUtils';
 import { UIConfiguration, defaultConfiguration, ConfigurationManager } from '@/types/configuration';
+import { useTheme } from '@/contexts/ThemeContext';
 import { LoadingScreen } from '@/components/ui/LoadingScreen';
 import { FilterPanelSidebarProvider } from '@/widgets/filter-panel/FilterPanelSidebarContext';
 import { FilterPanelSidebar } from '@/widgets/filter-panel/FilterPanelSidebar';
@@ -104,7 +105,8 @@ export default function Home({
     const [configuration, setConfiguration] = useState<UIConfiguration>(defaultConfiguration);
     const [configurationLoading, setConfigurationLoading] = useState(true);
     const [showConfigDialog, setShowConfigDialog] = useState(false);
-    const fallbackBackground = defaultConfiguration.background.fallbackColor;
+    const fallbackBackground = configuration.background.fallbackColor ?? defaultConfiguration.background.fallbackColor;
+    const { theme } = useTheme();
 
     // Search highlighting state
     const [highlightSectionId, setHighlightSectionId] = useState<string>('');
@@ -797,9 +799,9 @@ export default function Home({
         setShowNewSectionDialog(true);
     };
 
-    // Get computed styles based on configuration
+    // Get computed styles based on configuration (theme from toggle overrides config mode)
     const configManager = ConfigurationManager.getInstance();
-    const backgroundStyle = configManager.getBackgroundStyle(configuration);
+    const backgroundStyle = configManager.getBackgroundStyle(configuration, theme);
     const themeVariables = configManager.getThemeVariables(configuration);
 
     if (loading || configurationLoading) {
@@ -826,7 +828,7 @@ export default function Home({
 
                 <FilterPanelSidebarProvider>
                     <FilterPanelSidebar />
-                    <div className="relative z-10 flex max-h-screen flex-col overflow-y-auto text-white">
+                    <div className="relative z-10 flex max-h-screen flex-col overflow-y-auto" style={{ color: 'var(--foreground)' }}>
                         <div className="sticky top-0 z-20 flex-shrink-0">
                             <DashboardHeader
                             isAdmin={isAdmin}
@@ -848,12 +850,12 @@ export default function Home({
 
                         {!dashboardData?.sections || dashboardData.sections.length === 0 ? (
                             <div className="flex h-[60vh] flex-col items-center justify-center">
-                                <h5 className="mb-4 text-white text-xl font-semibold">
+                                <h5 className="mb-4 text-xl font-semibold" style={{ color: 'var(--foreground)' }}>
                                     No dashboard sections found
                                 </h5>
                                 {isEditModeAllowed ? (
                                     <>
-                                        <p className="mb-4 text-white">
+                                        <p className="mb-4" style={{ color: 'var(--foreground)' }}>
                                             Create a new section by clicking the + button in edit mode
                                         </p>
                                         <Button
@@ -864,10 +866,10 @@ export default function Home({
                                         />
                                     </>
                                 ) : (
-                                    <p className="mb-4 text-white">
+                                    <p className="mb-4" style={{ color: 'var(--foreground)' }}>
                                         Dashboard content will appear here when available
                                         {isAdmin && !isEditModeAllowed && (
-                                            <span className="mt-2 block text-sm text-gray-300">
+                                            <span className="mt-2 block text-sm" style={{ color: 'var(--text-muted)' }}>
                                                 Add ?view=edit to the URL to enable editing features
                                             </span>
                                         )}

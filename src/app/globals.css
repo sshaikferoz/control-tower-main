@@ -6,7 +6,79 @@
 @import 'react-resizable/css/styles.css';
 @import 'react-grid-layout/css/styles.css'; 
 @import 'react-resizable/css/styles.css';
-/* Dark theme only */
+
+/* ========== LIGHT THEME ========== */
+:root[data-theme='light'] {
+  --background: #F7F8FA;
+  --foreground: #293366;
+  --primary1: #83BD01;
+  --primary2: #00A3E0;
+  --secondary1: #293366;
+  --border: #E8E9EE;
+  --scrollbar-thumb: rgba(0, 0, 0, 0.2);
+  --scrollbar-track: transparent;
+  --font-manifa: 'Manifa2', sans-serif;
+
+  /* Sidebar */
+  --sidebar-bg: #00A3E0;
+  --sidebar-text: #FBFBFB;
+  --sidebar-text-active: #00A3E0;
+  --sidebar-active-bg: #FFFFFF;
+  --sidebar-search-border: #95CB9B;
+  --sidebar-search-placeholder: #E9E9E9;
+
+  /* Header */
+  --header-bg: #FFFFFF;
+  --header-shadow: 0px 4px 30px rgba(168, 175, 184, 0.3);
+  --header-title: #293366;
+  --header-icon: #00A3E0;
+  --header-search-bg: #FFFFFF;
+  --header-search-border: #B9C0CA;
+  --header-search-placeholder: rgba(95, 108, 129, 0.5);
+
+  /* Dashboard / Chart area */
+  --dashboard-bg: #F7F8FA;
+  --dashboard-bg-start: #F7F8FA;
+  --dashboard-bg-end: #F7F8FA;
+  --chart-bg: #FBFBFC;
+  --chart-border: #EFEFEF;
+  --widget-bg: #FFFFFF;
+  --widget-shadow: 3px 8px 30px 1px rgba(168, 175, 184, 0.3);
+  --widget-surface: #F9FAFC;
+  --widget-surface-hover: #F3F4F6;
+  --widget-border: #E8E9EE;
+  --icon-invert: 0;
+
+  /* Section titles */
+  --section-title: #5F6C81;
+  --section-icon: #00A3E0;
+  --section-icon-filter: brightness(0) saturate(100%) invert(48%) sepia(79%) saturate(2476%) hue-rotate(166deg) brightness(98%) contrast(101%);
+  --section-vector: #00A3E0;
+  --section-line: #E8E9EE;
+
+  /* Data labels */
+  --text-neutral: #5F6C81;
+  --text-muted: #8088A3;
+  --text-secondary: #45546E;
+
+  /* Chart widgets */
+  --chart-text: #5F6C81;
+  --chart-grid: #E8E9EE;
+  --chart-axis-line: #E8E9EE;
+  --chart-progress-bg: rgba(95, 108, 129, 0.2);
+  --chart-donut-stroke: #E8E9EE;
+  --chart-legend-border: #E8E9EE;
+  --chart-tooltip-bg: #FFFFFF;
+  --chart-tooltip-border: #E8E9EE;
+  --chart-tooltip-text: #293366;
+  --chart-cursor: rgba(0, 163, 224, 0.5);
+
+  /* Loader & Skeleton */
+  --skeleton-bg: rgba(95, 108, 129, 0.2);
+  --loader-color: #00A3E0;
+}
+
+/* ========== DARK THEME ========== */
 :root,
 :root[data-theme='dark'] {
   --background: #06103a;
@@ -18,6 +90,64 @@
   --scrollbar-thumb: rgba(255, 255, 255, 0.2);
   --scrollbar-track: transparent;
   --font-manifa: 'Manifa2', sans-serif;
+
+  /* Sidebar */
+  --sidebar-bg: #00214E;
+  --sidebar-text: #FBFBFB;
+  --sidebar-text-active: #00A3E0;
+  --sidebar-active-bg: #FFFFFF;
+  --sidebar-search-border: #95CB9B;
+  --sidebar-search-placeholder: #E9E9E9;
+
+  /* Header */
+  --header-bg: #0a1a35;
+  --header-shadow: 0px 4px 30px rgba(0, 0, 0, 0.3);
+  --header-title: #ededed;
+  --header-icon: #00A3E0;
+  --header-search-bg: rgba(255, 255, 255, 0.1);
+  --header-search-border: rgba(255, 255, 255, 0.2);
+  --header-search-placeholder: rgba(255, 255, 255, 0.5);
+
+  /* Dashboard / Chart area - original dark values */
+  --dashboard-bg: linear-gradient(to bottom right, #0a1a35, #1a3a6b);
+  --dashboard-bg-start: #0a1a35;
+  --dashboard-bg-end: #1a3a6b;
+  --chart-bg: #0a1a35;
+  --chart-border: rgba(255, 255, 255, 0.12);
+  --widget-bg: transparent;
+  --widget-shadow: none;
+  --widget-surface: rgba(255, 255, 255, 0.05);
+  --widget-surface-hover: rgba(255, 255, 255, 0.1);
+  --widget-border: rgba(255, 255, 255, 0.1);
+  --icon-invert: 1;
+
+  /* Section titles */
+  --section-title: #ededed;
+  --section-icon: #00a3e0;
+  --section-icon-filter: brightness(0) saturate(100%) invert(48%) sepia(79%) saturate(2476%) hue-rotate(166deg) brightness(98%) contrast(101%);
+  --section-vector: #00A3E0;
+  --section-line: rgba(255, 255, 255, 0.12);
+
+  /* Data labels */
+  --text-neutral: #ededed;
+  --text-muted: #a0aec0;
+  --text-secondary: #cbd5e0;
+
+  /* Chart widgets - original dark values */
+  --chart-text: #ffffff;
+  --chart-grid: #ffffff30;
+  --chart-axis-line: #ffffff50;
+  --chart-progress-bg: rgba(255, 255, 255, 0.1);
+  --chart-donut-stroke: #ffffff30;
+  --chart-legend-border: rgba(255, 255, 255, 0.2);
+  --chart-tooltip-bg: linear-gradient(135deg, #021c36 0%, #043960 100%);
+  --chart-tooltip-border: rgba(0, 255, 255, 0.4);
+  --chart-tooltip-text: #ffffff;
+  --chart-cursor: rgba(0, 255, 255, 0.5);
+
+  /* Loader & Skeleton */
+  --skeleton-bg: #0164B0;
+  --loader-color: #60a5fa;
 }
 
 @theme inline {
@@ -44,6 +174,14 @@ body {
   font-family:
     'Poppins', system-ui, 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande',
     'Lucida Sans', Arial, sans-serif !important;
+  scrollbar-width: none; /* Firefox - hide scrollbars */
+  -ms-overflow-style: none; /* IE/Edge - hide scrollbars */
+}
+
+*::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+  display: none;
 }
 
 .grid-stack-item-content {
@@ -51,23 +189,112 @@ body {
   padding: 0;
 }
 
-/* Scrollbar styles */
-::-webkit-scrollbar {
-  width: 8px;
+/* Light theme: blank widget uses white/light styling */
+[data-theme='light'] .blank-widget {
+  background: var(--widget-bg) !important;
+  background-image: none !important;
+  color: var(--text-neutral);
 }
 
-::-webkit-scrollbar-track {
-  background: var(--scrollbar-track);
-  border: none;
+/* Only apply default color when typography has no color (inline style wins) */
+[data-theme='light'] .blank-widget h3 {
+  color: var(--text-neutral);
 }
 
-::-webkit-scrollbar-thumb {
-  background-color: var(--scrollbar-thumb);
-  border: none;
-  border-radius: 4px;
-  transition: background-color 0.3s ease;
+/* Dark theme: dashboard menu uses original gradient */
+[data-theme='dark'] .dashboard-menu-widget {
+  background: linear-gradient(to bottom, #00214E, #0164B0) !important;
+  color: #ffffff !important;
 }
 
-::-webkit-scrollbar-thumb:hover {
-  background-color: rgba(255, 255, 255, 0.3);
+/* Dark theme: multi-metric widget - match other widgets (same gradient) */
+[data-theme='dark'] .multi-metric-widget {
+  background: linear-gradient(to bottom, #00214E, #0164B0) !important;
+  color: #ffffff !important;
+}
+
+/* Dashboard menu search placeholder - ensure visible in both themes */
+.dashboard-menu-search::placeholder {
+  color: var(--text-neutral) !important;
+  opacity: 1;
+}
+
+[data-theme='light'] .dashboard-menu-search::placeholder {
+  color: #293366 !important;
+}
+
+/* Light theme: chart widgets use white/light styling */
+[data-theme='light'] .kpi-chart-widget {
+  background: var(--widget-bg) !important;
+  background-image: none !important;
+  color: var(--text-neutral) !important;
+}
+
+
+/* Ensure KPI main value only is visible in light mode - delta keeps its default style */
+[data-theme='light'] .kpi-chart-widget {
+  color: var(--foreground) !important;
+}
+
+[data-theme='light'] .kpi-chart-widget .kpi-legend-label {
+  color: var(--text-neutral);
+}
+
+[data-theme='light'] .multi-chart-widget {
+  background: var(--widget-bg) !important;
+  background-image: none !important;
+  color: var(--text-neutral);
+}
+
+[data-theme='light'] .multi-chart-widget h3 {
+  color: var(--text-neutral);
+}
+
+[data-theme='light'] .multi-chart-table thead th {
+  background: var(--widget-surface) !important;
+  color: var(--text-neutral);
+  border-bottom-color: var(--widget-border) !important;
+  border-right-color: var(--widget-border) !important;
+}
+
+[data-theme='light'] .multi-chart-table tbody tr {
+  border-bottom-color: var(--widget-border) !important;
+}
+
+[data-theme='light'] .multi-chart-table tbody tr:hover {
+  background-color: var(--widget-surface-hover) !important;
+}
+
+[data-theme='light'] .multi-chart-table tbody td {
+  color: var(--text-neutral);
+  border-right-color: var(--widget-border) !important;
+}
+
+[data-theme='light'] .multi-chart-table tbody td.multi-chart-table-xcell {
+  border-right-color: var(--widget-border) !important;
+}
+
+[data-theme='light'] .multi-metric-widget {
+  background: var(--widget-bg) !important;
+  background-image: none !important;
+  color: var(--text-neutral);
+}
+
+[data-theme='light'] .multi-metric-widget h3,
+[data-theme='light'] .multi-metric-widget p,
+[data-theme='light'] .multi-metric-widget span {
+  color: var(--text-neutral);
+}
+
+[data-theme='light'] .multi-metric-widget .metric-divider {
+  border-color: var(--chart-legend-border) !important;
+}
+
+/* Light theme: transparent widgets - no background */
+[data-theme='light'] .transparent .kpi-chart-widget,
+[data-theme='light'] .transparent .multi-chart-widget,
+[data-theme='light'] .transparent .multi-metric-widget,
+[data-theme='light'] .transparent .blank-widget {
+  background: transparent !important;
+  background-image: none !important;
 }

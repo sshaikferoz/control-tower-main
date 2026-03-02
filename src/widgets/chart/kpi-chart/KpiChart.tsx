@@ -141,7 +141,7 @@ const KpiChart: React.FC<KpiChartProps> = ({
 
     const renderNumber = () => (
         <div className="flex flex-col items-center justify-center flex-1">
-            <span className="text-4xl font-bold" style={valueStyles}>{currentValue !== null ? formatNumber(currentValue) : '—'}</span>
+            <span className="kpi-value text-4xl font-bold" style={valueStyles}>{currentValue !== null ? formatNumber(currentValue) : '—'}</span>
         </div>
     );
 
@@ -161,7 +161,7 @@ const KpiChart: React.FC<KpiChartProps> = ({
 
         return (
             <div className="flex flex-col items-center">
-                <span className="text-4xl font-bold" style={valueStyles}>{currentValue !== null ? formatNumber(currentValue) : '—'}</span>
+                <span className="kpi-value text-4xl font-bold" style={valueStyles}>{currentValue !== null ? formatNumber(currentValue) : '—'}</span>
                 <span className={`text-sm font-semibold ${isPositive ? 'text-green-300' : 'text-red-300'}`} style={labelStyles}>
                     {isPositive ? '▲' : '▼'} {Math.abs(deltaPct).toFixed(1)}%
                 </span>
@@ -171,7 +171,7 @@ const KpiChart: React.FC<KpiChartProps> = ({
 
     const renderLinear = () => (
         <div className="w-full">
-            <div className="h-8 bg-white/10 rounded-full overflow-hidden">
+            <div className="h-8 rounded-full overflow-hidden" style={{ background: 'var(--chart-progress-bg)' }}>
                 <div
                     className="h-full transition-all"
                     style={{ width: `${percentage}%`, backgroundColor: color }}
@@ -182,7 +182,7 @@ const KpiChart: React.FC<KpiChartProps> = ({
 
     const renderProgress = () => (
         <div className="w-full flex flex-col gap-2">
-            <span className="text-sm font-semibold" style={valueStyles}>{Math.round(percentage)}%</span>
+            <span className="kpi-value text-sm font-semibold" style={valueStyles}>{Math.round(percentage)}%</span>
             {renderLinear()}
         </div>
     );
@@ -199,7 +199,7 @@ const KpiChart: React.FC<KpiChartProps> = ({
         };
         return (
             <svg width="120" height="120">
-                <circle cx="60" cy="60" r={r} stroke="#ffffff30" strokeWidth="10" fill="none" />
+                <circle cx="60" cy="60" r={r} stroke="var(--chart-donut-stroke)" strokeWidth="10" fill="none" />
                 <circle
                     cx="60"
                     cy="60"
@@ -228,7 +228,7 @@ const KpiChart: React.FC<KpiChartProps> = ({
     const renderStatus = () => (
         <div className="flex items-center gap-3">
             <span className="w-3 h-3 rounded-full" style={{ backgroundColor: color }} />
-            <span className="text-lg font-semibold" style={valueStyles}>{formatNumber(currentValue ?? 0)}</span>
+            <span className="kpi-value text-lg font-semibold" style={valueStyles}>{formatNumber(currentValue ?? 0)}</span>
         </div>
     );
 
@@ -241,7 +241,7 @@ const KpiChart: React.FC<KpiChartProps> = ({
                 {/* Bullet Bar + Pointer + Value (all aligned at markerPosition) */}
                 <div className="relative h-6 w-full flex items-end">
                     {/* Background bar */}
-                    <div className="absolute bottom-0 left-0 right-0 h-2 rounded overflow-hidden bg-white/20">
+                    <div className="absolute bottom-0 left-0 right-0 h-2 rounded overflow-hidden" style={{ background: 'var(--chart-progress-bg)' }}>
                         {/* Color ranges */}
                         {kpiConfig?.colorRanges?.map((range, index) => {
                             const left = getPercentage(range.min);
@@ -305,7 +305,7 @@ const KpiChart: React.FC<KpiChartProps> = ({
     const renderIconKpi = () => (
         <div className="flex items-center gap-3">
             <span className="text-3xl">📊</span>
-            <span className="text-xl font-bold" style={valueStyles}>{formatNumber(currentValue ?? 0)}</span>
+            <span className="kpi-value text-xl font-bold" style={valueStyles}>{formatNumber(currentValue ?? 0)}</span>
         </div>
     );
 
@@ -348,7 +348,7 @@ const KpiChart: React.FC<KpiChartProps> = ({
             arrow
             disableHoverListener={!hasDescription}
         >
-            <div className="h-full w-full rounded-xl p-4 flex flex-col" style={backgroundStyle}>
+            <div className="kpi-chart-widget h-full w-full rounded-xl p-4 flex flex-col" style={backgroundStyle}>
 
                 <h3 className="mb-4 font-bold" style={titleStyles}>{title}</h3>
 
@@ -357,7 +357,7 @@ const KpiChart: React.FC<KpiChartProps> = ({
                 </div>
                 {/* Legend for color ranges when showLabels is enabled */}
                 {showLabels && kpiConfig.colorRanges && kpiConfig.colorRanges.length > 0 && (
-                    <div className="mt-4 pt-3 border-t border-white/20">
+                    <div className="mt-4 pt-3 border-t kpi-legend" style={{ borderColor: 'var(--chart-legend-border)' }}>
                         <div className="flex flex-wrap gap-2 justify-center items-center">
                             {kpiConfig.colorRanges.map((range, index) => (
                                 <div
@@ -365,10 +365,10 @@ const KpiChart: React.FC<KpiChartProps> = ({
                                     className="flex items-center gap-1.5"
                                 >
                                     <div
-                                        className="w-3 h-3 rounded border border-white/30 flex-shrink-0"
-                                        style={{ backgroundColor: range.color }}
+                                        className="w-3 h-3 rounded flex-shrink-0"
+                                        style={{ backgroundColor: range.color, border: '1px solid var(--chart-legend-border)' }}
                                     />
-                                    <span className="text-xs text-white/90 font-medium" style={labelStyles}>
+                                    <span className="text-xs font-medium kpi-legend-label" style={labelStyles}>
                                         {range.label || `${formatNumber(range.min)} - ${formatNumber(range.max)}`}
                                     </span>
                                 </div>

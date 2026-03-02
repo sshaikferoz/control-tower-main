@@ -15,8 +15,15 @@ export interface UIConfiguration {
         imageBase64: string;
         useBase64: boolean;
         opacity: number;
-        fallbackColor: string; // NEW
-        thumbnailBase64?: string; // NEW
+        fallbackColor: string;
+        fallbackColorLight?: string; // Fallback when no image in light mode
+        thumbnailBase64?: string;
+        mode: 'light' | 'dark'; // Which image to show: dark (existing) or light
+        // Light mode image (separate from dark)
+        imageUrlLight?: string;
+        imageBase64Light?: string;
+        useBase64Light?: boolean;
+        thumbnailBase64Light?: string;
     };
     chatbot: {
         enabled: boolean;
@@ -64,8 +71,13 @@ export const defaultConfiguration: UIConfiguration = {
         imageBase64: '',
         useBase64: false,
         opacity: 100,
-        fallbackColor: '#1a1a2e', // NEW
-        thumbnailBase64: `url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAUCAYAAACNiR0NAAACSUlEQVR4AZ3Ba45VRRQG0PXVqXNfDXSbyHSc/0j4o9Ag9OOeR20BEyImRnGtzK9/Kd/EjwvxTfdV/C+Jv+vED0v8k+5HJP5N9/RR0tQYKEmYuppmRFpX2yqJSmSKWq7SJsZOFWNTVSg9mVCSqD7TZzVKTjdKkSY+21ZRmGldjUGRKtJE0aLXvpDGPEuL9K4qrJvcvGAM1RZfRBjF4STbSkXtVxkrU5dp0qTJ8SyXl9y+VkUOZy438uqOPssg8+yrGrJtTJ2UtE7riBq7nsstxyPzSdsXYzrIi1v2Xb17y9gZg4T5pBKpwdQQOUxqW6nieNBz97MaG+tiX64yn9S2sg+en1QVbWLq2umoBS3GNrSXZ+PTR25eShrXR/00x9Yu1r20aVej+HBP76bLyZ5J9l0dz2pbOR4Zpd2cpHeHu580u23Z7Peb9nx/b9qu5vPB8cUL9k0uFxmb7eFBLVdjntXTI9Mkh5Pc3mk3L9XDo+XNG2Mftnf3RpU+9sXTb78yBjW0y43x/Mi+M8/UYLkyBsW4Xk0txsMntW9yPlvfvWd5NvXolitCQuvGupCJ05kqCuvK1GnU8mxczjKGcX2WFrUujF07vdJSgyrGoM9ojJ1tJSHoE31S28q+qt/fy7FLb1SJz2qzfXirlc8S+oGxI7TQQgsh88wUpjDPcjgY12dpMV1OJKSpGrrWqGJsCG0winmmBi00hEyT1ruB2lGllpXDgSqqdPPZ90LDumHzRflTYfe9Et+0SfdXif8uvhNfdV+F+AHxTXznD8cPLyVbAg4NAAAAAElFTkSuQmCC)`
+        fallbackColor: '#1a1a2e',
+        fallbackColorLight: '#F7F8FA',
+        thumbnailBase64: `url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAUCAYAAACNiR0NAAACSUlEQVR4AZ3Ba45VRRQG0PXVqXNfDXSbyHSc/0j4o9Ag9OOeR20BEyImRnGtzK9/Kd/EjwvxTfdV/C+Jv+vED0v8k+5HJP5N9/RR0tQYKEmYuppmRFpX2yqJSmSKWq7SJsZOFWNTVSg9mVCSqD7TZzVKTjdKkSY+21ZRmGldjUGRKtJE0aLXvpDGPEuL9K4qrJvcvGAM1RZfRBjF4STbSkXtVxkrU5dp0qTJ8SyXl9y+VkUOZy438uqOPssg8+yrGrJtTJ2UtE7riBq7nsstxyPzSdsXYzrIi1v2Xb17y9gZg4T5pBKpwdQQOUxqW6nieNBz97MaG+tiX64yn9S2sg+en1QVbWLq2umoBS3GNrSXZ+PTR25eShrXR/00x9Yu1r20aVej+HBP76bLyZ5J9l0dz2pbOR4Zpd2cpHeHu580u23Z7Peb9nx/b9qu5vPB8cUL9k0uFxmb7eFBLVdjntXTI9Mkh5Pc3mk3L9XDo+XNG2Mftnf3RpU+9sXTb78yBjW0y43x/Mi+M8/UYLkyBsW4Xk0txsMntW9yPlvfvWd5NvXolitCQuvGupCJ05kqCuvK1GnU8mxczjKGcX2WFrUujF07vdJSgyrGoM9ojJ1tJSHoE31S28q+qt/fy7FLb1SJz2qzfXirlc8S+oGxI7TQQgsh88wUpjDPcjgY12dpMV1OJKSpGrrWqGJsCG0winmmBi00hEyT1ruB2lGllpXDgSqqdPPZ90LDumHzRflTYfe9Et+0SfdXif8uvhNfdV+F+AHxTXznD8cPLyVbAg4NAAAAAElFTkSuQmCC)`,
+        mode: 'dark',
+        imageUrlLight: `${process.env.NEXT_PUBLIC_BSP_NAME}/background/bg-low.png`,
+        imageBase64Light: '',
+        useBase64Light: false,
     },
     chatbot: {
         enabled: false,
@@ -132,6 +144,15 @@ export class ConfigurationManager {
             const serverConfig = await sapODataService.fetchSettingsByTabId(tabId);
 
             if (serverConfig) {
+                // Ensure background has mode and light image fields for backward compatibility
+                if (serverConfig.background) {
+                    const bg = serverConfig.background as Record<string, unknown>;
+                    if (!('mode' in bg)) bg.mode = 'dark';
+                    if (!('imageUrlLight' in bg)) bg.imageUrlLight = '';
+                    if (!('imageBase64Light' in bg)) bg.imageBase64Light = '';
+                    if (!('useBase64Light' in bg)) bg.useBase64Light = false;
+                    serverConfig.background = bg as UIConfiguration['background'];
+                }
                 // Ensure the announcement config has the new structure
                 if (serverConfig.announcement && !('items' in serverConfig.announcement)) {
                     // Migrate old format to new format
@@ -198,37 +219,43 @@ export class ConfigurationManager {
     }
 
     /**
-     * Apply background styling based on configuration
+     * Apply background styling based on configuration.
+     * @param theme - When provided, uses theme to pick light/dark image (e.g. from useTheme()).
+     *               Otherwise falls back to configuration.background.mode.
      */
-    getBackgroundStyle(configuration: UIConfiguration): React.CSSProperties {
+    getBackgroundStyle(configuration: UIConfiguration, theme?: 'light' | 'dark'): React.CSSProperties {
+        const mode = theme ?? configuration.background.mode ?? 'dark';
+        const useLight = mode === 'light';
+        const fallbackColor = useLight
+            ? (configuration.background.fallbackColorLight ?? '#F7F8FA')
+            : (configuration.background.fallbackColor ?? '#1a1a2e');
+
         const baseStyle: React.CSSProperties = {
-            backgroundColor: configuration.background.fallbackColor, // Always shows immediately
+            backgroundColor: fallbackColor,
         };
 
         if (!configuration.background.enabled) {
             return baseStyle;
         }
-
-        const fullImage = configuration.background.useBase64
-            ? configuration.background.imageBase64
-            : configuration.background.imageUrl;
+        const fullImage = useLight
+            ? (configuration.background.useBase64Light ? configuration.background.imageBase64Light : configuration.background.imageUrlLight)
+            : (configuration.background.useBase64 ? configuration.background.imageBase64 : configuration.background.imageUrl);
+        const thumbnail = useLight ? configuration.background.thumbnailBase64Light : configuration.background.thumbnailBase64;
 
         if (!fullImage) {
             return baseStyle;
         }
 
-        // If thumbnail exists, show both (CSS loads them automatically)
-        if (configuration.background.thumbnailBase64) {
+        if (thumbnail) {
             return {
                 ...baseStyle,
-                backgroundImage: `url('${fullImage}'), url('${configuration.background.thumbnailBase64}')`,
+                backgroundImage: `url('${fullImage}'), url('${thumbnail}')`,
                 backgroundSize: 'cover',
                 backgroundPosition: 'center',
                 opacity: configuration.background.opacity / 100,
             };
         }
 
-        // No thumbnail - just full image
         return {
             ...baseStyle,
             backgroundImage: `url('${fullImage}')`,

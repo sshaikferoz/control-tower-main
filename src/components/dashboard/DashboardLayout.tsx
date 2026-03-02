@@ -27,8 +27,8 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
 }) => {
     return (
         <div
-            className="flex h-screen bg-gradient-to-br from-[#0a1a35] to-[#1a3a6b]"
-            style={backgroundStyle}
+            className="flex h-screen transition-colors duration-300"
+            style={{ background: 'var(--dashboard-bg)', ...backgroundStyle }}
         >
             {/* Show sidebar (hide in standalone mode) */}
             {!isStandaloneAllowed && (

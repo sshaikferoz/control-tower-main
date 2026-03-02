@@ -28,14 +28,18 @@ const MenuIcon: React.FC<{
     const outer = iconSizeClasses[size];
     const inner = iconInnerClasses[size];
 
+    const iconBgClass = 'rounded-lg';
+    const iconColorClass = 'text-[var(--primary2,#00A3E0)]';
+
     // Custom icon from public/icons (e.g. "dashboard-icon.png")
     if (iconType && typeof iconType === 'string' && MENU_ICON_IDS.has(iconType)) {
         return (
-            <span className={`${outer} mr-2 inline-flex flex-shrink-0 items-center justify-center rounded-lg bg-white/10`}>
+            <span className={`${outer} mr-2 inline-flex flex-shrink-0 items-center justify-center ${iconBgClass}`} style={{ background: 'var(--widget-surface)' }}>
                 <img
                     src={`${DASHBOARD_MENU_ICON_BASE_URL}/${iconType}`}
                     alt=""
-                    className={`${inner} object-contain brightness-0 invert`}
+                    className={`${inner} object-contain`}
+                    style={{ filter: 'invert(var(--icon-invert, 0))' }}
                 />
             </span>
         );
@@ -43,9 +47,9 @@ const MenuIcon: React.FC<{
 
     if (iconType === 'dashboard') {
         return (
-            <span className={`${outer} mr-2 inline-flex items-center justify-center rounded-lg bg-white/10`}>
+            <span className={`${outer} mr-2 inline-flex items-center justify-center ${iconBgClass}`} style={{ background: 'var(--widget-surface)' }}>
                 <svg
-                    className={size === 'large' ? 'h-8 w-8 text-cyan-300' : 'h-3.5 w-3.5 text-cyan-300'}
+                    className={`${size === 'large' ? 'h-8 w-8' : 'h-3.5 w-3.5'} ${iconColorClass}`}
                     viewBox="0 0 16 16"
                     fill="none"
                     xmlns="http://www.w3.org/2000/svg"
@@ -61,9 +65,9 @@ const MenuIcon: React.FC<{
 
     if (iconType === 'user') {
         return (
-            <span className={`${outer} mr-2 inline-flex items-center justify-center rounded-lg bg-white/10`}>
+            <span className={`${outer} mr-2 inline-flex items-center justify-center ${iconBgClass}`} style={{ background: 'var(--widget-surface)' }}>
                 <svg
-                    className={size === 'large' ? 'h-8 w-8 text-cyan-300' : 'h-3.5 w-3.5 text-cyan-300'}
+                    className={`${size === 'large' ? 'h-8 w-8' : 'h-3.5 w-3.5'} ${iconColorClass}`}
                     viewBox="0 0 16 16"
                     fill="none"
                     xmlns="http://www.w3.org/2000/svg"
@@ -82,9 +86,9 @@ const MenuIcon: React.FC<{
 
     // Default: report/document icon
     return (
-        <span className={`${outer} mr-2 inline-flex items-center justify-center rounded-lg bg-white/10`}>
+        <span className={`${outer} mr-2 inline-flex items-center justify-center ${iconBgClass}`} style={{ background: 'var(--widget-surface)' }}>
             <svg
-                className={size === 'large' ? 'h-8 w-8 text-cyan-300' : 'h-3.5 w-3.5 text-cyan-300'}
+                className={`${size === 'large' ? 'h-8 w-8' : 'h-3.5 w-3.5'} ${iconColorClass}`}
                 viewBox="0 0 16 16"
                 fill="none"
                 xmlns="http://www.w3.org/2000/svg"
@@ -119,17 +123,20 @@ const SingleDashboardCard: React.FC<{
         <button
             type="button"
             onClick={handleClick}
-            className="group flex h-full w-full cursor-pointer flex-col rounded-lg border border-transparent p-4 text-left transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400"
+            className="group flex h-full min-h-0 w-full cursor-pointer flex-col rounded-lg p-3 text-left transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary2,#00A3E0)]"
+            style={{ border: '1px solid var(--widget-border)', background: 'var(--widget-surface)' }}
+            onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--widget-surface-hover)'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = 'var(--widget-surface)'; }}
         >
             <div className="mb-3 flex flex-shrink-0 justify-start">
                 <MenuIcon type={item.iconType} size="large" />
             </div>
-            <div className="min-w-0 flex-1">
-                <span className="block text-base font-semibold text-white group-hover:text-cyan-200">
+            <div className="flex min-w-0 flex-col justify-start">
+                <span className="block text-base font-semibold text-[var(--text-neutral)] group-hover:text-[#00A3E0]">
                     {targetReport.name || 'Untitled report'}
                 </span>
                 {targetReport.description && (
-                    <span className="mt-0.5 block line-clamp-3 text-sm text-white/60">
+                    <span className="mt-1 block line-clamp-3 text-sm leading-snug text-[var(--text-muted)]">
                         {targetReport.description}
                     </span>
                 )}
@@ -153,22 +160,25 @@ const DashboardMenuItem: React.FC<{
         <button
             type="button"
             onClick={handleClick}
-            className="group flex w-full cursor-pointer items-center justify-between rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-left text-sm text-white transition-colors hover:bg-white/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400"
+            className="group flex w-full cursor-pointer items-center justify-between rounded-lg px-3 py-2 text-left text-sm text-[var(--text-neutral)] transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary2,#00A3E0)]"
+            style={{ border: '1px solid var(--widget-border)', background: 'var(--widget-surface)' }}
+            onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--widget-surface-hover)'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = 'var(--widget-surface)'; }}
         >
-            <div className="flex flex-1 items-start gap-2">
+            <div className="flex flex-1 items-center gap-2">
                 <MenuIcon type={item.iconType} />
-                <div className="flex flex-col">
-                    <span className="text-xs font-semibold text-white group-hover:text-cyan-200">
+                <div className="flex min-w-0 flex-1 flex-col">
+                    <span className="text-xs font-semibold text-[var(--text-neutral)] group-hover:text-[var(--primary2,#00A3E0)]">
                         {targetReport.name || 'Untitled report'}
                     </span>
                     {targetReport.description && (
-                        <span className="mt-0.5 line-clamp-2 text-[0.65rem] text-white/70">
+                        <span className="mt-0.5 line-clamp-2 text-[0.65rem] leading-tight text-[var(--text-muted)]">
                             {targetReport.description}
                         </span>
                     )}
                 </div>
             </div>
-            <span className="ml-3 flex items-center text-[0.65rem] text-cyan-300">
+            <span className="ml-3 flex items-center text-[0.65rem] text-[var(--primary2,#00A3E0)]">
                 Open
                 <svg
                     className="ml-1 h-3 w-3"
@@ -211,12 +221,11 @@ const DashboardMenu: React.FC<DashboardMenuProps> = ({
         });
     }, [items, searchQuery]);
 
-    const base = backgroundColor || '#00214E';
-    const light = backgroundColor ? `${backgroundColor}80` : '#0164B0';
+    const accentColor = backgroundColor || '#00A3E0';
 
     const backgroundStyle: React.CSSProperties = {
-        backgroundImage: `linear-gradient(to bottom, ${base}, ${light})`,
-        color: '#ffffff',
+        background: 'var(--widget-bg)',
+        color: 'var(--text-neutral, #5F6C81)',
     };
 
     // Single card: show tile only when there is an item; no default "Dashboard Menu" title
@@ -227,20 +236,20 @@ const DashboardMenu: React.FC<DashboardMenuProps> = ({
         return (
             <div className="relative h-full w-full">
                 <div
-                    className="flex h-full w-full flex-col rounded-xl border border-[#00214E] bg-[#00214E] text-white"
+                    className="dashboard-menu-widget flex h-full w-full flex-col rounded-xl"
                     style={backgroundStyle}
                 >
                     {title ? (
-                        <div className="px-4 pt-3 pb-2">
+                        <div className="px-4 pt-4 pb-2">
                             <span
-                                className="text-xs font-semibold uppercase tracking-wide text-white/80"
+                                className="text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]"
                                 style={applyTypographyStyles('title', typography)}
                             >
                                 {title}
                             </span>
                         </div>
                     ) : null}
-                    <div className="flex-1 overflow-hidden px-4 pb-4">
+                    <div className="flex-1 overflow-hidden p-4 min-h-0">
                         <SingleDashboardCard item={firstItem} />
                     </div>
                 </div>
@@ -252,20 +261,20 @@ const DashboardMenu: React.FC<DashboardMenuProps> = ({
     return (
         <div className="relative h-full w-full">
             <div
-                className="flex h-full w-full flex-col rounded-xl border border-[#00214E] bg-[#00214E] text-white"
+                className="dashboard-menu-widget flex h-full w-full flex-col rounded-xl"
                 style={backgroundStyle}
             >
                 <div className="flex items-center justify-between gap-3 px-4 pt-3 pb-2">
                     <div className="flex flex-col min-w-0 flex-1">
                         <span
-                            className="text-xs font-semibold uppercase tracking-wide text-white/80"
+                            className="text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]"
                             style={applyTypographyStyles('title', typography)}
                         >
                             {title || 'Dashboard Menu'}
                         </span>
                     </div>
-                    <div className="flex-shrink-0 flex items-center rounded-md border border-white/20 bg-white/10 focus-within:border-cyan-400 focus-within:ring-1 focus-within:ring-cyan-400 w-32 sm:w-40">
-                        <span className="pointer-events-none pl-2.5 text-white/50" aria-hidden>
+                    <div className="flex-shrink-0 flex items-center rounded-md w-32 sm:w-40 focus-within:ring-1 focus-within:ring-[var(--primary2,#00A3E0)] focus-within:border-[var(--primary2,#00A3E0)]" style={{ border: '1px solid var(--widget-border)', background: 'var(--widget-surface)' }}>
+                        <span className="pointer-events-none pl-2.5 text-[var(--text-muted)]" aria-hidden>
                             <svg className="h-3.5 w-3.5" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
                                 <circle cx="7" cy="7" r="4.5" stroke="currentColor" strokeWidth="1.3" />
                                 <path d="M10.5 10.5L13 13" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
@@ -276,7 +285,8 @@ const DashboardMenu: React.FC<DashboardMenuProps> = ({
                             placeholder="Search..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full min-w-0 rounded-md bg-transparent px-2 py-1.5 pr-2 text-xs text-white placeholder:text-white/50 focus:outline-none"
+                            className="dashboard-menu-search w-full min-w-0 rounded-md bg-transparent px-2 py-1.5 pr-2 text-xs focus:outline-none"
+                            style={{ color: 'var(--text-neutral)' }}
                             aria-label="Search menu items"
                         />
                     </div>
@@ -285,14 +295,14 @@ const DashboardMenu: React.FC<DashboardMenuProps> = ({
                 <div className="flex-1 overflow-y-auto px-4 pb-4 pt-1">
                     {items.length === 0 ? (
                         <div className="flex h-full items-center justify-center">
-                            <span className="text-xs text-white/70">
+                            <span className="text-xs text-[var(--text-muted)]">
                                 No reports configured. Use the configuration panel to add menu
                                 items.
                             </span>
                         </div>
                     ) : filteredItems.length === 0 ? (
                         <div className="flex h-full items-center justify-center">
-                            <span className="text-xs text-white/70">
+                            <span className="text-xs text-[var(--text-muted)]">
                                 No items match &quot;{searchQuery}&quot;.
                             </span>
                         </div>

@@ -335,14 +335,11 @@ const Header: React.FC<HeaderProps> = ({ configuration, tabId, onSearchSelect, o
 
     return (
         <nav
-            className={`relative mx-4 mt-4 mb-6 flex h-[73px] w-[calc(100%-2rem)] items-center justify-between rounded-lg px-6 py-4`}
+            className={`relative mx-4 mt-4 flex h-[73px] w-[calc(100%-2rem)] items-center justify-between rounded-lg px-6 py-4`}
             style={{
-                backgroundImage: announcementConfig?.enabled
-                    ? `url('${process.env.NEXT_PUBLIC_BSP_NAME}/background/announcement-bg.png')`
-                    : `linear-gradient(to right, #00214E, ${brandingConfig.primaryColor})`,
-                backgroundRepeat: 'no-repeat',
-                backgroundSize: 'cover',
-                backgroundPosition: 'center',
+                background: announcementConfig?.enabled
+                    ? `url('${process.env.NEXT_PUBLIC_BSP_NAME}/background/announcement-bg.png') no-repeat center / cover`
+                    : 'var(--sidebar-bg)',
             }}
         >
             {/* Left - Logo and App Name */}

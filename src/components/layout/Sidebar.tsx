@@ -18,6 +18,7 @@ import {
     LinkIcon,
 } from '@heroicons/react/24/outline';
 import { UserProfile } from './UserProfile';
+import { ThemeSettingsButton } from './ThemeSettingsButton';
 import { SidebarItemModal } from '../modals/SidebarItemModal';
 import { LoadingSpinner } from '../ui/LoadingSpinner';
 import { LoadingScreen } from '../ui/LoadingScreen';
@@ -285,8 +286,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
     return (
         <div
-            className={`flex h-screen flex-col bg-gradient-to-b from-[#00214E] to-[#0164B0] p-4 text-white ease-in-out ${isCollapsed ? 'w-16' : 'w-64 min-w-[16rem]'
+            className={`flex h-screen flex-col p-4 text-white ease-in-out ${isCollapsed ? 'w-16' : 'w-64 min-w-[16rem]'
                 }`}
+            style={{ background: 'var(--sidebar-bg)', boxShadow: '0px 4px 4px rgba(0, 0, 0, 0.25)' }}
         >
             {/* Header with Toggle Button */}
             <div className="flex flex-row items-center">
@@ -317,7 +319,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
                             placeholder="Search Menu"
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
-                            className="w-full rounded-md bg-[#ffffff20] p-2 pl-10 text-white placeholder-gray-300 outline-none"
+                            className="w-full rounded-md p-2 pl-10 text-[var(--sidebar-text)] outline-none"
+                            style={{
+                                background: 'rgba(255,255,255,0.2)',
+                                border: '1px solid var(--sidebar-search-border)',
+                            }}
                             disabled={isSaving}
                         />
                     </div>
@@ -378,9 +384,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
                                                     ref={provided.innerRef}
                                                     {...provided.draggableProps}
                                                     className={`group relative flex cursor-pointer items-center rounded px-3 py-2 transition-colors ${selectedItem === item.id
-                                                        ? 'bg-white text-black'
-                                                        : 'text-white hover:bg-[#ffffff30]'
+                                                        ? 'text-[var(--sidebar-text-active)]'
+                                                        : 'text-[var(--sidebar-text)] hover:bg-[#ffffff30]'
                                                         } ${isSaving ? 'opacity-50' : ''} ${isCollapsed ? 'justify-center' : ''}`}
+                                                    style={selectedItem === item.id ? { background: 'var(--sidebar-active-bg)', boxShadow: '0px 4px 4px rgba(69, 84, 110, 0.1)' } : {}}
                                                     onClick={() => !editMode && !isSaving && onItemSelect(item)}
                                                     title={isCollapsed ? item.name : ''}
                                                 >
@@ -500,13 +507,19 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     </DragDropContext>
                 )}
             </nav>
-            {/* User Profile - Hidden when collapsed */}
+            {/* User Profile & Theme Toggle - Hidden when collapsed */}
             {!isCollapsed && (
-                <UserProfile
-                    userInfo={userInfo}
-                    userInfoLoading={userInfoLoading}
-                    formatTime={formatTime}
-                />
+                <div className="mt-auto flex flex-col gap-3 border-t border-white/10 pt-4">
+                    <UserProfile
+                        userInfo={userInfo}
+                        userInfoLoading={userInfoLoading}
+                        formatTime={formatTime}
+                    />
+                    <div className="flex items-center justify-between">
+                        <span className="text-xs font-medium text-[var(--sidebar-text)] opacity-80">Theme</span>
+                        <ThemeSettingsButton />
+                    </div>
+                </div>
             )}
             {/* Sidebar Item Modal */}
             <SidebarItemModal

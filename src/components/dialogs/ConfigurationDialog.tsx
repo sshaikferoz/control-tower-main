@@ -26,10 +26,12 @@ export const ConfigurationDialog: React.FC<ConfigurationDialogProps> = ({
     const [isSaving, setIsSaving] = useState(false);
     const [isResetting, setIsResetting] = useState(false);
     const [backgroundPreview, setBackgroundPreview] = useState<string>('');
+    const [backgroundPreviewLight, setBackgroundPreviewLight] = useState<string>('');
     const [logoPreview, setLogoPreview] = useState<string>('');
     const [activeTab, setActiveTab] = useState(0);
 
     const backgroundFileRef = useRef<HTMLInputElement>(null);
+    const backgroundFileRefLight = useRef<HTMLInputElement>(null);
     const logoFileRef = useRef<HTMLInputElement>(null);
     const [newAnnouncement, setNewAnnouncement] = useState({ title: '', description: '' });
     const [editingAnnouncementId, setEditingAnnouncementId] = useState<string | null>(null);
@@ -45,6 +47,15 @@ export const ConfigurationDialog: React.FC<ConfigurationDialogProps> = ({
             setBackgroundPreview(formData.background.imageBase64);
         } else if (formData.background.imageUrl) {
             setBackgroundPreview(formData.background.imageUrl);
+        } else {
+            setBackgroundPreview('');
+        }
+        if (formData.background.useBase64Light && formData.background.imageBase64Light) {
+            setBackgroundPreviewLight(formData.background.imageBase64Light);
+        } else if (formData.background.imageUrlLight) {
+            setBackgroundPreviewLight(formData.background.imageUrlLight);
+        } else {
+            setBackgroundPreviewLight('');
         }
     }, [formData.background]);
 
@@ -74,7 +85,7 @@ export const ConfigurationDialog: React.FC<ConfigurationDialogProps> = ({
         });
     };
 
-    // Handle background file upload
+    // Handle background file upload (dark)
     const handleBackgroundUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
         if (file) {
@@ -96,6 +107,33 @@ export const ConfigurationDialog: React.FC<ConfigurationDialogProps> = ({
                 setSaveMessage({
                     type: 'error',
                     text: 'Failed to process background image.',
+                });
+            }
+        }
+    };
+
+    // Handle background file upload (light)
+    const handleBackgroundUploadLight = async (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        if (file) {
+            try {
+                const base64 = await fileToBase64(file);
+                setFormData({
+                    ...formData,
+                    background: {
+                        ...formData.background,
+                        imageBase64Light: base64,
+                        useBase64Light: true,
+                    },
+                });
+                if (backgroundFileRefLight.current) {
+                    backgroundFileRefLight.current.value = '';
+                }
+            } catch (error) {
+                console.error('Error converting file to base64:', error);
+                setSaveMessage({
+                    type: 'error',
+                    text: 'Failed to process light background image.',
                 });
             }
         }
@@ -326,6 +364,47 @@ export const ConfigurationDialog: React.FC<ConfigurationDialogProps> = ({
                     {/* Background Settings */}
                     {activeTab === 0 && (
                         <div className="space-y-6">
+                            <div>
+                                <label className="mb-3 block text-sm font-medium text-gray-300">
+                                    Background Mode
+                                </label>
+                                <div className="flex gap-4">
+                                    <label className="flex cursor-pointer items-center gap-2">
+                                        <input
+                                            type="radio"
+                                            name="bg-mode"
+                                            checked={(formData.background.mode ?? 'dark') === 'dark'}
+                                            disabled={isSaving || isResetting}
+                                            onChange={() =>
+                                                setFormData({
+                                                    ...formData,
+                                                    background: { ...formData.background, mode: 'dark' },
+                                                })
+                                            }
+                                            className="h-4 w-4 border-gray-600 bg-gray-700 text-blue-600 focus:ring-blue-500 disabled:opacity-50"
+                                        />
+                                        <span className="text-gray-300">Dark</span>
+                                    </label>
+                                    <label className="flex cursor-pointer items-center gap-2">
+                                        <input
+                                            type="radio"
+                                            name="bg-mode"
+                                            checked={(formData.background.mode ?? 'dark') === 'light'}
+                                            disabled={isSaving || isResetting}
+                                            onChange={() =>
+                                                setFormData({
+                                                    ...formData,
+                                                    background: { ...formData.background, mode: 'light' },
+                                                })
+                                            }
+                                            className="h-4 w-4 border-gray-600 bg-gray-700 text-blue-600 focus:ring-blue-500 disabled:opacity-50"
+                                        />
+                                        <span className="text-gray-300">Light</span>
+                                    </label>
+                                </div>
+                                <small className="text-gray-400">Choose which background image to display</small>
+                            </div>
+
                             <div className="flex items-center justify-between">
                                 <label className="block text-sm font-medium text-gray-300">
                                     Enable Background Image
@@ -349,15 +428,14 @@ export const ConfigurationDialog: React.FC<ConfigurationDialogProps> = ({
 
                             {formData.background.enabled && (
                                 <>
-                                    <div>
-                                        <label className="mb-3 block text-sm font-medium text-gray-300">
-                                            Background Source
-                                        </label>
-                                        <div className="space-y-3">
-                                            <div className="flex items-center gap-2">
+                                    {/* Dark mode background */}
+                                    <div className="rounded-lg border border-[#3a5a8b] p-4 space-y-4">
+                                        <h4 className="text-sm font-medium text-gray-200">Dark Mode Background</h4>
+                                        <div className="flex gap-4">
+                                            <label className="flex items-center gap-2">
                                                 <input
                                                     type="radio"
-                                                    id="bg-url"
+                                                    name="bg-dark-source"
                                                     checked={!formData.background.useBase64}
                                                     disabled={isSaving || isResetting}
                                                     onChange={() =>
@@ -368,14 +446,12 @@ export const ConfigurationDialog: React.FC<ConfigurationDialogProps> = ({
                                                     }
                                                     className="h-4 w-4 border-gray-600 bg-gray-700 text-blue-600 focus:ring-blue-500 disabled:opacity-50"
                                                 />
-                                                <label htmlFor="bg-url" className="text-gray-300">
-                                                    Use Image URL
-                                                </label>
-                                            </div>
-                                            <div className="flex items-center gap-2">
+                                                <span className="text-gray-300">URL</span>
+                                            </label>
+                                            <label className="flex items-center gap-2">
                                                 <input
                                                     type="radio"
-                                                    id="bg-upload"
+                                                    name="bg-dark-source"
                                                     checked={formData.background.useBase64}
                                                     disabled={isSaving || isResetting}
                                                     onChange={() =>
@@ -386,18 +462,10 @@ export const ConfigurationDialog: React.FC<ConfigurationDialogProps> = ({
                                                     }
                                                     className="h-4 w-4 border-gray-600 bg-gray-700 text-blue-600 focus:ring-blue-500 disabled:opacity-50"
                                                 />
-                                                <label htmlFor="bg-upload" className="text-gray-300">
-                                                    Upload Image
-                                                </label>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    {!formData.background.useBase64 && (
-                                        <div>
-                                            <label className="mb-2 block text-sm font-medium text-gray-300">
-                                                Custom Background URL
+                                                <span className="text-gray-300">Upload</span>
                                             </label>
+                                        </div>
+                                        {!formData.background.useBase64 ? (
                                             <input
                                                 type="text"
                                                 value={formData.background.imageUrl}
@@ -408,19 +476,11 @@ export const ConfigurationDialog: React.FC<ConfigurationDialogProps> = ({
                                                         background: { ...formData.background, imageUrl: e.target.value },
                                                     })
                                                 }
-                                                placeholder="https://example.com/background.jpg"
+                                                placeholder="https://example.com/dark-bg.jpg"
                                                 className="w-full rounded border border-[#3a5a8b] bg-[#2a4a7b] p-3 text-white outline-none focus:border-blue-500 disabled:opacity-50"
                                             />
-                                            <small className="text-gray-400">Enter a custom background image URL</small>
-                                        </div>
-                                    )}
-
-                                    {formData.background.useBase64 && (
-                                        <div>
-                                            <label className="mb-2 block text-sm font-medium text-gray-300">
-                                                Upload Background Image
-                                            </label>
-                                            <div className="w-full rounded border-2 border-dashed border-[#3a5a8b] bg-[#2a4a7b] p-6 text-center hover:border-blue-500">
+                                        ) : (
+                                            <div className="rounded border-2 border-dashed border-[#3a5a8b] bg-[#2a4a7b] p-4 text-center">
                                                 <input
                                                     ref={backgroundFileRef}
                                                     type="file"
@@ -430,40 +490,87 @@ export const ConfigurationDialog: React.FC<ConfigurationDialogProps> = ({
                                                     className="hidden"
                                                     id="bg-file-upload"
                                                 />
-                                                <label
-                                                    htmlFor="bg-file-upload"
-                                                    className={`cursor-pointer text-gray-300 hover:text-white ${isSaving || isResetting ? 'cursor-not-allowed opacity-50' : ''
-                                                        }`}
-                                                >
+                                                <label htmlFor="bg-file-upload" className={`cursor-pointer text-gray-300 hover:text-white ${isSaving || isResetting ? 'cursor-not-allowed opacity-50' : ''}`}>
                                                     <i className="pi pi-upload mb-2 text-2xl" />
-                                                    <div>Choose Background Image</div>
-                                                    <small className="text-gray-400">
-                                                        Maximum file size: 5MB. Supported formats: JPG, PNG, GIF, WebP
-                                                    </small>
+                                                    <div>Choose Image</div>
                                                 </label>
                                             </div>
+                                        )}
+                                        <div className="h-20 rounded border border-[#3a5a8b] bg-[#2a4a7b]" style={{ backgroundImage: backgroundPreview ? `url('${backgroundPreview}')` : undefined, backgroundSize: 'cover', backgroundPosition: 'center' }}>
+                                            {!backgroundPreview && <div className="flex h-full items-center justify-center text-gray-500 text-sm">No image</div>}
                                         </div>
-                                    )}
+                                    </div>
 
-                                    {/* Background Preview */}
-                                    <div>
-                                        <label className="mb-2 block text-sm font-medium text-gray-300">Preview</label>
-                                        <div
-                                            className="h-24 w-full overflow-hidden rounded border border-[#3a5a8b] bg-[#2a4a7b]"
-                                            style={{
-                                                backgroundImage: backgroundPreview
-                                                    ? `url('${backgroundPreview}')`
-                                                    : undefined,
-                                                backgroundSize: 'cover',
-                                                backgroundPosition: 'center',
-                                                opacity: formData.background.opacity / 100,
-                                            }}
-                                        >
-                                            {!backgroundPreview && (
-                                                <div className="flex h-full items-center justify-center text-gray-400">
-                                                    No background image selected
-                                                </div>
-                                            )}
+                                    {/* Light mode background */}
+                                    <div className="rounded-lg border border-[#3a5a8b] p-4 space-y-4">
+                                        <h4 className="text-sm font-medium text-gray-200">Light Mode Background</h4>
+                                        <div className="flex gap-4">
+                                            <label className="flex items-center gap-2">
+                                                <input
+                                                    type="radio"
+                                                    name="bg-light-source"
+                                                    checked={!formData.background.useBase64Light}
+                                                    disabled={isSaving || isResetting}
+                                                    onChange={() =>
+                                                        setFormData({
+                                                            ...formData,
+                                                            background: { ...formData.background, useBase64Light: false },
+                                                        })
+                                                    }
+                                                    className="h-4 w-4 border-gray-600 bg-gray-700 text-blue-600 focus:ring-blue-500 disabled:opacity-50"
+                                                />
+                                                <span className="text-gray-300">URL</span>
+                                            </label>
+                                            <label className="flex items-center gap-2">
+                                                <input
+                                                    type="radio"
+                                                    name="bg-light-source"
+                                                    checked={!!formData.background.useBase64Light}
+                                                    disabled={isSaving || isResetting}
+                                                    onChange={() =>
+                                                        setFormData({
+                                                            ...formData,
+                                                            background: { ...formData.background, useBase64Light: true },
+                                                        })
+                                                    }
+                                                    className="h-4 w-4 border-gray-600 bg-gray-700 text-blue-600 focus:ring-blue-500 disabled:opacity-50"
+                                                />
+                                                <span className="text-gray-300">Upload</span>
+                                            </label>
+                                        </div>
+                                        {!formData.background.useBase64Light ? (
+                                            <input
+                                                type="text"
+                                                value={formData.background.imageUrlLight ?? ''}
+                                                disabled={isSaving || isResetting}
+                                                onChange={(e) =>
+                                                    setFormData({
+                                                        ...formData,
+                                                        background: { ...formData.background, imageUrlLight: e.target.value },
+                                                    })
+                                                }
+                                                placeholder="https://example.com/light-bg.jpg"
+                                                className="w-full rounded border border-[#3a5a8b] bg-[#2a4a7b] p-3 text-white outline-none focus:border-blue-500 disabled:opacity-50"
+                                            />
+                                        ) : (
+                                            <div className="rounded border-2 border-dashed border-[#3a5a8b] bg-[#2a4a7b] p-4 text-center">
+                                                <input
+                                                    ref={backgroundFileRefLight}
+                                                    type="file"
+                                                    accept="image/*"
+                                                    disabled={isSaving || isResetting}
+                                                    onChange={handleBackgroundUploadLight}
+                                                    className="hidden"
+                                                    id="bg-file-upload-light"
+                                                />
+                                                <label htmlFor="bg-file-upload-light" className={`cursor-pointer text-gray-300 hover:text-white ${isSaving || isResetting ? 'cursor-not-allowed opacity-50' : ''}`}>
+                                                    <i className="pi pi-upload mb-2 text-2xl" />
+                                                    <div>Choose Image</div>
+                                                </label>
+                                            </div>
+                                        )}
+                                        <div className="h-20 rounded border border-[#3a5a8b] bg-[#2a4a7b]" style={{ backgroundImage: backgroundPreviewLight ? `url('${backgroundPreviewLight}')` : undefined, backgroundSize: 'cover', backgroundPosition: 'center' }}>
+                                            {!backgroundPreviewLight && <div className="flex h-full items-center justify-center text-gray-500 text-sm">No image</div>}
                                         </div>
                                     </div>
                                 </>

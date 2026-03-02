@@ -14,6 +14,9 @@ export const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({ size = 'md', cla
     };
 
     return (
-        <ArrowPathIcon className={`${sizeClasses[size]} animate-spin text-blue-400 ${className}`} />
+        <ArrowPathIcon
+            className={`${sizeClasses[size]} animate-spin ${className}`}
+            style={{ color: 'var(--loader-color)' }}
+        />
     );
 };

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { X } from 'lucide-react';
 import { Section } from '@/services/sapODataService';
+import { SectionIconPicker } from '@/components/ui/SectionIconPicker';
 
 interface NewSectionDialogProps {
   open: boolean;
@@ -20,6 +21,7 @@ export const NewSectionDialog: React.FC<NewSectionDialogProps> = ({
     description: '',
     type: 'SCM Report',
     visible: true,
+    icon: '',
     roles: [] as any[],
   });
 
@@ -71,6 +73,7 @@ export const NewSectionDialog: React.FC<NewSectionDialogProps> = ({
       description: formData.description,
       type: formData.type,
       visible: formData.visible,
+      icon: formData.icon || undefined,
       roles: formData.roles,
       order: 0,
       deleted: false,
@@ -91,6 +94,7 @@ export const NewSectionDialog: React.FC<NewSectionDialogProps> = ({
       description: '',
       type: 'SCM Report',
       visible: true,
+      icon: '',
       roles: [],
     });
     setShowAddRole(false);
@@ -139,6 +143,12 @@ export const NewSectionDialog: React.FC<NewSectionDialogProps> = ({
               rows={3}
             />
           </div>
+
+          <SectionIconPicker
+            label="Icon"
+            value={formData.icon}
+            onChange={(iconId) => setFormData({ ...formData, icon: iconId })}
+          />
 
           <div className="flex items-center justify-between">
             <label className="block text-sm font-medium text-gray-300">Expanded by Default</label>

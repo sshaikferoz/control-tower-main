@@ -2,7 +2,8 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
 import { Button } from 'primereact/button';
-import { ThemeToggleButton } from '@/components/ui/ThemeToggleButton';
+import { useTheme } from '@/contexts/ThemeContext';
+import { SunIcon, MoonIcon } from '@heroicons/react/24/outline';
 import {
     EyeIcon,
     PencilIcon,
@@ -97,6 +98,8 @@ interface DashboardBuilderProps extends Omit<DashboardProps, 'isViewMode' | 'sel
     isSaving?: boolean;
     saveDisabled?: boolean;
     onWidgetRemove?: (widgetId: string) => void; // Optional custom remove handler
+    /** When true, uses transparent background so parent background (e.g. configured) shows through */
+    transparentBackground?: boolean;
 }
 
 /**
@@ -118,7 +121,9 @@ export const DashboardBuilder: React.FC<DashboardBuilderProps> = ({
     isSaving = false,
     saveDisabled = false,
     onWidgetRemove,
+    transparentBackground = false,
 }) => {
+    const { theme, setTheme } = useTheme();
     const [selectedWidgetIds, setSelectedWidgetIds] = useState<string[]>([]);
     const [isViewMode, setIsViewMode] = useState<boolean>(false);
     const [copiedWidget, setCopiedWidget] = useState<{
@@ -520,7 +525,7 @@ export const DashboardBuilder: React.FC<DashboardBuilderProps> = ({
             <div
                 className="relative flex h-screen w-full overflow-hidden"
                 style={{
-                    backgroundColor: 'var(--background)',
+                    backgroundColor: transparentBackground ? 'transparent' : 'var(--background)',
                     color: 'var(--foreground)',
                 } as React.CSSProperties}
             >
@@ -555,7 +560,18 @@ export const DashboardBuilder: React.FC<DashboardBuilderProps> = ({
                                     )}
                                 </Button>
 
-                                <ThemeToggleButton className="shadow-lg" />
+                                <Button
+                                    className="p-button-rounded p-button-secondary shadow-lg flex items-center justify-center"
+                                    onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+                                    tooltip={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+                                    tooltipOptions={{ position: 'top' }}
+                                >
+                                    {theme === 'dark' ? (
+                                        <SunIcon className="h-5 w-5 text-white" />
+                                    ) : (
+                                        <MoonIcon className="h-5 w-5 text-white" />
+                                    )}
+                                </Button>
                             </div>
                         )}
 

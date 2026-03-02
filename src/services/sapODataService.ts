@@ -196,6 +196,8 @@ export interface Section {
     deleted: boolean;
     roles: Role[];
     widgets: Widget[];
+    /** Icon filename from DASHBOARD_MENU_ICONS (e.g. "dashboard-icon.png") */
+    icon?: string;
     // Additional fields for UI state
     isNew?: boolean;
     hasChanges?: boolean;
@@ -404,6 +406,7 @@ class SAPODataService {
                         order: item.SortOrder,
                         description: item.Description,
                         type: item.Type,
+                        icon: item.Type || undefined, // Type field stores icon name in SectionConfSet
                         deleted: item.DelInd === 'X',
                         roles: formattedRoles,
                         widgets: [], // Will be populated separately
@@ -670,7 +673,7 @@ class SAPODataService {
                 Name: section.name,
                 IsVisible: section.visible ? 'X' : '',
                 Description: section.description,
-                Type: section.type,
+                Type: section.icon || section.type || '', // Store icon in Type field for SectionConfSet
                 SortOrder: section.order,
                 DelInd: section.deleted ? 'X' : '',
                 Crudflag: isUpdate ? 'U' : 'C',
@@ -888,7 +891,7 @@ class SAPODataService {
                 Name: section.name,
                 IsVisible: section.visible ? 'X' : '',
                 Description: section.description,
-                Type: section.type,
+                Type: section.icon || section.type || '', // Store icon in Type field for SectionConfSet
                 SortOrder: section.order,
                 DelInd: 'X', // Mark as deleted
                 Crudflag: 'U', // Update operation

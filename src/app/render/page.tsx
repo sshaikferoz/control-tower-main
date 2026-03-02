@@ -125,7 +125,7 @@ const RenderSavedConfig = () => {
                         variant="text"
                         width="40%"
                         height={32}
-                        sx={{ bgcolor: '#0164B0' }}
+                        sx={{ bgcolor: 'var(--skeleton-bg)' }}
                     />
                 </div>
                 <div className="flex-1 p-4">
