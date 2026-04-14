@@ -150,6 +150,8 @@ const mirageServer = (environment = 'development') => {
                 const query = queryParams.query;
 
                 switch (query) {
+                    case 'Y_VENDOR_LIST':
+                        return new Response(200, { 'content-type': 'text/xml' }, otherQueries[query]);
                     case 'YPDO_IPR_FILTER_XML':
                         return new Response(200, { 'content-type': 'text/xml' }, inventoryQueries[query]);
                     case 'YPDO_SCCT_MFR_PROFIL_SPEND_MAP_WITH_VAR':

@@ -23,6 +23,7 @@ type BexQueryResult = EnhancedParseResult | OldParserResult
 interface BexQueryOptions {
     parser?: 'new' | 'old'
     variables?: string // SAP BW variables string (e.g., "VAR_NAME_1=VAR1&VAR_OPERATOR_1=EQ&VAR_VALUE_EXT_1=VALUE1")
+    displayKey?: boolean // Appends display_key=X to include key metadata/columns
     [key: string]: unknown
 }
 
@@ -43,13 +44,22 @@ const fetchBexQuery = async (
     queryName: string,
     options: BexQueryOptions = {}
 ): Promise<BexQueryResult> => {
-    let url = process.env.NODE_ENV === 'development'
+    const useSapDb =
+        process.env.NEXT_PUBLIC_USE_SAP_DB ?? process.env.USE_SAP_DB
+    const sapDbBaseUrl =
+        process.env.NEXT_PUBLIC_PROXY_BASE_URL_SAP_DB ??
+        process.env.PROXY_BASE_URL_SAP_DB
+
+    let url = process.env.NODE_ENV === 'development' && useSapDb !== 'true'
         ? `/api/sap/bc/bsp/sap/zbw_reporting/execute_report_oo.htm?query=${queryName}`
-        : `/sap/bc/bsp/sap/zbw_reporting/execute_report_oo.htm?query=${queryName}`
+        : `${sapDbBaseUrl || ''}/sap/bc/bsp/sap/zbw_reporting/execute_report_oo.htm?query=${queryName}`
 
     // Append variables if provided
     if (options.variables) {
         url += `&variables=${encodeURIComponent(options.variables)}`
+    }
+    if (options.displayKey) {
+        url += '&display_key=X'
     }
 
     try {
@@ -84,11 +94,11 @@ export default function useBexJson(
     queryName: string = '',
     options: UseBexJsonOptions = {}
 ): UseQueryResult<BexQueryResult, Error> {
-    const { parser, variables, ...queryOptions } = options
+    const { parser, variables, displayKey, ...queryOptions } = options
 
     return useQuery<BexQueryResult, Error>({
-        queryKey: ['Bex', queryName, parser, variables],
-        queryFn: () => fetchBexQuery(queryName, { parser, variables }),
+        queryKey: ['Bex', queryName, parser, variables, displayKey],
+        queryFn: () => fetchBexQuery(queryName, { parser, variables, displayKey }),
         ...queryOptions,
     })
 }

@@ -1,8 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import { MenuItem, SidebarModalState } from '../../types';
 import { useUserInfo } from '../../hooks/auth/useUserInfo';
-import { useAdminCheck } from '../../hooks/auth/useAdminCheck';
 import { sapODataService } from '../../services/sapODataService';
 import {
     MagnifyingGlassIcon,
@@ -16,6 +15,9 @@ import {
     TrashIcon,
     ShieldCheckIcon,
     LinkIcon,
+    QuestionMarkCircleIcon,
+    Cog6ToothIcon,
+    XMarkIcon,
 } from '@heroicons/react/24/outline';
 import { UserProfile } from './UserProfile';
 import { ThemeSettingsButton } from './ThemeSettingsButton';
@@ -24,6 +26,7 @@ import { LoadingSpinner } from '../ui/LoadingSpinner';
 import { LoadingScreen } from '../ui/LoadingScreen';
 import { Button } from '../ui/Button';
 import PSCLogo from '@/assets/PSCLogo';
+import Markdown from 'markdown-to-jsx';
 
 interface SidebarProps {
     selectedItem: string; // This should be the ID of the selected item
@@ -32,7 +35,25 @@ interface SidebarProps {
     onMenuItemsChange: (items: MenuItem[]) => void;
     isLoading?: boolean;
     isEditModeAllowed?: boolean;
+    /** Passed from Dashboard to avoid duplicate admin check API calls */
+    isAdmin?: boolean;
 }
+
+interface HelpConfig {
+    text: string;
+    _metadata?: {
+        configName?: string;
+    };
+}
+
+const DEFAULT_HELP_CONFIG: HelpConfig = {
+    text: 'Need assistance? Contact support or open the user guide.',
+};
+
+const stripHtmlTags = (input: string): string => {
+    if (!input) return '';
+    return input.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+};
 
 export const Sidebar: React.FC<SidebarProps> = ({
     selectedItem,
@@ -41,6 +62,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
     onMenuItemsChange,
     isLoading = false,
     isEditModeAllowed = false,
+    isAdmin: isAdminProp = false,
 }) => {
     const [search, setSearch] = useState<string>('');
     const [sidebarModal, setSidebarModal] = useState<SidebarModalState>({
@@ -52,19 +74,119 @@ export const Sidebar: React.FC<SidebarProps> = ({
     const [isSaving, setIsSaving] = useState(false);
     const [isCollapsed, setIsCollapsed] = useState(false);
     const [copiedItemId, setCopiedItemId] = useState<string | null>(null);
+    const [showHelpPanel, setShowHelpPanel] = useState(false);
+    const [showHelpConfigModal, setShowHelpConfigModal] = useState(false);
+    const [helpConfig, setHelpConfig] = useState<HelpConfig>(DEFAULT_HELP_CONFIG);
+    const [helpFormData, setHelpFormData] = useState<HelpConfig>(DEFAULT_HELP_CONFIG);
+    const [helpConfigLoading, setHelpConfigLoading] = useState(true);
+    const [helpConfigSaving, setHelpConfigSaving] = useState(false);
+    const [helpConfigStatus, setHelpConfigStatus] = useState<{ type: 'success' | 'error'; text: string } | null>(
+        null
+    );
+    const helpPanelRef = useRef<HTMLDivElement | null>(null);
 
     const { userInfo, userInfoLoading, formatTime } = useUserInfo();
-    const { isAdmin } = useAdminCheck();
-
+    const isAdmin = isAdminProp;
     useEffect(() => {
         setTempItems([...menuItems]);
     }, [menuItems]);
+
+    useEffect(() => {
+        const fetchHelpConfig = async () => {
+            try {
+                setHelpConfigLoading(true);
+                const remoteConfig = await sapODataService.fetchUIConfig('help');
+                if (remoteConfig) {
+                    const markdownText =
+                        typeof remoteConfig.text === 'string'
+                            ? remoteConfig.text
+                            : typeof remoteConfig.textHtml === 'string'
+                                ? stripHtmlTags(remoteConfig.textHtml)
+                                : DEFAULT_HELP_CONFIG.text;
+                    const normalized: HelpConfig = {
+                        text: markdownText,
+                        _metadata: {
+                            configName: remoteConfig?._metadata?.configName,
+                        },
+                    };
+                    setHelpConfig(normalized);
+                    setHelpFormData(normalized);
+                    return;
+                } else {
+                    setHelpConfig(DEFAULT_HELP_CONFIG);
+                    setHelpFormData(DEFAULT_HELP_CONFIG);
+                }
+            } catch (error) {
+                console.error('Failed to load help configuration:', error);
+                setHelpConfig(DEFAULT_HELP_CONFIG);
+                setHelpFormData(DEFAULT_HELP_CONFIG);
+            } finally {
+                setHelpConfigLoading(false);
+            }
+        };
+
+        fetchHelpConfig();
+    }, []);
+
+    useEffect(() => {
+        const handleOutsideClick = (event: MouseEvent) => {
+            if (!showHelpPanel) return;
+            if (helpPanelRef.current && !helpPanelRef.current.contains(event.target as Node)) {
+                setShowHelpPanel(false);
+            }
+        };
+        document.addEventListener('mousedown', handleOutsideClick);
+        return () => document.removeEventListener('mousedown', handleOutsideClick);
+    }, [showHelpPanel]);
 
     const toggleSidebar = () => {
         setIsCollapsed(!isCollapsed);
         // Exit edit mode when collapsing to avoid UI conflicts
         if (!isCollapsed && editMode) {
             setEditMode(false);
+        }
+        if (!isCollapsed) {
+            setShowHelpPanel(false);
+        }
+    };
+
+    const handleOpenHelpConfig = () => {
+        if (!isAdmin || !isEditModeAllowed) return;
+        setHelpFormData(helpConfig);
+        setHelpConfigStatus(null);
+        setShowHelpConfigModal(true);
+    };
+
+    const handleSaveHelpConfig = async () => {
+        try {
+            setHelpConfigSaving(true);
+            setHelpConfigStatus(null);
+            const payload = {
+                text: helpFormData.text.trim() || DEFAULT_HELP_CONFIG.text,
+            };
+            const saved = await sapODataService.saveUIConfig(
+                'help',
+                payload,
+                helpConfig._metadata?.configName
+            );
+            const updated: HelpConfig = {
+                text: typeof saved.text === 'string' ? saved.text : payload.text,
+                _metadata: {
+                    configName: saved?._metadata?.configName,
+                },
+            };
+            setHelpConfig(updated);
+            setHelpFormData(updated);
+            setHelpConfigStatus({ type: 'success', text: 'Help information saved successfully.' });
+            setTimeout(() => {
+                setShowHelpConfigModal(false);
+                setHelpConfigStatus(null);
+            }, 800);
+        } catch (error) {
+            console.error('Failed to save help configuration:', error);
+            setHelpConfigStatus({ type: 'error', text: 'Unable to save help information. Please try again.' });
+        } finally {
+            setHelpConfigSaving(false);
         }
     };
 
@@ -187,19 +309,20 @@ export const Sidebar: React.FC<SidebarProps> = ({
         if (editMode) {
             try {
                 setIsSaving(true);
-                const itemsWithNewOrder = tempItems.map((item, index) => ({
-                    ...item,
-                    order: index,
-                }));
-
                 const hasOrderChange =
                     tempItems.length === menuItems.length &&
                     tempItems.some(
                         (item, index) =>
                             menuItems[index]?.id !== item.id
                     );
+                const itemsForSave = hasOrderChange
+                    ? tempItems.map((item, index) => ({
+                        ...item,
+                        order: index,
+                    }))
+                    : tempItems;
                 if (hasOrderChange) {
-                    const sortOrderPayload = itemsWithNewOrder
+                    const sortOrderPayload = itemsForSave
                         .map((item, index) =>
                             item.isNew
                                 ? null
@@ -216,7 +339,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     }
                 }
 
-                const itemsWithOtherChanges = itemsWithNewOrder.filter(
+                const itemsWithOtherChanges = itemsForSave.filter(
                     (item) =>
                         item.isNew ||
                         (item.hasChanges &&
@@ -250,10 +373,19 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
     const onDragEnd = (result: any) => {
         if (!result.destination) return;
+        if (result.source.index === result.destination.index) return;
+
+        const sourceItemId = filteredItems[result.source.index]?.id;
+        const destinationItemId = filteredItems[result.destination.index]?.id;
+        if (!sourceItemId || !destinationItemId) return;
 
         const items = Array.from(tempItems);
-        const [reorderedItem] = items.splice(result.source.index, 1);
-        items.splice(result.destination.index, 0, reorderedItem);
+        const sourceIndexInAll = items.findIndex((item) => item.id === sourceItemId);
+        const destinationIndexInAll = items.findIndex((item) => item.id === destinationItemId);
+        if (sourceIndexInAll < 0 || destinationIndexInAll < 0) return;
+
+        const [reorderedItem] = items.splice(sourceIndexInAll, 1);
+        items.splice(destinationIndexInAll, 0, reorderedItem);
 
         const updatedItems = items.map((item, index) => ({
             ...item,
@@ -272,11 +404,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
         );
     };
 
-    // Hidden items (and icon) only when admin + view=edit; otherwise show only visible items.
+    // Filter out deleted/unsorted items and keep sidebar aligned with persisted sort order.
+    // In non‑edit mode, hide items that are marked as not visible so they cannot be selected.
     const filteredItems = tempItems
         .filter((item) => !item.deleted)
-        .filter((item) => isEditModeAllowed || item.visible)
-        .filter((item) => item.name.toLowerCase().includes(search.toLowerCase()));
+        .filter((item) => Number.isFinite(Number(item.order)))
+        .sort((a, b) => Number(a.order) - Number(b.order))
+        .filter((item) => item.name.toLowerCase().includes(search.toLowerCase()))
+        .filter((item) => (editMode ? true : item.visible !== false));
 
     // Get first letter or icon for collapsed state
     const getItemIcon = (item: MenuItem) => {
@@ -291,24 +426,38 @@ export const Sidebar: React.FC<SidebarProps> = ({
             style={{ background: 'var(--sidebar-bg)', boxShadow: '0px 4px 4px rgba(0, 0, 0, 0.25)' }}
         >
             {/* Header with Toggle Button */}
-            <div className="flex flex-row items-center">
-                <button
-                    onClick={toggleSidebar}
-                    className="rounded-md p-2 text-white transition-colors hover:bg-[#ffffff20]"
-                    title={isCollapsed ? 'Expand Sidebar' : 'Collapse Sidebar'}
-                >
-                    <Bars3Icon className="h-5 w-5" />
-                </button>
-
-                {!isCollapsed && (
+            {isCollapsed ? (
+                <div className="mb-2 flex flex-col">
+                    <div className="flex justify-center">
+                        <PSCLogo />
+                    </div>
+                    <div className="mt-2 flex w-full justify-end">
+                        <button
+                            onClick={toggleSidebar}
+                            className="rounded-md p-2 text-white transition-colors hover:bg-[#ffffff20]"
+                            title="Expand Sidebar"
+                        >
+                            <Bars3Icon className="h-5 w-5" />
+                        </button>
+                    </div>
+                </div>
+            ) : (
+                <div className="flex flex-row items-center justify-between">
                     <div className="flex flex-row items-center space-x-2">
                         <PSCLogo />
                         <div className="flex flex-col">
                             <h1 className="text-xs leading-tight font-semibold">P&SC Intelligence Centre</h1>
                         </div>
                     </div>
-                )}
-            </div>
+                    <button
+                        onClick={toggleSidebar}
+                        className="rounded-md p-2 text-white transition-colors hover:bg-[#ffffff20]"
+                        title="Collapse Sidebar"
+                    >
+                        <Bars3Icon className="h-5 w-5" />
+                    </button>
+                </div>
+            )}
             {/* Search and Edit Controls - Hidden when collapsed */}
             {!isCollapsed && (
                 <div className="mt-4 flex items-center justify-between">
@@ -387,7 +536,15 @@ export const Sidebar: React.FC<SidebarProps> = ({
                                                         ? 'text-[var(--sidebar-text-active)]'
                                                         : 'text-[var(--sidebar-text)] hover:bg-[#ffffff30]'
                                                         } ${isSaving ? 'opacity-50' : ''} ${isCollapsed ? 'justify-center' : ''}`}
-                                                    style={selectedItem === item.id ? { background: 'var(--sidebar-active-bg)', boxShadow: '0px 4px 4px rgba(69, 84, 110, 0.1)' } : {}}
+                                                    style={{
+                                                        ...(selectedItem === item.id
+                                                            ? {
+                                                                background: 'var(--sidebar-active-bg)',
+                                                                boxShadow: '0px 4px 4px rgba(69, 84, 110, 0.1)',
+                                                            }
+                                                            : {}),
+                                                        ...(provided.draggableProps.style || {}),
+                                                    }}
                                                     onClick={() => !editMode && !isSaving && onItemSelect(item)}
                                                     title={isCollapsed ? item.name : ''}
                                                 >
@@ -518,6 +675,136 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     <div className="flex items-center justify-between">
                         <span className="text-xs font-medium text-[var(--sidebar-text)] opacity-80">Theme</span>
                         <ThemeSettingsButton />
+                    </div>
+                    <div className="relative w-full" ref={helpPanelRef}>
+                        <div className="flex items-center justify-between">
+                            <span className="text-xs font-medium text-[var(--sidebar-text)] opacity-80">Help</span>
+                            <div className="flex items-center gap-1">
+                                {isAdmin && isEditModeAllowed && (
+                                    <button
+                                        type="button"
+                                        onClick={handleOpenHelpConfig}
+                                        className="rounded-md p-1.5 text-[var(--sidebar-text)] opacity-90 transition-colors hover:bg-white/15"
+                                        aria-label="Configure help information"
+                                        title="Configure help information"
+                                    >
+                                        <Cog6ToothIcon className="h-4 w-4" />
+                                    </button>
+                                )}
+                                <button
+                                    type="button"
+                                    onClick={() => setShowHelpPanel((prev) => !prev)}
+                                    className="rounded-full p-1 transition-colors hover:bg-white/15"
+                                    aria-label="Open help information"
+                                    title="Help"
+                                >
+                                    <QuestionMarkCircleIcon className="h-5 w-5 text-[var(--sidebar-text)]" />
+                                </button>
+                            </div>
+                        </div>
+                        {showHelpPanel && (
+                            <div className="absolute right-0 bottom-full left-0 z-40 mb-2 rounded-xl border border-white/20 bg-[#0c3267]/95 p-3 text-xs text-white shadow-2xl backdrop-blur-md">
+                                <p className="mb-2 text-[11px] font-semibold tracking-wide text-white/80 uppercase">
+                                    Help & Support
+                                </p>
+                                <div
+                                    className="prose prose-invert max-w-none text-white/95 [&_a]:font-medium [&_a]:text-[#8FE7FF] [&_a]:underline [&_li]:my-1 [&_ol]:my-1 [&_p]:my-1 [&_ul]:my-1"
+                                >
+                                    <Markdown
+                                        options={{
+                                            forceBlock: true,
+                                            overrides: {
+                                                a: {
+                                                    props: {
+                                                        target: '_blank',
+                                                        rel: 'noopener noreferrer',
+                                                    },
+                                                },
+                                            },
+                                        }}
+                                    >
+                                        {helpConfig.text || DEFAULT_HELP_CONFIG.text}
+                                    </Markdown>
+                                </div>
+                                {helpConfigLoading && <p className="mt-2 text-white/75">Loading help content...</p>}
+                            </div>
+                        )}
+                    </div>
+                </div>
+            )}
+            {showHelpConfigModal && isAdmin && isEditModeAllowed && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+                    <div
+                        className="w-full max-w-md rounded-xl border border-white/20 p-4 shadow-2xl"
+                        style={{ background: 'var(--sidebar-bg)', color: 'var(--sidebar-text)' }}
+                    >
+                        <div className="mb-3 flex items-center justify-between">
+                            <h3 className="text-base font-semibold">Configure Help Information</h3>
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    setShowHelpConfigModal(false);
+                                    setHelpConfigStatus(null);
+                                }}
+                                className="rounded p-1 hover:bg-white/15"
+                                aria-label="Close help configuration"
+                            >
+                                <XMarkIcon className="h-5 w-5" />
+                            </button>
+                        </div>
+                        <div className="space-y-3">
+                            <div>
+                                <label className="mb-1 block text-xs opacity-90">Help Text (Markdown)</label>
+                                <textarea
+                                    value={helpFormData.text}
+                                    onChange={(e) =>
+                                        setHelpFormData((prev) => ({ ...prev, text: e.target.value || '' }))
+                                    }
+                                    placeholder={
+                                        '- To get the required authorization role, [Click here](https://example.com)\n- For support, please contact [Procurement & Supply Chain Control Tower](mailto:support@example.com)'
+                                    }
+                                    className="mt-1 w-full rounded border border-white/30 bg-[#0f2f5a] p-2 text-xs text-white outline-none focus:border-blue-400"
+                                    rows={10}
+                                />
+                            </div>
+                            <div>
+                                <p className="text-[11px] opacity-75">
+                                    Paste Markdown here. Links format: [label](https://example.com) or [email](mailto:support@example.com).
+                                </p>
+                            </div>
+                            {helpConfigStatus && (
+                                <div
+                                    className={`rounded border px-2 py-1 text-xs ${helpConfigStatus.type === 'success'
+                                        ? 'border-green-500/40 bg-green-500/15 text-green-100'
+                                        : 'border-red-500/40 bg-red-500/15 text-red-100'
+                                        }`}
+                                >
+                                    {helpConfigStatus.text}
+                                </div>
+                            )}
+                            <div className="mt-2 flex justify-end gap-2">
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setHelpFormData(helpConfig);
+                                        setShowHelpConfigModal(false);
+                                        setHelpConfigStatus(null);
+                                    }}
+                                    className="rounded bg-gray-600 px-3 py-1.5 text-xs text-white hover:bg-gray-700"
+                                    disabled={helpConfigSaving}
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={handleSaveHelpConfig}
+                                    className="rounded bg-blue-600 px-3 py-1.5 text-xs text-white hover:bg-blue-700 disabled:opacity-50"
+                                    disabled={helpConfigSaving}
+                                >
+                                    {helpConfigSaving ? 'Saving...' : 'Save'}
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             )}

@@ -49,6 +49,8 @@ interface TypographyConfigUIProps {
     value?: WidgetTypographyConfig;
     onChange: (config: WidgetTypographyConfig) => void;
     elementTypes?: string[];
+    /** Optional display labels for each element type (e.g. { title: 'Widget title', menuTitle: 'Menu title' }) */
+    elementLabels?: Record<string, string>;
 }
 
 // Collapsible Section Component
@@ -176,6 +178,7 @@ export const TypographyConfigUI: React.FC<TypographyConfigUIProps> = ({
     value = {},
     onChange,
     elementTypes = ['title', 'value', 'label'],
+    elementLabels,
 }) => {
     const handleChange = (
         elementType: string,
@@ -221,11 +224,14 @@ export const TypographyConfigUI: React.FC<TypographyConfigUIProps> = ({
             {elementTypes.map((type) => {
                 const config = value[type] || {};
                 const isConfigured = Object.keys(config).length > 0;
+                const sectionTitle = elementLabels?.[type]
+                    ? `${elementLabels[type]} Typography`
+                    : `${type.charAt(0).toUpperCase() + type.slice(1)} Typography`;
 
                 return (
                     <CollapsibleSection
                         key={type}
-                        title={`${type.charAt(0).toUpperCase() + type.slice(1)} Typography`}
+                        title={sectionTitle}
                         defaultOpen={true}
                         icon={<PaintBrushIcon className="h-5 w-5" />}
                     >

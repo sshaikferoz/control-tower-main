@@ -5,6 +5,7 @@ import { DashboardMenuWidgetConfig, DashboardMenuItemConfig, DASHBOARD_MENU_ICON
 import { TargetReportConfig } from '@/helpers/types';
 import { applyTypographyStyles } from '@/helpers/typographyHelper';
 import { openReport } from '@/utils/openReportUtils';
+import { sapODataService } from '@/services/sapODataService';
 
 const DASHBOARD_MENU_ICON_BASE_URL = `${process.env.NEXT_PUBLIC_BSP_NAME || ''}/icons`;
 
@@ -110,8 +111,11 @@ const MenuIcon: React.FC<{
 /** Single tile: logo at top, then title and description (for displayMode === 'single'). */
 const SingleDashboardCard: React.FC<{
     item: DashboardMenuItemConfig;
-}> = ({ item }) => {
+    typography?: DashboardMenuProps['typography'];
+}> = ({ item, typography }) => {
     const { targetReport } = item;
+    const menuTitleStyles = applyTypographyStyles('menuTitle', typography);
+    const menuDescStyles = applyTypographyStyles('menuDesc', typography);
 
     const handleClick = async (e: React.MouseEvent) => {
         e.preventDefault();
@@ -132,11 +136,17 @@ const SingleDashboardCard: React.FC<{
                 <MenuIcon type={item.iconType} size="large" />
             </div>
             <div className="flex min-w-0 flex-col justify-start">
-                <span className="block text-base font-semibold text-[var(--text-neutral)] group-hover:text-[#00A3E0]">
+                <span
+                    className="block text-base font-semibold text-[var(--text-neutral)] group-hover:text-[#00A3E0]"
+                    style={menuTitleStyles}
+                >
                     {targetReport.name || 'Untitled report'}
                 </span>
                 {targetReport.description && (
-                    <span className="mt-1 block line-clamp-3 text-sm leading-snug text-[var(--text-muted)]">
+                    <span
+                        className="mt-1 block line-clamp-3 text-sm leading-snug text-[var(--text-muted)]"
+                        style={menuDescStyles}
+                    >
                         {targetReport.description}
                     </span>
                 )}
@@ -147,8 +157,11 @@ const SingleDashboardCard: React.FC<{
 
 const DashboardMenuItem: React.FC<{
     item: DashboardMenuItemConfig;
-}> = ({ item }) => {
+    typography?: DashboardMenuProps['typography'];
+}> = ({ item, typography }) => {
     const { targetReport } = item;
+    const menuTitleStyles = applyTypographyStyles('menuTitle', typography);
+    const menuDescStyles = applyTypographyStyles('menuDesc', typography);
 
     const handleClick = async (e: React.MouseEvent) => {
         e.preventDefault();
@@ -168,11 +181,17 @@ const DashboardMenuItem: React.FC<{
             <div className="flex flex-1 items-center gap-2">
                 <MenuIcon type={item.iconType} />
                 <div className="flex min-w-0 flex-1 flex-col">
-                    <span className="text-xs font-semibold text-[var(--text-neutral)] group-hover:text-[var(--primary2,#00A3E0)]">
+                    <span
+                        className="text-xs font-semibold text-[var(--text-neutral)] group-hover:text-[var(--primary2,#00A3E0)]"
+                        style={menuTitleStyles}
+                    >
                         {targetReport.name || 'Untitled report'}
                     </span>
                     {targetReport.description && (
-                        <span className="mt-0.5 line-clamp-2 text-[0.65rem] leading-tight text-[var(--text-muted)]">
+                        <span
+                            className="mt-0.5 line-clamp-2 text-[0.65rem] leading-tight text-[var(--text-muted)]"
+                            style={menuDescStyles}
+                    >
                             {targetReport.description}
                         </span>
                     )}
@@ -206,20 +225,73 @@ const DashboardMenu: React.FC<DashboardMenuProps> = ({
     typography,
 }) => {
     const [searchQuery, setSearchQuery] = useState('');
+    const [userRoles, setUserRoles] = useState<string[] | null>(null);
+    const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
     const items = dashboardMenuConfig?.items || [];
     const displayMode = dashboardMenuConfig?.displayMode ?? 'multiple';
     const isSingle = displayMode === 'single';
-    const firstItem = items[0];
+    const [accessChecked, setAccessChecked] = React.useState(false);
+
+    React.useEffect(() => {
+        let isMounted = true;
+
+        const loadAccessData = async () => {
+            try {
+                const [adminFlag, roles] = await Promise.all([
+                    sapODataService.checkAdminRole(),
+                    sapODataService.fetchCurrentUserRoles(),
+                ]);
+
+                if (!isMounted) return;
+
+                setIsAdmin(adminFlag);
+                setUserRoles(roles);
+            } finally {
+                if (isMounted) {
+                    setAccessChecked(true);
+                }
+            }
+        };
+
+        loadAccessData();
+
+        return () => {
+            isMounted = false;
+        };
+    }, []);
+
+    const itemsWithAccess = useMemo(() => {
+        // First, drop disabled items
+        const enabledItems = items.filter((item) => item.enabled !== false);
+
+        // While access is not yet checked or user is admin, show all enabled items
+        if (isAdmin || !accessChecked || !userRoles) {
+            return enabledItems;
+        }
+
+        // For non-admin users, filter by per-item roles (if configured)
+        return enabledItems.filter((item) => {
+            const itemRoles = item.roles || [];
+            if (itemRoles.length === 0) {
+                // No roles configured means visible to all
+                return true;
+            }
+            return itemRoles.some((role) => userRoles.includes(role));
+        });
+    }, [items, isAdmin, userRoles, accessChecked]);
+
+    const firstItem = itemsWithAccess[0];
 
     const filteredItems = useMemo(() => {
-        if (!searchQuery.trim()) return items;
+        const baseItems = itemsWithAccess;
+        if (!searchQuery.trim()) return baseItems;
         const q = searchQuery.trim().toLowerCase();
-        return items.filter((item) => {
+        return baseItems.filter((item) => {
             const name = (item.targetReport?.name || '').toLowerCase();
             const desc = (item.targetReport?.description || '').toLowerCase();
             return name.includes(q) || desc.includes(q);
         });
-    }, [items, searchQuery]);
+    }, [itemsWithAccess, searchQuery]);
 
     const accentColor = backgroundColor || '#00A3E0';
 
@@ -250,7 +322,7 @@ const DashboardMenu: React.FC<DashboardMenuProps> = ({
                         </div>
                     ) : null}
                     <div className="flex-1 overflow-hidden p-4 min-h-0">
-                        <SingleDashboardCard item={firstItem} />
+                        <SingleDashboardCard item={firstItem} typography={typography} />
                     </div>
                 </div>
             </div>
@@ -309,7 +381,7 @@ const DashboardMenu: React.FC<DashboardMenuProps> = ({
                     ) : (
                         <div className="flex flex-col gap-2">
                             {filteredItems.map((item) => (
-                                <DashboardMenuItem key={item.id} item={item} />
+                                <DashboardMenuItem key={item.id} item={item} typography={typography} />
                             ))}
                         </div>
                     )}

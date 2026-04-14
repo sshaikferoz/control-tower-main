@@ -37,6 +37,7 @@ const Dashboard: React.FC = () => {
     const { selectedMenuItem, handleMenuItemSelect } = useDashboardState({
         menuItems,
         isStandaloneAllowed,
+        isEditModeAllowed,
         urlParams,
     });
 
@@ -81,6 +82,7 @@ const Dashboard: React.FC = () => {
             onMenuItemsChange={setMenuItems}
             isLoading={isLoading}
             isEditModeAllowed={isEditModeAllowed}
+            isAdmin={isAdmin}
         >
             <DashboardContent
                 selectedMenuItem={selectedMenuItem}

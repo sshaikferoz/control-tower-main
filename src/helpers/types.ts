@@ -175,7 +175,8 @@ export type WidgetTypes =
     | 'dashboard-menu'
     | 'filter-widget'
     | 'listener-widget'
-    | 'blank-widget';
+    | 'blank-widget'
+    | 'alert-notifications';
 
 // Mapping configurations for each widget type
 export const widgetConfigFields: Record<
@@ -183,6 +184,7 @@ export const widgetConfigFields: Record<
     { field: string; type: string; path: ObjectPath }[]
 > = {
     'multi-metric': [],
+    'alert-notifications': [],
     'one-metric': [
         { field: 'name', type: 'string', path: 'name' },
         { field: 'value', type: 'number', path: 'value' },

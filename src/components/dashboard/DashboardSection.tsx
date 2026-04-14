@@ -132,7 +132,9 @@ export const DashboardSection: React.FC<ExtendedDashboardSectionProps> = ({
     const sectionRef = useRef<HTMLDivElement>(null);
     const dataManager = useMemo(() => DataManager.getInstance(), []);
     const announcementWidgets = section.widgets?.filter((w: any) => w.name === 'announcement') || [];
-    const gridWidgets = section.widgets?.filter((w: any) => w.name !== 'announcement') || [];
+    // When rendering the dashboard, hide widgets with active === false (IsActive ''); mapping screen shows all
+    const gridWidgets =
+        section.widgets?.filter((w: any) => w.name !== 'announcement' && w.active !== false) || [];
 
     // Check if this section should be highlighted
     const isSectionHighlighted =
@@ -669,7 +671,8 @@ export const DashboardSection: React.FC<ExtendedDashboardSectionProps> = ({
                             const isTransparentWidget =
                                 props.chartConfig?.transparentBackground === true ||
                                 props.kpiConfig?.transparentBackground === true ||
-                                props.multiMetricConfig?.transparentBackground === true;
+                                props.multiMetricConfig?.transparentBackground === true ||
+                                props.alertConfig?.transparentBackground === true;
 
                             if (!Component) {
                                 console.error(`Component not found for widget type: ${widget.name}`);

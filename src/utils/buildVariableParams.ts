@@ -24,18 +24,11 @@ export const buildVariableParams: any = (variables: Record<string, FilterValue>)
         }
 
         if (typeof value === 'object' && 'from' in value) {
-            if (value.from) {
-                variableParams.push(`VAR_NAME_${varNum}=${varName}`);
-                variableParams.push(`VAR_OPERATOR_${varNum}=GE`);
-                variableParams.push(`VAR_VALUE_EXT_${varNum}=${value.from}`);
-                varNum++;
-            }
-            if (value.to) {
-                variableParams.push(`VAR_NAME_${varNum}=${varName}`);
-                variableParams.push(`VAR_OPERATOR_${varNum}=LE`);
-                variableParams.push(`VAR_VALUE_EXT_${varNum}=${value.to}`);
-                varNum++;
-            }
+            variableParams.push(`VAR_NAME_${varNum}=${varName}`);
+            variableParams.push(`VAR_OPERATOR_${varNum}=BT`);
+            variableParams.push(`VAR_VALUE_LOW_EXT_${varNum}=${value.from || ''}`);
+            variableParams.push(`VAR_VALUE_HIGH_EXT_${varNum}=${value.to || ''}`);
+            varNum++;
             return;
         }
 

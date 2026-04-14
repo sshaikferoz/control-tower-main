@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { UserInfo } from '../../types';
+import { sapODataService } from '../../services/sapODataService';
 
 export const useUserInfo = () => {
     const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
@@ -9,39 +10,22 @@ export const useUserInfo = () => {
         const fetchUserInfo = async () => {
             try {
                 setUserInfoLoading(true);
-                const baseUrl =
-                    process.env.NODE_ENV === 'development'
-                        ? 'https://ctapitester-a4mel9cxg6.dispatcher.sa1.hana.ondemand.com/sap/opu/odata/sap/ZBW_CT_SCIC_SRV'
-                        : '/sap/opu/odata/sap/ZBW_CT_SCIC_SRV';
+                const data = await sapODataService.fetchUserProfile();
 
-                const response = await fetch(`${baseUrl}/UserProfileSet('')?$format=json`, {
-                    method: 'GET',
-                    headers: {
-                        Accept: 'application/json',
-                        'Content-Type': 'application/json',
-                    },
-                });
-
-                if (!response.ok) {
-                    throw new Error(`SAP API responded with status: ${response.status}`);
-                }
-
-                const data = await response.json();
-
-                if (data && data.d && data.d.UserName) {
-                    const user_id = data.d.UserName;
-                    const userFullName = data.d.UserFullName;
-                    const lastAccessDate = data.d.LastAccessDate;
-                    const lastAccessTime = data.d.LastAccessTime;
+                if (data?.UserName) {
+                    const user_id = data.UserName;
+                    const userFullName = data.UserFullName;
+                    const lastAccessDate = data.LastAccessDate;
+                    const lastAccessTime = data.LastAccessTime;
                     const session_id = Math.random().toString(36).substring(2, 7);
 
                     setUserInfo({
                         user_id,
-                        userFullName,
+                        userFullName: userFullName ?? 'User',
                         networkId: user_id,
                         session_id,
-                        lastAccessDate,
-                        lastAccessTime,
+                        lastAccessDate: lastAccessDate ?? new Date().toLocaleDateString(),
+                        lastAccessTime: lastAccessTime ?? new Date().toLocaleTimeString(),
                     });
                 } else {
                     throw new Error('Invalid response format');

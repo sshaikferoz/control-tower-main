@@ -299,6 +299,11 @@ export interface AdminRoleCheckResponse {
     IsAdmin: string;
 }
 
+export interface UserRoleResponseItem {
+    UserName: string;
+    RoleName: string;
+}
+
 export interface UIConfigEntry {
     Id?: string;
     ConfigName: string;
@@ -316,6 +321,33 @@ class SAPODataService {
     private serviceUrlsCacheTime: number = 0;
     private readonly CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 
+    // Deduplicate in-flight GET requests (e.g. from React Strict Mode double-mount)
+    private inFlightGet: Map<string, Promise<any>> = new Map();
+
+    /**
+     * GET request with deduplication: identical concurrent requests share one promise.
+     */
+    private async dedupedGetJson<T = any>(url: string): Promise<T> {
+        const existing = this.inFlightGet.get(url);
+        if (existing) return existing as Promise<T>;
+        const promise = (async () => {
+            const response = await fetch(url, {
+                method: 'GET',
+                headers: {
+                    Accept: 'application/json',
+                    'Content-Type': 'application/json',
+                },
+            });
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })();
+        this.inFlightGet.set(url, promise);
+        promise.finally(() => this.inFlightGet.delete(url));
+        return promise as Promise<T>;
+    }
+
     // private baseUrl =
     // process.env.NODE_ENV === 'development'
     //   ? 'https://ctapitester-a4mel9cxg6.dispatcher.sa1.hana.ondemand.com/sap/opu/odata/sap/ZBW_CT_SCIC_SRV'
@@ -325,22 +357,8 @@ class SAPODataService {
 
     async fetchMenuItems(): Promise<any[]> {
         try {
-            const response = await fetch(
-                // `${this.baseUrl}/ZSCM_CT_V_TABS?$expand=to_roles&$format=json&$filter=id eq '${itemId}'`,
-                `${this.baseUrl}/TabConfSet?&$expand=TabRolesItem&$format=json&`,
-                {
-                    method: 'GET',
-                    headers: {
-                        Accept: 'application/json',
-                        'Content-Type': 'application/json',
-                    },
-                });
-
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-
-            const data = await response.json();
+            const url = `${this.baseUrl}/TabConfSet?&$expand=TabRolesItem&$format=json&`;
+            const data = await this.dedupedGetJson<{ d: { results: any[] } }>(url);
 
             return data.d.results.map(
                 (item: any): MenuItem => ({
@@ -349,7 +367,7 @@ class SAPODataService {
                     name: item.Name,
                     description: item.Description,
                     visible: item.IsVisible === 'X',
-                    order: item.sort_order,
+                    order: item.SortOrder,
                     type: item.Type,
                     deleted: item.del_ind === 'X',
                     roles: item.TabRolesItem.results || [],
@@ -365,23 +383,8 @@ class SAPODataService {
     // Fetch sections for a specific tab
     async fetchSectionsByTabId(tabId: string): Promise<Section[]> {
         try {
-            const response = await fetch(
-                // `${this.baseUrl}/ZSCM_CT_V_SECTION?$expand=to_roles&$format=json&$filter=TabId eq '${tabId}'&orderby=sort_order`,
-                `${this.baseUrl}/SectionConfSet?$filter=TabId eq '${tabId}'&$expand=RolesSecItem&$format=json&`,
-                {
-                    method: 'GET',
-                    headers: {
-                        Accept: 'application/json',
-                        'Content-Type': 'application/json',
-                    },
-                }
-            );
-
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-
-            const data = await response.json();
+            const url = `${this.baseUrl}/SectionConfSet?$filter=TabId eq '${tabId}'&$expand=RolesSecItem&$format=json&`;
+            const data = await this.dedupedGetJson<{ d: { results: any[] } }>(url);
 
             const sections = data.d.results.map(
                 (item: any): Section => {
@@ -431,25 +434,8 @@ class SAPODataService {
     // Fetch widgets for a specific section
     async fetchWidgetsBySectionId(sectionId: string): Promise<Widget[]> {
         try {
-            const response = await fetch(
-                // `${this.baseUrl}/ZSCM_CT_V_WIDGETS?$expand=to_roles&$format=json&$filter=section_id%20eq%20%27${sectionId}%27`,
-                `${this.baseUrl}/WidgetConfSet?$filter=SectionId eq '${sectionId}'&$expand=WidgetConfRolesItem&$format=json`,
-
-                {
-                    method: 'GET',
-                    headers: {
-                        Accept: 'application/json',
-                        'Content-Type': 'application/json',
-                    },
-                }
-            );
-
-
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-
-            const data = await response.json();
+            const url = `${this.baseUrl}/WidgetConfSet?$filter=SectionId eq '${sectionId}'&$expand=WidgetConfRolesItem&$format=json`;
+            const data = await this.dedupedGetJson<{ d: { results: any[] } }>(url);
 
 
             return data.d.results?.map(
@@ -559,7 +545,7 @@ class SAPODataService {
                 name: item.Name,
                 description: item.Description,
                 visible: item.IsVisible === 'X',
-                order: item.sort_order,
+                order: item.SortOrder,
                 type: item.Type,
                 deleted: item.del_ind === 'X',
                 roles: item.TabRolesItem?.results || item.TabRolesItem || [],
@@ -1043,22 +1029,8 @@ class SAPODataService {
      */
     async checkAdminRole(): Promise<boolean> {
         try {
-            // Construct the URL - if userName is provided, filter by it
             const url = `${this.baseUrl}/ZSCM_CT_V_ADMIN_ROLE_CHECK?$format=json`;
-
-            const response = await fetch(url, {
-                method: 'GET',
-                headers: {
-                    Accept: 'application/json',
-                    'Content-Type': 'application/json',
-                },
-            });
-
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-
-            const data = await response.json();
+            const data = await this.dedupedGetJson<{ d: { results: AdminRoleCheckResponse[] } }>(url);
 
             // Check if results exist and if IsAdmin flag is set
             if (data.d.results && data.d.results.length > 0) {
@@ -1074,28 +1046,54 @@ class SAPODataService {
         }
     }
 
+    /**
+     * Fetch all roles for the current user from GetRolesSet.
+     * Returns an array of role name strings (e.g. "BA:BW:DASHBOARD_ADMIN").
+     */
+    async fetchCurrentUserRoles(): Promise<string[]> {
+        try {
+            const url = `${this.baseUrl}/GetRolesSet?$format=json`;
+            const data = await this.dedupedGetJson<{ d: { results: UserRoleResponseItem[] } }>(url);
+
+            if (!data?.d?.results) {
+                return [];
+            }
+
+            return data.d.results
+                .map((item) => item.RoleName)
+                .filter((name): name is string => typeof name === 'string' && !!name.trim());
+        } catch {
+            // In case of error, return empty list so that non-admin users
+            // will effectively see only items without role restrictions.
+            return [];
+        }
+    }
+
+    /**
+     * Fetch current user profile (UserProfileSet). Deduplicated with other GETs.
+     */
+    async fetchUserProfile(): Promise<{
+        UserName?: string;
+        UserFullName?: string;
+        LastAccessDate?: string;
+        LastAccessTime?: string;
+    } | null> {
+        try {
+            const url = `${this.baseUrl}/UserProfileSet('')?$format=json`;
+            const data = await this.dedupedGetJson<{ d?: { UserName?: string; UserFullName?: string; LastAccessDate?: string; LastAccessTime?: string } }>(url);
+            return data?.d ?? null;
+        } catch {
+            return null;
+        }
+    }
 
     /**
      * Fetch UI configuration settings for a specific tab
      */
     async fetchSettingsByTabId(tabId: string): Promise<UIConfiguration | null> {
         try {
-            const response = await fetch(
-                `${this.baseUrl}/SettingsSet?$filter=TabId eq '${tabId}'&$format=json`,
-                {
-                    method: 'GET',
-                    headers: {
-                        Accept: 'application/json',
-                        'Content-Type': 'application/json',
-                    },
-                }
-            );
-
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-
-            const data = await response.json();
+            const url = `${this.baseUrl}/SettingsSet?$filter=TabId eq '${tabId}'&$format=json`;
+            const data = await this.dedupedGetJson<{ d: { results: any[] } }>(url);
 
             if (data.d.results && data.d.results.length > 0) {
                 const settingsData: SettingsResponse = data.d.results[0];
@@ -1223,22 +1221,8 @@ class SAPODataService {
      */
     async fetchUIConfig(configName: string): Promise<Record<string, any> | null> {
         try {
-            const response = await fetch(
-                `${this.baseUrl}/UIConfigSet?$format=json`,
-                {
-                    method: 'GET',
-                    headers: {
-                        Accept: 'application/json',
-                        'Content-Type': 'application/json',
-                    },
-                }
-            );
-
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-
-            const data = await response.json();
+            const url = `${this.baseUrl}/UIConfigSet?$format=json`;
+            const data = await this.dedupedGetJson<{ d?: { results?: UIConfigEntry[] } }>(url);
             const results: UIConfigEntry[] = data?.d?.results || [];
 
             // Filter by ConfigName in JavaScript

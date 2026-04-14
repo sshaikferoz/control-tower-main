@@ -151,9 +151,9 @@ const ListenerWidget: React.FC<ListenerWidgetProps> = ({
                 // Prefer full variables string emitted by the filter widget (supports multiple variables)
                 if (filterData && filterData.variables) {
                     url =
-                        process.env.NODE_ENV === 'development'
+                        process.env.NODE_ENV === 'development' && process.env.USE_SAP_DB !== 'true'
                             ? `/api/sap/bc/bsp/sap/zbw_reporting/execute_report_oo.htm?query=${effectiveQuery}`
-                            : `/sap/bc/bsp/sap/zbw_reporting/execute_report_oo.htm?query=${effectiveQuery}&variables=${encodeURIComponent(
+                            : `${process.env.PROXY_BASE_URL_SAP_DB || ''}/sap/bc/bsp/sap/zbw_reporting/execute_report_oo.htm?query=${effectiveQuery}&variables=${encodeURIComponent(
                                 filterData.variables
                             )}`;
 
@@ -166,11 +166,11 @@ const ListenerWidget: React.FC<ListenerWidgetProps> = ({
                     )}&VAR_OPERATOR_1=EQ&VAR_VALUE_EXT_1=${encodeURIComponent(filterData.value)}`;
 
                     url =
-                        process.env.NODE_ENV === 'development'
+                        process.env.NODE_ENV === 'development' && process.env.USE_SAP_DB !== 'true'
                             ? `/api/sap/bc/bsp/sap/zbw_reporting/execute_report_oo.htm?query=${effectiveQuery}&variables=${encodeURIComponent(
                                 variables
                             )}`
-                            : `/sap/bc/bsp/sap/zbw_reporting/execute_report_oo.htm?query=${effectiveQuery}&variables=${encodeURIComponent(
+                            : `${process.env.PROXY_BASE_URL_SAP_DB || ''}/sap/bc/bsp/sap/zbw_reporting/execute_report_oo.htm?query=${effectiveQuery}&variables=${encodeURIComponent(
                                 variables
                             )}`;
 
@@ -179,9 +179,9 @@ const ListenerWidget: React.FC<ListenerWidgetProps> = ({
                 } else {
                     // No filter variables – fetch base report
                     url =
-                        process.env.NODE_ENV === 'development'
+                        process.env.NODE_ENV === 'development' && process.env.USE_SAP_DB !== 'true'
                             ? `/api/sap/bc/bsp/sap/zbw_reporting/execute_report_oo.htm?query=${effectiveQuery}`
-                            : `/sap/bc/bsp/sap/zbw_reporting/execute_report_oo.htm?query=${effectiveQuery}`;
+                            : `${process.env.PROXY_BASE_URL_SAP_DB || ''}/sap/bc/bsp/sap/zbw_reporting/execute_report_oo.htm?query=${effectiveQuery}`;
 
                     setAppliedFilters(null);
                 }

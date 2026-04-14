@@ -1540,12 +1540,12 @@ const MultiChart: React.FC<MultiChartProps> = ({
     if (queryName && chartConfig && bexError) {
         return (
             <div className="flex h-full w-full flex-col">
-        <div
-            className="multi-chart-widget flex flex-1 flex-col overflow-hidden rounded-xl p-4 text-white items-center justify-center"
-            style={backgroundStyle}
-        >
-            <div className="text-center">
-                <p className="text-sm text-red-300 mb-2">Error loading chart data</p>
+                <div
+                    className="multi-chart-widget flex flex-1 flex-col overflow-hidden rounded-xl p-4 text-white items-center justify-center"
+                    style={backgroundStyle}
+                >
+                    <div className="text-center">
+                        <p className="text-sm text-red-300 mb-2">Error loading chart data</p>
                         <p className="text-xs text-white/60">{bexError.message || 'Unknown error'}</p>
                     </div>
                 </div>
@@ -1557,12 +1557,12 @@ const MultiChart: React.FC<MultiChartProps> = ({
     if (queryName && !chartConfig) {
         return (
             <div className="flex h-full w-full flex-col">
-        <div
-            className="multi-chart-widget flex flex-1 flex-col overflow-hidden rounded-xl p-4 text-white items-center justify-center"
-            style={backgroundStyle}
-        >
-            <div className="text-center">
-                <p className="text-sm text-white/80">Chart configuration is required</p>
+                <div
+                    className="multi-chart-widget flex flex-1 flex-col overflow-hidden rounded-xl p-4 text-white items-center justify-center"
+                    style={backgroundStyle}
+                >
+                    <div className="text-center">
+                        <p className="text-sm text-white/80">Chart configuration is required</p>
                     </div>
                 </div>
             </div>

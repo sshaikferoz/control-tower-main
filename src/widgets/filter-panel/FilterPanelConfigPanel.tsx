@@ -6,8 +6,9 @@ import {
     ChevronUpIcon,
     TrashIcon,
     PlusIcon,
+    ArrowPathIcon,
 } from '@heroicons/react/24/outline';
-import { FilterPanelWidgetConfig, FilterComponent, SelectionMode, FilterComponentType } from './FilterPanelConfig.types';
+import { FilterPanelWidgetConfig, FilterComponent, SelectionMode, FilterComponentType, DateFilterFormat } from './FilterPanelConfig.types';
 import useBexJson from '@/hooks/useBexJson';
 
 interface FilterPanelConfigPanelProps {
@@ -105,6 +106,74 @@ const CustomSelect: React.FC<CustomSelectProps> = ({ label, value, onChange, opt
     );
 };
 
+interface CustomToggleProps {
+    label: string;
+    checked: boolean;
+    onChange: (checked: boolean) => void;
+    description?: string;
+}
+
+const CustomToggle: React.FC<CustomToggleProps> = ({ label, checked, onChange, description }) => {
+    return (
+        <div className="mb-4 rounded-lg border border-white/10 bg-white/5 px-3 py-2.5">
+            <label className="flex cursor-pointer items-start gap-3">
+                <input
+                    type="checkbox"
+                    checked={checked}
+                    onChange={(e) => onChange(e.target.checked)}
+                    className="mt-0.5 h-4 w-4 rounded border-white/30 bg-white/10 text-cyan-400 focus:ring-cyan-400/50"
+                />
+                <span className="text-sm text-white/90">
+                    {label}
+                    {description && <span className="mt-0.5 block text-xs text-white/60">{description}</span>}
+                </span>
+            </label>
+        </div>
+    );
+};
+
+interface MultiFieldSelectProps {
+    label: string;
+    selectedFields: string[];
+    options: string[];
+    onChange: (fields: string[]) => void;
+}
+
+const MultiFieldSelect: React.FC<MultiFieldSelectProps> = ({ label, selectedFields, options, onChange }) => {
+    const handleToggle = (field: string, checked: boolean) => {
+        if (checked) {
+            onChange([...selectedFields, field]);
+            return;
+        }
+        onChange(selectedFields.filter((selectedField) => selectedField !== field));
+    };
+
+    return (
+        <div className="mb-4">
+            <label className="mb-2 block text-xs font-medium text-white/70">{label}</label>
+            <div className="max-h-40 overflow-y-auto rounded-lg border border-white/20 bg-white/5 p-2">
+                {options.map((field) => (
+                    <label
+                        key={field}
+                        className="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm text-white/90 hover:bg-white/10"
+                    >
+                        <input
+                            type="checkbox"
+                            checked={selectedFields.includes(field)}
+                            onChange={(e) => handleToggle(field, e.target.checked)}
+                            className="h-4 w-4 rounded border-white/30 bg-white/10 text-cyan-400 focus:ring-cyan-400/50"
+                        />
+                        <span className="truncate">{field}</span>
+                    </label>
+                ))}
+            </div>
+            <p className="mt-2 text-xs text-white/60">
+                Selected: {selectedFields.length > 0 ? selectedFields.join(', ') : 'None'}
+            </p>
+        </div>
+    );
+};
+
 // Component Configuration Card
 const ComponentConfigCard: React.FC<{
     component: FilterComponent;
@@ -115,10 +184,11 @@ const ComponentConfigCard: React.FC<{
     const [queryNameInput, setQueryNameInput] = useState(component.queryName || '');
 
     // Fetch BEX data when query name is provided (for list component)
-    const { data: bexData, isLoading: bexLoading } = useBexJson(
+    const { data: bexData, isLoading: bexLoading, isFetching: bexFetching, refetch: refetchBexData } = useBexJson(
         queryNameInput,
         {
             parser: 'new',
+            displayKey: component.includeDisplayKey === true,
             enabled: component.type === 'list' && !!queryNameInput && queryNameInput.length > 0,
         }
     );
@@ -134,6 +204,11 @@ const ComponentConfigCard: React.FC<{
 
         return Object.keys(chartData[0]);
     }, [bexData, component.type]);
+
+    const selectedDisplayFields = useMemo(() => {
+        if (!component.displayField) return [];
+        return Array.isArray(component.displayField) ? component.displayField : [component.displayField];
+    }, [component.displayField]);
 
     // Update query name when input changes
     useEffect(() => {
@@ -156,6 +231,11 @@ const ComponentConfigCard: React.FC<{
         { value: 'multi', label: 'Multi Selection' },
         { value: 'range', label: 'Range Selection' },
     ];
+    const dateFormatOptions: { value: DateFilterFormat; label: string }[] = [
+        { value: 'YYYY', label: 'Year (YYYY)' },
+        { value: 'MM/YYYY', label: 'Year Month (MM/YYYY)' },
+        { value: 'MM/DD/YYYY', label: 'Date (MM/DD/YYYY)' },
+    ];
 
     // Filter selection modes based on component type
     const availableSelectionModes = useMemo(() => {
@@ -165,6 +245,7 @@ const ComponentConfigCard: React.FC<{
         if (component.type === 'datePicker') {
             return [
                 { value: 'single' as SelectionMode, label: 'Single Date' },
+                { value: 'multi' as SelectionMode, label: 'Multiple Dates' },
                 { value: 'range' as SelectionMode, label: 'Date Range' },
             ];
         }
@@ -192,6 +273,9 @@ const ComponentConfigCard: React.FC<{
                     const newType = value as FilterComponentType;
                     if (newType === 'input' && component.selectionMode !== 'single') {
                         onComponentChange(index, 'selectionMode', 'single');
+                    }
+                    if (newType === 'datePicker' && !component.dateFormat) {
+                        onComponentChange(index, 'dateFormat', 'MM/DD/YYYY');
                     }
                 }}
                 options={componentTypeOptions}
@@ -237,40 +321,66 @@ const ComponentConfigCard: React.FC<{
 
             {component.type === 'datePicker' && (
                 <>
+                    <CustomSelect
+                        label="Date Format"
+                        value={component.dateFormat || 'MM/DD/YYYY'}
+                        onChange={(value) => onComponentChange(index, 'dateFormat', value as DateFilterFormat)}
+                        options={dateFormatOptions}
+                    />
                     <CustomInput
                         label="Min Date"
                         value={component.minDate || ''}
                         onChange={(value) => onComponentChange(index, 'minDate', value)}
-                        placeholder="YYYY-MM-DD"
+                        placeholder={component.dateFormat === 'YYYY' ? 'YYYY' : component.dateFormat === 'MM/YYYY' ? 'MM/YYYY' : 'MM/DD/YYYY'}
                     />
                     <CustomInput
                         label="Max Date"
                         value={component.maxDate || ''}
                         onChange={(value) => onComponentChange(index, 'maxDate', value)}
-                        placeholder="YYYY-MM-DD"
+                        placeholder={component.dateFormat === 'YYYY' ? 'YYYY' : component.dateFormat === 'MM/YYYY' ? 'MM/YYYY' : 'MM/DD/YYYY'}
                     />
                 </>
             )}
 
             {component.type === 'list' && (
                 <>
-                    <CustomInput
-                        label="BEX Query Name"
-                        value={queryNameInput}
-                        onChange={setQueryNameInput}
-                        placeholder="Enter BEX query name"
+                    <div className="mb-4">
+                        <label className="mb-2 block text-xs font-medium text-white/70">BEX Query Name</label>
+                        <div className="flex items-center gap-2">
+                            <input
+                                type="text"
+                                value={queryNameInput}
+                                onChange={(e) => setQueryNameInput(e.target.value)}
+                                placeholder="Enter BEX query name"
+                                className="w-full rounded-lg border border-white/20 bg-white/5 px-4 py-2.5 text-sm text-white transition-all focus:border-cyan-400 focus:outline-none focus:ring-2 focus:ring-cyan-400/20"
+                            />
+                            <button
+                                type="button"
+                                onClick={() => refetchBexData()}
+                                className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-white/20 bg-white/5 text-white transition-colors hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-60"
+                                disabled={!queryNameInput || bexFetching}
+                                aria-label="Refresh query data"
+                                title="Refresh query data"
+                            >
+                                <ArrowPathIcon className={`h-4 w-4 ${bexFetching ? 'animate-spin' : ''}`} />
+                            </button>
+                        </div>
+                    </div>
+                    <CustomToggle
+                        label="Include key field (display_key=X)"
+                        checked={component.includeDisplayKey === true}
+                        onChange={(checked) => onComponentChange(index, 'includeDisplayKey', checked)}
                     />
                     {bexLoading && (
                         <div className="mb-2 text-xs text-white/60">Loading query data...</div>
                     )}
                     {availableFields.length > 0 && (
                         <>
-                            <CustomSelect
+                            <MultiFieldSelect
                                 label="Display Field"
-                                value={component.displayField || ''}
-                                onChange={(value) => onComponentChange(index, 'displayField', value)}
-                                options={availableFields.map((field) => ({ value: field, label: field }))}
-                                placeholder="Select field to display"
+                                selectedFields={selectedDisplayFields}
+                                onChange={(fields) => onComponentChange(index, 'displayField', fields)}
+                                options={availableFields}
                             />
                             <CustomSelect
                                 label="Value Field"

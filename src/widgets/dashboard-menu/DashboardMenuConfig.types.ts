@@ -34,6 +34,18 @@ export interface DashboardMenuItemConfig {
      */
     targetReport: TargetReportConfig;
     /**
+     * Optional list of role names that are allowed to see this menu item.
+     * If empty or undefined, the item is visible to all users (subject to
+     * any widget-level role checks).
+     */
+    roles?: string[];
+    /**
+     * Whether this menu item is enabled. Disabled items are hidden when the
+     * dashboard is rendered but still appear in the configuration panel.
+     * @default true
+     */
+    enabled?: boolean;
+    /**
      * Icon shown before the title in the list, so users can visually
      * distinguish report, dashboard, or user shortcuts.
      */

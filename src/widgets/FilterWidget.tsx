@@ -158,9 +158,9 @@ const FilterWidget: React.FC<FilterWidgetProps> = ({
             setLoading(true);
             try {
                 const res = await fetch(
-                    process.env.NODE_ENV === 'development'
+                    process.env.NODE_ENV === 'development' && process.env.USE_SAP_DB !== 'true'
                         ? `/api/sap/bc/bsp/sap/zbw_reporting/execute_report_oo.htm?query=${reportName}`
-                        : `/sap/bc/bsp/sap/zbw_reporting/execute_report_oo.htm?query=${reportName}`
+                        : `${process.env.PROXY_BASE_URL_SAP_DB || ''}/sap/bc/bsp/sap/zbw_reporting/execute_report_oo.htm?query=${reportName}`
                 );
                 const xmlData = await res.text();
                 const parsedJSON = parseXMLToJson(xmlData);

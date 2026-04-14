@@ -28,6 +28,7 @@ const MultiChartWidget = lazy(() => import('@/widgets/chart/multi-chart/MultiCha
 const BlankWidget = lazy(() => import('@/widgets/blank-widget/BlankWidget'));
 const KpiChart = lazy(() => import('@/widgets/chart/kpi-chart/KpiChart'));
 const DashboardMenu = lazy(() => import('@/widgets/dashboard-menu/DashboardMenu'));
+const AlertNotifications = lazy(() => import('@/widgets/alert-notifications/AlertNotifications'));
 
 // Component mappings with lazy loading
 export const widgetMapping: Record<string, React.ComponentType<any>> = {
@@ -57,7 +58,8 @@ export const widgetMapping: Record<string, React.ComponentType<any>> = {
     'multi-chart-bex': MultiChartWidget,
     'blank-widget': BlankWidget,
     'kpi-chart': KpiChart,
-    'dashboard-menu': DashboardMenu
+    'dashboard-menu': DashboardMenu,
+    'alert-notifications': AlertNotifications,
 };
 
 // Default widget props for when data isn't available
@@ -268,5 +270,9 @@ export const defaultPropsMapping: Record<string, any> = {
             layout: 'list',
         },
     },
-
+    'alert-notifications': {
+        alertConfig: {
+            categories: [],
+        },
+    },
 };

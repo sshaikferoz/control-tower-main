@@ -12,6 +12,7 @@ interface DashboardLayoutProps {
     onMenuItemsChange: (items: MenuItem[]) => void;
     isLoading: boolean;
     isEditModeAllowed: boolean;
+    isAdmin?: boolean;
 }
 
 export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
@@ -24,10 +25,11 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
     onMenuItemsChange,
     isLoading,
     isEditModeAllowed,
+    isAdmin = false,
 }) => {
     return (
         <div
-            className="flex h-screen transition-colors duration-300"
+            className="dashboard-layout flex h-screen transition-colors duration-300"
             style={{ background: 'var(--dashboard-bg)', ...backgroundStyle }}
         >
             {/* Show sidebar (hide in standalone mode) */}
@@ -39,6 +41,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
                     onMenuItemsChange={onMenuItemsChange}
                     isLoading={isLoading}
                     isEditModeAllowed={isEditModeAllowed}
+                    isAdmin={isAdmin}
                 />
             )}
 

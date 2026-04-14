@@ -50,14 +50,14 @@ const MappingScreen: React.FC = () => {
                     const fetchedWidgets = await sapODataService.fetchWidgetsBySectionId(sectionId);
 
                     if (fetchedWidgets && fetchedWidgets.length > 0) {
-                        // Filter only active and non-deleted widgets
-                        const activeWidgets = fetchedWidgets.filter(
-                            (widget: any) => widget.active && !widget.deleted
+                        // Include all non-deleted widgets so we can edit and toggle IsActive (inactive widgets stay visible on mapping screen)
+                        const visibleWidgets = fetchedWidgets.filter(
+                            (widget: any) => !widget.deleted
                         );
 
-                        if (activeWidgets.length > 0) {
+                        if (visibleWidgets.length > 0) {
                             // Transform widgets to match Widget type
-                            const transformedWidgets: Widget[] = activeWidgets.map((widget: any) => {
+                            const transformedWidgets: Widget[] = visibleWidgets.map((widget: any) => {
                                 // Preserve the full role object to keep RoleId - same as old mapping page
                                 const transformedRoles = widget.roles
                                     ? widget.roles.map((role: any) => {
@@ -85,6 +85,8 @@ const MappingScreen: React.FC = () => {
                                         roles: transformedRoles,
                                         // Also expose description in props so it can be edited in the configuration panel
                                         description: widget.description || '',
+                                        // IsActive: 'X' or '' - used by Info tab enable/disable and when saving
+                                        IsActive: widget.active ? 'X' : '',
                                     },
                                     roles: transformedRoles, // Also keep on widget for backward compatibility
                                     Description: widget.description || '',
@@ -96,7 +98,7 @@ const MappingScreen: React.FC = () => {
                             setWidgets(transformedWidgets);
 
                             // Transform layout
-                            const transformedLayout: any = activeWidgets.map(
+                            const transformedLayout: any = visibleWidgets.map(
                                 (widget: any, index: number) => {
                                     const layoutConfig = widget.layoutConfig || {};
                                     const { w, h } = getDefaultWidgetSize(widget.type);
@@ -120,7 +122,7 @@ const MappingScreen: React.FC = () => {
 
                             // Transform field mappings
                             const transformedFieldMappings: Record<string, any> = {};
-                            activeWidgets.forEach((widget: any) => {
+                            visibleWidgets.forEach((widget: any) => {
                                 if (widget.fieldMappings) {
                                     transformedFieldMappings[widget.id] = widget.fieldMappings;
                                 }
@@ -251,7 +253,8 @@ const MappingScreen: React.FC = () => {
                     Description: widget.Description || widget.props?.description || '',
                     widgetType: widget.name,
                     deleted: widget.deleted || false,
-                    active: !widget.deleted,
+                    // IsActive from Info tab: 'X' = visible when dashboard is rendered, '' = hidden
+                    active: (widget.props?.IsActive ?? 'X') === 'X',
                 };
             });
 
@@ -336,19 +339,19 @@ const MappingScreen: React.FC = () => {
             <Toast ref={toast} />
             <div className="relative z-10" style={{ color: 'var(--foreground)' }}>
                 <DashboardBuilder
-                widgets={widgets}
-                layout={layout}
-                onWidgetsChange={setWidgets}
-                onLayoutChange={setLayout}
-                sectionName={sectionName}
-                cols={12}
-                rowHeight={80}
-                onSave={saveLayout}
-                isSaving={isSaving}
-                saveDisabled={!sectionId}
-                onWidgetRemove={removeWidget}
-                transparentBackground
-            />
+                    widgets={widgets}
+                    layout={layout}
+                    onWidgetsChange={setWidgets}
+                    onLayoutChange={setLayout}
+                    sectionName={sectionName}
+                    cols={12}
+                    rowHeight={80}
+                    onSave={saveLayout}
+                    isSaving={isSaving}
+                    saveDisabled={!sectionId}
+                    onWidgetRemove={removeWidget}
+                    transparentBackground
+                />
             </div>
         </div>
     );

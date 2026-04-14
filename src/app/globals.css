@@ -9,7 +9,7 @@
 
 /* ========== LIGHT THEME ========== */
 :root[data-theme='light'] {
-  --background: #F7F8FA;
+  --background: #FFFFFF;
   --foreground: #293366;
   --primary1: #83BD01;
   --primary2: #00A3E0;
@@ -37,9 +37,9 @@
   --header-search-placeholder: rgba(95, 108, 129, 0.5);
 
   /* Dashboard / Chart area */
-  --dashboard-bg: #F7F8FA;
-  --dashboard-bg-start: #F7F8FA;
-  --dashboard-bg-end: #F7F8FA;
+  --dashboard-bg: #FFFFFF;
+  --dashboard-bg-start: #FFFFFF;
+  --dashboard-bg-end: #FFFFFF;
   --chart-bg: #FBFBFC;
   --chart-border: #EFEFEF;
   --widget-bg: #FFFFFF;
@@ -81,7 +81,7 @@
 /* ========== DARK THEME ========== */
 :root,
 :root[data-theme='dark'] {
-  --background: #06103a;
+  --background: #0a1a35;
   --foreground: #ededed;
   --primary1: #9dd115;
   --primary2: #a396ff;
@@ -108,10 +108,10 @@
   --header-search-border: rgba(255, 255, 255, 0.2);
   --header-search-placeholder: rgba(255, 255, 255, 0.5);
 
-  /* Dashboard / Chart area - original dark values */
-  --dashboard-bg: linear-gradient(to bottom right, #0a1a35, #1a3a6b);
+  /* Dashboard / Chart area - clean solid dark (no gradient/texture) */
+  --dashboard-bg: #0a1a35;
   --dashboard-bg-start: #0a1a35;
-  --dashboard-bg-end: #1a3a6b;
+  --dashboard-bg-end: #0a1a35;
   --chart-bg: #0a1a35;
   --chart-border: rgba(255, 255, 255, 0.12);
   --widget-bg: transparent;
@@ -148,6 +148,12 @@
   /* Loader & Skeleton */
   --skeleton-bg: #0164B0;
   --loader-color: #60a5fa;
+}
+
+/* Dark mode: clean solid background (no image texture, no gradient) */
+[data-theme='dark'] .dashboard-layout {
+  background: #0a1a35 !important;
+  background-image: none !important;
 }
 
 @theme inline {
@@ -211,6 +217,344 @@ body {
 [data-theme='dark'] .multi-metric-widget {
   background: linear-gradient(to bottom, #00214E, #0164B0) !important;
   color: #ffffff !important;
+}
+
+/* Dark theme: alert-notifications widget - match multi-metric (same gradient) */
+[data-theme='dark'] .alert-notifications-widget {
+  background: linear-gradient(to bottom, #00214E, #0164B0) !important;
+  background-image: linear-gradient(to bottom, #00214E, #0164B0) !important;
+  color: #ffffff !important;
+}
+
+[data-theme='dark'] .alert-notifications-row {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+[data-theme='dark'] .alert-notifications-row:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+[data-theme='dark'] .transparent .alert-notifications-widget {
+  background: transparent !important;
+  background-image: none !important;
+}
+
+/* Dark theme: filter panel - clean look, no glow/glass; sidebar panel keeps gradient, content area transparent */
+[data-theme='dark'] .filter-panel-widget,
+[data-theme='dark'] .filter-panel-sidebar-panel {
+  /* background: linear-gradient(to bottom, #00214E, #0164B0) !important; */
+  /* background-image: linear-gradient(to bottom, #00214E, #0164B0) !important; */
+  color: #ffffff !important;
+  box-shadow: none !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+}
+
+[data-theme='dark'] .filter-panel-content-card,
+[data-theme='dark'] .filter-panel-sidebar-content-inner {
+  background: transparent !important;
+  background-image: none !important;
+  color: #ffffff !important;
+  box-shadow: none !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+}
+
+[data-theme='dark'] .filter-panel-sidebar-overlay {
+  background: rgba(0, 0, 0, 0.4) !important;
+  backdrop-filter: none !important;
+}
+
+[data-theme='dark'] .filter-panel-sidebar-panel {
+  box-shadow: none !important;
+}
+
+[data-theme='dark'] .filter-panel-sidebar-nav {
+  background: #001a3d !important;
+  backdrop-filter: none !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+}
+
+[data-theme='dark'] .filter-panel-sidebar-nav button {
+  box-shadow: none !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+}
+
+[data-theme='dark'] .filter-panel-sidebar-nav button:hover {
+  background: rgba(255, 255, 255, 0.06) !important;
+  border-color: rgba(255, 255, 255, 0.15) !important;
+  box-shadow: none !important;
+}
+
+[data-theme='dark'] .filter-panel-sidebar-content-inner {
+  backdrop-filter: none !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+}
+
+[data-theme='dark'] .filter-panel-title-bar {
+  border-color: rgba(255, 255, 255, 0.12) !important;
+}
+
+[data-theme='dark'] .filter-panel-btn-primary,
+[data-theme='dark'] .filter-panel-btn-secondary {
+  box-shadow: none !important;
+}
+
+[data-theme='dark'] .filter-panel-btn-primary {
+  color: #ffffff !important;
+}
+
+[data-theme='dark'] .filter-panel-btn-secondary {
+  background: rgba(255, 255, 255, 0.1) !important;
+  border-color: rgba(255, 255, 255, 0.2) !important;
+}
+
+[data-theme='dark'] .filter-panel-nav-item-selected {
+  box-shadow: none !important;
+  border-color: rgba(34, 211, 238, 0.45) !important;
+  background: rgba(34, 211, 238, 0.12) !important;
+}
+
+[data-theme='dark'] .filter-panel-sidebar-nav .filter-panel-title-bar {
+  box-shadow: none !important;
+}
+
+[data-theme='dark'] .filter-panel-sidebar-nav .filter-panel-title-bar .filter-panel-btn-primary,
+[data-theme='dark'] .filter-panel-sidebar-nav .filter-panel-title-bar .filter-panel-btn-secondary {
+  box-shadow: none !important;
+}
+
+[data-theme='dark'] .filter-panel-content-card {
+  backdrop-filter: none !important;
+}
+
+[data-theme='dark'] .filter-panel-content-card .filter-panel-input,
+[data-theme='dark'] .filter-panel-content-card input[type="text"],
+[data-theme='dark'] .filter-panel-content-card input[type="date"],
+[data-theme='dark'] .filter-panel-content-card input[type="month"] {
+  background: transparent !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  box-shadow: none !important;
+}
+
+[data-theme='dark'] .filter-panel-content-card .filter-panel-title-bar {
+  background: transparent !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+}
+
+[data-theme='dark'] .filter-panel-content-card .filter-panel-list-box {
+  background: transparent !important;
+  border-color: rgba(255, 255, 255, 0.2) !important;
+}
+
+[data-theme='dark'] .filter-panel-trigger-btn {
+  box-shadow: none !important;
+}
+
+[data-theme='dark'] .filter-panel-list-box thead th,
+[data-theme='dark'] .filter-panel-list-box thead tr {
+  backdrop-filter: none !important;
+}
+
+/* Light theme: filter panel - match multi-metric (widget bg + neutral text), no shadows */
+[data-theme='light'] .filter-panel-content-card,
+[data-theme='light'] .filter-panel-sidebar-panel {
+  background: var(--widget-bg) !important;
+  /* background-image: none !important; */
+  border-color: var(--widget-border) !important;
+  color: var(--text-neutral) !important;
+  box-shadow: none !important;
+}
+
+[data-theme='light'] .filter-panel-sidebar-panel h2,
+[data-theme='light'] .filter-panel-sidebar-panel h3 {
+  color: var(--text-neutral) !important;
+}
+
+[data-theme='light'] .filter-panel-sidebar-overlay {
+  background: rgba(0, 0, 0, 0.25);
+}
+
+[data-theme='light'] .filter-panel-label {
+  color: var(--text-neutral) !important;
+}
+
+[data-theme='light'] .filter-panel-input,
+[data-theme='light'] .filter-panel-content-card input[type="text"],
+[data-theme='light'] .filter-panel-content-card input[type="date"],
+[data-theme='light'] .filter-panel-content-card input[type="month"] {
+  background: var(--widget-surface) !important;
+  border-color: var(--widget-border) !important;
+  color: var(--foreground) !important;
+}
+
+/* Light mode: make native date/month calendar icon dark and visible */
+[data-theme='light'] .filter-panel-content-card input[type="date"]::-webkit-calendar-picker-indicator,
+[data-theme='light'] .filter-panel-content-card input[type="month"]::-webkit-calendar-picker-indicator {
+  filter: invert(1) contrast(1.1);
+  opacity: 1;
+  cursor: pointer;
+}
+
+[data-theme='light'] .filter-panel-input::placeholder,
+[data-theme='light'] .filter-panel-content-card input::placeholder {
+  color: var(--text-muted) !important;
+}
+
+[data-theme='light'] .filter-panel-list-box {
+  background: var(--widget-surface) !important;
+  border-color: var(--widget-border) !important;
+  box-shadow: none !important;
+}
+
+[data-theme='light'] .filter-panel-list-box table,
+[data-theme='light'] .filter-panel-list-box thead th,
+[data-theme='light'] .filter-panel-list-box thead tr,
+[data-theme='light'] .filter-panel-list-box tbody td,
+[data-theme='light'] .filter-panel-list-box tbody tr {
+  color: var(--foreground) !important;
+}
+
+[data-theme='light'] .filter-panel-list-box thead th,
+[data-theme='light'] .filter-panel-list-box thead tr {
+  background: var(--widget-surface-hover) !important;
+  border-color: var(--widget-border) !important;
+}
+
+[data-theme='light'] .filter-panel-list-box tbody tr {
+  border-color: var(--widget-border) !important;
+}
+
+[data-theme='light'] .filter-panel-list-box tbody tr:hover {
+  background: var(--widget-surface-hover) !important;
+}
+
+[data-theme='light'] .filter-panel-btn-secondary {
+  background: var(--widget-surface) !important;
+  border-color: var(--widget-border) !important;
+  color: var(--foreground) !important;
+  box-shadow: none !important;
+}
+
+[data-theme='light'] .filter-panel-btn-secondary:hover {
+  background: var(--widget-surface-hover) !important;
+  border-color: var(--border) !important;
+}
+
+[data-theme='light'] .filter-panel-btn-primary {
+  background: var(--primary2) !important;
+  color: #ffffff !important;
+  box-shadow: none !important;
+}
+
+[data-theme='light'] .filter-panel-sidebar-nav button.filter-panel-btn-primary,
+[data-theme='light'] .filter-panel-title-bar button.filter-panel-btn-primary,
+[data-theme='light'] .filter-panel-content-card button.filter-panel-btn-primary {
+  color: #ffffff !important;
+}
+
+[data-theme='light'] .filter-panel-title-bar,
+[data-theme='light'] .filter-panel-sidebar-nav,
+[data-theme='light'] .filter-panel-sidebar-content-inner {
+  background: var(--widget-surface) !important;
+  border-color: var(--widget-border) !important;
+  color: var(--text-neutral) !important;
+}
+
+[data-theme='light'] .filter-panel-sidebar-nav button {
+  color: var(--text-neutral) !important;
+}
+
+[data-theme='light'] .filter-panel-sidebar-nav .filter-panel-nav-chevron {
+  color: var(--text-neutral) !important;
+}
+
+[data-theme='light'] .filter-panel-sidebar-nav button:hover .filter-panel-nav-chevron {
+  color: var(--foreground) !important;
+}
+
+[data-theme='light'] .filter-panel-sidebar-nav .filter-panel-nav-item-selected .filter-panel-nav-chevron {
+  color: var(--primary2) !important;
+}
+
+[data-theme='light'] .filter-panel-sidebar-nav button:hover,
+[data-theme='light'] .filter-panel-sidebar-nav button[class*="hover:bg"]:hover {
+  background: var(--widget-surface-hover) !important;
+}
+
+[data-theme='light'] .filter-panel-sidebar-nav .filter-panel-nav-item-selected {
+  background: rgba(0, 163, 224, 0.15) !important;
+  border-color: rgba(0, 163, 224, 0.4) !important;
+  color: var(--foreground) !important;
+}
+
+[data-theme='light'] .filter-panel-applied-badge {
+  background: rgba(0, 163, 224, 0.2) !important;
+  border-color: rgba(0, 163, 224, 0.4) !important;
+  color: var(--foreground) !important;
+}
+
+[data-theme='light'] .filter-panel-empty-msg,
+[data-theme='light'] .filter-panel-hint {
+  color: var(--text-muted) !important;
+}
+
+[data-theme='light'] .filter-panel-trigger-btn {
+  background: var(--widget-bg) !important;
+  background-image: none !important;
+  border-color: var(--widget-border) !important;
+  color: var(--foreground) !important;
+  box-shadow: none !important;
+}
+
+[data-theme='light'] .filter-panel-trigger-btn:hover {
+  background: var(--widget-surface-hover) !important;
+}
+
+[data-theme='light'] .filter-panel-trigger-btn .filter-panel-count-badge {
+  background: var(--primary2) !important;
+  border-color: var(--primary2) !important;
+  color: #fff !important;
+}
+
+[data-theme='light'] .filter-panel-no-config {
+  background: var(--widget-surface) !important;
+  border-color: var(--widget-border) !important;
+  color: var(--text-neutral) !important;
+}
+
+/* Light theme: clear filter badge (top-right icon) - match widget styling */
+[data-theme='light'] .filter-panel-clear-badge {
+  background: var(--widget-surface) !important;
+  border-color: var(--widget-border) !important;
+  color: var(--text-neutral) !important;
+  box-shadow: none !important;
+}
+[data-theme='light'] .filter-panel-clear-badge:hover {
+  background: var(--widget-surface-hover) !important;
+  border-color: var(--border) !important;
+  color: var(--foreground) !important;
+}
+
+/* Light theme: filter panel close button - ensure visible against light header */
+[data-theme='light'] .filter-panel-close-btn {
+  color: var(--text-neutral) !important;
+}
+
+[data-theme='light'] .filter-panel-close-btn:hover {
+  background: var(--widget-surface-hover) !important;
+  color: var(--foreground) !important;
+}
+
+/* Dark theme: clear filter badge */
+[data-theme='dark'] .filter-panel-clear-badge {
+  background: rgba(255, 255, 255, 0.15) !important;
+  border-color: rgba(255, 255, 255, 0.25) !important;
+  color: rgba(255, 255, 255, 0.9) !important;
+}
+[data-theme='dark'] .filter-panel-clear-badge:hover {
+  background: rgba(248, 113, 113, 0.25) !important;
+  border-color: rgba(248, 113, 113, 0.4) !important;
+  color: #fff !important;
 }
 
 /* Dashboard menu search placeholder - ensure visible in both themes */
@@ -290,10 +634,39 @@ body {
   border-color: var(--chart-legend-border) !important;
 }
 
+/* Light theme: alert-notifications widget - match multi-metric (widget bg + neutral text) */
+[data-theme='light'] .alert-notifications-widget {
+  background: var(--widget-bg) !important;
+  background-image: none !important;
+  color: var(--text-neutral) !important;
+}
+
+[data-theme='light'] .alert-notifications-widget .alert-notifications-title,
+[data-theme='light'] .alert-notifications-widget .alert-notifications-label,
+[data-theme='light'] .alert-notifications-widget .alert-notifications-value,
+[data-theme='light'] .alert-notifications-widget .alert-notifications-category {
+  color: var(--text-neutral) !important;
+}
+
+[data-theme='light'] .alert-notifications-widget .alert-notifications-suffix,
+[data-theme='light'] .alert-notifications-widget .alert-notifications-empty {
+  color: var(--text-muted) !important;
+}
+
+[data-theme='light'] .alert-notifications-row {
+  background: var(--widget-surface);
+  border: 1px solid var(--widget-border);
+}
+
+[data-theme='light'] .alert-notifications-row:hover {
+  background: var(--widget-surface-hover);
+}
+
 /* Light theme: transparent widgets - no background */
 [data-theme='light'] .transparent .kpi-chart-widget,
 [data-theme='light'] .transparent .multi-chart-widget,
 [data-theme='light'] .transparent .multi-metric-widget,
+[data-theme='light'] .transparent .alert-notifications-widget,
 [data-theme='light'] .transparent .blank-widget {
   background: transparent !important;
   background-image: none !important;

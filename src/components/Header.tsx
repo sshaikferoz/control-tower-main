@@ -1,7 +1,9 @@
 //Header.tsx
 'use client';
 import { Search, Loader2, X } from 'lucide-react';
+import { QuestionMarkCircleIcon } from '@heroicons/react/24/outline';
 import { DASHBOARD_MENU_ICONS } from '@/widgets/dashboard-menu/DashboardMenuConfig.types';
+import Markdown from 'markdown-to-jsx';
 
 const MENU_ICON_IDS: Set<string> = new Set(DASHBOARD_MENU_ICONS.map((i) => i.id));
 
@@ -76,6 +78,8 @@ import { ChevronLeft, ChevronRight, Play, Pause } from 'lucide-react';
 import { UIConfiguration } from '../types/configuration';
 import { TargetReportConfig } from '@/helpers/types';
 import { openReport } from '@/utils/openReportUtils';
+import { ThemeSettingsButton } from '@/components/layout/ThemeSettingsButton';
+import { useTheme } from '@/contexts/ThemeContext';
 
 interface SearchResult {
     metadata: {
@@ -129,6 +133,9 @@ const Header: React.FC<HeaderProps> = ({ configuration, tabId, onSearchSelect, o
     const debounceRef = useRef<NodeJS.Timeout>(null);
     const [announcementIndex, setAnnouncementIndex] = useState(0);
     const [announcementPaused, setAnnouncementPaused] = useState(false);
+    const [showHelpPanel, setShowHelpPanel] = useState(false);
+    const helpPanelRef = useRef<HTMLDivElement>(null);
+    const { theme } = useTheme();
 
     const searchConfig = configuration?.search || {
         enabled: true,
@@ -151,6 +158,13 @@ const Header: React.FC<HeaderProps> = ({ configuration, tabId, onSearchSelect, o
         scrollDelay: 5000,
         scrollDirection: 'left' as const,
     };
+    const themeConfig = configuration?.theme || {
+        enabled: false,
+    };
+    const helpConfig = configuration?.help || {
+        enabled: false,
+        text: 'Need assistance? Contact support or open the user guide.',
+    };
     const getLogoSrc = () => {
         if (brandingConfig.useLogoBase64 && brandingConfig.logoBase64) {
             return brandingConfig.logoBase64;
@@ -159,6 +173,7 @@ const Header: React.FC<HeaderProps> = ({ configuration, tabId, onSearchSelect, o
     };
 
     const logoSrc = getLogoSrc();
+    const isLightTheme = theme === 'light';
 
     // Clear search when tabId changes
     useEffect(() => {
@@ -174,11 +189,14 @@ const Header: React.FC<HeaderProps> = ({ configuration, tabId, onSearchSelect, o
                 setShowDropdown(false);
                 setSelectedIndex(-1);
             }
+            if (showHelpPanel && helpPanelRef.current && !helpPanelRef.current.contains(event.target as Node)) {
+                setShowHelpPanel(false);
+            }
         };
 
         document.addEventListener('mousedown', handleClickOutside);
         return () => document.removeEventListener('mousedown', handleClickOutside);
-    }, []);
+    }, [showHelpPanel]);
 
     // Auto-scroll effect
     useEffect(() => {
@@ -338,7 +356,7 @@ const Header: React.FC<HeaderProps> = ({ configuration, tabId, onSearchSelect, o
             className={`relative mx-4 mt-4 flex h-[73px] w-[calc(100%-2rem)] items-center justify-between rounded-lg px-6 py-4`}
             style={{
                 background: announcementConfig?.enabled
-                    ? `url('${process.env.NEXT_PUBLIC_BSP_NAME}/background/announcement-bg.png') no-repeat center / cover`
+                    ? `url('${process.env.NEXT_PUBLIC_BSP_NAME}/background/${isLightTheme ? 'announcement-light.png' : 'announcement-bg.png'}') no-repeat center / cover`
                     : 'var(--sidebar-bg)',
             }}
         >
@@ -399,7 +417,7 @@ const Header: React.FC<HeaderProps> = ({ configuration, tabId, onSearchSelect, o
 
                             {/* Announcement Text */}
                             <div className="min-w-0 flex-1">
-                                <h3 className="mb-1 text-base leading-tight font-semibold text-[#00A3E0]">
+                                <h3 className="mb-1 text-base leading-tight font-semibold text-white">
                                     {announcementConfig.items[announcementIndex]?.title}
                                 </h3>
                                 <p className="line-clamp-2 text-xs leading-snug text-white/90">
@@ -534,6 +552,44 @@ const Header: React.FC<HeaderProps> = ({ configuration, tabId, onSearchSelect, o
                                         )}
                                     </div>
                                 )}
+                            </div>
+                        )}
+                    </div>
+                )}
+                {themeConfig.enabled && <ThemeSettingsButton />}
+                {helpConfig.enabled && (
+                    <div className="relative" ref={helpPanelRef}>
+                        <button
+                            type="button"
+                            onClick={() => setShowHelpPanel((prev) => !prev)}
+                            className="rounded-full p-1.5 text-white transition-colors hover:bg-white/15"
+                            aria-label="Open help information"
+                            title="Help"
+                        >
+                            <QuestionMarkCircleIcon className="h-6 w-6" />
+                        </button>
+                        {showHelpPanel && (
+                            <div className="absolute top-full right-0 z-50 mt-2 w-80 rounded-xl border border-white/20 bg-[#0c3267]/95 p-3 text-xs text-white shadow-2xl backdrop-blur-md">
+                                <p className="mb-2 text-[11px] font-semibold tracking-wide text-white/80 uppercase">
+                                    Help & Support
+                                </p>
+                                <div className="prose prose-invert max-w-none text-white/95 [&_a]:font-medium [&_a]:text-[#8FE7FF] [&_a]:underline [&_li]:my-1 [&_ol]:my-1 [&_p]:my-1 [&_ul]:my-1">
+                                    <Markdown
+                                        options={{
+                                            forceBlock: true,
+                                            overrides: {
+                                                a: {
+                                                    props: {
+                                                        target: '_blank',
+                                                        rel: 'noopener noreferrer',
+                                                    },
+                                                },
+                                            },
+                                        }}
+                                    >
+                                        {helpConfig.text}
+                                    </Markdown>
+                                </div>
                             </div>
                         )}
                     </div>

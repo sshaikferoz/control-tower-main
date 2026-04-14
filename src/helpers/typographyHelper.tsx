@@ -94,6 +94,8 @@ export function getTypographyElementsForWidget(widgetType: string): string[] {
         announcement: ['title', 'description'],
         'multi-chart': ['title', 'value', 'legend'],
         'kpi-chart': ['title', 'value', 'label'],
+        'dashboard-menu': ['title', 'menuTitle', 'menuDesc'],
+        'alert-notifications': ['title', 'categoryTitle', 'value', 'suffix'],
     };
 
     return widgetElementMap[widgetType] || ['title', 'value', 'label'];

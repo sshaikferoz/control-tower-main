@@ -20,5 +20,6 @@ export const WIDGETS: Widget[] = [
     { id: 'filter-widget', name: 'filter-widget', displayName: 'Filter Widget' },
     { id: 'listener-widget', name: 'listener-widget', displayName: 'Listener Widget' },
     { id: 'blank-widget', name: 'blank-widget', displayName: 'Blank Widget' },
+    { id: 'alert-notifications', name: 'alert-notifications', displayName: 'Alert Intelligence' },
 ] as const;
 

@@ -40,6 +40,7 @@ export const widgetSizes: Record<string, { w: number; h: number }> = {
     'listener-widget': { w: 4, h: 4 },
     'blank-widget': { w: 2, h: 2 },
     'dashboard-menu': { w: 3, h: 3 },
+    'alert-notifications': { w: 4, h: 3 },
 };
 
 /**
@@ -323,6 +324,13 @@ export const defaultPropsMapping: Record<string, any> = {
             displayMode: 'multiple',
             layout: 'list',
         },
+    },
+    'alert-notifications': {
+        alertConfig: {
+            categories: [],
+            transparentBackground: false,
+        },
+        backgroundColor: DEFAULT_MULTI_METRIC_COLOR,
     },
 };
 

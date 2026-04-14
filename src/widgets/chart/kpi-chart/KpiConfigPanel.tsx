@@ -37,7 +37,10 @@ const defaultConfig: KpiWidgetConfig = {
     showLabels: true,
     showTitle: true,
     valueFormat: 'non-currency',
+    decimalPrecision: 2,
     kpiType: 'number',
+    targetSource: 'manual',
+    showTargetValueTop: false,
 };
 
 export const KpiConfigPanel: React.FC<KpiConfigPanelProps> = ({
@@ -429,6 +432,149 @@ export const KpiConfigPanel: React.FC<KpiConfigPanelProps> = ({
                     </Select>
                 </FormControl>
 
+                <Typography variant="caption" className="mb-2 text-white/70 text-xs block">
+                    Optional target value shown as an indicator on KPI scales.
+                </Typography>
+
+                <FormControl fullWidth className="mb-4">
+                    <InputLabel
+                        id="kpi-target-source-label"
+                        sx={{
+                            color: 'rgba(255, 255, 255, 0.7)',
+                            '&.Mui-focused': {
+                                color: 'rgba(255, 255, 255, 0.9)',
+                            },
+                        }}
+                    >
+                        Target Source
+                    </InputLabel>
+                    <Select
+                        labelId="kpi-target-source-label"
+                        value={config.targetSource || 'manual'}
+                        onChange={(e) => handleChange('targetSource', e.target.value)}
+                        label="Target Source"
+                        sx={{
+                            color: 'white',
+                            '& .MuiOutlinedInput-notchedOutline': {
+                                borderColor: 'rgba(255, 255, 255, 0.3)',
+                            },
+                            '&:hover .MuiOutlinedInput-notchedOutline': {
+                                borderColor: 'rgba(255, 255, 255, 0.5)',
+                            },
+                            '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                                borderColor: '#00d4ff',
+                            },
+                            '& .MuiSvgIcon-root': {
+                                color: 'white',
+                            },
+                        }}
+                    >
+                        <MenuItem value="manual">Manual</MenuItem>
+                        <MenuItem value="query">From Query Field</MenuItem>
+                    </Select>
+                </FormControl>
+
+                {(config.targetSource || 'manual') === 'manual' ? (
+                    <TextField
+                        label="Target Value"
+                        type="number"
+                        value={config.targetManualValue ?? ''}
+                        onChange={(e) =>
+                            handleChange(
+                                'targetManualValue',
+                                e.target.value === '' ? undefined : parseFloat(e.target.value)
+                            )
+                        }
+                        fullWidth
+                        className="mb-4"
+                        sx={{
+                            '& .MuiOutlinedInput-root': {
+                                color: 'white',
+                                '& fieldset': {
+                                    borderColor: 'rgba(255, 255, 255, 0.3)',
+                                },
+                                '&:hover fieldset': {
+                                    borderColor: 'rgba(255, 255, 255, 0.5)',
+                                },
+                                '&.Mui-focused fieldset': {
+                                    borderColor: '#00d4ff',
+                                },
+                            },
+                            '& .MuiInputLabel-root': {
+                                color: 'rgba(255, 255, 255, 0.7)',
+                            },
+                            '& .MuiInputLabel-root.Mui-focused': {
+                                color: 'rgba(255, 255, 255, 0.9)',
+                            },
+                        }}
+                    />
+                ) : (
+                    <FormControl fullWidth className="mb-4">
+                        <InputLabel
+                            id="kpi-target-value-key-label"
+                            sx={{
+                                color: 'rgba(255, 255, 255, 0.7)',
+                                '&.Mui-focused': {
+                                    color: 'rgba(255, 255, 255, 0.9)',
+                                },
+                            }}
+                        >
+                            Target Field
+                        </InputLabel>
+                        <Select
+                            labelId="kpi-target-value-key-label"
+                            value={config.targetValueKey || ''}
+                            onChange={(e) => handleChange('targetValueKey', e.target.value || undefined)}
+                            label="Target Field"
+                            sx={{
+                                color: 'white',
+                                '& .MuiOutlinedInput-notchedOutline': {
+                                    borderColor: 'rgba(255, 255, 255, 0.3)',
+                                },
+                                '&:hover .MuiOutlinedInput-notchedOutline': {
+                                    borderColor: 'rgba(255, 255, 255, 0.5)',
+                                },
+                                '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                                    borderColor: '#00d4ff',
+                                },
+                                '& .MuiSvgIcon-root': {
+                                    color: 'white',
+                                },
+                            }}
+                        >
+                            <MenuItem value="">
+                                <em>None</em>
+                            </MenuItem>
+                            {availableFields.keyFigureKeys.map((key: string) => (
+                                <MenuItem key={key} value={key}>
+                                    {availableFields.headerText[key] || key}
+                                </MenuItem>
+                            ))}
+                        </Select>
+                    </FormControl>
+                )}
+
+                <FormControlLabel
+                    className="mb-2"
+                    control={
+                        <Checkbox
+                            checked={config.showTargetValueTop === true}
+                            onChange={(e) => handleChange('showTargetValueTop', e.target.checked)}
+                            sx={{
+                                color: 'rgba(255, 255, 255, 0.7)',
+                                '&.Mui-checked': {
+                                    color: '#00d4ff',
+                                },
+                            }}
+                        />
+                    }
+                    label={
+                        <Typography variant="body2" sx={{ fontSize: '0.875rem' }}>
+                            Show Target Value At Top
+                        </Typography>
+                    }
+                />
+
                 <TextField
                     label="Listen To Event (Optional)"
                     value={config.listenToEvent || ''}
@@ -486,7 +632,7 @@ export const KpiConfigPanel: React.FC<KpiConfigPanelProps> = ({
                     </InputLabel>
                     <Select
                         labelId="kpi-type-label"
-                        value={(config.kpiType || 'combined') as KpiType}
+                        value={(config.kpiType || 'number') as KpiType}
                         onChange={(e) => handleChange('kpiType', e.target.value as KpiType)}
                         label="KPI Type"
                         sx={{
@@ -511,6 +657,7 @@ export const KpiConfigPanel: React.FC<KpiConfigPanelProps> = ({
                         <MenuItem value="radialBar">Radial Bar</MenuItem>
                         <MenuItem value="status">Status</MenuItem>
                         <MenuItem value="bullet">Bullet</MenuItem>
+                        <MenuItem value="gauge">Gauge</MenuItem>
                     </Select>
                 </FormControl>
             </div>
@@ -620,6 +767,38 @@ export const KpiConfigPanel: React.FC<KpiConfigPanelProps> = ({
                     <MenuItem value="currency">Currency</MenuItem>
                 </Select>
             </FormControl>
+
+            <TextField
+                label="Decimal Precision"
+                type="number"
+                value={config.decimalPrecision ?? 2}
+                onChange={(e) => {
+                    const num = Number(e.target.value);
+                    handleChange('decimalPrecision', Number.isFinite(num) ? Math.max(0, num) : undefined);
+                }}
+                inputProps={{ min: 0, step: 1 }}
+                fullWidth
+                sx={{
+                    '& .MuiOutlinedInput-root': {
+                        color: 'white',
+                        '& fieldset': {
+                            borderColor: 'rgba(255, 255, 255, 0.3)',
+                        },
+                        '&:hover fieldset': {
+                            borderColor: 'rgba(255, 255, 255, 0.5)',
+                        },
+                        '&.Mui-focused fieldset': {
+                            borderColor: '#00d4ff',
+                        },
+                    },
+                    '& .MuiInputLabel-root': {
+                        color: 'rgba(255, 255, 255, 0.7)',
+                    },
+                    '& .MuiInputLabel-root.Mui-focused': {
+                        color: 'rgba(255, 255, 255, 0.9)',
+                    },
+                }}
+            />
         </div>
     );
 };

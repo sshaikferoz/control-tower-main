@@ -237,6 +237,8 @@ export const ConfigurationDialog: React.FC<ConfigurationDialogProps> = ({
         { label: 'Background', icon: 'pi pi-image', id: 'background' },
         { label: 'Chatbot', icon: 'pi pi-comments', id: 'chatbot' },
         { label: 'Search', icon: 'pi pi-search', id: 'search' },
+        { label: 'Help', icon: 'pi pi-question-circle', id: 'help' },
+        { label: 'Theme', icon: 'pi pi-moon', id: 'theme' },
         { label: 'Branding', icon: 'pi pi-palette', id: 'branding' },
         { label: 'Announcement', icon: 'pi pi-megaphone', id: 'announcement' },
         { label: 'Dashboard', icon: 'pi pi-th-large', id: 'dashboard' },
@@ -768,8 +770,104 @@ export const ConfigurationDialog: React.FC<ConfigurationDialogProps> = ({
                         </div>
                     )}
 
-                    {/* Branding Settings */}
+                    {/* Help Settings */}
                     {activeTab === 3 && (
+                        <div className="space-y-6">
+                            <div className="flex items-center justify-between">
+                                <label className="block text-sm font-medium text-gray-300">
+                                    Enable Help in Sidebar
+                                </label>
+                                <label className="relative inline-flex cursor-pointer items-center">
+                                    <input
+                                        type="checkbox"
+                                        checked={formData.help?.enabled ?? false}
+                                        disabled={isSaving || isResetting}
+                                        onChange={(e) =>
+                                            setFormData({
+                                                ...formData,
+                                                help: {
+                                                    ...(formData.help || {
+                                                        enabled: true,
+                                                        text: 'Need assistance? Contact support or open the user guide.',
+                                                    }),
+                                                    enabled: e.target.checked,
+                                                },
+                                            })
+                                        }
+                                        className="peer sr-only"
+                                    />
+                                    <div className="peer h-6 w-11 rounded-full bg-gray-700 peer-checked:bg-blue-600 peer-focus:outline-none peer-disabled:opacity-50 after:absolute after:top-[2px] after:left-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:after:translate-x-full peer-checked:after:border-white"></div>
+                                </label>
+                            </div>
+                            <small className="block text-gray-400">
+                                Use Markdown to control Help text, links, and formatting shown from the sidebar help icon.
+                            </small>
+
+                            <div className={`${formData.help?.enabled ? '' : 'opacity-50 pointer-events-none'}`}>
+                                <label className="mb-2 block text-sm font-medium text-gray-300">
+                                    Help Text (Markdown)
+                                </label>
+                                <textarea
+                                    value={formData.help?.text ?? ''}
+                                    rows={8}
+                                    disabled={isSaving || isResetting || !(formData.help?.enabled ?? false)}
+                                    onChange={(e) =>
+                                        setFormData({
+                                            ...formData,
+                                            help: {
+                                                ...(formData.help || {
+                                                    enabled: true,
+                                                    text: '',
+                                                }),
+                                                text: e.target.value,
+                                            },
+                                        })
+                                    }
+                                    placeholder="- To get the required authorization role, [Click here](https://example.com)
+- For support, contact [Procurement & Supply Chain Control Tower](mailto:support@example.com)"
+                                    className="w-full rounded border border-[#3a5a8b] bg-[#2a4a7b] p-3 text-sm text-white outline-none focus:border-blue-500 disabled:opacity-50"
+                                />
+                                <small className="mt-1 block text-gray-400">
+                                    Example links: `[label](https://example.com)` or `[email](mailto:support@example.com)`.
+                                </small>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Theme Settings */}
+                    {activeTab === 4 && (
+                        <div className="space-y-6">
+                            <div className="flex items-center justify-between">
+                                <label className="block text-sm font-medium text-gray-300">
+                                    Enable Theme Toggle in Header
+                                </label>
+                                <label className="relative inline-flex cursor-pointer items-center">
+                                    <input
+                                        type="checkbox"
+                                        checked={formData.theme?.enabled ?? false}
+                                        disabled={isSaving || isResetting}
+                                        onChange={(e) =>
+                                            setFormData({
+                                                ...formData,
+                                                theme: {
+                                                    ...(formData.theme || { enabled: false }),
+                                                    enabled: e.target.checked,
+                                                },
+                                            })
+                                        }
+                                        className="peer sr-only"
+                                    />
+                                    <div className="peer h-6 w-11 rounded-full bg-gray-700 peer-checked:bg-blue-600 peer-focus:outline-none peer-disabled:opacity-50 after:absolute after:top-[2px] after:left-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:after:translate-x-full peer-checked:after:border-white"></div>
+                                </label>
+                            </div>
+                            <small className="block text-gray-400">
+                                Shows a light/dark mode control in the header navigation for end users.
+                            </small>
+                        </div>
+                    )}
+
+                    {/* Branding Settings */}
+                    {activeTab === 5 && (
                         <div className="space-y-6">
                             <div>
                                 <label className="mb-2 block text-sm font-medium text-gray-300">
@@ -918,7 +1016,7 @@ export const ConfigurationDialog: React.FC<ConfigurationDialogProps> = ({
                     )}
 
                     {/* Dashboard Settings */}
-                    {activeTab === 5 && (
+                    {activeTab === 7 && (
                         <div className="space-y-6">
                             <div>
                                 <label className="mb-2 block text-sm font-medium text-gray-300">
@@ -949,7 +1047,7 @@ export const ConfigurationDialog: React.FC<ConfigurationDialogProps> = ({
                     )}
 
                     {/* Color Palettes Settings */}
-                    {activeTab === 6 && (
+                    {activeTab === 8 && (
                         <div className="space-y-6">
                             <ColorPaletteConfigUI
                                 customVariants={formData.colorPalettes?.customVariants || []}
@@ -966,7 +1064,7 @@ export const ConfigurationDialog: React.FC<ConfigurationDialogProps> = ({
                     )}
 
                     {/* Announcement Settings */}
-                    {activeTab === 4 && (
+                    {activeTab === 6 && (
                         <div className="space-y-6">
                             {/* Enable/Disable */}
                             <div className="flex items-center justify-between">

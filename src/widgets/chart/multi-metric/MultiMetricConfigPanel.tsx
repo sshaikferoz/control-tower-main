@@ -22,6 +22,7 @@ const defaultConfig: MultiMetricWidgetConfig = {
     metrics: [],
     layout: 'horizontal',
     showDividers: true,
+    listenToEvent: undefined,
 };
 
 // Collapsible Section Component
@@ -234,6 +235,7 @@ export const MultiMetricConfigPanel: React.FC<MultiMetricConfigPanelProps> = ({
         const newMetric: MultiMetricItem = {
             id: `metric-${Date.now()}`,
             title: `Metric ${(config.metrics?.length || 0) + 1}`,
+            titleSource: 'manual',
             queryName: '',
             valueKey: undefined,
             titleAlignment: 'center',
@@ -280,6 +282,11 @@ export const MultiMetricConfigPanel: React.FC<MultiMetricConfigPanelProps> = ({
         { value: 'horizontal', label: 'Horizontal (Title beside Value)' },
     ];
 
+    const titleSourceOptions = [
+        { value: 'manual', label: 'Manual' },
+        { value: 'query', label: 'From Query Field' },
+    ];
+
     return (
         <div className="space-y-4 text-white">
             {/* Basic Configuration */}
@@ -313,6 +320,16 @@ export const MultiMetricConfigPanel: React.FC<MultiMetricConfigPanelProps> = ({
                     description="Use transparent background instead of gradient"
                     id="transparent-background"
                     name="transparent-background"
+                />
+
+                <CustomInput
+                    label="Listen To Event (Optional)"
+                    type="text"
+                    value={config.listenToEvent || ''}
+                    onChange={(value) => handleChange('listenToEvent', value || undefined)}
+                    placeholder="Event name from filter panel (e.g., filter-changed)"
+                    id="listen-to-event"
+                    name="listen-to-event"
                 />
             </CollapsibleSection>
 
@@ -352,6 +369,7 @@ export const MultiMetricConfigPanel: React.FC<MultiMetricConfigPanelProps> = ({
                             alignmentOptions={alignmentOptions}
                             formatOptions={formatOptions}
                             metricLayoutOptions={metricLayoutOptions}
+                            titleSourceOptions={titleSourceOptions}
                         />
                     ))}
                 </div>
@@ -369,7 +387,8 @@ const MetricConfigCard: React.FC<{
     alignmentOptions: { value: string; label: string }[];
     formatOptions: { value: string; label: string }[];
     metricLayoutOptions: { value: string; label: string }[];
-}> = ({ metric, index, onMetricChange, onRemove, alignmentOptions, formatOptions, metricLayoutOptions }) => {
+    titleSourceOptions: { value: string; label: string }[];
+}> = ({ metric, index, onMetricChange, onRemove, alignmentOptions, formatOptions, metricLayoutOptions, titleSourceOptions }) => {
     const [queryNameInput, setQueryNameInput] = useState(metric.queryName || '');
 
     // Fetch BEX data when query name is provided
@@ -385,20 +404,27 @@ const MetricConfigCard: React.FC<{
     const availableFields = useMemo(() => {
         if (!bexData) {
             return {
+                allFieldKeys: [],
                 keyFigureKeys: [],
                 headerText: {},
             };
         }
 
         // Handle enhanced parser result
+        const chartData = (bexData as any)?.chartData || [];
+        const rowKeys = chartData.length > 0 ? Object.keys(chartData[0] || {}) : [];
+        const charKeys = (bexData as any)?.charKeys || [];
         const keyFigureKeys = (bexData as any)?.keyFigureKeys || [];
         const headerText = (bexData as any)?.headerText || {};
+        const allFieldKeys = Array.from(new Set([...charKeys, ...keyFigureKeys, ...rowKeys]));
 
         return {
+            allFieldKeys,
             keyFigureKeys,
             headerText,
         };
     }, [bexData]);
+
 
     // Update query name when input changes
     useEffect(() => {
@@ -415,16 +441,47 @@ const MetricConfigCard: React.FC<{
             {/* Header: Title and Delete Button */}
             <div className="mb-4 flex items-start justify-between gap-3">
                 <div className="flex-1 min-w-0">
-                    <label htmlFor={`metric-title-${index}`} className="mb-2 block text-xs font-medium text-white/70">Metric Title</label>
-                    <input
-                        id={`metric-title-${index}`}
-                        name={`metric-title-${index}`}
-                        type="text"
-                        value={metric.title}
-                        onChange={(e) => onMetricChange(index, 'title', e.target.value)}
-                        placeholder="Enter metric title"
-                        className="w-full rounded-lg border border-white/20 bg-white/5 px-4 py-2.5 text-sm text-white placeholder:!text-white/40 focus:border-cyan-400 focus:outline-none focus:ring-2 focus:ring-cyan-400/20"
+                    <CustomSelect
+                        label="Title Source"
+                        value={metric.titleSource || 'manual'}
+                        onChange={(value) => onMetricChange(index, 'titleSource', value)}
+                        options={titleSourceOptions}
+                        id={`title-source-${index}`}
+                        name={`title-source-${index}`}
                     />
+
+                    {(metric.titleSource || 'manual') === 'manual' ? (
+                        <>
+                            <label htmlFor={`metric-title-${index}`} className="mb-2 block text-xs font-medium text-white/70">Metric Title</label>
+                            <input
+                                id={`metric-title-${index}`}
+                                name={`metric-title-${index}`}
+                                type="text"
+                                value={metric.title}
+                                onChange={(e) => onMetricChange(index, 'title', e.target.value)}
+                                placeholder="Enter metric title"
+                                className="w-full rounded-lg border border-white/20 bg-white/5 px-4 py-2.5 text-sm text-white placeholder:!text-white/40 focus:border-cyan-400 focus:outline-none focus:ring-2 focus:ring-cyan-400/20"
+                            />
+                        </>
+                    ) : (
+                        <>
+                            <CustomSelect
+                                label="Title Field"
+                                value={metric.titleFieldKey || ''}
+                                onChange={(value) => onMetricChange(index, 'titleFieldKey', value || undefined)}
+                                options={[
+                                    { value: '', label: 'None' },
+                                    ...availableFields.allFieldKeys.map((key: string) => ({
+                                        value: key,
+                                        label: availableFields.headerText[key] || key,
+                                    })),
+                                ]}
+                                placeholder="Select query field for title"
+                                id={`title-field-${index}`}
+                                name={`title-field-${index}`}
+                            />
+                        </>
+                    )}
                 </div>
                 <button
                     onClick={() => onRemove(index)}
@@ -587,91 +644,6 @@ const MetricConfigCard: React.FC<{
                 )}
             </div>
 
-            {/* Event Listening Configuration */}
-            <div className="mb-4 space-y-3 rounded-lg border border-white/10 bg-white/5 p-3">
-                <h5 className="mb-2 text-sm font-semibold text-white">Filter Event Configuration</h5>
-                <CustomInput
-                    label="Listen to Event"
-                    type="text"
-                    value={metric.listenToEvent || ''}
-                    onChange={(value) => onMetricChange(index, 'listenToEvent', value || undefined)}
-                    placeholder="Event name from filter panel (e.g., filter-changed)"
-                    id={`listen-to-event-${index}`}
-                    name={`listen-to-event-${index}`}
-                />
-                <p className="text-xs text-white/50">
-                    Enter the event name emitted by the filter panel widget. Leave empty to disable event listening.
-                </p>
-
-                {metric.listenToEvent && (
-                    <div className="mt-4 space-y-3">
-                        <div className="mb-2 flex items-center justify-between">
-                            <label className="text-xs font-medium text-white/70">Variable Mappings</label>
-                            <button
-                                onClick={() => {
-                                    const currentMappings = metric.variableMappings || [];
-                                    onMetricChange(index, 'variableMappings', [
-                                        ...currentMappings,
-                                        { filterVariableName: '', bexVariableName: '' },
-                                    ]);
-                                }}
-                                className="rounded px-2 py-1 text-xs text-cyan-400 transition-colors hover:bg-cyan-400/10"
-                            >
-                                <PlusIcon className="mr-1 inline h-3 w-3" />
-                                Add Mapping
-                            </button>
-                        </div>
-                        {(metric.variableMappings || []).map((mapping, mapIndex) => (
-                            <div key={mapIndex} className="flex gap-2 rounded border border-white/10 bg-white/5 p-2">
-                                <div className="flex-1">
-                                    <CustomInput
-                                        label="Filter Variable Name"
-                                        type="text"
-                                        value={mapping.filterVariableName}
-                                        onChange={(value) => {
-                                            const updatedMappings = [...(metric.variableMappings || [])];
-                                            updatedMappings[mapIndex] = { ...mapping, filterVariableName: value as string };
-                                            onMetricChange(index, 'variableMappings', updatedMappings);
-                                        }}
-                                        placeholder="Variable name from filter event"
-                                        id={`filter-var-${index}-${mapIndex}`}
-                                        name={`filter-var-${index}-${mapIndex}`}
-                                    />
-                                </div>
-                                <div className="flex-1">
-                                    <CustomInput
-                                        label="BEX Variable Name"
-                                        type="text"
-                                        value={mapping.bexVariableName}
-                                        onChange={(value) => {
-                                            const updatedMappings = [...(metric.variableMappings || [])];
-                                            updatedMappings[mapIndex] = { ...mapping, bexVariableName: value as string };
-                                            onMetricChange(index, 'variableMappings', updatedMappings);
-                                        }}
-                                        placeholder="Variable name for BEX query"
-                                        id={`bex-var-${index}-${mapIndex}`}
-                                        name={`bex-var-${index}-${mapIndex}`}
-                                    />
-                                </div>
-                                <button
-                                    onClick={() => {
-                                        const updatedMappings = (metric.variableMappings || []).filter((_, i) => i !== mapIndex);
-                                        onMetricChange(index, 'variableMappings', updatedMappings.length > 0 ? updatedMappings : undefined);
-                                    }}
-                                    className="mt-6 rounded p-1 text-white/70 transition-colors hover:bg-red-500/20 hover:text-red-400"
-                                >
-                                    <TrashIcon className="h-4 w-4" />
-                                </button>
-                            </div>
-                        ))}
-                        {(!metric.variableMappings || metric.variableMappings.length === 0) && (
-                            <p className="text-xs text-white/50">
-                                Add variable mappings to map filter panel variables to BEX query variables.
-                            </p>
-                        )}
-                    </div>
-                )}
-            </div>
         </div>
     );
 };

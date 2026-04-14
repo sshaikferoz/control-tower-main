@@ -66,6 +66,25 @@ const KpiChart: React.FC<KpiChartProps> = ({
         return Number.isFinite(parsed) ? parsed : null;
     }, [bexData, providedData, kpiConfig]);
 
+    const targetValue = useMemo(() => {
+        if (!kpiConfig) return null;
+
+        if ((kpiConfig.targetSource || 'manual') === 'query') {
+            if (!kpiConfig.targetValueKey) return null;
+            const source = (bexData as any)?.chartData || providedData;
+            if (!source?.length) return null;
+            const value = source[0][kpiConfig.targetValueKey];
+            if (value === '' || value === null || value === undefined) return null;
+            const parsed = typeof value === 'string' ? Number(value.trim()) : Number(value);
+            return Number.isFinite(parsed) ? parsed : null;
+        }
+
+        const manual = kpiConfig.targetManualValue;
+        if (manual === null || manual === undefined) return null;
+        const parsed = Number(manual);
+        return Number.isFinite(parsed) ? parsed : null;
+    }, [bexData, providedData, kpiConfig]);
+
     useEffect(() => {
         setCurrentValue(extractedValue);
     }, [extractedValue]);
@@ -94,7 +113,8 @@ const KpiChart: React.FC<KpiChartProps> = ({
 
         return formatNumberUtil(num, {
             format: kpiConfig?.valueFormat || 'non-currency',
-            decimals: 2,
+            decimalPrecision: kpiConfig?.decimalPrecision,
+            decimals: kpiConfig?.decimalPrecision ?? 2,
         });
     };
 
@@ -115,7 +135,10 @@ const KpiChart: React.FC<KpiChartProps> = ({
     };
 
     const percentage = getPercentage(currentValue);
+    const targetPercentage = getPercentage(targetValue);
     const color = getColorForValue(currentValue);
+    const targetIndicatorColor = 'var(--chart-text)';
+    const showTargetTop = kpiConfig?.showTargetValueTop === true && targetValue !== null;
 
     /* ---------------------------------- */
     /* Theme */
@@ -170,13 +193,37 @@ const KpiChart: React.FC<KpiChartProps> = ({
     };
 
     const renderLinear = () => (
-        <div className="w-full">
-            <div className="h-8 rounded-full overflow-hidden" style={{ background: 'var(--chart-progress-bg)' }}>
+        <div className="w-full relative">
+            <div className="h-8 rounded-full overflow-hidden relative" style={{ background: 'var(--chart-progress-bg)' }}>
                 <div
                     className="h-full transition-all"
                     style={{ width: `${percentage}%`, backgroundColor: color }}
                 />
+                {targetValue !== null && (
+                    <div
+                        className="absolute top-0 h-full w-[2px]"
+                        style={{
+                            left: `${targetPercentage}%`,
+                            transform: 'translateX(-50%)',
+                            backgroundColor: targetIndicatorColor,
+                            boxShadow: '0 0 4px color-mix(in srgb, var(--chart-text) 55%, transparent)',
+                        }}
+                        aria-label={`Target ${formatNumber(targetValue)}`}
+                    />
+                )}
             </div>
+            {targetValue !== null && showTargetTop && (
+                <span
+                    className="absolute -top-5 text-[10px] font-semibold whitespace-nowrap"
+                    style={{
+                        left: `${targetPercentage}%`,
+                        transform: 'translateX(-50%)',
+                        color: targetIndicatorColor,
+                    }}
+                >
+                    {formatNumber(targetValue)}
+                </span>
+            )}
         </div>
     );
 
@@ -224,6 +271,90 @@ const KpiChart: React.FC<KpiChartProps> = ({
     };
 
     const renderRadialBar = () => renderDonut();
+
+    const renderGauge = () => {
+        const centerX = 100;
+        const centerY = 100;
+        const radius = 70;
+        const startX = centerX - radius;
+        const endX = centerX + radius;
+        const arcPath = `M ${startX} ${centerY} A ${radius} ${radius} 0 0 1 ${endX} ${centerY}`;
+        const gaugeValue = Math.round(percentage);
+        const hasTarget = targetValue !== null;
+        const targetAngle = Math.PI * (1 - targetPercentage / 100);
+        const targetX = centerX + radius * Math.cos(targetAngle);
+        const targetY = centerY - radius * Math.sin(targetAngle);
+        const targetInnerX = centerX + (radius - 10) * Math.cos(targetAngle);
+        const targetInnerY = centerY - (radius - 10) * Math.sin(targetAngle);
+        const targetOuterX = centerX + (radius + 10) * Math.cos(targetAngle);
+        const targetOuterY = centerY - (radius + 10) * Math.sin(targetAngle);
+
+        const valueTextStyle = {
+            fontSize: valueStyles.fontSize || '20px',
+            fontWeight: valueStyles.fontWeight || 600,
+            fill: valueStyles.color || 'var(--chart-text)',
+            fontFamily: valueStyles.fontFamily,
+        };
+
+        return (
+            <div className="w-full flex justify-center">
+                <svg width="220" height="140" viewBox="0 0 200 130" role="img" aria-label={`Gauge value ${gaugeValue}%`}>
+                    <path
+                        d={arcPath}
+                        stroke="#D1D5DB"
+                        strokeWidth="22"
+                        fill="none"
+                        strokeLinecap="butt"
+                    />
+                    <path
+                        d={arcPath}
+                        stroke={color}
+                        strokeWidth="22"
+                        fill="none"
+                        strokeLinecap="butt"
+                        pathLength={100}
+                        strokeDasharray={`${gaugeValue} 100`}
+                    />
+                    {hasTarget && (
+                        <>
+                            <line
+                                x1={targetInnerX}
+                                y1={targetInnerY}
+                                x2={targetOuterX}
+                                y2={targetOuterY}
+                                stroke={targetIndicatorColor}
+                                strokeWidth="3"
+                                strokeLinecap="round"
+                            />
+                            {showTargetTop && (
+                                <text
+                                    x={targetX}
+                                    y={targetY - 12}
+                                    textAnchor="middle"
+                                    style={{
+                                        fill: targetIndicatorColor,
+                                        fontSize: '10px',
+                                        fontWeight: 600,
+                                    }}
+                                >
+                                    {formatNumber(targetValue)}
+                                </text>
+                            )}
+                        </>
+                    )}
+                    <text
+                        x="100"
+                        y="103"
+                        dominantBaseline="middle"
+                        textAnchor="middle"
+                        style={valueTextStyle}
+                    >
+                        {gaugeValue}%
+                    </text>
+                </svg>
+            </div>
+        );
+    };
 
     const renderStatus = () => (
         <div className="flex items-center gap-3">
@@ -282,6 +413,18 @@ const KpiChart: React.FC<KpiChartProps> = ({
                         />
                     )}
 
+                    {targetValue !== null && (
+                        <div
+                            className="absolute bottom-0 h-3.5 w-[2px]"
+                            style={{
+                                left: `${targetPercentage}%`,
+                                transform: 'translateX(-50%)',
+                                backgroundColor: targetIndicatorColor,
+                            }}
+                            aria-label={`Target ${formatNumber(targetValue)}`}
+                        />
+                    )}
+
                     {/* Numeric value aligned to markerPosition */}
                     {currentValue !== null && (
                         <div
@@ -294,6 +437,18 @@ const KpiChart: React.FC<KpiChartProps> = ({
                             }}
                         >
                             {formatNumber(currentValue)}
+                        </div>
+                    )}
+                    {targetValue !== null && showTargetTop && (
+                        <div
+                            className="absolute -top-4 text-[10px] font-semibold whitespace-nowrap"
+                            style={{
+                                left: `${targetPercentage}%`,
+                                transform: 'translateX(-50%)',
+                                color: targetIndicatorColor,
+                            }}
+                        >
+                            {formatNumber(targetValue)}
                         </div>
                     )}
                 </div>
@@ -320,7 +475,8 @@ const KpiChart: React.FC<KpiChartProps> = ({
         donut: renderDonut,
         radialBar: renderRadialBar,
         status: renderStatus,
-        bullet: renderBullet
+        bullet: renderBullet,
+        gauge: renderGauge,
     };
 
     /* ---------------------------------- */
@@ -351,6 +507,13 @@ const KpiChart: React.FC<KpiChartProps> = ({
             <div className="kpi-chart-widget h-full w-full rounded-xl p-4 flex flex-col" style={backgroundStyle}>
 
                 <h3 className="mb-4 font-bold" style={titleStyles}>{title}</h3>
+                {!showTargetTop && (
+                    <div className="mb-2 flex justify-center">
+                        <span className="text-xs font-semibold" style={{ ...labelStyles, color: 'var(--chart-text)' }}>
+                            {formatNumber(targetValue)}
+                        </span>
+                    </div>
+                )}
 
                 <div className="flex-1 flex items-center justify-center">
                     {renderers[kpiConfig.kpiType || 'number']()}

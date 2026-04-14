@@ -1,6 +1,7 @@
 export type SelectionMode = 'single' | 'multi' | 'range';
 
 export type FilterComponentType = 'input' | 'datePicker' | 'list';
+export type DateFilterFormat = 'YYYY' | 'MM/YYYY' | 'MM/DD/YYYY';
 
 export interface FilterVariable {
     name: string; // Variable name that will be used in BEX queries
@@ -19,13 +20,14 @@ export interface FilterComponent {
     defaultValue?: string;
     
     // For datePicker component
-    dateFormat?: string;
+    dateFormat?: DateFilterFormat;
     minDate?: string;
     maxDate?: string;
     
     // For list component (BEX Query)
     queryName?: string; // BEX query name to fetch list options
-    displayField?: string; // Field to display in the list
+    includeDisplayKey?: boolean; // Append display_key=X to query URL to fetch key fields
+    displayField?: string | string[]; // Field(s) to display in the list
     valueField?: string; // Field to use as value
 }
 

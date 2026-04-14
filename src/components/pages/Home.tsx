@@ -831,18 +831,18 @@ export default function Home({
                     <div className="relative z-10 flex max-h-screen flex-col overflow-y-auto" style={{ color: 'var(--foreground)' }}>
                         <div className="sticky top-0 z-20 flex-shrink-0">
                             <DashboardHeader
-                            isAdmin={isAdmin}
-                            isEditModeAllowed={isEditModeAllowed}
-                            isEditMode={isEditMode}
-                            onToggleEditMode={handleToggleEditMode}
-                            onSaveDashboard={handleSaveDashboard}
-                            onAddSection={handleAddSection}
-                            configuration={configuration}
-                            onOpenConfigDialog={handleOpenConfigDialog}
-                            tabId={tabId}
-                            onSearchSelect={handleSearchSelect}
-                            // Provide local fuzzy search over current dashboard widgets/sections
-                            onLocalSearch={performLocalWidgetSearch}
+                                isAdmin={isAdmin}
+                                isEditModeAllowed={isEditModeAllowed}
+                                isEditMode={isEditMode}
+                                onToggleEditMode={handleToggleEditMode}
+                                onSaveDashboard={handleSaveDashboard}
+                                onAddSection={handleAddSection}
+                                configuration={configuration}
+                                onOpenConfigDialog={handleOpenConfigDialog}
+                                tabId={tabId}
+                                onSearchSelect={handleSearchSelect}
+                                // Provide local fuzzy search over current dashboard widgets/sections
+                                onLocalSearch={performLocalWidgetSearch}
                             />
                         </div>
 

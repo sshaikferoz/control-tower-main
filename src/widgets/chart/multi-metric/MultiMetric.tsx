@@ -1,10 +1,11 @@
-import React, { useMemo, useEffect, useState } from 'react';
+import React, { useMemo } from 'react';
 import useBexJson from '@/hooks/useBexJson';
 import { MultiMetricWidgetConfig, MultiMetricItem } from './MultiMetricConfig.types';
 import { formatNumber } from '@/helpers/numberFormatting';
 import { applyTypographyStyles } from '@/helpers/typographyHelper';
 import { Skeleton } from '@mui/material';
-import { eventBus } from '@/services/EventBus';
+import { useAppSelector } from '@/store/hooks';
+import { buildVariableParams } from '@/utils/buildVariableParams';
 
 interface MultiMetricProps {
     multiMetricConfig?: MultiMetricWidgetConfig;
@@ -219,6 +220,7 @@ const MultiMetric: React.FC<MultiMetricProps> = ({
     typography,
     title,
 }) => {
+    const filterState = useAppSelector((state) => state.filters);
     const defaultBaseColor = backgroundColor || '#00214E';
     const defaultLighterColor = backgroundColor ? `${backgroundColor}80` : '#0164B0';
     const isTransparent = multiMetricConfig?.transparentBackground === true;
@@ -237,6 +239,13 @@ const MultiMetric: React.FC<MultiMetricProps> = ({
     // Get layout from config, default to 'horizontal'
     const layout = multiMetricConfig?.layout || 'horizontal';
     const showDividers = multiMetricConfig?.showDividers ?? true;
+    const resolvedListenToEvent = multiMetricConfig?.listenToEvent;
+    const filterVariables = useMemo(() => {
+        if (!resolvedListenToEvent || filterState.eventName !== resolvedListenToEvent) {
+            return undefined;
+        }
+        return buildVariableParams(filterState.variables);
+    }, [filterState.eventName, filterState.variables, resolvedListenToEvent]);
 
     // Typography for widget-level title (driven by "title" element config)
     const widgetTitleStyles = applyTypographyStyles('title', typography);
@@ -244,11 +253,11 @@ const MultiMetric: React.FC<MultiMetricProps> = ({
     if (!multiMetricConfig || !multiMetricConfig.metrics || multiMetricConfig.metrics.length === 0) {
         return (
             <div className="relative h-full w-full">
-            <div
-                className="multi-metric-widget h-full rounded-xl p-4 flex items-center justify-center"
-                style={backgroundStyle}
-            >
-                <p className="text-sm text-white/80">No metrics configured</p>
+                <div
+                    className="multi-metric-widget h-full rounded-xl p-4 flex items-center justify-center"
+                    style={backgroundStyle}
+                >
+                    <p className="text-sm text-white/80">No metrics configured</p>
                 </div>
             </div>
         );
@@ -280,6 +289,7 @@ const MultiMetric: React.FC<MultiMetricProps> = ({
                                 metric={metric}
                                 typography={typography}
                                 layout={layout}
+                                filterVariables={filterVariables}
                             />
                             {/* Add divider between metrics in horizontal layout (except last) */}
                             {showDividers && layout === 'horizontal' && index < multiMetricConfig.metrics.length - 1 && (
@@ -302,80 +312,35 @@ const MetricCardWrapper: React.FC<{
     metric: MultiMetricItem;
     typography?: any;
     layout?: 'horizontal' | 'vertical';
-}> = ({ metric, typography, layout = 'horizontal' }) => {
-    const [filterVariables, setFilterVariables] = useState<string | null>(null);
-
-    // Subscribe to filter events if configured
-    useEffect(() => {
-        if (!metric.listenToEvent) return;
-
-        const unsubscribe = eventBus.subscribe(metric.listenToEvent, (eventData: any) => {
-            console.log('MultiMetric received filter event:', eventData);
-
-            // Build variables string from event data and variable mappings
-            if (eventData.variables) {
-                // Use the variables string directly if provided
-                setFilterVariables(eventData.variables);
-            } else if (metric.variableMappings && metric.variableMappings.length > 0) {
-                // Build variables string from mappings
-                const variableParams: string[] = [];
-                let varNum = 1;
-
-                metric.variableMappings.forEach((mapping) => {
-                    const filterValue = eventData[mapping.filterVariableName];
-                    if (filterValue !== undefined && filterValue !== null) {
-                        if (Array.isArray(filterValue)) {
-                            // Multi-select: create multiple variable entries
-                            filterValue.forEach((val) => {
-                                variableParams.push(`VAR_NAME_${varNum}=${mapping.bexVariableName}`);
-                                variableParams.push(`VAR_OPERATOR_${varNum}=EQ`);
-                                variableParams.push(`VAR_VALUE_EXT_${varNum}=${String(val)}`);
-                                varNum++;
-                            });
-                        } else if (typeof filterValue === 'object' && 'from' in filterValue) {
-                            // Range selection
-                            if (filterValue.from) {
-                                variableParams.push(`VAR_NAME_${varNum}=${mapping.bexVariableName}`);
-                                variableParams.push(`VAR_OPERATOR_${varNum}=GE`);
-                                variableParams.push(`VAR_VALUE_EXT_${varNum}=${filterValue.from}`);
-                                varNum++;
-                            }
-                            if (filterValue.to) {
-                                variableParams.push(`VAR_NAME_${varNum}=${mapping.bexVariableName}`);
-                                variableParams.push(`VAR_OPERATOR_${varNum}=LE`);
-                                variableParams.push(`VAR_VALUE_EXT_${varNum}=${filterValue.to}`);
-                                varNum++;
-                            }
-                        } else {
-                            // Single value
-                            variableParams.push(`VAR_NAME_${varNum}=${mapping.bexVariableName}`);
-                            variableParams.push(`VAR_OPERATOR_${varNum}=EQ`);
-                            variableParams.push(`VAR_VALUE_EXT_${varNum}=${String(filterValue)}`);
-                            varNum++;
-                        }
-                    }
-                });
-
-                if (variableParams.length > 0) {
-                    setFilterVariables(variableParams.join('&'));
-                } else {
-                    setFilterVariables(null);
-                }
-            } else {
-                setFilterVariables(null);
-            }
-        });
-
-        return () => {
-            unsubscribe();
-        };
-    }, [metric.listenToEvent, metric.variableMappings]);
-
+    filterVariables?: string;
+}> = ({ metric, typography, layout = 'horizontal', filterVariables }) => {
     const { data: bexData, isLoading, error } = useBexJson(metric.queryName || '', {
         parser: 'new',
         enabled: !!metric.queryName,
-        variables: filterVariables || undefined,
+        variables: filterVariables,
     });
+
+    const resolvedTitle = useMemo(() => {
+        if ((metric.titleSource || 'manual') === 'query') {
+            if (!metric.titleFieldKey) {
+                return metric.title;
+            }
+
+            const source = (bexData as any)?.chartData || [];
+            if (!source?.length) {
+                return metric.title;
+            }
+
+            const rawTitleValue = source[0]?.[metric.titleFieldKey];
+            if (rawTitleValue === null || rawTitleValue === undefined || rawTitleValue === '') {
+                return metric.title || metric.titleFieldKey;
+            }
+
+            return String(rawTitleValue);
+        }
+
+        return metric.title;
+    }, [bexData, metric.title, metric.titleFieldKey, metric.titleSource]);
 
     const safeParseNumber = (value: unknown): number | null => {
         if (value === '' || value === null || value === undefined) return null;
@@ -405,7 +370,7 @@ const MetricCardWrapper: React.FC<{
 
     return (
         <MetricItem
-            metric={metric}
+            metric={{ ...metric, title: resolvedTitle }}
             value={extractedValue}
             isLoading={isLoading}
             error={error as Error | null}

@@ -4,43 +4,46 @@ import { MenuItem } from '../../types';
 interface UseDashboardStateProps {
     menuItems: MenuItem[];
     isStandaloneAllowed: boolean;
+    isEditModeAllowed: boolean;
     urlParams: URLSearchParams | null;
 }
 
 export const useDashboardState = ({
     menuItems,
     isStandaloneAllowed,
+    isEditModeAllowed,
     urlParams,
 }: UseDashboardStateProps) => {
     const [selectedMenuItem, setSelectedMenuItem] = useState<MenuItem | null>(null);
 
-    // Default to first *visible* (and not deleted) menu item when menuItems are loaded
+    // Default to first menu item when menuItems are loaded.
+    // In admin edit mode, hidden items remain selectable.
     useEffect(() => {
         if (isStandaloneAllowed) return;
 
-        // Only consider items that are not deleted and currently visible in the sidebar
-        const visibleItems = menuItems
-            .filter((item) => !item.deleted && item.visible)
+        const selectableItems = menuItems
+            .filter((item) => !item.deleted)
+            .filter((item) => isEditModeAllowed || item.visible)
             .sort((a, b) => (a.order || 0) - (b.order || 0));
 
-        if (visibleItems.length === 0) {
-            // No visible items – clear selection
+        if (selectableItems.length === 0) {
+            // No selectable items – clear selection
             if (selectedMenuItem !== null) {
                 setSelectedMenuItem(null);
             }
             return;
         }
 
-        // If nothing is selected yet OR the currently selected item is no longer visible,
-        // fall back to the first visible item.
-        const isCurrentStillVisible = selectedMenuItem
-            ? visibleItems.some((item) => item.id === selectedMenuItem.id)
+        // If nothing is selected yet OR the currently selected item is no longer selectable,
+        // fall back to the first selectable item.
+        const isCurrentStillSelectable = selectedMenuItem
+            ? selectableItems.some((item) => item.id === selectedMenuItem.id)
             : false;
 
-        if (!selectedMenuItem || !isCurrentStillVisible) {
-            setSelectedMenuItem(visibleItems[0]);
+        if (!selectedMenuItem || !isCurrentStillSelectable) {
+            setSelectedMenuItem(selectableItems[0]);
         }
-    }, [menuItems, selectedMenuItem, isStandaloneAllowed]);
+    }, [menuItems, selectedMenuItem, isStandaloneAllowed, isEditModeAllowed]);
 
     // If standalone mode, force the selectedMenuItem to appId
     useEffect(() => {

@@ -47,6 +47,7 @@ import MultiMetric from '@/widgets/chart/multi-metric/MultiMetric';
 import KpiChart from '@/widgets/chart/kpi-chart/KpiChart';
 import FilterPanel from '@/widgets/filter-panel/FilterPanel';
 import DashboardMenu from '@/widgets/dashboard-menu/DashboardMenu';
+import AlertNotifications from '@/widgets/alert-notifications/AlertNotifications';
 import { FilterPanelSidebarProvider } from '@/widgets/filter-panel/FilterPanelSidebarContext';
 import { FilterPanelSidebar } from '@/widgets/filter-panel/FilterPanelSidebar';
 
@@ -84,6 +85,7 @@ const widgetMapping: Record<string, React.ComponentType<any>> = {
     'kpi-chart': KpiChart,
     'filter-panel': FilterPanel,
     'dashboard-menu': DashboardMenu,
+    'alert-notifications': AlertNotifications,
 };
 
 interface DashboardBuilderProps extends Omit<DashboardProps, 'isViewMode' | 'selectedWidget' | 'onWidgetClick' | 'onWidgetRemove'> {

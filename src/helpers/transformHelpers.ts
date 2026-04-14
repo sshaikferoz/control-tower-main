@@ -336,9 +336,9 @@ export async function fetchAndTransformMultiChartData(
     try {
         // Fetch the raw XML data
         const response = await fetch(
-            process.env.NODE_ENV === 'development'
+            process.env.NODE_ENV === 'development' && process.env.USE_SAP_DB !== 'true'
                 ? `/api/sap/bc/bsp/sap/zbw_reporting/execute_report_oo.htm?query=${reportName}`
-                : `/sap/bc/bsp/sap/zbw_reporting/execute_report_oo.htm?query=${reportName}`
+                : `${process.env.PROXY_BASE_URL_SAP_DB || ''}/sap/bc/bsp/sap/zbw_reporting/execute_report_oo.htm?query=${reportName}`
         );
         const xmlData = await response.text();
         const parsedResponse = parseXMLToJson(xmlData);

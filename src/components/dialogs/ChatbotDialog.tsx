@@ -70,8 +70,8 @@ const ChatbotDialog: React.FC<ChatbotDialogProps> = ({ isOpen, onClose }) => {
             <div
                 ref={dialogRef}
                 className={`animate-in fade-in-0 zoom-in-85 relative overflow-auto rounded-[28px] bg-white shadow-2xl transition-all duration-300 ${isEnlarged
-                        ? 'h-full w-full max-w-none scale-100'
-                        : 'h-[100vh] w-full max-w-[70%] scale-90'
+                    ? 'h-full w-full max-w-none scale-100'
+                    : 'h-[100vh] w-full max-w-[70%] scale-90'
                     }`}
             >
                 {/* Header with buttons */}

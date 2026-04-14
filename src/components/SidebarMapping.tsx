@@ -33,9 +33,10 @@ const menuItems = [
 
     { name: 'multi-metric', imageURL: '' },
     { name: 'multi-chart-bex', imageURL: '' },
-    // { name: 'filter-panel', imageURL: '' },
+    { name: 'filter-panel', imageURL: '' },
     { name: 'news-feed', imageURL: '' },
-    { name: 'dashboard-menu', imageURL: '' }
+    { name: 'dashboard-menu', imageURL: '' },
+    { name: 'alert-notifications', imageURL: '' }
 
     //   { name: 'announcement', imageURL: '' },npm r
 ];
@@ -121,7 +122,9 @@ const SidebarMapping: React.FC<SidebarMappingProps> = ({ onItemClick }) => {
                                                             ? 'Alert Widget'
                                                             : item.name === 'dashboard-menu'
                                                                 ? 'Dashboard Menu'
-                                                                : item.name.replace(/-/g, ' ')}
+                                                                : item.name === 'alert-notifications'
+                                                                    ? 'Alert Intelligence'
+                                                                    : item.name.replace(/-/g, ' ')}
                                     </span>
                                 </div>
                             </div>

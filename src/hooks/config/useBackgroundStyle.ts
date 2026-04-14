@@ -13,12 +13,17 @@ export const useBackgroundStyle = (configuration: UIConfiguration) => {
 
         const mode = theme ?? configuration.background.mode ?? 'dark';
         const useLight = mode === 'light';
-        const backgroundImage = useLight
+        const backgroundImageCandidate = useLight
             ? (configuration.background.useBase64Light ? configuration.background.imageBase64Light : configuration.background.imageUrlLight)
             : (configuration.background.useBase64 ? configuration.background.imageBase64 : configuration.background.imageUrl);
+        const isLegacyDarkDefaultInLightMode = useLight && typeof backgroundImageCandidate === 'string' && (
+            backgroundImageCandidate.includes('/background/bg.png')
+            || backgroundImageCandidate.includes('/background/bg-low.png')
+        );
+        const backgroundImage = isLegacyDarkDefaultInLightMode ? '' : backgroundImageCandidate;
 
         const fallbackColor = useLight
-            ? (configuration.background.fallbackColorLight ?? '#F7F8FA')
+            ? (configuration.background.fallbackColorLight ?? '#FFFFFF')
             : (configuration.background.fallbackColor ?? '#1a1a2e');
 
         return {

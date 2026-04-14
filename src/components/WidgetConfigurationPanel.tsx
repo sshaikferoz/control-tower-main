@@ -19,6 +19,7 @@ import {
     CircularProgress,
     Checkbox,
     FormControlLabel,
+    Button,
 } from '@mui/material';
 import FormatPaintIcon from '@mui/icons-material/FormatPaint';
 import PaletteIcon from '@mui/icons-material/Palette';
@@ -41,8 +42,11 @@ import { KpiWidgetConfig } from '@/widgets/chart/kpi-chart/KpiConfig.types';
 import { BlankWidgetConfig } from '@/widgets/blank-widget/BlankWidgetConfig.types';
 import { FilterPanelConfigPanel } from '@/widgets/filter-panel/FilterPanelConfigPanel';
 import { FilterPanelWidgetConfig } from '@/widgets/filter-panel/FilterPanelConfig.types';
+import { AlertNotificationsConfigPanel } from '@/widgets/alert-notifications/AlertNotificationsConfigPanel';
+import { AlertNotificationsWidgetConfig } from '@/widgets/alert-notifications/AlertNotificationsConfig.types';
 import useBexJson from '@/hooks/useBexJson';
 import { TargetReportConfig } from '@/helpers/types';
+import { getTypographyElementsForWidget } from '@/helpers/typographyHelper';
 
 interface Widget {
     id: string;
@@ -111,6 +115,8 @@ const WidgetConfigurationPanel: React.FC<WidgetConfigurationPanelProps> = ({
     const roles: Role[] = widgetProps.roles || [];
     const description: string = widgetProps.description || '';
     const title: string = widgetProps.title || '';
+    // IsActive: 'X' = widget visible when dashboard is rendered, '' = hidden (mapping screen always shows all)
+    const isActive = (widgetProps.IsActive ?? 'X') === 'X';
     const targetReportEnabled = widgetProps.targetReportEnabled !== undefined ? widgetProps.targetReportEnabled : true;
     const targetReport: TargetReportConfig = widgetProps.targetReport || {
         type: 'Bex Query',
@@ -127,6 +133,7 @@ const WidgetConfigurationPanel: React.FC<WidgetConfigurationPanelProps> = ({
     const isBlankWidget = widgetName === 'blank-widget';
     const isFilterPanel = widgetName === 'filter-panel';
     const isDashboardMenu = widgetName === 'dashboard-menu';
+    const isAlertNotifications = widgetName === 'alert-notifications';
 
     // Get queryName for BEX chart widgets
     const queryName =
@@ -174,7 +181,7 @@ const WidgetConfigurationPanel: React.FC<WidgetConfigurationPanelProps> = ({
         showLabels: true,
         showTitle: true,
         valueFormat: 'non-currency',
-        kpiType: 'combined',
+        kpiType: 'number',
     };
 
     // Get multi-metric config for multi-metric widgets
@@ -199,6 +206,11 @@ const WidgetConfigurationPanel: React.FC<WidgetConfigurationPanelProps> = ({
     const filterPanelConfig: FilterPanelWidgetConfig = widgetProps.filterPanelConfig || {
         eventName: '',
         components: [],
+    };
+
+    // Get alert notifications config for alert-notifications widgets
+    const alertConfig: AlertNotificationsWidgetConfig = widgetProps.alertConfig || {
+        categories: [],
     };
 
     // Use loaded BEX data for configuration panel preview only
@@ -284,7 +296,15 @@ const WidgetConfigurationPanel: React.FC<WidgetConfigurationPanelProps> = ({
         }
     }, [isFilterPanel, widgetProps.filterPanelConfig]);
 
-
+    // Initialize alertConfig if it doesn't exist for alert-notifications widgets
+    useEffect(() => {
+        if (isAlertNotifications && !widgetProps.alertConfig) {
+            const defaultAlertConfig: AlertNotificationsWidgetConfig = {
+                categories: [],
+            };
+            updateWidgetProp('alertConfig', defaultAlertConfig);
+        }
+    }, [isAlertNotifications, widgetProps.alertConfig]);
 
     const handleTypographyChange = (config: any) => {
         updateWidgetProp('typography', config);
@@ -344,6 +364,10 @@ const WidgetConfigurationPanel: React.FC<WidgetConfigurationPanelProps> = ({
         updateWidgetProp('filterPanelConfig', config);
     };
 
+    const handleAlertNotificationsConfigChange = (config: AlertNotificationsWidgetConfig) => {
+        updateWidgetProp('alertConfig', config);
+    };
+
     const handleTargetReportChange = (field: keyof TargetReportConfig, value: string | boolean) => {
         updateWidgetProp('targetReport', {
             ...targetReport,
@@ -365,7 +389,7 @@ const WidgetConfigurationPanel: React.FC<WidgetConfigurationPanelProps> = ({
     ];
 
     const hasConfigTab =
-        isMultiChart || isKpiChart || isMultiMetric || isBlankWidget || isFilterPanel || isDashboardMenu;
+        isMultiChart || isKpiChart || isMultiMetric || isBlankWidget || isFilterPanel || isDashboardMenu || isAlertNotifications;
 
     return (
         <div className="flex h-screen w-56 min-w-56 max-w-56 flex-shrink-0 flex-col overflow-auto bg-gradient-to-b from-[#00214E] to-[#0164B0] text-white md:w-64 md:min-w-64 md:max-w-64">
@@ -470,6 +494,62 @@ const WidgetConfigurationPanel: React.FC<WidgetConfigurationPanelProps> = ({
                                 backgroundColor: 'rgba(255, 255, 255, 0.05)',
                                 borderRadius: 2,
                                 p: 2,
+                                mb: 2,
+                            }}
+                        >
+                            <Typography variant="caption" sx={{ mb: 1, color: 'white', fontWeight: 500, fontSize: '0.7rem', display: 'block' }}>
+                                Visibility when dashboard is viewed
+                            </Typography>
+                            <Typography variant="caption" sx={{ mb: 1.5, color: 'rgba(255, 255, 255, 0.7)', fontSize: '0.65rem', display: 'block' }}>
+                                Disabled widgets stay on the mapping screen but are hidden when the dashboard is rendered.
+                            </Typography>
+                            <Box sx={{ display: 'flex', gap: 1 }}>
+                                <Button
+                                    variant={isActive ? 'contained' : 'outlined'}
+                                    size="small"
+                                    onClick={() => updateWidgetProp('IsActive', 'X')}
+                                    sx={{
+                                        flex: 1,
+                                        fontSize: '0.7rem',
+                                        textTransform: 'none',
+                                        bgcolor: isActive ? '#84BD00' : 'transparent',
+                                        color: isActive ? 'white' : 'rgba(255, 255, 255, 0.8)',
+                                        borderColor: 'rgba(255, 255, 255, 0.4)',
+                                        '&:hover': {
+                                            bgcolor: isActive ? '#6fa000' : 'rgba(255, 255, 255, 0.08)',
+                                            borderColor: 'rgba(255, 255, 255, 0.5)',
+                                        },
+                                    }}
+                                >
+                                    Enable
+                                </Button>
+                                <Button
+                                    variant={!isActive ? 'contained' : 'outlined'}
+                                    size="small"
+                                    onClick={() => updateWidgetProp('IsActive', '')}
+                                    sx={{
+                                        flex: 1,
+                                        fontSize: '0.7rem',
+                                        textTransform: 'none',
+                                        bgcolor: !isActive ? 'rgba(225, 85, 63, 0.9)' : 'transparent',
+                                        color: !isActive ? 'white' : 'rgba(255, 255, 255, 0.8)',
+                                        borderColor: 'rgba(255, 255, 255, 0.4)',
+                                        '&:hover': {
+                                            bgcolor: !isActive ? 'rgba(225, 85, 63, 1)' : 'rgba(255, 255, 255, 0.08)',
+                                            borderColor: 'rgba(255, 255, 255, 0.5)',
+                                        },
+                                    }}
+                                >
+                                    Disable
+                                </Button>
+                            </Box>
+                        </Box>
+
+                        <Box
+                            sx={{
+                                backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                                borderRadius: 2,
+                                p: 2,
                             }}
                         >
 
@@ -558,6 +638,19 @@ const WidgetConfigurationPanel: React.FC<WidgetConfigurationPanelProps> = ({
                     <TypographyConfigUI
                         value={typography}
                         onChange={handleTypographyChange}
+                        elementTypes={getTypographyElementsForWidget(widgetName)}
+                        elementLabels={
+                            isDashboardMenu
+                                ? { title: 'Widget title', menuTitle: 'Menu title', menuDesc: 'Menu desc' }
+                                : isAlertNotifications
+                                  ? {
+                                        title: 'Widget title',
+                                        categoryTitle: 'Category title',
+                                        value: 'Value',
+                                        suffix: 'Suffix',
+                                    }
+                                  : undefined
+                        }
                     />
                 </TabPanel>
 
@@ -1254,6 +1347,32 @@ const WidgetConfigurationPanel: React.FC<WidgetConfigurationPanelProps> = ({
                     </TabPanel>
                 )}
 
+                {/* Config Tab - Only for alert-notifications widgets */}
+                {isAlertNotifications && (
+                    <TabPanel value={activeTab} index={1}>
+                        <Box sx={{ color: 'white' }}>
+                            <Typography variant="subtitle2" sx={{ mb: 0.5, fontWeight: 600, fontSize: '0.75rem' }}>
+                                Alert Notifications Configuration
+                            </Typography>
+                            <Typography variant="caption" sx={{ mb: 2, color: 'rgba(255, 255, 255, 0.7)', fontSize: '0.65rem', display: 'block' }}>
+                                Add categories and alerts. Each alert uses a BEX query; criticality (Warning/Normal/Critical) is derived from thresholds.
+                            </Typography>
+
+                            <Box
+                                sx={{
+                                    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                                    borderRadius: 2,
+                                    p: 2,
+                                }}
+                            >
+                                <AlertNotificationsConfigPanel
+                                    value={alertConfig}
+                                    onChange={handleAlertNotificationsConfigChange}
+                                />
+                            </Box>
+                        </Box>
+                    </TabPanel>
+                )}
 
                 {/* Report Config Tab - Available for all widgets */}
                 <TabPanel value={activeTab} index={hasConfigTab ? 2 : 1}>
