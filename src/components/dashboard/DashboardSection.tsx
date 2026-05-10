@@ -90,6 +90,7 @@ if (process.env.NODE_ENV === 'development') mirageServer();
 export const DashboardSection: React.FC<ExtendedDashboardSectionProps> = ({
     section,
     index,
+    isAdmin = false,
     isEditMode,
     onDragStart,
     onDragEnter,
@@ -128,6 +129,7 @@ export const DashboardSection: React.FC<ExtendedDashboardSectionProps> = ({
 
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
     const menuOpen = Boolean(anchorEl);
+    const showQueryDebugErrors = isAdmin && isEditMode;
 
     const sectionRef = useRef<HTMLDivElement>(null);
     const dataManager = useMemo(() => DataManager.getInstance(), []);
@@ -584,7 +586,13 @@ export const DashboardSection: React.FC<ExtendedDashboardSectionProps> = ({
                     {/* 🔔 Render announcement widgets outside the grid */}
                     {announcementWidgets.map((widget) => {
                         const Component = widgetMapping[widget.name];
-                        const props = widgetProps[widget.id] || defaultPropsMapping[widget.name] || {};
+                        const baseProps = widgetProps[widget.id] || defaultPropsMapping[widget.name] || {};
+                        const props = {
+                            ...baseProps,
+                            showQueryDebugErrors,
+                            debugWidgetName: widget.title || baseProps.title || widget.name,
+                            debugWidgetId: widget.id,
+                        };
                         const isLoading = loadingWidgets.has(widget.id);
                         const isTransparentWidget =
                             props.chartConfig?.transparentBackground === true ||
@@ -662,7 +670,13 @@ export const DashboardSection: React.FC<ExtendedDashboardSectionProps> = ({
                     >
                         {gridWidgets.map((widget: any) => {
                             const Component = widgetMapping[widget.name];
-                            const props = widgetProps[widget.id] || defaultPropsMapping[widget.name] || {};
+                            const baseProps = widgetProps[widget.id] || defaultPropsMapping[widget.name] || {};
+                            const props = {
+                                ...baseProps,
+                                showQueryDebugErrors,
+                                debugWidgetName: widget.title || baseProps.title || widget.name,
+                                debugWidgetId: widget.id,
+                            };
                             const isLoading = loadingWidgets.has(widget.id);
                             const hasRoles = widget.roles?.length > 0;
                             const isFilterPanel = widget?.name === 'filter-panel';

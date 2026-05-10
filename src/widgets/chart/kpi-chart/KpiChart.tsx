@@ -21,6 +21,8 @@ interface KpiChartProps {
     backgroundColor?: string;
     typography?: any;
     listenToEvent?: string;
+    showQueryDebugErrors?: boolean;
+    debugWidgetName?: string;
 }
 
 /* ---------------------------------- */
@@ -34,6 +36,8 @@ const KpiChart: React.FC<KpiChartProps> = ({
     queryName,
     backgroundColor,
     typography,
+    showQueryDebugErrors = false,
+    debugWidgetName,
 }) => {
     const [currentValue, setCurrentValue] = useState<number | null>(null);
 
@@ -51,6 +55,10 @@ const KpiChart: React.FC<KpiChartProps> = ({
         enabled: !!effectiveQueryName,
         variables: filterVariables,
     });
+    const parserError =
+        typeof (bexData as { error?: unknown } | undefined)?.error === 'string'
+            ? (bexData as { error?: string }).error
+            : null;
 
     /* ---------------------------------- */
     /* Data extraction */
@@ -485,8 +493,22 @@ const KpiChart: React.FC<KpiChartProps> = ({
 
     if (isLoading)
         return <WidgetSkeleton />;
-    if (error)
-        return <div className="flex items-center justify-center h-full text-red-300">Error</div>;
+    if (error || parserError) {
+        const errorMessage = parserError || error?.message || 'Unknown error';
+        return (
+            <div className="flex h-full items-center justify-center p-3">
+                {showQueryDebugErrors ? (
+                    <div className="query-debug-error w-full rounded p-2 text-xs">
+                        <p><strong>Widget:</strong> {debugWidgetName || title || 'kpi-chart'}</p>
+                        <p><strong>Query:</strong> {effectiveQueryName || 'N/A'}</p>
+                        <p><strong>Error:</strong> {errorMessage}</p>
+                    </div>
+                ) : (
+                    <span className="query-error-banner rounded px-2 py-1">Error</span>
+                )}
+            </div>
+        );
+    }
     if (!kpiConfig)
         return <div className="flex items-center justify-center h-full text-white">Missing KPI config</div>;
 

@@ -243,6 +243,9 @@ interface MultiChartProps {
     ySeriesFormatting?: {
         decimalPrecision?: number;
     };
+    showQueryDebugErrors?: boolean;
+    debugWidgetName?: string;
+    debugWidgetId?: string;
 }
 
 const defaultColors = ['#8884d8', '#82ca9d', '#ffc658', '#ff7c7c', '#8dd1e1', '#d084d0', '#ffb347', '#87ceeb', '#dda0dd', '#98d8c8'];
@@ -337,6 +340,8 @@ const MultiChart: React.FC<MultiChartProps> = ({
     ySeriesBreak,
     listenToEvent,
     ySeriesFormatting: providedYSeriesFormatting,
+    showQueryDebugErrors = false,
+    debugWidgetName,
 }) => {
     const filterState = useAppSelector((state) => state.filters);
     const resolvedListenToEvent = listenToEvent || chartConfig?.listenToEvent;
@@ -360,6 +365,10 @@ const MultiChart: React.FC<MultiChartProps> = ({
             variables: filterVariables,
         }
     );
+    const parserError =
+        typeof (bexData as { error?: unknown } | undefined)?.error === 'string'
+            ? (bexData as { error?: string }).error
+            : null;
 
     // Transform BEX data if available
     const bexTransformedData = useMemo(() => {
@@ -1537,16 +1546,26 @@ const MultiChart: React.FC<MultiChartProps> = ({
     }
 
     // Show error state if BEX fetch failed
-    if (queryName && chartConfig && bexError) {
+    if (queryName && chartConfig && (bexError || parserError)) {
+        const errorMessage = parserError || bexError?.message || 'Unknown error';
         return (
             <div className="flex h-full w-full flex-col">
                 <div
-                    className="multi-chart-widget flex flex-1 flex-col overflow-hidden rounded-xl p-4 text-white items-center justify-center"
+                    className="multi-chart-widget flex flex-1 flex-col items-center justify-center overflow-hidden rounded-xl p-4"
                     style={backgroundStyle}
                 >
                     <div className="text-center">
-                        <p className="text-sm text-red-300 mb-2">Error loading chart data</p>
-                        <p className="text-xs text-white/60">{bexError.message || 'Unknown error'}</p>
+                        <p className="mb-2 text-sm" style={{ color: 'var(--text-neutral)' }}>
+                            Error loading chart data
+                        </p>
+                        {showQueryDebugErrors && (
+                            <div className="query-debug-error mb-2 rounded p-2 text-left text-xs">
+                                <p><strong>Widget:</strong> {debugWidgetName || title || 'multi-chart'}</p>
+                                <p><strong>Query:</strong> {queryName}</p>
+                                <p><strong>Error:</strong> {errorMessage}</p>
+                            </div>
+                        )}
+                        <p className="query-error-banner rounded px-2 py-1 text-xs">{errorMessage}</p>
                     </div>
                 </div>
             </div>
@@ -1558,11 +1577,11 @@ const MultiChart: React.FC<MultiChartProps> = ({
         return (
             <div className="flex h-full w-full flex-col">
                 <div
-                    className="multi-chart-widget flex flex-1 flex-col overflow-hidden rounded-xl p-4 text-white items-center justify-center"
+                    className="multi-chart-widget flex flex-1 flex-col items-center justify-center overflow-hidden rounded-xl p-4"
                     style={backgroundStyle}
                 >
                     <div className="text-center">
-                        <p className="text-sm text-white/80">Chart configuration is required</p>
+                        <p className="text-sm" style={{ color: 'var(--text-neutral)' }}>Chart configuration is required</p>
                     </div>
                 </div>
             </div>

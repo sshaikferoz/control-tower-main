@@ -165,6 +165,8 @@ export const FilterPanelSidebar: React.FC = () => {
                                         selectedComponentId={selectedComponent.id}
                                         onApplyRef={applyFilterRef}
                                         onClearRef={clearFilterRef}
+                                        showQueryDebugErrors={state.showQueryDebugErrors === true}
+                                        debugWidgetName={state.debugWidgetName}
                                     />
                                 </div>
                             </>

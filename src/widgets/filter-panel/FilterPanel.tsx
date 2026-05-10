@@ -14,6 +14,8 @@ interface FilterPanelProps {
     title?: string;
     backgroundColor?: string;
     typography?: any;
+    showQueryDebugErrors?: boolean;
+    debugWidgetName?: string;
 }
 
 interface ListFilterColumn {
@@ -25,9 +27,18 @@ interface ListFilterRow {
     key: string;
     value: string;
     columns: ListFilterColumn[];
+    hierarchyLevel?: number;
+    hasChildren?: boolean;
+    parentKey?: string | null;
 }
 
 const DEFAULT_DATE_FORMAT: DateFilterFormat = 'MM/DD/YYYY';
+const DEFAULT_FILTER_EVENT_NAME = 'filter-changed';
+
+function normalizeEventName(eventName?: string | null): string {
+    const trimmed = (eventName || '').trim();
+    return trimmed || DEFAULT_FILTER_EVENT_NAME;
+}
 
 function getDateFormat(component: FilterComponent): DateFilterFormat {
     if (component.dateFormat === 'YYYY' || component.dateFormat === 'MM/YYYY') {
@@ -383,13 +394,20 @@ const ListFilter: React.FC<{
     component: FilterComponent;
     value: string | string[] | { from: string; to: string } | null;
     onChange: (value: string | string[] | { from: string; to: string } | null) => void;
-}> = ({ component, value, onChange }) => {
+    showQueryDebugErrors?: boolean;
+    debugWidgetName?: string;
+}> = ({ component, value, onChange, showQueryDebugErrors = false, debugWidgetName }) => {
     const [searchTerm, setSearchTerm] = useState('');
     const { data: bexData, isLoading, error } = useBexJson(component.queryName || '', {
         parser: 'new',
         displayKey: component.includeDisplayKey === true,
+        hierarchy: component.isHierarchyQuery === true,
         enabled: !!component.queryName,
     });
+    const parserError =
+        typeof (bexData as { error?: unknown } | undefined)?.error === 'string'
+            ? (bexData as { error?: string }).error
+            : null;
 
     const displayFields = useMemo(() => {
         if (!component.displayField) return [];
@@ -399,13 +417,49 @@ const ListFilter: React.FC<{
     const rows = useMemo<ListFilterRow[]>(() => {
         if (!bexData || displayFields.length === 0 || !component.valueField) return [];
         const chartData = (bexData as any)?.chartData || [];
+        const parentStack: string[] = [];
+        const usedRowKeys = new Set<string>();
         return chartData.map((item: any, index: number) => ({
-            key: String(item[component.valueField!] ?? index),
-            value: String(item[component.valueField!] ?? ''),
+            ...(function () {
+                const rowLevel = Math.max(Number(item.__hierarchyLevel || 1), 1);
+                const configuredValue = item[component.valueField!];
+                const hierarchyKeyField = `${component.valueField!}_KEY`;
+                const hierarchyKeyValue =
+                    component.isHierarchyQuery === true ? item[hierarchyKeyField] : undefined;
+                const selectedValue =
+                    hierarchyKeyValue != null && String(hierarchyKeyValue).trim() !== ''
+                        ? String(hierarchyKeyValue)
+                        : String(configuredValue ?? '');
+                const hierarchyIndex = Number(item.__index);
+                const indexKey = Number.isFinite(hierarchyIndex) && hierarchyIndex > 0 ? `idx-${hierarchyIndex}` : `pos-${index}`;
+                const baseRowKey =
+                    selectedValue.trim() !== ''
+                        ? `${selectedValue}::${indexKey}`
+                        : indexKey;
+                let rowKey = baseRowKey;
+                let duplicateCounter = 2;
+                while (usedRowKeys.has(rowKey)) {
+                    rowKey = `${baseRowKey}::dup-${duplicateCounter}`;
+                    duplicateCounter += 1;
+                }
+                usedRowKeys.add(rowKey);
+                while (parentStack.length >= rowLevel) {
+                    parentStack.pop();
+                }
+                const parentKey = rowLevel > 1 ? parentStack[rowLevel - 2] || null : null;
+                parentStack[rowLevel - 1] = rowKey;
+                return {
+                    key: rowKey,
+                    value: selectedValue,
+                    parentKey,
+                };
+            })(),
             columns: displayFields.map((field) => ({
                 field,
                 value: item[field] ?? '-',
             })),
+            hierarchyLevel: Number(item.__hierarchyLevel || 0),
+            hasChildren: Boolean(item.__hasChildren),
         }));
     }, [bexData, displayFields, component.valueField]);
 
@@ -416,6 +470,29 @@ const ListFilter: React.FC<{
             row.columns.some((column) => String(column.value).toLowerCase().includes(normalizedSearch))
         );
     }, [rows, searchTerm]);
+    const [expandedKeys, setExpandedKeys] = useState<Set<string>>(new Set());
+
+    useEffect(() => {
+        if (!component.isHierarchyQuery) return;
+        const rootWithChildren = filteredRows
+            .filter((row) => (row.hierarchyLevel || 1) <= 1 && row.hasChildren)
+            .map((row) => row.key);
+        setExpandedKeys(new Set(rootWithChildren));
+    }, [component.isHierarchyQuery, filteredRows]);
+
+    const visibleRows = useMemo(() => {
+        if (!component.isHierarchyQuery) return filteredRows;
+        const rowsByKey = new Map(filteredRows.map((row) => [row.key, row]));
+        return filteredRows.filter((row) => {
+            if (!row.parentKey) return true;
+            let parentKey = row.parentKey;
+            while (parentKey) {
+                if (!expandedKeys.has(parentKey)) return false;
+                parentKey = rowsByKey.get(parentKey)?.parentKey || '';
+            }
+            return true;
+        });
+    }, [component.isHierarchyQuery, expandedKeys, filteredRows]);
 
     const isMulti = component.selectionMode === 'multi';
     const isRange = component.selectionMode === 'range';
@@ -460,14 +537,21 @@ const ListFilter: React.FC<{
         );
     }
 
-    if (error) {
+    if (error || parserError) {
         return (
             <div className="mb-5">
                 <label className="filter-panel-label mb-2 block text-xs font-semibold tracking-wide uppercase text-cyan-50/90">
                     {component.label}
                 </label>
-                <div className="rounded-xl border border-red-400/40 bg-red-500/10 p-4 text-sm text-red-200">
-                    Error loading options: {error.message}
+                <div className="query-error-banner rounded-xl p-4 text-sm">
+                    Error loading options: {parserError || error?.message || 'Unknown error'}
+                    {showQueryDebugErrors && (
+                        <div className="query-debug-error mt-2 rounded p-2 text-xs">
+                            <p><strong>Widget:</strong> {debugWidgetName || 'filter-panel'}</p>
+                            <p><strong>Filter:</strong> {component.label}</p>
+                            <p><strong>Query:</strong> {component.queryName || 'N/A'}</p>
+                        </div>
+                    )}
                 </div>
             </div>
         );
@@ -488,7 +572,7 @@ const ListFilter: React.FC<{
                 />
             </div>
             <div className="filter-panel-list-box max-h-[calc(100vh-250px)] overflow-auto rounded-xl border border-white/15 bg-[#082750]/40 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]">
-                {filteredRows.length === 0 ? (
+                {visibleRows.length === 0 ? (
                     <div className="filter-panel-empty-msg p-4 text-center text-sm text-white/60">No options available</div>
                 ) : (
                     <table className="min-w-full border-collapse text-left text-sm text-white">
@@ -515,7 +599,7 @@ const ListFilter: React.FC<{
                             </tr>
                         </thead>
                         <tbody>
-                            {filteredRows.map((row) => {
+                            {visibleRows.map((row) => {
                                 const optionValue = row.value;
                                 if (!optionValue) return null;
                                 const isChecked = isMulti
@@ -523,6 +607,7 @@ const ListFilter: React.FC<{
                                     : selectedValues === optionValue;
                                 const isFromChecked = isRange ? (selectedValues as { from: string; to: string }).from === optionValue : false;
                                 const isToChecked = isRange ? (selectedValues as { from: string; to: string }).to === optionValue : false;
+                                const hierarchyLevel = Math.max((row.hierarchyLevel || 1) - 1, 0);
 
                                 return (
                                     <tr key={row.key} className="border-t border-white/10 transition-colors hover:bg-cyan-300/5">
@@ -562,7 +647,33 @@ const ListFilter: React.FC<{
                                                 key={`${row.key}-${column.field}`}
                                                 className="px-3 py-2 text-sm text-white/95 whitespace-nowrap"
                                             >
-                                                {String(column.value)}
+                                                {component.isHierarchyQuery && column.field === displayFields[0] ? (
+                                                    <span className="inline-flex items-center" style={{ paddingLeft: `${hierarchyLevel * 14}px` }}>
+                                                        {row.hasChildren ? (
+                                                            <button
+                                                                type="button"
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    setExpandedKeys((prev) => {
+                                                                        const next = new Set(prev);
+                                                                        if (next.has(row.key)) next.delete(row.key);
+                                                                        else next.add(row.key);
+                                                                        return next;
+                                                                    });
+                                                                }}
+                                                                className="mr-1 inline-flex h-5 w-5 items-center justify-center rounded text-cyan-200/90 hover:bg-white/10"
+                                                                aria-label={expandedKeys.has(row.key) ? 'Collapse node' : 'Expand node'}
+                                                            >
+                                                                {expandedKeys.has(row.key) ? '▾' : '▸'}
+                                                            </button>
+                                                        ) : (
+                                                            <span className="mr-2 text-white/30">•</span>
+                                                        )}
+                                                        <span>{String(column.value)}</span>
+                                                    </span>
+                                                ) : (
+                                                    String(column.value)
+                                                )}
                                             </td>
                                         ))}
                                     </tr>
@@ -587,6 +698,8 @@ export interface FilterPanelContentProps {
     onApplyRef?: React.MutableRefObject<(() => void) | null>;
     /** When set, the clear handler is assigned so parent can trigger Clear Filter (e.g. sidebar header). */
     onClearRef?: React.MutableRefObject<(() => void) | null>;
+    showQueryDebugErrors?: boolean;
+    debugWidgetName?: string;
 }
 
 function createInitialVariables(filterPanelConfig: FilterPanelWidgetConfig): Record<string, FilterVariable> {
@@ -612,6 +725,8 @@ export const FilterPanelContent: React.FC<FilterPanelContentProps> = ({
     selectedComponentId = null,
     onApplyRef,
     onClearRef,
+    showQueryDebugErrors = false,
+    debugWidgetName,
 }) => {
     const filterSidebar = useFilterPanelSidebar();
     const configKey = useMemo(() => {
@@ -688,7 +803,7 @@ export const FilterPanelContent: React.FC<FilterPanelContentProps> = ({
         });
         dispatch(
             setFilterState({
-                eventName: filterPanelConfig.eventName || null,
+                eventName: normalizeEventName(filterPanelConfig.eventName),
                 variables: nextVariables,
             })
         );
@@ -702,7 +817,7 @@ export const FilterPanelContent: React.FC<FilterPanelContentProps> = ({
         filterSidebar?.clearDraftValues(filterPanelConfig);
         dispatch(
             setFilterState({
-                eventName: filterPanelConfig.eventName || null,
+                eventName: normalizeEventName(filterPanelConfig.eventName),
                 variables: {},
             })
         );
@@ -770,6 +885,8 @@ export const FilterPanelContent: React.FC<FilterPanelContentProps> = ({
                                     component={component}
                                     value={variable.value as string | string[] | { from: string; to: string } | null}
                                     onChange={(value) => handleComponentChange(component.id, value)}
+                                    showQueryDebugErrors={showQueryDebugErrors}
+                                    debugWidgetName={debugWidgetName}
                                 />
                             );
                         default:
@@ -801,6 +918,8 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
     filterPanelConfig,
     title = 'Filter Panel',
     backgroundColor = '#00214E',
+    showQueryDebugErrors = false,
+    debugWidgetName,
 }) => {
     const filterSidebar = useFilterPanelSidebar();
     const dispatch = useAppDispatch();
@@ -809,7 +928,13 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
 
     const handleButtonClick = () => {
         if (filterSidebar && filterPanelConfig) {
-            filterSidebar.openFilterSidebar(filterPanelConfig, title, backgroundColor);
+            filterSidebar.openFilterSidebar(
+                filterPanelConfig,
+                title,
+                backgroundColor,
+                showQueryDebugErrors,
+                debugWidgetName || title || 'filter-panel'
+            );
         }
     };
 
@@ -819,7 +944,7 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
         filterSidebar?.clearDraftValues(filterPanelConfig);
         dispatch(
             setFilterState({
-                eventName: filterPanelConfig.eventName || null,
+                eventName: normalizeEventName(filterPanelConfig.eventName),
                 variables: {},
             })
         );

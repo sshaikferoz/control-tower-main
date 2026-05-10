@@ -671,3 +671,44 @@ body {
   background: transparent !important;
   background-image: none !important;
 }
+
+/* Query error banners/debug details used in admin edit mode. */
+.query-error-banner {
+  border: 1px solid rgba(239, 68, 68, 0.35) !important;
+  background: rgba(239, 68, 68, 0.12) !important;
+  color: #7f1d1d !important;
+}
+
+.query-debug-error {
+  border: 1px solid rgba(239, 68, 68, 0.35) !important;
+  background: rgba(255, 255, 255, 0.75) !important;
+  color: #7f1d1d !important;
+}
+
+.query-debug-inline {
+  color: #9f1239 !important;
+}
+
+.query-debug-inline-secondary {
+  color: #7f1d1d !important;
+}
+
+[data-theme='dark'] .query-error-banner {
+  border-color: rgba(252, 165, 165, 0.45) !important;
+  background: rgba(127, 29, 29, 0.28) !important;
+  color: #fecaca !important;
+}
+
+[data-theme='dark'] .query-debug-error {
+  border-color: rgba(252, 165, 165, 0.45) !important;
+  background: rgba(127, 29, 29, 0.28) !important;
+  color: #fecaca !important;
+}
+
+[data-theme='dark'] .query-debug-inline {
+  color: #fecaca !important;
+}
+
+[data-theme='dark'] .query-debug-inline-secondary {
+  color: #fca5a5 !important;
+}

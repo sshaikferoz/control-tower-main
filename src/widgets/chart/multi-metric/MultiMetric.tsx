@@ -12,6 +12,8 @@ interface MultiMetricProps {
     backgroundColor?: string;
     typography?: any;
     title?: string; // Widget-level title (may come from query or manual widget title)
+    showQueryDebugErrors?: boolean;
+    debugWidgetName?: string;
 }
 
 // Trend icon component
@@ -49,9 +51,24 @@ const MetricItem: React.FC<{
     value: number | null;
     isLoading: boolean;
     error: Error | null;
+    errorMessage?: string | null;
+    queryName?: string;
+    showQueryDebugErrors?: boolean;
+    debugWidgetName?: string;
     typography?: any;
     layout?: 'horizontal' | 'vertical';
-}> = ({ metric, value, isLoading, error, typography, layout = 'horizontal' }) => {
+}> = ({
+    metric,
+    value,
+    isLoading,
+    error,
+    errorMessage,
+    queryName,
+    showQueryDebugErrors = false,
+    debugWidgetName,
+    typography,
+    layout = 'horizontal',
+}) => {
     // Get metric's own layout (how title and value are arranged within the metric)
     const metricLayout = metric.metricLayout || 'vertical';
 
@@ -132,6 +149,16 @@ const MetricItem: React.FC<{
     }
 
     if (error) {
+        if (showQueryDebugErrors) {
+            return (
+                <div className="query-debug-error min-w-0 flex-1 rounded px-3 py-2 text-xs">
+                    <p><strong>Widget:</strong> {debugWidgetName || 'multi-metric'}</p>
+                    <p><strong>Metric:</strong> {metric.title}</p>
+                    <p><strong>Query:</strong> {queryName || 'N/A'}</p>
+                    <p><strong>Error:</strong> {errorMessage || error.message}</p>
+                </div>
+            );
+        }
         return null;
     }
 
@@ -219,6 +246,8 @@ const MultiMetric: React.FC<MultiMetricProps> = ({
     backgroundColor,
     typography,
     title,
+    showQueryDebugErrors = false,
+    debugWidgetName,
 }) => {
     const filterState = useAppSelector((state) => state.filters);
     const defaultBaseColor = backgroundColor || '#00214E';
@@ -290,6 +319,8 @@ const MultiMetric: React.FC<MultiMetricProps> = ({
                                 typography={typography}
                                 layout={layout}
                                 filterVariables={filterVariables}
+                                showQueryDebugErrors={showQueryDebugErrors}
+                                debugWidgetName={debugWidgetName || title || 'multi-metric'}
                             />
                             {/* Add divider between metrics in horizontal layout (except last) */}
                             {showDividers && layout === 'horizontal' && index < multiMetricConfig.metrics.length - 1 && (
@@ -313,12 +344,26 @@ const MetricCardWrapper: React.FC<{
     typography?: any;
     layout?: 'horizontal' | 'vertical';
     filterVariables?: string;
-}> = ({ metric, typography, layout = 'horizontal', filterVariables }) => {
+    showQueryDebugErrors?: boolean;
+    debugWidgetName?: string;
+}> = ({
+    metric,
+    typography,
+    layout = 'horizontal',
+    filterVariables,
+    showQueryDebugErrors = false,
+    debugWidgetName,
+}) => {
     const { data: bexData, isLoading, error } = useBexJson(metric.queryName || '', {
         parser: 'new',
         enabled: !!metric.queryName,
         variables: filterVariables,
     });
+    const parserError =
+        typeof (bexData as { error?: unknown } | undefined)?.error === 'string'
+            ? (bexData as { error?: string }).error
+            : null;
+    const resolvedErrorMessage = parserError || error?.message || null;
 
     const resolvedTitle = useMemo(() => {
         if ((metric.titleSource || 'manual') === 'query') {
@@ -373,7 +418,11 @@ const MetricCardWrapper: React.FC<{
             metric={{ ...metric, title: resolvedTitle }}
             value={extractedValue}
             isLoading={isLoading}
-            error={error as Error | null}
+            error={resolvedErrorMessage ? (error as Error | null) || new Error(resolvedErrorMessage) : null}
+            errorMessage={resolvedErrorMessage}
+            queryName={metric.queryName}
+            showQueryDebugErrors={showQueryDebugErrors}
+            debugWidgetName={debugWidgetName}
             typography={typography}
             layout={layout}
         />

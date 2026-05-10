@@ -189,26 +189,63 @@ const ComponentConfigCard: React.FC<{
         {
             parser: 'new',
             displayKey: component.includeDisplayKey === true,
+            hierarchy: component.isHierarchyQuery === true,
             enabled: component.type === 'list' && !!queryNameInput && queryNameInput.length > 0,
         }
     );
+    const parserError =
+        typeof (bexData as { error?: unknown } | undefined)?.error === 'string'
+            ? (bexData as { error?: string }).error
+            : null;
 
     // Extract available fields from response
-    const availableFields = useMemo(() => {
+    const availableFields = useMemo<string[]>(() => {
         if (!bexData || component.type !== 'list') {
             return [];
+        }
+
+        const headerFields = ((bexData as any)?.header || [])
+            .map((h: any) => h?.fieldName)
+            .filter((field: unknown): field is string => typeof field === 'string' && field.trim().length > 0);
+
+        if (headerFields.length > 0) {
+            return headerFields;
         }
 
         const chartData = (bexData as any)?.chartData || [];
         if (chartData.length === 0) return [];
 
-        return Object.keys(chartData[0]);
+        return Object.keys(chartData[0]).filter((field) => !field.startsWith('__'));
     }, [bexData, component.type]);
 
     const selectedDisplayFields = useMemo(() => {
         if (!component.displayField) return [];
         return Array.isArray(component.displayField) ? component.displayField : [component.displayField];
     }, [component.displayField]);
+
+    useEffect(() => {
+        if (component.type !== 'list' || availableFields.length === 0) return;
+
+        const validDisplayFields = selectedDisplayFields.filter((field) => availableFields.includes(field));
+        if (validDisplayFields.length !== selectedDisplayFields.length) {
+            onComponentChange(index, 'displayField', validDisplayFields);
+        }
+
+        const preferredValueField =
+            availableFields.find((field: string) => field.toUpperCase().endsWith('_KEY')) ||
+            availableFields[0];
+
+        if (!component.valueField || !availableFields.includes(component.valueField)) {
+            onComponentChange(index, 'valueField', preferredValueField);
+        }
+    }, [
+        availableFields,
+        component.type,
+        component.valueField,
+        index,
+        onComponentChange,
+        selectedDisplayFields,
+    ]);
 
     // Update query name when input changes
     useEffect(() => {
@@ -367,12 +404,22 @@ const ComponentConfigCard: React.FC<{
                         </div>
                     </div>
                     <CustomToggle
+                        label="Hierarchy query"
+                        checked={component.isHierarchyQuery === true}
+                        onChange={(checked) => onComponentChange(index, 'isHierarchyQuery', checked)}
+                    />
+                    <CustomToggle
                         label="Include key field (display_key=X)"
                         checked={component.includeDisplayKey === true}
                         onChange={(checked) => onComponentChange(index, 'includeDisplayKey', checked)}
                     />
                     {bexLoading && (
                         <div className="mb-2 text-xs text-white/60">Loading query data...</div>
+                    )}
+                    {parserError && (
+                        <div className="query-error-banner mb-2 rounded px-2 py-1 text-xs">
+                            {parserError}
+                        </div>
                     )}
                     {availableFields.length > 0 && (
                         <>

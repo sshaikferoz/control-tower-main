@@ -23,6 +23,8 @@ interface AlertNotificationsProps {
     alertConfig?: AlertNotificationsWidgetConfig;
     backgroundColor?: string;
     typography?: any;
+    showQueryDebugErrors?: boolean;
+    debugWidgetName?: string;
 }
 
 function getCriticality(
@@ -107,12 +109,20 @@ function AlertRow({
     value,
     isLoading,
     error,
+    errorMessage,
+    queryName,
+    showQueryDebugErrors,
+    debugWidgetName,
     typography,
 }: {
     alert: AlertItemConfig;
     value: number | null;
     isLoading: boolean;
     error: Error | null;
+    errorMessage?: string | null;
+    queryName?: string;
+    showQueryDebugErrors?: boolean;
+    debugWidgetName?: string;
     typography?: any;
 }) {
     const mode = config.thresholdMode || 'above';
@@ -143,12 +153,24 @@ function AlertRow({
         <div className="alert-notifications-row flex items-center justify-between gap-3 rounded-lg px-3 py-2.5 transition-colors">
             <div className="flex min-w-0 flex-1 items-center gap-3">
                 <AlertIcon iconType={config.iconType} criticality={criticality} />
-                <span
-                    className="alert-notifications-label truncate text-sm font-medium text-white"
-                    style={labelStyles}
-                >
-                    {config.title}
-                </span>
+                <div className="min-w-0">
+                    <span
+                        className="alert-notifications-label block truncate text-sm font-medium text-white"
+                        style={labelStyles}
+                    >
+                        {config.title}
+                    </span>
+                    {showQueryDebugErrors && errorMessage && (
+                        <span className="query-debug-inline block truncate text-[11px]">
+                            Query `{queryName || 'N/A'}`: {errorMessage}
+                        </span>
+                    )}
+                    {showQueryDebugErrors && errorMessage && debugWidgetName && (
+                        <span className="query-debug-inline-secondary block truncate text-[10px]">
+                            Widget: {debugWidgetName}
+                        </span>
+                    )}
+                </div>
             </div>
             <div className="flex flex-shrink-0 items-baseline gap-1">
                 <span
@@ -173,10 +195,14 @@ function AlertRow({
 function AlertItemWrapper({
     alert: config,
     filterVariables,
+    showQueryDebugErrors,
+    debugWidgetName,
     typography,
 }: {
     alert: AlertItemConfig;
     filterVariables?: string;
+    showQueryDebugErrors?: boolean;
+    debugWidgetName?: string;
     typography?: any;
 }) {
     const { data: bexData, isLoading, error } = useBexJson(config.queryName || '', {
@@ -184,6 +210,11 @@ function AlertItemWrapper({
         enabled: !!config.queryName,
         variables: filterVariables,
     });
+    const parserError =
+        typeof (bexData as { error?: unknown } | undefined)?.error === 'string'
+            ? (bexData as { error?: string }).error
+            : null;
+    const resolvedErrorMessage = parserError || error?.message || null;
 
     const value = useMemo(() => {
         if (!config.valueKey || !bexData) return null;
@@ -200,7 +231,11 @@ function AlertItemWrapper({
             alert={config}
             value={value}
             isLoading={isLoading}
-            error={error as Error | null}
+            error={resolvedErrorMessage ? (error as Error | null) || new Error(resolvedErrorMessage) : null}
+            errorMessage={resolvedErrorMessage}
+            queryName={config.queryName}
+            showQueryDebugErrors={showQueryDebugErrors}
+            debugWidgetName={debugWidgetName}
             typography={typography}
         />
     );
@@ -209,10 +244,14 @@ function AlertItemWrapper({
 function CategoryBlock({
     category,
     filterVariables,
+    showQueryDebugErrors,
+    debugWidgetName,
     typography,
 }: {
     category: AlertCategoryConfig;
     filterVariables?: string;
+    showQueryDebugErrors?: boolean;
+    debugWidgetName?: string;
     typography?: any;
 }) {
     const alerts = (category.alerts ?? []).filter((a) => a.enabled !== false);
@@ -234,6 +273,8 @@ function CategoryBlock({
                         key={alert.id}
                         alert={alert}
                         filterVariables={filterVariables}
+                        showQueryDebugErrors={showQueryDebugErrors}
+                        debugWidgetName={debugWidgetName}
                         typography={typography}
                     />
                 ))}
@@ -247,6 +288,8 @@ const AlertNotifications: React.FC<AlertNotificationsProps> = ({
     alertConfig,
     backgroundColor,
     typography,
+    showQueryDebugErrors = false,
+    debugWidgetName,
 }) => {
     const filterState = useAppSelector((state) => state.filters);
     const listenToEvent = alertConfig?.listenToEvent;
@@ -360,6 +403,8 @@ const AlertNotifications: React.FC<AlertNotificationsProps> = ({
                             key={cat.id}
                             category={cat}
                             filterVariables={filterVariables}
+                            showQueryDebugErrors={showQueryDebugErrors}
+                            debugWidgetName={debugWidgetName || title || 'alert-notifications'}
                             typography={typography}
                         />
                     ))}

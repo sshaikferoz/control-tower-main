@@ -32,6 +32,7 @@ export interface DashboardData {
 export interface DashboardSectionProps {
   section: DashboardSection;
   index: number;
+  isAdmin?: boolean;
   isEditMode: boolean;
   onDragStart: (index: number) => void;
   onDragEnter: (index: number) => void;

@@ -9,11 +9,19 @@ interface FilterPanelSidebarState {
     config: FilterPanelWidgetConfig | null;
     title: string;
     backgroundColor?: string;
+    showQueryDebugErrors?: boolean;
+    debugWidgetName?: string;
 }
 
 interface FilterPanelSidebarContextValue {
     state: FilterPanelSidebarState;
-    openFilterSidebar: (config: FilterPanelWidgetConfig, title?: string, backgroundColor?: string) => void;
+    openFilterSidebar: (
+        config: FilterPanelWidgetConfig,
+        title?: string,
+        backgroundColor?: string,
+        showQueryDebugErrors?: boolean,
+        debugWidgetName?: string
+    ) => void;
     closeFilterSidebar: () => void;
     getDraftValues: (config: FilterPanelWidgetConfig) => Record<string, FilterVariable> | null;
     setDraftValues: (config: FilterPanelWidgetConfig, values: Record<string, FilterVariable>) => void;
@@ -38,8 +46,22 @@ export const FilterPanelSidebarProvider: React.FC<{ children: React.ReactNode }>
     const [draftValuesByConfig, setDraftValuesByConfig] = useState<Record<string, Record<string, FilterVariable>>>({});
 
     const openFilterSidebar = useCallback(
-        (config: FilterPanelWidgetConfig, title = 'Filter Panel', backgroundColor?: string) => {
-            setState({ isOpen: true, config, title, backgroundColor });
+        (
+            config: FilterPanelWidgetConfig,
+            title = 'Filter Panel',
+            backgroundColor?: string,
+            showQueryDebugErrors?: boolean,
+            debugWidgetName?: string
+        ) => {
+            setState((prev) => ({
+                ...prev,
+                isOpen: true,
+                config,
+                title,
+                backgroundColor,
+                showQueryDebugErrors,
+                debugWidgetName,
+            }));
         },
         []
     );

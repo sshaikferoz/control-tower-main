@@ -26,6 +26,7 @@ export interface FilterComponent {
     
     // For list component (BEX Query)
     queryName?: string; // BEX query name to fetch list options
+    isHierarchyQuery?: boolean; // If true, use hierarchy endpoint/response shape
     includeDisplayKey?: boolean; // Append display_key=X to query URL to fetch key fields
     displayField?: string | string[]; // Field(s) to display in the list
     valueField?: string; // Field to use as value

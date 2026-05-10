@@ -738,6 +738,7 @@ export default function Home({
             key={`section-${section.id || index}`}
             section={section}
             index={index}
+            isAdmin={isAdmin}
             isEditMode={isEditMode && isEditModeAllowed}
             onDragStart={handleDragStart}
             onDragEnter={handleDragEnter}

@@ -2,6 +2,7 @@ import axios from 'redaxios'
 import { useQuery, UseQueryOptions, UseQueryResult } from '@tanstack/react-query'
 import bexToJsonFastParser, { ParseResult as EnhancedParseResult } from '@/lib/bexQueryXmlToJsonEnhanced'
 import { parseXMLToJson } from '@/lib/bexQueryXmlToJson'
+import { parseHierarchyXMLToJson } from '@/lib/bexHierarchyXmlToJson'
 
 // Type for the old parser result
 interface OldParserResult {
@@ -24,7 +25,48 @@ interface BexQueryOptions {
     parser?: 'new' | 'old'
     variables?: string // SAP BW variables string (e.g., "VAR_NAME_1=VAR1&VAR_OPERATOR_1=EQ&VAR_VALUE_EXT_1=VALUE1")
     displayKey?: boolean // Appends display_key=X to include key metadata/columns
+    hierarchy?: boolean
     [key: string]: unknown
+}
+
+const ABAP_ERROR_REGEX = /<(?:(?:\w+):)?error>([\s\S]*?)<\/(?:(?:\w+):)?error>/i
+
+function buildFallbackResult(message: string): OldParserResult {
+    return {
+        header: [],
+        chartData: [],
+        error: message,
+    }
+}
+
+function extractAbapError(xmlPayload: string): string | null {
+    const match = xmlPayload.match(ABAP_ERROR_REGEX)
+    if (!match || !match[1]) return null
+    const normalized = match[1]
+        .replace(/\s+/g, ' ')
+        .trim()
+    return normalized || 'Error returned by SAP data provider'
+}
+
+function normalizeParserResult(result: unknown): BexQueryResult {
+    if (!result || typeof result !== 'object') {
+        return buildFallbackResult('Invalid query response format')
+    }
+
+    const maybeError = (result as { error?: unknown }).error
+    if (typeof maybeError === 'string' && maybeError.trim().length > 0) {
+        return buildFallbackResult(maybeError.trim())
+    }
+
+    const normalized = result as Record<string, unknown>
+    const header = Array.isArray(normalized.header) ? normalized.header : []
+    const chartData = Array.isArray(normalized.chartData) ? normalized.chartData : []
+
+    return {
+        ...normalized,
+        header,
+        chartData,
+    } as BexQueryResult
 }
 
 // Type for react-query options (excluding queryFn and queryKey which we handle)
@@ -51,8 +93,8 @@ const fetchBexQuery = async (
         process.env.PROXY_BASE_URL_SAP_DB
 
     let url = process.env.NODE_ENV === 'development' && useSapDb !== 'true'
-        ? `/api/sap/bc/bsp/sap/zbw_reporting/execute_report_oo.htm?query=${queryName}`
-        : `${sapDbBaseUrl || ''}/sap/bc/bsp/sap/zbw_reporting/execute_report_oo.htm?query=${queryName}`
+        ? `/api/sap/bc/bsp/sap/zbw_reporting/${options.hierarchy ? 'execute_report_oo_hier.htm' : 'execute_report_oo.htm'}?query=${queryName}`
+        : `${sapDbBaseUrl || ''}/sap/bc/bsp/sap/zbw_reporting/${options.hierarchy ? 'execute_report_oo_hier.htm' : 'execute_report_oo.htm'}?query=${queryName}`
 
     // Append variables if provided
     if (options.variables) {
@@ -65,22 +107,29 @@ const fetchBexQuery = async (
     try {
         const { data } = await axios.get<string>(url)
 
-        if (options.parser === 'new') {
-            return bexToJsonFastParser(data)
+        const xmlPayload = typeof data === 'string' ? data : String(data ?? '')
+        const abapError = extractAbapError(xmlPayload)
+        if (abapError) {
+            return buildFallbackResult(abapError)
         }
-        return parseXMLToJson(data)
+
+        let parsed: BexQueryResult
+        if (options.hierarchy) {
+            parsed = parseHierarchyXMLToJson(xmlPayload)
+        } else if (options.parser === 'new') {
+            parsed = bexToJsonFastParser(xmlPayload)
+        } else {
+            parsed = parseXMLToJson(xmlPayload)
+        }
+
+        return normalizeParserResult(parsed)
     } catch (err) {
         // If the query is not executed or responds with an error,
         // return an empty result so downstream logic does not break.
         // We use the "old" parser shape for the fallback because it is the loosest.
         const message =
             err instanceof Error ? err.message : 'Failed to execute BEx query'
-
-        return {
-            header: [],
-            chartData: [],
-            error: message,
-        }
+        return buildFallbackResult(message)
     }
 }
 
@@ -94,11 +143,11 @@ export default function useBexJson(
     queryName: string = '',
     options: UseBexJsonOptions = {}
 ): UseQueryResult<BexQueryResult, Error> {
-    const { parser, variables, displayKey, ...queryOptions } = options
+    const { parser, variables, displayKey, hierarchy, ...queryOptions } = options
 
     return useQuery<BexQueryResult, Error>({
-        queryKey: ['Bex', queryName, parser, variables, displayKey],
-        queryFn: () => fetchBexQuery(queryName, { parser, variables, displayKey }),
+        queryKey: ['Bex', queryName, parser, variables, displayKey, hierarchy],
+        queryFn: () => fetchBexQuery(queryName, { parser, variables, displayKey, hierarchy }),
         ...queryOptions,
     })
 }

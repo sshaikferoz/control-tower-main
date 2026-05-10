@@ -85,11 +85,16 @@ const RenderSavedConfig = () => {
     const chartResult = useMemo(() => {
         if (!bexResponse || !chartConfig || isLoading) return null;
 
-        const flattenedConfig: ChartWidgetConfig = {
-            ...chartConfig,
-            measures: chartConfig.measures.flat() as any,
-        };
-        return transformBexToChart(bexResponse, flattenedConfig);
+        try {
+            const flattenedConfig: ChartWidgetConfig = {
+                ...chartConfig,
+                measures: Array.isArray(chartConfig.measures) ? chartConfig.measures.flat() as any : [],
+            };
+            return transformBexToChart(bexResponse, flattenedConfig);
+        } catch (transformError) {
+            console.error('Failed to transform BEx response for render preview:', transformError);
+            return null;
+        }
     }, [bexResponse, chartConfig, isLoading]);
 
     if (error) {
