@@ -34,6 +34,16 @@ export interface DashboardSectionProps {
   index: number;
   isAdmin?: boolean;
   isEditMode: boolean;
+  isWidgetPreferenceEditMode?: boolean;
+  sectionWidgetPreferences?: Record<string, {
+    widgetId: string;
+    sectionId: string;
+    tabId: string;
+    hidden: boolean;
+    order: number;
+    layout?: { x?: number; y?: number; w?: number; h?: number };
+    updatedAt: string;
+  }>;
   onDragStart: (index: number) => void;
   onDragEnter: (index: number) => void;
   onDragEnd: () => void;
@@ -42,4 +52,9 @@ export interface DashboardSectionProps {
   onDeleteSection: (section: any) => void;
   onOpenMapping: (section: any, isExpanded: boolean) => void;
   onAddWidgets: (section: any, isExpanded: boolean) => void;
+  onWidgetVisibilityPreferenceChange?: (sectionId: string, widgetId: string, hidden: boolean) => void;
+  onWidgetLayoutPreferenceChange?: (
+    sectionId: string,
+    layoutItems: Array<{ i: string; x: number; y: number; w: number; h: number }>
+  ) => void;
 }

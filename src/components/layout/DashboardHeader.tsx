@@ -1,4 +1,5 @@
 //DashboardHeader.tsx
+
 // Updated DashboardHeader component with search selection support
 import React, { useState, Suspense } from 'react';
 import { IconButton, Button, Tooltip } from '@mui/material';
@@ -43,6 +44,12 @@ interface DashboardHeaderProps {
     tabId: any;
     onSearchSelect?: (result: SearchResult | null) => void; // Search selection/highlighting
     onLocalSearch?: (query: string) => SearchResult[]; // Local fuzzy search over widgets
+    isWidgetPreferenceEditMode?: boolean;
+    onToggleWidgetPreferenceEditMode?: () => void;
+    onSaveWidgetPreferences?: () => void;
+    onCancelWidgetPreferences?: () => void;
+    onOpenWidgetVisibilityDialog?: () => void;
+    canEditWidgetPreferences?: boolean;
 }
 
 export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
@@ -57,6 +64,12 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
     tabId,
     onSearchSelect,
     onLocalSearch,
+    isWidgetPreferenceEditMode = false,
+    onToggleWidgetPreferenceEditMode,
+    onSaveWidgetPreferences,
+    onCancelWidgetPreferences,
+    onOpenWidgetVisibilityDialog,
+    canEditWidgetPreferences = true,
 }) => {
     const [isChatOpen, setIsChatOpen] = useState(false);
 
@@ -98,6 +111,13 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
                 onSearchSelect={onSearchSelect}
                 // Provide optional local fuzzy search implementation
                 onLocalSearch={onLocalSearch}
+                isEditMode={isEditMode}
+                isWidgetPreferenceEditMode={isWidgetPreferenceEditMode}
+                canEditWidgetPreferences={canEditWidgetPreferences}
+                onToggleWidgetPreferenceEditMode={onToggleWidgetPreferenceEditMode}
+                onOpenWidgetVisibilityDialog={onOpenWidgetVisibilityDialog}
+                onSaveWidgetPreferences={onSaveWidgetPreferences}
+                onCancelWidgetPreferences={onCancelWidgetPreferences}
             />
 
             {/* Chat Button - Only render if chatbot is enabled */}
@@ -118,70 +138,72 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
             </Suspense>
 
             {/* Admin controls */}
-            {isAdmin && isEditModeAllowed && (
-                <div className="flex items-center justify-center gap-2">
-                    {/* Configuration Button */}
-                    <Tooltip title="UI Configuration" placement="top">
-                        <span>
-                            <IconButton
-                                onClick={onOpenConfigDialog}
-                                aria-label="Open Configuration"
-                                sx={{
-                                    backgroundColor: 'var(--primary2)',
-                                    color: 'white',
-                                    '&:hover': { backgroundColor: 'var(--primary2)', opacity: 0.9 },
-                                }}
-                            >
-                                <SettingsIcon sx={{ color: 'inherit' }} />
-                            </IconButton>
-                        </span>
-                    </Tooltip>
-
-                    {isEditMode ? (
-                        <>
-                            <IconButton
-                                onClick={onAddSection}
-                                aria-label="Add Section"
-                                sx={{
-                                    backgroundColor: 'var(--primary2)',
-                                    color: 'white',
-                                    '&:hover': { backgroundColor: 'var(--primary2)', opacity: 0.9 },
-                                }}
-                            >
-                                <AddIcon sx={{ color: 'inherit' }} />
-                            </IconButton>
-                            <Button
-                                variant="contained"
-                                startIcon={<SaveIcon sx={{ color: 'inherit' }} />}
-                                onClick={onSaveDashboard}
-                                sx={{
-                                    backgroundColor: 'var(--secondary1)',
-                                    color: 'white',
-                                    '&:hover': { backgroundColor: 'var(--secondary1)', opacity: 0.9 },
-                                }}
-                            >
-                                Save Layout
-                            </Button>
-                        </>
-                    ) : (
-                        <Tooltip title="Edit Layout" placement="top">
+            <div className="flex items-center justify-center gap-2">
+                {isAdmin && isEditModeAllowed && (
+                    <>
+                        {/* Configuration Button */}
+                        <Tooltip title="UI Configuration" placement="top">
                             <span>
                                 <IconButton
-                                    onClick={onToggleEditMode}
-                                    aria-label="Edit Layout"
+                                    onClick={onOpenConfigDialog}
+                                    aria-label="Open Configuration"
                                     sx={{
                                         backgroundColor: 'var(--primary2)',
                                         color: 'white',
                                         '&:hover': { backgroundColor: 'var(--primary2)', opacity: 0.9 },
                                     }}
                                 >
-                                    <EditIcon sx={{ color: 'inherit' }} />
+                                    <SettingsIcon sx={{ color: 'inherit' }} />
                                 </IconButton>
                             </span>
                         </Tooltip>
-                    )}
-                </div>
-            )}
+
+                        {isEditMode ? (
+                            <>
+                                <IconButton
+                                    onClick={onAddSection}
+                                    aria-label="Add Section"
+                                    sx={{
+                                        backgroundColor: 'var(--primary2)',
+                                        color: 'white',
+                                        '&:hover': { backgroundColor: 'var(--primary2)', opacity: 0.9 },
+                                    }}
+                                >
+                                    <AddIcon sx={{ color: 'inherit' }} />
+                                </IconButton>
+                                <Button
+                                    variant="contained"
+                                    startIcon={<SaveIcon sx={{ color: 'inherit' }} />}
+                                    onClick={onSaveDashboard}
+                                    sx={{
+                                        backgroundColor: 'var(--secondary1)',
+                                        color: 'white',
+                                        '&:hover': { backgroundColor: 'var(--secondary1)', opacity: 0.9 },
+                                    }}
+                                >
+                                    Save Layout
+                                </Button>
+                            </>
+                        ) : (
+                            <Tooltip title="Edit Layout" placement="top">
+                                <span>
+                                    <IconButton
+                                        onClick={onToggleEditMode}
+                                        aria-label="Edit Layout"
+                                        sx={{
+                                            backgroundColor: 'var(--primary2)',
+                                            color: 'white',
+                                            '&:hover': { backgroundColor: 'var(--primary2)', opacity: 0.9 },
+                                        }}
+                                    >
+                                        <EditIcon sx={{ color: 'inherit' }} />
+                                    </IconButton>
+                                </span>
+                            </Tooltip>
+                        )}
+                    </>
+                )}
+            </div>
         </div>
     );
 };

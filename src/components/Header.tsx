@@ -2,6 +2,11 @@
 'use client';
 import { Search, Loader2, X } from 'lucide-react';
 import { QuestionMarkCircleIcon } from '@heroicons/react/24/outline';
+import TuneIcon from '@mui/icons-material/Tune';
+import VisibilityIcon from '@mui/icons-material/Visibility';
+import SaveIcon from '@mui/icons-material/Save';
+import CloseIcon from '@mui/icons-material/Close';
+import { IconButton, Tooltip } from '@mui/material';
 import { DASHBOARD_MENU_ICONS } from '@/widgets/dashboard-menu/DashboardMenuConfig.types';
 import Markdown from 'markdown-to-jsx';
 
@@ -115,9 +120,28 @@ interface HeaderProps {
     onSearchSelect?: (result: SearchResult | null) => void;
     // Optional callback for client-side fuzzy search over widgets/sections
     onLocalSearch?: (query: string) => SearchResult[];
+    isEditMode?: boolean;
+    isWidgetPreferenceEditMode?: boolean;
+    canEditWidgetPreferences?: boolean;
+    onToggleWidgetPreferenceEditMode?: () => void;
+    onOpenWidgetVisibilityDialog?: () => void;
+    onSaveWidgetPreferences?: () => void;
+    onCancelWidgetPreferences?: () => void;
 }
 
-const Header: React.FC<HeaderProps> = ({ configuration, tabId, onSearchSelect, onLocalSearch }) => {
+const Header: React.FC<HeaderProps> = ({
+    configuration,
+    tabId,
+    onSearchSelect,
+    onLocalSearch,
+    isEditMode = false,
+    isWidgetPreferenceEditMode = false,
+    canEditWidgetPreferences = false,
+    onToggleWidgetPreferenceEditMode,
+    onOpenWidgetVisibilityDialog,
+    onSaveWidgetPreferences,
+    onCancelWidgetPreferences,
+}) => {
     const [visible, setVisible] = useState(false);
     const [sectionName, setSectionName] = useState('');
     const [isExpanded, setIsExpanded] = useState(true);
@@ -557,6 +581,61 @@ const Header: React.FC<HeaderProps> = ({ configuration, tabId, onSearchSelect, o
                     </div>
                 )}
                 {themeConfig.enabled && <ThemeSettingsButton />}
+                {canEditWidgetPreferences && !isEditMode && (
+                    isWidgetPreferenceEditMode ? (
+                        <>
+                            <Tooltip title="Widget Visibility" placement="bottom">
+                                <IconButton
+                                    onClick={onOpenWidgetVisibilityDialog}
+                                    sx={{
+                                        color: 'white',
+                                        backgroundColor: 'rgba(255, 255, 255, 0.14)',
+                                        '&:hover': { backgroundColor: 'rgba(255, 255, 255, 0.24)' },
+                                    }}
+                                >
+                                    <VisibilityIcon fontSize="small" />
+                                </IconButton>
+                            </Tooltip>
+                            <Tooltip title="Save Widget Preferences" placement="bottom">
+                                <IconButton
+                                    onClick={onSaveWidgetPreferences}
+                                    sx={{
+                                        color: 'white',
+                                        backgroundColor: 'rgba(131, 189, 1, 0.85)',
+                                        '&:hover': { backgroundColor: 'rgba(131, 189, 1, 1)' },
+                                    }}
+                                >
+                                    <SaveIcon fontSize="small" />
+                                </IconButton>
+                            </Tooltip>
+                            <Tooltip title="Cancel" placement="bottom">
+                                <IconButton
+                                    onClick={onCancelWidgetPreferences}
+                                    sx={{
+                                        color: 'white',
+                                        backgroundColor: 'rgba(255, 255, 255, 0.14)',
+                                        '&:hover': { backgroundColor: 'rgba(255, 255, 255, 0.24)' },
+                                    }}
+                                >
+                                    <CloseIcon fontSize="small" />
+                                </IconButton>
+                            </Tooltip>
+                        </>
+                    ) : (
+                        <Tooltip title="Customize Widgets" placement="bottom">
+                            <IconButton
+                                onClick={onToggleWidgetPreferenceEditMode}
+                                sx={{
+                                    color: 'white',
+                                    backgroundColor: 'rgba(255, 255, 255, 0.14)',
+                                    '&:hover': { backgroundColor: 'rgba(255, 255, 255, 0.24)' },
+                                }}
+                            >
+                                <TuneIcon fontSize="small" />
+                            </IconButton>
+                        </Tooltip>
+                    )
+                )}
                 {helpConfig.enabled && (
                     <div className="relative" ref={helpPanelRef}>
                         <button

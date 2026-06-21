@@ -15,8 +15,6 @@ import EditIcon from '@mui/icons-material/Edit';
 import MappingIcon from '@mui/icons-material/Map';
 import DeleteIcon from '@mui/icons-material/Delete';
 import InfoIcon from '@mui/icons-material/Info';
-import SecurityIcon from '@mui/icons-material/Security';
-import LaunchIcon from '@mui/icons-material/Launch';
 import RGL, { WidthProvider } from 'react-grid-layout/legacy';
 import { DashboardSectionProps } from '@/types/dashboard';
 import { LazyWidgetContent } from '@/widgets/LazyWidgetContent';
@@ -100,6 +98,9 @@ export const DashboardSection: React.FC<ExtendedDashboardSectionProps> = ({
     onDeleteSection,
     onOpenMapping,
     onAddWidgets,
+    isWidgetPreferenceEditMode = false,
+    sectionWidgetPreferences = {},
+    onWidgetLayoutPreferenceChange,
     // New highlighting props
     highlightSectionId,
     highlightWidgetIds = [],
@@ -133,10 +134,30 @@ export const DashboardSection: React.FC<ExtendedDashboardSectionProps> = ({
 
     const sectionRef = useRef<HTMLDivElement>(null);
     const dataManager = useMemo(() => DataManager.getInstance(), []);
-    const announcementWidgets = section.widgets?.filter((w: any) => w.name === 'announcement') || [];
-    // When rendering the dashboard, hide widgets with active === false (IsActive ''); mapping screen shows all
-    const gridWidgets =
-        section.widgets?.filter((w: any) => w.name !== 'announcement' && w.active !== false) || [];
+    const sectionId = section.id || section.originalSection?.id || '';
+    const allWidgets = section.widgets || [];
+    const visibleByPreference = (widgetId: string) => {
+        const pref = sectionWidgetPreferences?.[widgetId];
+        return !pref?.hidden;
+    };
+    const getWidgetOrder = (widgetId: string, fallbackIndex: number) => {
+        const pref = sectionWidgetPreferences?.[widgetId];
+        return pref?.order ?? fallbackIndex;
+    };
+    const getWidgetLayoutPreference = (widgetId: string) => {
+        return sectionWidgetPreferences?.[widgetId]?.layout;
+    };
+    const orderedAllWidgets = [...allWidgets].sort((a: any, b: any) => {
+        const indexA = allWidgets.findIndex((item: any) => item.id === a.id);
+        const indexB = allWidgets.findIndex((item: any) => item.id === b.id);
+        return getWidgetOrder(a.id, indexA) - getWidgetOrder(b.id, indexB);
+    });
+    const orderedRenderableWidgets = orderedAllWidgets.filter((widget: any) => visibleByPreference(widget.id));
+    const announcementWidgets = orderedRenderableWidgets.filter((w: any) => w.name === 'announcement');
+    // When rendering the dashboard, hide widgets with active === false (IsActive '')
+    const gridWidgets = orderedRenderableWidgets.filter(
+        (w: any) => w.name !== 'announcement' && w.active !== false
+    );
 
     // Check if this section should be highlighted
     const isSectionHighlighted =
@@ -413,7 +434,7 @@ export const DashboardSection: React.FC<ExtendedDashboardSectionProps> = ({
     // Handle widget click to open report
     const handleWidgetClick = (e: React.MouseEvent, widget: any) => {
         // Don't handle click in edit mode
-        if (isEditMode) return;
+        if (isEditMode || isWidgetPreferenceEditMode) return;
 
         // Check if the click target or its parent is an action button
         const target = e.target as HTMLElement;
@@ -456,18 +477,33 @@ export const DashboardSection: React.FC<ExtendedDashboardSectionProps> = ({
         handleOpenReport(targetReport);
     };
 
-    const otherWidgets = section.widgets?.filter((w: any) => w.name !== 'announcement') || [];
+    const handleLayoutPreferenceChange = (newLayout: readonly any[]) => {
+        if (!isWidgetPreferenceEditMode || !onWidgetLayoutPreferenceChange || !sectionId) return;
+        const normalizedLayout = newLayout.map((item) => ({
+            i: item.i,
+            x: item.x,
+            y: item.y,
+            w: item.w,
+            h: item.h,
+        }));
+        onWidgetLayoutPreferenceChange(sectionId, normalizedLayout);
+    };
 
-    // Merge: announcements first
-    const orderedWidgets = [...announcementWidgets, ...otherWidgets];
-
-    // Recalculate layout: announcements on top, shift others down
     const originalLayout = section.layout || [];
 
     const layout = gridWidgets
         .map((widget) => {
             const item = originalLayout.find((l: any) => l.i === widget.id);
-            return item || null;
+            const layoutPreference = getWidgetLayoutPreference(widget.id);
+            if (!item && !layoutPreference) return null;
+            return {
+                ...(item || {}),
+                i: widget.id,
+                x: layoutPreference?.x ?? item?.x ?? 0,
+                y: layoutPreference?.y ?? item?.y ?? 0,
+                w: layoutPreference?.w ?? item?.w ?? 4,
+                h: layoutPreference?.h ?? item?.h ?? 3,
+            };
         })
         .filter(Boolean);
     // Generate dynamic classes for section highlighting
@@ -495,7 +531,7 @@ export const DashboardSection: React.FC<ExtendedDashboardSectionProps> = ({
         }
 
         // Add cursor pointer when not in edit mode and has mapped report
-        if (!isEditMode) {
+        if (!isEditMode && !isWidgetPreferenceEditMode) {
             const widget = section.widgets?.find((w: any) => w.id === widgetId);
             const hasReport =
                 widget?.fieldMappings?.targetReport || section.fieldMappings?.[widgetId]?.targetReport;
@@ -663,10 +699,11 @@ export const DashboardSection: React.FC<ExtendedDashboardSectionProps> = ({
                         layout={layout}
                         cols={12}
                         rowHeight={80}
-                        isResizable={false}
-                        isDraggable={false}
+                        isResizable={isWidgetPreferenceEditMode}
+                        isDraggable={isWidgetPreferenceEditMode}
                         allowOverlap={true}
-                        resizeHandles={[]}
+                        resizeHandles={isWidgetPreferenceEditMode ? ['se', 'e', 's'] : []}
+                        onLayoutChange={handleLayoutPreferenceChange}
                     >
                         {gridWidgets.map((widget: any) => {
                             const Component = widgetMapping[widget.name];

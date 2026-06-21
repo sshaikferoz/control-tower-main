@@ -22,6 +22,14 @@ import { LoadingScreen } from '@/components/ui/LoadingScreen';
 import { FilterPanelSidebarProvider } from '@/widgets/filter-panel/FilterPanelSidebarContext';
 import { FilterPanelSidebar } from '@/widgets/filter-panel/FilterPanelSidebar';
 import { TargetReportConfig } from '@/helpers/types';
+import { WidgetVisibilityDialog, WidgetVisibilityItem } from '@/components/dialogs/WidgetVisibilityDialog';
+import {
+    UserTabWidgetPreferences,
+    WidgetPreference,
+    createEmptyUserTabPreferences,
+    getUserTabWidgetPreferences,
+    saveUserTabWidgetPreferences,
+} from '@/lib/userWidgetPreferences';
 
 // Define SearchResult interface
 interface SearchResult {
@@ -120,6 +128,11 @@ export default function Home({
     const [showEditSectionDialog, setShowEditSectionDialog] = useState(false);
     const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
     const [selectedSection, setSelectedSection] = useState<Section | null>(null);
+    const [currentUserId, setCurrentUserId] = useState('anonymous');
+    const [savedWidgetPreferences, setSavedWidgetPreferences] = useState<UserTabWidgetPreferences | null>(null);
+    const [draftWidgetPreferences, setDraftWidgetPreferences] = useState<UserTabWidgetPreferences | null>(null);
+    const [isWidgetPreferenceEditMode, setIsWidgetPreferenceEditMode] = useState(false);
+    const [showWidgetVisibilityDialog, setShowWidgetVisibilityDialog] = useState(false);
 
     // Toast ref for notifications
     const toast = useRef<Toast>(null);
@@ -129,6 +142,32 @@ export default function Home({
         const icon = getTabIconFromConfiguration(configuration);
         applyFavicon(icon);
     }, [configuration]);
+
+    useEffect(() => {
+        let mounted = true;
+        const loadCurrentUser = async () => {
+            try {
+                const profile = await sapODataService.fetchUserProfile();
+                if (mounted && profile?.UserName) {
+                    setCurrentUserId(profile.UserName);
+                }
+            } catch {
+                // Keep anonymous profile when user profile API is unavailable.
+            }
+        };
+        loadCurrentUser();
+        return () => {
+            mounted = false;
+        };
+    }, []);
+
+    useEffect(() => {
+        if (!tabId) return;
+        const loaded = getUserTabWidgetPreferences(currentUserId, tabId);
+        setSavedWidgetPreferences(loaded);
+        setDraftWidgetPreferences(loaded);
+        setIsWidgetPreferenceEditMode(false);
+    }, [currentUserId, tabId]);
 
     // Load configuration when tab changes
     useEffect(() => {
@@ -733,30 +772,192 @@ export default function Home({
         if (!isEditModeAllowed) return;
     };
 
-    const renderSection = (section: any, index: number) => (
-        <DashboardSection
-            key={`section-${section.id || index}`}
-            section={section}
-            index={index}
-            isAdmin={isAdmin}
-            isEditMode={isEditMode && isEditModeAllowed}
-            onDragStart={handleDragStart}
-            onDragEnter={handleDragEnter}
-            onDragEnd={handleDragEnd}
-            onDragOver={handleDragOver}
-            onEditSection={handleEditSection}
-            onDeleteSection={handleDeleteSection}
-            onOpenMapping={handleOpenMapping}
-            onAddWidgets={handleAddWidgets}
-            // Pass highlighting props
-            highlightSectionId={highlightSectionId}
-            highlightWidgetIds={highlightWidgetIds}
-            // Pass dashboard configuration
-            dashboardType={configuration.dashboard?.type || 'Sections'}
-        />
-    );
+    const clonePreferences = (preferences: UserTabWidgetPreferences): UserTabWidgetPreferences =>
+        JSON.parse(JSON.stringify(preferences));
+
+    const getWorkingPreferences = (): UserTabWidgetPreferences => {
+        const active = isWidgetPreferenceEditMode ? draftWidgetPreferences : savedWidgetPreferences;
+        return active || createEmptyUserTabPreferences(currentUserId, tabId);
+    };
+
+    const upsertWidgetPreference = (
+        source: UserTabWidgetPreferences,
+        sectionId: string,
+        widgetId: string,
+        patch: Partial<WidgetPreference>
+    ): UserTabWidgetPreferences => {
+        const sectionPrefs = source.sections[sectionId] || { sectionId, widgets: {} };
+        const existingWidgetPref = sectionPrefs.widgets[widgetId];
+        const fallbackOrder = Object.keys(sectionPrefs.widgets).length;
+        const nextWidgetPref: WidgetPreference = {
+            ...existingWidgetPref,
+            widgetId,
+            sectionId,
+            tabId,
+            hidden: existingWidgetPref?.hidden ?? false,
+            order: existingWidgetPref?.order ?? fallbackOrder,
+            ...patch,
+            updatedAt: new Date().toISOString(),
+        };
+        return {
+            ...source,
+            updatedAt: new Date().toISOString(),
+            sections: {
+                ...source.sections,
+                [sectionId]: {
+                    ...sectionPrefs,
+                    widgets: {
+                        ...sectionPrefs.widgets,
+                        [widgetId]: nextWidgetPref,
+                    },
+                },
+            },
+        };
+    };
+
+    const handleToggleWidgetPreferenceEditMode = () => {
+        if (!tabId || isEditMode) return;
+        if (isWidgetPreferenceEditMode) {
+            setIsWidgetPreferenceEditMode(false);
+            setShowWidgetVisibilityDialog(false);
+            return;
+        }
+        const nextDraft = clonePreferences(
+            savedWidgetPreferences || createEmptyUserTabPreferences(currentUserId, tabId)
+        );
+        setDraftWidgetPreferences(nextDraft);
+        setIsWidgetPreferenceEditMode(true);
+    };
+
+    const handleCancelWidgetPreferences = () => {
+        const restored = clonePreferences(
+            savedWidgetPreferences || createEmptyUserTabPreferences(currentUserId, tabId)
+        );
+        setDraftWidgetPreferences(restored);
+        setIsWidgetPreferenceEditMode(false);
+        setShowWidgetVisibilityDialog(false);
+    };
+
+    const handleSaveWidgetPreferences = () => {
+        if (!tabId || !draftWidgetPreferences) return;
+        const payloadToSave: UserTabWidgetPreferences = {
+            ...draftWidgetPreferences,
+            userId: currentUserId,
+            tabId,
+            updatedAt: new Date().toISOString(),
+        };
+        saveUserTabWidgetPreferences(currentUserId, tabId, payloadToSave);
+        setSavedWidgetPreferences(payloadToSave);
+        setDraftWidgetPreferences(clonePreferences(payloadToSave));
+        setIsWidgetPreferenceEditMode(false);
+        setShowWidgetVisibilityDialog(false);
+        toast.current?.show({
+            severity: 'success',
+            summary: 'Success',
+            detail: 'Widget preferences saved successfully!',
+            life: 3000,
+        });
+    };
+
+    const handleOpenWidgetVisibilityDialog = () => {
+        if (!isWidgetPreferenceEditMode) return;
+        setShowWidgetVisibilityDialog(true);
+    };
+
+    const handleWidgetVisibilityPreferenceChange = (
+        sectionId: string,
+        widgetId: string,
+        hidden: boolean
+    ) => {
+        const base = getWorkingPreferences();
+        const next = upsertWidgetPreference(base, sectionId, widgetId, { hidden });
+        setDraftWidgetPreferences(next);
+        if (!isWidgetPreferenceEditMode) {
+            setSavedWidgetPreferences(next);
+            saveUserTabWidgetPreferences(currentUserId, tabId, next);
+        }
+    };
+
+    const handleWidgetLayoutPreferenceChange = (
+        sectionId: string,
+        layoutItems: Array<{ i: string; x: number; y: number; w: number; h: number }>
+    ) => {
+        const base = getWorkingPreferences();
+        let next = base;
+        layoutItems.forEach((layoutItem, order) => {
+            next = upsertWidgetPreference(next, sectionId, layoutItem.i, {
+                order,
+                layout: {
+                    x: layoutItem.x,
+                    y: layoutItem.y,
+                    w: layoutItem.w,
+                    h: layoutItem.h,
+                },
+            });
+        });
+        setDraftWidgetPreferences(next);
+    };
+
+    const widgetVisibilityItems: WidgetVisibilityItem[] = (() => {
+        const workingPreferences = getWorkingPreferences();
+        return (dashboardData?.sections || []).flatMap((section) => {
+            const sectionId = section.id || section.originalSection?.id || '';
+            const sectionName = section.sectionName || section.originalSection?.name || '';
+            return (section.widgets || []).map((widget: any) => {
+                const widgetPref = workingPreferences.sections?.[sectionId]?.widgets?.[widget.id];
+                return {
+                    sectionId,
+                    sectionName,
+                    widgetId: widget.id,
+                    widgetTitle:
+                        widget.props?.title ||
+                        widget.title ||
+                        widget.description ||
+                        widget.name,
+                    widgetDescription:
+                        widget.description ||
+                        section.fieldMappings?.[widget.id]?.targetReport?.description ||
+                        '',
+                    hidden: widgetPref?.hidden ?? false,
+                };
+            });
+        });
+    })();
+
+    const renderSection = (section: any, index: number) => {
+        const sectionId = section.id || section.originalSection?.id || '';
+        const workingPreferences = getWorkingPreferences();
+        const sectionPrefs = sectionId ? workingPreferences.sections?.[sectionId]?.widgets || {} : {};
+        return (
+            <DashboardSection
+                key={`section-${section.id || index}`}
+                section={section}
+                index={index}
+                isAdmin={isAdmin}
+                isEditMode={isEditMode && isEditModeAllowed}
+                isWidgetPreferenceEditMode={isWidgetPreferenceEditMode}
+                sectionWidgetPreferences={sectionPrefs}
+                onDragStart={handleDragStart}
+                onDragEnter={handleDragEnter}
+                onDragEnd={handleDragEnd}
+                onDragOver={handleDragOver}
+                onEditSection={handleEditSection}
+                onDeleteSection={handleDeleteSection}
+                onOpenMapping={handleOpenMapping}
+                onAddWidgets={handleAddWidgets}
+                onWidgetVisibilityPreferenceChange={handleWidgetVisibilityPreferenceChange}
+                onWidgetLayoutPreferenceChange={handleWidgetLayoutPreferenceChange}
+                // Pass highlighting props
+                highlightSectionId={highlightSectionId}
+                highlightWidgetIds={highlightWidgetIds}
+                // Pass dashboard configuration
+                dashboardType={configuration.dashboard?.type || 'Sections'}
+            />
+        );
+    };
 
     const handleToggleEditMode = () => {
+        if (isWidgetPreferenceEditMode) return;
         setIsEditMode(!isEditMode);
     };
 
@@ -842,6 +1043,12 @@ export default function Home({
                                 onOpenConfigDialog={handleOpenConfigDialog}
                                 tabId={tabId}
                                 onSearchSelect={handleSearchSelect}
+                                isWidgetPreferenceEditMode={isWidgetPreferenceEditMode}
+                                onToggleWidgetPreferenceEditMode={handleToggleWidgetPreferenceEditMode}
+                                onSaveWidgetPreferences={handleSaveWidgetPreferences}
+                                onCancelWidgetPreferences={handleCancelWidgetPreferences}
+                                onOpenWidgetVisibilityDialog={handleOpenWidgetVisibilityDialog}
+                                canEditWidgetPreferences={Boolean(tabId)}
                                 // Provide local fuzzy search over current dashboard widgets/sections
                                 onLocalSearch={performLocalWidgetSearch}
                             />
@@ -920,6 +1127,13 @@ export default function Home({
                     />
                 </>
             )}
+
+            <WidgetVisibilityDialog
+                open={showWidgetVisibilityDialog}
+                items={widgetVisibilityItems}
+                onClose={() => setShowWidgetVisibilityDialog(false)}
+                onToggle={handleWidgetVisibilityPreferenceChange}
+            />
         </div>
     );
 }
