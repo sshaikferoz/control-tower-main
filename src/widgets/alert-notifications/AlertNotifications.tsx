@@ -14,6 +14,7 @@ import { applyTypographyStyles } from '@/helpers/typographyHelper';
 import { useAppSelector } from '@/store/hooks';
 import { buildVariableParams } from '@/utils/buildVariableParams';
 import { sapODataService } from '@/services/sapODataService';
+import { getWidgetConfigBgStyle } from '@/widgets/widgetBackground';
 
 const ALERT_ICON_IDS = new Set(ALERT_NOTIFICATION_ICONS.map((i) => i.id));
 const ICON_BASE_URL = `${process.env.NEXT_PUBLIC_BSP_NAME || ''}/icons`;
@@ -301,11 +302,12 @@ const AlertNotifications: React.FC<AlertNotificationsProps> = ({
     const baseColor = backgroundColor || '#00214E';
     const lighterColor = backgroundColor ? `${backgroundColor}80` : '#0164B0';
     const isTransparent = alertConfig?.transparentBackground === true;
-    const backgroundStyle = isTransparent
-        ? { backgroundColor: 'transparent', color: 'inherit' }
+    const backgroundStyle: React.CSSProperties = isTransparent
+        ? { backgroundColor: 'transparent', color: 'inherit', ...getWidgetConfigBgStyle(undefined, true) }
         : {
             backgroundImage: `linear-gradient(to bottom, ${baseColor}, ${lighterColor})`,
             color: '#ffffff',
+            ...getWidgetConfigBgStyle(backgroundColor),
         };
 
     const [userRoles, setUserRoles] = useState<string[] | null>(null);

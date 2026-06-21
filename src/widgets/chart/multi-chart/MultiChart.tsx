@@ -220,6 +220,7 @@ interface MultiChartProps {
     series?: SeriesConfig[];
     chartType?: 'line' | 'bar' | 'area' | 'composed' | 'scatter' | 'pie' | 'donut' | 'radar' | 'horizontal-bar' | 'table';
     color?: string;
+    backgroundColor?: string;
     colorPalette?: string[];
     setChangeColor?: (color: string) => void;
     selectedLabels?: string[];
@@ -326,6 +327,7 @@ const MultiChart: React.FC<MultiChartProps> = ({
     series: providedSeries = [],
     chartType: providedChartType = 'line',
     color,
+    backgroundColor,
     colorPalette,
     setChangeColor,
     selectedLabels = [],
@@ -512,7 +514,7 @@ const MultiChart: React.FC<MultiChartProps> = ({
         setChangeColor?.(selectedColor);
     };
 
-    const baseColor = userColor || color || defaultBaseColor;
+    const baseColor = backgroundColor || userColor || color || defaultBaseColor;
     const lighterColor = baseColor === defaultBaseColor ? defaultLighterColor : `${baseColor}80`;
     const isTransparent = chartConfig?.transparentBackground === true;
     const backgroundStyle = isTransparent

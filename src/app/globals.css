@@ -4,7 +4,7 @@
 @import 'primereact/resources/themes/lara-dark-cyan/theme.css';
 @import 'devextreme/dist/css/dx.dark.css';
 @import 'react-resizable/css/styles.css';
-@import 'react-grid-layout/css/styles.css'; 
+@import 'react-grid-layout/css/styles.css';
 @import 'react-resizable/css/styles.css';
 
 /* ========== LIGHT THEME ========== */
@@ -197,8 +197,7 @@ body {
 
 /* Light theme: blank widget uses white/light styling */
 [data-theme='light'] .blank-widget {
-  background: var(--widget-bg) !important;
-  background-image: none !important;
+  background: var(--widget-config-bg, var(--widget-bg)) !important;
   color: var(--text-neutral);
 }
 
@@ -207,22 +206,21 @@ body {
   color: var(--text-neutral);
 }
 
-/* Dark theme: dashboard menu uses original gradient */
+/* Dark theme: dashboard menu uses configured color, falling back to the default gradient */
 [data-theme='dark'] .dashboard-menu-widget {
-  background: linear-gradient(to bottom, #00214E, #0164B0) !important;
+  background: var(--widget-config-bg, linear-gradient(to bottom, #00214E, #0164B0)) !important;
   color: #ffffff !important;
 }
 
-/* Dark theme: multi-metric widget - match other widgets (same gradient) */
+/* Dark theme: multi-metric widget - configured color, falling back to default gradient */
 [data-theme='dark'] .multi-metric-widget {
-  background: linear-gradient(to bottom, #00214E, #0164B0) !important;
+  background: var(--widget-config-bg, linear-gradient(to bottom, #00214E, #0164B0)) !important;
   color: #ffffff !important;
 }
 
-/* Dark theme: alert-notifications widget - match multi-metric (same gradient) */
+/* Dark theme: alert-notifications widget - configured color, falling back to default gradient */
 [data-theme='dark'] .alert-notifications-widget {
-  background: linear-gradient(to bottom, #00214E, #0164B0) !important;
-  background-image: linear-gradient(to bottom, #00214E, #0164B0) !important;
+  background: var(--widget-config-bg, linear-gradient(to bottom, #00214E, #0164B0)) !important;
   color: #ffffff !important;
 }
 
@@ -569,8 +567,7 @@ body {
 
 /* Light theme: chart widgets use white/light styling */
 [data-theme='light'] .kpi-chart-widget {
-  background: var(--widget-bg) !important;
-  background-image: none !important;
+  background: var(--widget-config-bg, var(--widget-bg)) !important;
   color: var(--text-neutral) !important;
 }
 
@@ -619,8 +616,7 @@ body {
 }
 
 [data-theme='light'] .multi-metric-widget {
-  background: var(--widget-bg) !important;
-  background-image: none !important;
+  background: var(--widget-config-bg, var(--widget-bg)) !important;
   color: var(--text-neutral);
 }
 
@@ -636,8 +632,7 @@ body {
 
 /* Light theme: alert-notifications widget - match multi-metric (widget bg + neutral text) */
 [data-theme='light'] .alert-notifications-widget {
-  background: var(--widget-bg) !important;
-  background-image: none !important;
+  background: var(--widget-config-bg, var(--widget-bg)) !important;
   color: var(--text-neutral) !important;
 }
 

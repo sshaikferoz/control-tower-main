@@ -1,5 +1,6 @@
 import React from 'react';
 import { BlankWidgetConfig } from './BlankWidgetConfig.types';
+import { getWidgetConfigBgStyle } from '@/widgets/widgetBackground';
 interface BlankWidgetProps {
     title?: string;
     color?: string;
@@ -42,6 +43,7 @@ const BlankWidget: React.FC<BlankWidgetProps> = ({
             style={{
                 backgroundImage: `linear-gradient(to bottom, ${baseColor}, ${lighterColor})`,
                 color: '#ffffff',
+                ...getWidgetConfigBgStyle(backgroundColor),
             }}
         >
             <div className="mb-2 flex items-center gap-2">

@@ -6,6 +6,7 @@ import { applyTypographyStyles } from '@/helpers/typographyHelper';
 import { Skeleton } from '@mui/material';
 import { useAppSelector } from '@/store/hooks';
 import { buildVariableParams } from '@/utils/buildVariableParams';
+import { getWidgetConfigBgStyle } from '@/widgets/widgetBackground';
 
 interface MultiMetricProps {
     multiMetricConfig?: MultiMetricWidgetConfig;
@@ -253,16 +254,18 @@ const MultiMetric: React.FC<MultiMetricProps> = ({
     const defaultBaseColor = backgroundColor || '#00214E';
     const defaultLighterColor = backgroundColor ? `${backgroundColor}80` : '#0164B0';
     const isTransparent = multiMetricConfig?.transparentBackground === true;
-    const backgroundStyle = isTransparent
+    const backgroundStyle: React.CSSProperties = isTransparent
         ? {
             backgroundColor: 'transparent',
             color: '#ffffff',
             cursor: 'pointer',
+            ...getWidgetConfigBgStyle(undefined, true),
         }
         : {
             backgroundImage: `linear-gradient(to bottom, ${defaultBaseColor}, ${defaultLighterColor})`,
             color: '#ffffff',
             cursor: 'pointer',
+            ...getWidgetConfigBgStyle(backgroundColor),
         };
 
     // Get layout from config, default to 'horizontal'

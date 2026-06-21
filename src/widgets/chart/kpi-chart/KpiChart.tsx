@@ -7,6 +7,7 @@ import { getCleanTypographyStyles } from '@/helpers/typographyHelper';
 import { WidgetSkeleton } from '@/components/ui/WidgetSkeleton';
 import { buildVariableParams } from '@/utils/buildVariableParams';
 import { useAppSelector } from '@/store/hooks';
+import { getWidgetConfigBgStyle } from '@/widgets/widgetBackground';
 /* ---------------------------------- */
 /* Types */
 /* ---------------------------------- */
@@ -155,11 +156,12 @@ const KpiChart: React.FC<KpiChartProps> = ({
     const base = backgroundColor || '#00214E';
     const light = backgroundColor ? `${backgroundColor}80` : '#0164B0';
 
-    const backgroundStyle = kpiConfig?.transparentBackground
-        ? { backgroundColor: 'transparent', color: '#fff' }
+    const backgroundStyle: React.CSSProperties = kpiConfig?.transparentBackground
+        ? { backgroundColor: 'transparent', color: '#fff', ...getWidgetConfigBgStyle(undefined, true) }
         : {
             backgroundImage: `linear-gradient(to bottom, ${base}, ${light})`,
             color: '#fff',
+            ...getWidgetConfigBgStyle(backgroundColor),
         };
 
     const titleStyles = getCleanTypographyStyles('title', typography);

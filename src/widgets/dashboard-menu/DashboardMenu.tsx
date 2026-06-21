@@ -6,6 +6,7 @@ import { TargetReportConfig } from '@/helpers/types';
 import { applyTypographyStyles } from '@/helpers/typographyHelper';
 import { openReport } from '@/utils/openReportUtils';
 import { sapODataService } from '@/services/sapODataService';
+import { getWidgetBackgroundStyle, getWidgetConfigBgStyle } from '@/widgets/widgetBackground';
 
 const DASHBOARD_MENU_ICON_BASE_URL = `${process.env.NEXT_PUBLIC_BSP_NAME || ''}/icons`;
 
@@ -296,10 +297,13 @@ const DashboardMenu: React.FC<DashboardMenuProps> = ({
 
     const accentColor = backgroundColor || '#00A3E0';
 
-    const backgroundStyle: React.CSSProperties = {
-        background: 'var(--widget-bg)',
-        color: 'var(--text-neutral, #5F6C81)',
-    };
+    const customBackgroundStyle = getWidgetBackgroundStyle(backgroundColor);
+    const backgroundStyle: React.CSSProperties = customBackgroundStyle
+        ? { ...customBackgroundStyle, ...getWidgetConfigBgStyle(backgroundColor), color: '#ffffff' }
+        : {
+              background: 'var(--widget-bg)',
+              color: 'var(--text-neutral, #5F6C81)',
+          };
 
     // Single card: show tile only when there is an item; no default "Dashboard Menu" title
     if (isSingle) {

@@ -29,6 +29,7 @@ import AssignmentIcon from '@mui/icons-material/Assignment';
 import InfoIcon from '@mui/icons-material/Info';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
+import RestartAltIcon from '@mui/icons-material/RestartAlt';
 import Alert from '@mui/material/Alert';
 import { TypographyConfigUI } from './TypographyConfigUI';
 import { ChartConfigPanel } from '@/widgets/chart/multi-chart/ChartConfigPanel';
@@ -111,7 +112,7 @@ const WidgetConfigurationPanel: React.FC<WidgetConfigurationPanelProps> = ({
     const widgetProps = selectedWidgetData.props || {};
     const widgetName = selectedWidgetData.name;
     const typography = widgetProps.typography || {};
-    const backgroundColor = widgetProps.backgroundColor || '#ffffff';
+    const backgroundColor = widgetProps.backgroundColor || '#00214E';
     const roles: Role[] = widgetProps.roles || [];
     const description: string = widgetProps.description || '';
     const title: string = widgetProps.title || '';
@@ -313,6 +314,16 @@ const WidgetConfigurationPanel: React.FC<WidgetConfigurationPanelProps> = ({
     const handleBackgroundColorChange = (color: string) => {
         updateWidgetProp('backgroundColor', color);
     };
+
+    // Reset background to the widget's default (removes the configured color)
+    const handleResetBackgroundColor = () => {
+        if (onWidgetUpdate) {
+            const { backgroundColor: _removed, ...rest } = widgetProps;
+            onWidgetUpdate(selectedWidget, rest);
+        }
+    };
+
+    const hasCustomBackgroundColor = Boolean(widgetProps.backgroundColor);
 
     const handleAddRole = () => {
         if (newRoleName.trim()) {
@@ -708,7 +719,37 @@ const WidgetConfigurationPanel: React.FC<WidgetConfigurationPanelProps> = ({
                                     />
                                 </div>
                             </div>
+
+                            <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
+                                <Button
+                                    variant="outlined"
+                                    size="small"
+                                    startIcon={<RestartAltIcon sx={{ fontSize: '1rem' }} />}
+                                    onClick={handleResetBackgroundColor}
+                                    disabled={!hasCustomBackgroundColor}
+                                    sx={{
+                                        fontSize: '0.7rem',
+                                        textTransform: 'none',
+                                        color: 'rgba(255, 255, 255, 0.9)',
+                                        borderColor: 'rgba(255, 255, 255, 0.4)',
+                                        '&:hover': {
+                                            borderColor: 'rgba(255, 255, 255, 0.6)',
+                                            bgcolor: 'rgba(255, 255, 255, 0.08)',
+                                        },
+                                        '&.Mui-disabled': {
+                                            color: 'rgba(255, 255, 255, 0.3)',
+                                            borderColor: 'rgba(255, 255, 255, 0.15)',
+                                        },
+                                    }}
+                                >
+                                    Reset to default
+                                </Button>
+                            </Box>
                         </Box>
+
+                        <Typography variant="caption" sx={{ color: 'rgba(255, 255, 255, 0.5)', fontSize: '0.6rem', display: 'block' }}>
+                            Reset clears the configured color so the widget uses its default background.
+                        </Typography>
                     </Box>
                 </TabPanel>
 

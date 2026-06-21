@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { sapODataService, NewsItem } from '../services/sapODataService'; // Import the service
+import { getWidgetBackgroundStyle } from './widgetBackground';
 
 // Type definitions
 interface Category {
@@ -107,7 +108,12 @@ const categorizeNewsData = (newsItems: NewsItem[]): NewsData => {
     return categorized;
 };
 
-export const NewsFeed = () => {
+interface NewsFeedProps {
+    backgroundColor?: string;
+}
+
+export const NewsFeed = ({ backgroundColor }: NewsFeedProps = {}) => {
+    const widgetBackgroundStyle = getWidgetBackgroundStyle(backgroundColor);
     const [activeCategory, setActiveCategory] = useState<string>('innovation');
     const [hoveredCategory, setHoveredCategory] = useState<string | null>(null);
     const [selectedNews, setSelectedNews] = useState<NewsArticle | null>(null);
@@ -211,7 +217,7 @@ export const NewsFeed = () => {
                     <div className="ml-[11px] h-px flex-grow bg-gradient-to-r from-[#83bd01] to-transparent"></div>
                 </header>
 
-                <Card className="w-full rounded-xl border border-solid border-[#00a3e0] bg-gradient-to-b from-[#1e3a71] via-[#0080bd] to-[#0d366f] shadow-[3px_8px_30px_1px_#a8afb84c]">
+                <Card className="w-full rounded-xl border border-solid border-[#00a3e0] bg-gradient-to-b from-[#1e3a71] via-[#0080bd] to-[#0d366f] shadow-[3px_8px_30px_1px_#a8afb84c]" style={widgetBackgroundStyle}>
                     <CardContent className="p-[13px]">
                         <div className="flex items-center justify-center py-20">
                             <div className="flex flex-col items-center gap-4">
@@ -239,7 +245,7 @@ export const NewsFeed = () => {
           <div className="ml-[11px] h-px flex-grow bg-gradient-to-r from-[#83bd01] to-transparent"></div>
         </header> */}
 
-                <Card className="w-full rounded-xl border border-solid border-[#00a3e0] bg-gradient-to-b from-[#1e3a71] via-[#0080bd] to-[#0d366f] shadow-[3px_8px_30px_1px_#a8afb84c]">
+                <Card className="w-full rounded-xl border border-solid border-[#00a3e0] bg-gradient-to-b from-[#1e3a71] via-[#0080bd] to-[#0d366f] shadow-[3px_8px_30px_1px_#a8afb84c]" style={widgetBackgroundStyle}>
                     <CardContent className="p-[13px]">
                         <div className="flex items-center justify-center py-20">
                             <div className="flex flex-col items-center gap-4 text-center">
@@ -289,6 +295,7 @@ export const NewsFeed = () => {
 
                 <Card
                     className="w-full rounded-xl border border-solid border-[#00a3e0] bg-gradient-to-b from-[#1e3a71] via-[#0080bd] to-[#0d366f] shadow-[3px_8px_30px_1px_#a8afb84c]"
+                    style={widgetBackgroundStyle}
                     onMouseEnter={() => setIsHovering(true)}
                     onMouseLeave={() => setIsHovering(false)}
                 >
