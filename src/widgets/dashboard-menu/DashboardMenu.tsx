@@ -230,6 +230,7 @@ const DashboardMenu: React.FC<DashboardMenuProps> = ({
     const items = dashboardMenuConfig?.items || [];
     const displayMode = dashboardMenuConfig?.displayMode ?? 'multiple';
     const isSingle = displayMode === 'single';
+    const showSearch = dashboardMenuConfig?.showSearch !== false;
     const [accessChecked, setAccessChecked] = React.useState(false);
 
     React.useEffect(() => {
@@ -345,23 +346,25 @@ const DashboardMenu: React.FC<DashboardMenuProps> = ({
                             {title || 'Dashboard Menu'}
                         </span>
                     </div>
-                    <div className="flex-shrink-0 flex items-center rounded-md w-32 sm:w-40 focus-within:ring-1 focus-within:ring-[var(--primary2,#00A3E0)] focus-within:border-[var(--primary2,#00A3E0)]" style={{ border: '1px solid var(--widget-border)', background: 'var(--widget-surface)' }}>
-                        <span className="pointer-events-none pl-2.5 text-[var(--text-muted)]" aria-hidden>
-                            <svg className="h-3.5 w-3.5" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <circle cx="7" cy="7" r="4.5" stroke="currentColor" strokeWidth="1.3" />
-                                <path d="M10.5 10.5L13 13" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
-                            </svg>
-                        </span>
-                        <input
-                            type="search"
-                            placeholder="Search..."
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            className="dashboard-menu-search w-full min-w-0 rounded-md bg-transparent px-2 py-1.5 pr-2 text-xs focus:outline-none"
-                            style={{ color: 'var(--text-neutral)' }}
-                            aria-label="Search menu items"
-                        />
-                    </div>
+                    {showSearch && (
+                        <div className="flex-shrink-0 flex items-center rounded-md w-32 sm:w-40 focus-within:ring-1 focus-within:ring-[var(--primary2,#00A3E0)] focus-within:border-[var(--primary2,#00A3E0)]" style={{ border: '1px solid var(--widget-border)', background: 'var(--widget-surface)' }}>
+                            <span className="pointer-events-none pl-2.5 text-[var(--text-muted)]" aria-hidden>
+                                <svg className="h-3.5 w-3.5" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <circle cx="7" cy="7" r="4.5" stroke="currentColor" strokeWidth="1.3" />
+                                    <path d="M10.5 10.5L13 13" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+                                </svg>
+                            </span>
+                            <input
+                                type="search"
+                                placeholder="Search..."
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                className="dashboard-menu-search w-full min-w-0 rounded-md bg-transparent px-2 py-1.5 pr-2 text-xs focus:outline-none"
+                                style={{ color: 'var(--text-neutral)' }}
+                                aria-label="Search menu items"
+                            />
+                        </div>
+                    )}
                 </div>
 
                 <div className="flex-1 overflow-y-auto px-4 pb-4 pt-1">

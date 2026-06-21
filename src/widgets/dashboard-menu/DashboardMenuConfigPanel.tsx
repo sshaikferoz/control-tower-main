@@ -337,6 +337,25 @@ export const DashboardMenuConfigPanel: React.FC<DashboardMenuConfigPanelProps> =
                     Single: one card with large logo, title and description. Multiple: list of
                     menu items (default).
                 </p>
+                {(config.displayMode ?? 'multiple') === 'multiple' && (
+                    <div className="mt-3 flex items-center justify-between rounded-lg border border-white/10 bg-white/5 px-3 py-2">
+                        <div>
+                            <span className="text-xs font-medium text-white/80">Show Search Box</span>
+                            <p className="text-[10px] text-white/50">Display the search input in the widget header.</p>
+                        </div>
+                        <button
+                            type="button"
+                            role="switch"
+                            aria-checked={config.showSearch !== false}
+                            onClick={() => handleChange({ showSearch: config.showSearch === false ? true : false })}
+                            className={`relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors focus:outline-none focus:ring-2 focus:ring-cyan-400/40 ${config.showSearch !== false ? 'bg-cyan-500' : 'bg-white/20'}`}
+                        >
+                            <span
+                                className={`pointer-events-none inline-block h-4 w-4 rounded-full bg-white shadow-lg transition-transform ${config.showSearch !== false ? 'translate-x-4' : 'translate-x-0'}`}
+                            />
+                        </button>
+                    </div>
+                )}
             </CollapsibleSection>
             <CollapsibleSection title="Menu Items" defaultOpen>
                 <div className="mb-3 flex items-center justify-between">

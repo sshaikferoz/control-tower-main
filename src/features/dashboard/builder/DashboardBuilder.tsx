@@ -17,32 +17,10 @@ import SidebarMapping from '@/components/SidebarMapping';
 import WidgetConfigurationPanel from '@/components/WidgetConfigurationPanel';
 import { DashboardGrid } from './DashboardGrid';
 import { DashboardProps, Widget, LayoutItem } from '../dashboard.types';
-import PieMetric from '@/widgets/PieMetric';
-import SimpleMetric from '@/widgets/SimpleMetric';
-import SimpleMetricDate from '@/widgets/SimpleMetricDate';
-import SingleLineChart from '@/widgets/SingleLineChart';
-import TableMetric from '@/widgets/TableMetric';
-import BarMetric from '@/widgets/BarMetric';
-import StackedBarChart from '@/widgets/StackedBarChart';
-import OrdersLineChart from '@/widgets/OrdersLineChart';
-import AnnouncementWidget from '@/widgets/Announcement1';
-import DualLineChart from '@/widgets/DualLineChart';
-import PieChartWithTotal from '@/widgets/PieChartWithTotal';
-import QuadrantMetrics from '@/widgets/QuadrantMetrics';
-import LoansAppTray from '@/widgets/LoansAppTray';
 import NewsFeed from '@/widgets/NewsFeed';
-import PieChartComponent from '@/widgets/PieChart';
-import StackedColumn from '@/widgets/ColumnChart';
-import PredictionChart from '@/widgets/Prediction';
-import RadarChartComponent from '@/widgets/RadarChart';
-import MultiChart from '@/widgets/MultiChart';
 import MultiChartBex from '@/widgets/MultiChartBex';
-import FilterWidget from '@/widgets/FilterWidget';
-import ListenerWidget from '@/widgets/ListenerWidget';
 import BlankWidget from '@/widgets/blank-widget/BlankWidget';
 import { getDefaultWidgetProps, getDefaultWidgetSize } from '../config/widgetDefaultProps';
-import { ChartWidgetConfig } from '@/widgets/chart/multi-chart/ChartConfig.types';
-import { transformBexToChart } from '@/widgets/chart/multi-chart/transformBexToChart';
 import MultiMetric from '@/widgets/chart/multi-metric/MultiMetric';
 import KpiChart from '@/widgets/chart/kpi-chart/KpiChart';
 import FilterPanel from '@/widgets/filter-panel/FilterPanel';
@@ -58,28 +36,8 @@ const GLOBAL_WIDGET_CLIPBOARD_KEY = 'dashboardWidgetClipboard';
 
 // Widget mapping - maps widget names to their components
 const widgetMapping: Record<string, React.ComponentType<any>> = {
-    'two-metrics-piechart': PieMetric,
-    'one-metric': SimpleMetric,
-    'one-metric-date': SimpleMetricDate,
-    'two-metrics-linechart': SingleLineChart,
-    'one-metric-table': TableMetric,
-    'bar-chart': BarMetric,
-    'stacked-bar-chart': StackedBarChart,
-    'orders-line-chart': OrdersLineChart,
-    'dual-line-chart': DualLineChart,
-    'pie-chart-total': PieChartWithTotal,
-    'quadrant-metrics': QuadrantMetrics,
-    'loans-app-tray': LoansAppTray,
     'news-feed': NewsFeed,
-    announcement: AnnouncementWidget,
-    'pie-chart': PieChartComponent,
-    'column-chart': StackedColumn,
-    'prediction-chart': PredictionChart,
-    'radar-chart': RadarChartComponent,
-    'multi-chart': MultiChart,
     'multi-chart-bex': MultiChartBex,
-    'filter-widget': FilterWidget,
-    'listener-widget': ListenerWidget,
     'multi-metric': MultiMetric,
     'blank-widget': BlankWidget,
     'kpi-chart': KpiChart,

@@ -71,5 +71,11 @@ export interface DashboardMenuWidgetConfig {
      * but this leaves room for future grid / compact variants.
      */
     layout?: 'list';
+    /**
+     * Whether the search box is shown in the widget header.
+     * Only applies when displayMode is 'multiple'.
+     * @default true
+     */
+    showSearch?: boolean;
 }
 
