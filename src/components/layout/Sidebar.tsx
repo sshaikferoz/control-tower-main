@@ -74,6 +74,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
     const [isSaving, setIsSaving] = useState(false);
     const [isCollapsed, setIsCollapsed] = useState(false);
     const [copiedItemId, setCopiedItemId] = useState<string | null>(null);
+    const [copiedTabLinkId, setCopiedTabLinkId] = useState<string | null>(null);
     const [showHelpPanel, setShowHelpPanel] = useState(false);
     const [showHelpConfigModal, setShowHelpConfigModal] = useState(false);
     const [helpConfig, setHelpConfig] = useState<HelpConfig>(DEFAULT_HELP_CONFIG);
@@ -252,6 +253,30 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     setCopiedItemId(null);
                 }, 2000);
             } catch (fallbackError) {
+                alert('Failed to copy URL to clipboard');
+            }
+        }
+    };
+
+    const handleCopyTabLink = async (item: MenuItem) => {
+        try {
+            const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || window.location.origin;
+            const tabUrl = `${baseUrl}/?view=edit&tabId=${item.id}`;
+            await navigator.clipboard.writeText(tabUrl);
+            setCopiedTabLinkId(item.id);
+            setTimeout(() => setCopiedTabLinkId(null), 2000);
+        } catch {
+            try {
+                const textArea = document.createElement('textarea');
+                const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || window.location.origin;
+                textArea.value = `${baseUrl}/?view=edit&tabId=${item.id}`;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+                setCopiedTabLinkId(item.id);
+                setTimeout(() => setCopiedTabLinkId(null), 2000);
+            } catch {
                 alert('Failed to copy URL to clipboard');
             }
         }
@@ -545,7 +570,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                                                             : {}),
                                                         ...(provided.draggableProps.style || {}),
                                                     }}
-                                                    onClick={() => !editMode && !isSaving && onItemSelect(item)}
+                                                    onClick={() => !isSaving && onItemSelect(item)}
                                                     title={isCollapsed ? item.name : ''}
                                                 >
                                                     {editMode && !isCollapsed && (
@@ -605,6 +630,24 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
                                                     {editMode && !isCollapsed && (
                                                         <div className="flex space-x-1">
+                                                            <button
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    handleCopyTabLink(item);
+                                                                }}
+                                                                disabled={isSaving}
+                                                                className={`rounded p-1 ${copiedTabLinkId === item.id
+                                                                    ? 'bg-green-600 hover:bg-green-700'
+                                                                    : 'bg-indigo-600 hover:bg-indigo-700'
+                                                                    } transition-colors disabled:opacity-50`}
+                                                                title={copiedTabLinkId === item.id ? 'Link Copied!' : 'Copy Direct Link'}
+                                                            >
+                                                                {copiedTabLinkId === item.id ? (
+                                                                    <CheckIcon className="h-3 w-3 text-white" />
+                                                                ) : (
+                                                                    <LinkIcon className="h-3 w-3 text-white" />
+                                                                )}
+                                                            </button>
                                                             <button
                                                                 onClick={(e) => {
                                                                     e.stopPropagation();

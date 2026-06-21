@@ -16,14 +16,17 @@ export const useDashboardState = ({
 }: UseDashboardStateProps) => {
     const [selectedMenuItem, setSelectedMenuItem] = useState<MenuItem | null>(null);
 
+    // ?tabId=xxx allows admins to deep-link directly to any tab (including hidden ones).
+    const tabIdParam = urlParams?.get('tabId') ?? null;
+
     // Default to first menu item when menuItems are loaded.
-    // In admin edit mode, hidden items remain selectable.
+    // In admin edit mode, or when tabId URL param is set, hidden items remain selectable.
     useEffect(() => {
         if (isStandaloneAllowed) return;
 
         const selectableItems = menuItems
             .filter((item) => !item.deleted)
-            .filter((item) => isEditModeAllowed || item.visible)
+            .filter((item) => isEditModeAllowed || item.visible || item.id === tabIdParam)
             .sort((a, b) => (a.order || 0) - (b.order || 0));
 
         if (selectableItems.length === 0) {
@@ -32,6 +35,15 @@ export const useDashboardState = ({
                 setSelectedMenuItem(null);
             }
             return;
+        }
+
+        // If tabId param is set, prefer that item as the initial selection.
+        if (tabIdParam) {
+            const tabIdItem = menuItems.find((item) => item.id === tabIdParam && !item.deleted);
+            if (tabIdItem && selectedMenuItem?.id !== tabIdItem.id) {
+                setSelectedMenuItem(tabIdItem);
+                return;
+            }
         }
 
         // If nothing is selected yet OR the currently selected item is no longer selectable,
@@ -43,7 +55,7 @@ export const useDashboardState = ({
         if (!selectedMenuItem || !isCurrentStillSelectable) {
             setSelectedMenuItem(selectableItems[0]);
         }
-    }, [menuItems, selectedMenuItem, isStandaloneAllowed, isEditModeAllowed]);
+    }, [menuItems, selectedMenuItem, isStandaloneAllowed, isEditModeAllowed, tabIdParam]);
 
     // If standalone mode, force the selectedMenuItem to appId
     useEffect(() => {
