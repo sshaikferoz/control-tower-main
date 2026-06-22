@@ -22,6 +22,7 @@ import MultiChartBex from '@/widgets/MultiChartBex';
 import BlankWidget from '@/widgets/blank-widget/BlankWidget';
 import { getDefaultWidgetProps, getDefaultWidgetSize } from '../config/widgetDefaultProps';
 import MultiMetric from '@/widgets/chart/multi-metric/MultiMetric';
+import MultiMetricComparison from '@/widgets/chart/multi-metric-comparison/MultiMetricComparison';
 import KpiChart from '@/widgets/chart/kpi-chart/KpiChart';
 import FilterPanel from '@/widgets/filter-panel/FilterPanel';
 import DashboardMenu from '@/widgets/dashboard-menu/DashboardMenu';
@@ -39,6 +40,7 @@ const widgetMapping: Record<string, React.ComponentType<any>> = {
     'news-feed': NewsFeed,
     'multi-chart-bex': MultiChartBex,
     'multi-metric': MultiMetric,
+    'multi-metric-comparison-chart': MultiMetricComparison,
     'blank-widget': BlankWidget,
     'kpi-chart': KpiChart,
     'filter-panel': FilterPanel,

@@ -723,6 +723,7 @@ export const DashboardSection: React.FC<ExtendedDashboardSectionProps> = ({
                                 props.chartConfig?.transparentBackground === true ||
                                 props.kpiConfig?.transparentBackground === true ||
                                 props.multiMetricConfig?.transparentBackground === true ||
+                            props.comparisonConfig?.transparentBackground === true ||
                                 props.alertConfig?.transparentBackground === true;
 
                             if (!Component) {

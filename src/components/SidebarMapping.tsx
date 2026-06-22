@@ -32,6 +32,7 @@ const menuItems = [
     { name: 'kpi-chart', imageURL: '' },
 
     { name: 'multi-metric', imageURL: '' },
+    { name: 'multi-metric-comparison-chart', imageURL: '' },
     { name: 'multi-chart-bex', imageURL: '' },
     { name: 'filter-panel', imageURL: '' },
     { name: 'news-feed', imageURL: '' },
@@ -112,8 +113,10 @@ const SidebarMapping: React.FC<SidebarMappingProps> = ({ onItemClick }) => {
                                     <span className="break-words hyphens-auto">
                                         {item.name === 'pie-chart-total'
                                             ? 'Donut Chart'
-                                            : item.name === 'multi-chart-bex'
-                                                ? 'Multi Chart'
+                                            : item.name === 'multi-metric-comparison-chart'
+                                                ? 'Comparison Chart'
+                                                : item.name === 'multi-chart-bex'
+                                                    ? 'Multi Chart'
                                                 : item.name === 'kpi-chart'
                                                     ? 'Single KPI'
                                                     : item.name === 'blank-widget'

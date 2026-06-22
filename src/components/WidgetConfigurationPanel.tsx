@@ -36,6 +36,8 @@ import { ChartConfigPanel } from '@/widgets/chart/multi-chart/ChartConfigPanel';
 import { ChartWidgetConfig } from '@/widgets/chart/multi-chart/ChartConfig.types';
 import { MultiMetricConfigPanel } from '@/widgets/chart/multi-metric/MultiMetricConfigPanel';
 import { MultiMetricWidgetConfig } from '@/widgets/chart/multi-metric/MultiMetricConfig.types';
+import { MultiMetricComparisonConfigPanel } from '@/widgets/chart/multi-metric-comparison/MultiMetricComparisonConfigPanel';
+import { MultiMetricComparisonConfig } from '@/widgets/chart/multi-metric-comparison/MultiMetricComparisonConfig.types';
 import { DashboardMenuConfigPanel } from '@/widgets/dashboard-menu/DashboardMenuConfigPanel';
 import { DashboardMenuWidgetConfig } from '@/widgets/dashboard-menu/DashboardMenuConfig.types';
 import { KpiConfigPanel } from '@/widgets/chart/kpi-chart/KpiConfigPanel';
@@ -131,6 +133,7 @@ const WidgetConfigurationPanel: React.FC<WidgetConfigurationPanelProps> = ({
     const isBexChart = widgetName === 'multi-chart-bex';
     const isKpiChart = widgetName === 'kpi-chart';
     const isMultiMetric = widgetName === 'multi-metric';
+    const isMultiMetricComparison = widgetName === 'multi-metric-comparison-chart';
     const isBlankWidget = widgetName === 'blank-widget';
     const isFilterPanel = widgetName === 'filter-panel';
     const isDashboardMenu = widgetName === 'dashboard-menu';
@@ -188,6 +191,12 @@ const WidgetConfigurationPanel: React.FC<WidgetConfigurationPanelProps> = ({
     // Get multi-metric config for multi-metric widgets
     const multiMetricConfig: MultiMetricWidgetConfig = widgetProps.multiMetricConfig || {
         metrics: [],
+    };
+
+    // Get comparison config for multi-metric-comparison-chart widgets
+    const comparisonConfig: MultiMetricComparisonConfig = widgetProps.comparisonConfig || {
+        series: [],
+        chartType: 'bar',
     };
 
     // Get blank widget config for blank widgets
@@ -276,6 +285,20 @@ const WidgetConfigurationPanel: React.FC<WidgetConfigurationPanelProps> = ({
         }
     }, [isMultiMetric, widgetProps.multiMetricConfig]);
 
+    // Initialize comparisonConfig if it doesn't exist for comparison-chart widgets
+    useEffect(() => {
+        if (isMultiMetricComparison && !widgetProps.comparisonConfig) {
+            const defaultComparisonConfig: MultiMetricComparisonConfig = {
+                series: [],
+                chartType: 'bar',
+                showHeadlineMetrics: true,
+                showLegend: true,
+                showGridLines: true,
+            };
+            updateWidgetProp('comparisonConfig', defaultComparisonConfig);
+        }
+    }, [isMultiMetricComparison, widgetProps.comparisonConfig]);
+
     // Initialize blankWidgetConfig if it doesn't exist for blank widgets
     useEffect(() => {
         if (isBlankWidget && !widgetProps.blankWidgetConfig) {
@@ -363,6 +386,10 @@ const WidgetConfigurationPanel: React.FC<WidgetConfigurationPanelProps> = ({
         updateWidgetProp('multiMetricConfig', config);
     };
 
+    const handleComparisonConfigChange = (config: MultiMetricComparisonConfig) => {
+        updateWidgetProp('comparisonConfig', config);
+    };
+
     const handleBlankWidgetConfigChange = (config: BlankWidgetConfig) => {
         updateWidgetProp('blankWidgetConfig', config);
     };
@@ -400,7 +427,7 @@ const WidgetConfigurationPanel: React.FC<WidgetConfigurationPanelProps> = ({
     ];
 
     const hasConfigTab =
-        isMultiChart || isKpiChart || isMultiMetric || isBlankWidget || isFilterPanel || isDashboardMenu || isAlertNotifications;
+        isMultiChart || isKpiChart || isMultiMetric || isMultiMetricComparison || isBlankWidget || isFilterPanel || isDashboardMenu || isAlertNotifications;
 
     return (
         <div className="flex h-screen w-56 min-w-56 max-w-56 flex-shrink-0 flex-col overflow-auto bg-gradient-to-b from-[#00214E] to-[#0164B0] text-white md:w-64 md:min-w-64 md:max-w-64">
@@ -1328,6 +1355,33 @@ const WidgetConfigurationPanel: React.FC<WidgetConfigurationPanelProps> = ({
                                 <MultiMetricConfigPanel
                                     value={multiMetricConfig}
                                     onChange={handleMultiMetricConfigChange}
+                                />
+                            </Box>
+                        </Box>
+                    </TabPanel>
+                )}
+
+                {/* Config Tab - Only for multi-metric comparison chart widgets */}
+                {isMultiMetricComparison && (
+                    <TabPanel value={activeTab} index={1}>
+                        <Box sx={{ color: 'white' }}>
+                            <Typography variant="subtitle2" sx={{ mb: 0.5, fontWeight: 600, fontSize: '0.75rem' }}>
+                                Comparison Chart Configuration
+                            </Typography>
+                            <Typography variant="caption" sx={{ mb: 2, color: 'rgba(255, 255, 255, 0.7)', fontSize: '0.65rem', display: 'block' }}>
+                                Add multiple queries — one per series — then pick the category and value fields to compare.
+                            </Typography>
+
+                            <Box
+                                sx={{
+                                    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                                    borderRadius: 2,
+                                    p: 2,
+                                }}
+                            >
+                                <MultiMetricComparisonConfigPanel
+                                    value={comparisonConfig}
+                                    onChange={handleComparisonConfigChange}
                                 />
                             </Box>
                         </Box>

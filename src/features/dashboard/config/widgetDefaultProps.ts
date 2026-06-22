@@ -13,6 +13,7 @@ export const DEFAULT_MULTI_METRIC_COLOR = '#00214E';
  */
 export const widgetSizes: Record<string, { w: number; h: number }> = {
     'multi-metric': { w: 3, h: 2 },
+    'multi-metric-comparison-chart': { w: 6, h: 3 },
     'news-feed': { w: 12, h: 3 },
     'multi-chart-bex': { w: 6, h: 3 },
     'blank-widget': { w: 2, h: 2 },
@@ -31,6 +32,17 @@ export const defaultPropsMapping: Record<string, any> = {
             layout: 'horizontal',
             showDividers: true,
             showTitle: true,
+        },
+        backgroundColor: DEFAULT_MULTI_METRIC_COLOR,
+    },
+    'multi-metric-comparison-chart': {
+        comparisonConfig: {
+            series: [],
+            chartType: 'bar',
+            showHeadlineMetrics: true,
+            showLegend: true,
+            showGridLines: true,
+            showDataLabels: false,
         },
         backgroundColor: DEFAULT_MULTI_METRIC_COLOR,
     },
