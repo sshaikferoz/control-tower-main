@@ -297,36 +297,73 @@ const MultiMetricComparison: React.FC<MultiMetricComparisonProps> = ({
         const grid = showGridLines ? (
             <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.12)" vertical={false} />
         ) : null;
+        const tooltipEl = (
+            <Tooltip
+                cursor={{ fill: 'rgba(255,255,255,0.06)' }}
+                contentStyle={{
+                    background: '#0b2a52',
+                    border: '1px solid rgba(255,255,255,0.15)',
+                    borderRadius: 8,
+                    color: '#fff',
+                    fontSize: 12,
+                }}
+                formatter={(value: any, _name: any, item: any) => {
+                    const s = series.find((x) => x.id === item?.dataKey);
+                    const label = resolvedSeries.find((rs) => rs.config.id === item?.dataKey)?.label;
+                    return [formatValue(safeParseNumber(value), s || ({} as ComparisonSeries)), label];
+                }}
+            />
+        );
+
+        const legendEl = showLegend ? (
+            <Legend
+                formatter={(value: string) =>
+                    resolvedSeries.find((rs) => rs.config.id === value)?.label || value
+                }
+                wrapperStyle={{ fontSize: 12, color: '#fff' }}
+            />
+        ) : null;
+
+        // Axes for the vertical orientation (categories along the X axis).
         const commonAxes = (
             <>
                 {grid}
                 <XAxis dataKey="category" tick={axisTick} tickLine={false} axisLine={{ stroke: 'rgba(255,255,255,0.25)' }} />
                 <YAxis tick={axisTick} tickLine={false} axisLine={false} width={40} />
-                <Tooltip
-                    cursor={{ fill: 'rgba(255,255,255,0.06)' }}
-                    contentStyle={{
-                        background: '#0b2a52',
-                        border: '1px solid rgba(255,255,255,0.15)',
-                        borderRadius: 8,
-                        color: '#fff',
-                        fontSize: 12,
-                    }}
-                    formatter={(value: any, _name: any, item: any) => {
-                        const s = series.find((x) => x.id === item?.dataKey);
-                        const label = resolvedSeries.find((rs) => rs.config.id === item?.dataKey)?.label;
-                        return [formatValue(safeParseNumber(value), s || ({} as ComparisonSeries)), label];
-                    }}
-                />
-                {showLegend && (
-                    <Legend
-                        formatter={(value: string) =>
-                            resolvedSeries.find((rs) => rs.config.id === value)?.label || value
-                        }
-                        wrapperStyle={{ fontSize: 12, color: '#fff' }}
-                    />
-                )}
+                {tooltipEl}
+                {legendEl}
             </>
         );
+
+        if (chartType === 'horizontal-bar') {
+            return (
+                <BarChart
+                    data={chartData}
+                    layout="vertical"
+                    margin={{ top: 12, right: 16, left: 8, bottom: 0 }}
+                    barGap={2}
+                    barCategoryGap="20%"
+                >
+                    {grid}
+                    <XAxis type="number" tick={axisTick} tickLine={false} axisLine={false} />
+                    <YAxis
+                        type="category"
+                        dataKey="category"
+                        tick={axisTick}
+                        tickLine={false}
+                        axisLine={{ stroke: 'rgba(255,255,255,0.25)' }}
+                        width={90}
+                    />
+                    {tooltipEl}
+                    {legendEl}
+                    {resolvedSeries.map((rs) => (
+                        <Bar key={rs.config.id} dataKey={rs.config.id} name={rs.config.id} fill={rs.config.color} radius={[0, 3, 3, 0]} maxBarSize={36}>
+                            {showDataLabels && <LabelList dataKey={rs.config.id} position="right" fill="#fff" fontSize={10} />}
+                        </Bar>
+                    ))}
+                </BarChart>
+            );
+        }
 
         if (chartType === 'line') {
             return (

@@ -8,7 +8,7 @@
  * comparison chart (grouped bars / lines / areas) sharing a common category axis.
  */
 
-export type ComparisonChartType = 'bar' | 'line' | 'area';
+export type ComparisonChartType = 'bar' | 'horizontal-bar' | 'line' | 'area';
 
 export type ComparisonAggregation =
     | 'sum'

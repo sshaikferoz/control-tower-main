@@ -228,6 +228,7 @@ export const MultiMetricComparisonConfigPanel: React.FC<MultiMetricComparisonCon
 
     const chartTypeOptions = [
         { value: 'bar', label: 'Grouped Bars' },
+        { value: 'horizontal-bar', label: 'Horizontal Bars' },
         { value: 'line', label: 'Lines' },
         { value: 'area', label: 'Areas' },
     ];

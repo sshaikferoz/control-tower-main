@@ -30,6 +30,7 @@ import useBexJson from '@/hooks/useBexJson';
 import { transformBexToChart } from './transformBexToChart';
 import { ChartWidgetConfig, LineType, GridLineStyle, PointerStyle } from './ChartConfig.types';
 import { formatNumber as formatNumberUtil } from '@/helpers/numberFormatting';
+import { formatDimensionValue } from '@/helpers/dimensionFormatting';
 import { WidgetSkeleton } from '@/components/ui/WidgetSkeleton';
 import { useAppSelector } from '@/store/hooks';
 import { buildVariableParams } from '@/utils/buildVariableParams';
@@ -1514,7 +1515,10 @@ const MultiChart: React.FC<MultiChartProps> = ({
                                                             key={key}
                                                             className="multi-chart-table-xcell"
                                                         >
-                                                            {(item as any)[key] ?? '-'}
+                                                            {formatDimensionValue(
+                                                                (item as any)[key],
+                                                                chartConfig?.dimensionFormats?.[key]
+                                                            )}
                                                         </td>
                                                     ))}
                                                 {seriesToRender

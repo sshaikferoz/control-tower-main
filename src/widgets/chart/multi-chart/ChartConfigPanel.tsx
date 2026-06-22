@@ -11,6 +11,7 @@ import {
 } from '@heroicons/react/24/outline';
 import { ChartWidgetConfig, CHART_TYPES, SeriesConfig, SeriesType, LineType, GridLineStyle, PointerStyle } from './ChartConfig.types';
 import { ColorVariant, COLOR_VARIANTS } from '@/components/ColorVariantPicker';
+import { DIMENSION_DATE_PATTERNS } from '@/helpers/dimensionFormatting';
 
 interface ChartConfigPanelProps {
     response?: any;
@@ -342,6 +343,17 @@ export const ChartConfigPanel: React.FC<ChartConfigPanelProps> = ({
         }
     };
 
+    // Set/clear the display format for a single X-Series dimension.
+    const handleDimensionFormatChange = (charKey: string, pattern: string) => {
+        const current = { ...(config.dimensionFormats || {}) };
+        if (pattern) {
+            current[charKey] = { type: 'date', pattern };
+        } else {
+            delete current[charKey];
+        }
+        handleChange('dimensionFormats', Object.keys(current).length ? current : undefined);
+    };
+
     const handleSeriesTypeChange = (dataKey: string, type: SeriesType) => {
         const currentSeriesConfig = value.seriesConfig?.series || [];
         const updatedSeries = currentSeriesConfig.map((s) =>
@@ -510,15 +522,32 @@ export const ChartConfigPanel: React.FC<ChartConfigPanelProps> = ({
                                 </p>
                             ) : (
                                 <div className="space-y-2">
-                                    {availableFields.charKeys.map((key: string) => (
-                                        <CustomCheckbox
-                                            key={key}
-                                            label={availableFields.headerText[key] || key}
-                                            checked={(config.charKeys || []).includes(key)}
-                                            onChange={(checked) => handleCharKeyToggle(key, checked)}
-                                            description={key === config.xAxisKey ? 'Currently used as primary X-Axis field' : undefined}
-                                        />
-                                    ))}
+                                    {availableFields.charKeys.map((key: string) => {
+                                        const isSelected = (config.charKeys || []).includes(key);
+                                        return (
+                                            <div key={key}>
+                                                <CustomCheckbox
+                                                    label={availableFields.headerText[key] || key}
+                                                    checked={isSelected}
+                                                    onChange={(checked) => handleCharKeyToggle(key, checked)}
+                                                    description={key === config.xAxisKey ? 'Currently used as primary X-Axis field' : undefined}
+                                                />
+                                                {isSelected && (
+                                                    <div className="mb-2 ml-7">
+                                                        <CustomSelect
+                                                            label="Date Format"
+                                                            value={config.dimensionFormats?.[key]?.pattern || ''}
+                                                            onChange={(value) => handleDimensionFormatChange(key, value)}
+                                                            options={[
+                                                                { value: '', label: 'No formatting' },
+                                                                ...DIMENSION_DATE_PATTERNS.map((p) => ({ value: p, label: p })),
+                                                            ]}
+                                                        />
+                                                    </div>
+                                                )}
+                                            </div>
+                                        );
+                                    })}
                                 </div>
                             )}
                         </div>

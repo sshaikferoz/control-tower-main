@@ -49,6 +49,15 @@ export interface GroupConfig {
     colorVariantId?: string;     // Selected color variant ID for this group (fallback)
 }
 
+/**
+ * Display formatting for an X-Series dimension (characteristic field).
+ * Currently only date formatting is supported.
+ */
+export interface DimensionFormat {
+    type: 'date';
+    pattern: string; // e.g. 'DD.MM.YYYY', 'MMM YYYY'
+}
+
 export interface ChartWidgetConfig {
     chartType: ChartType;
 
@@ -71,6 +80,10 @@ export interface ChartWidgetConfig {
     transparentBackground?: boolean; // Disable background and make it transparent
     groupConfigs?: Record<string, GroupConfig>; // Group-specific configurations: { groupValue: { enabled, colorPalette, colorVariantId } }
     listenToEvent?: string; // Event name to listen for filter updates
+
+    // Per-dimension (X-Series field) display formatting, keyed by field key.
+    // Applied when rendering values (currently only the table chart type).
+    dimensionFormats?: Record<string, DimensionFormat>;
 
     /**
      * Optional formatting options for Y-series numeric values.
