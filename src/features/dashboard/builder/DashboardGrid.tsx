@@ -128,6 +128,10 @@ export const DashboardGrid: React.FC<DashboardGridProps> = ({
                                     style={{
                                         // backgroundColor: 'var(--background)',
                                         border: `2px solid var(${selectedWidgetIds.includes(widget.id) || selectedWidget === widget.id ? '--primary1' : '--foreground'})`,
+                                        // Grouped widgets get a dashed accent outline so the
+                                        // admin can see they will move together at runtime.
+                                        outline: widget.props?.groupId ? '2px dashed #8C7AE6' : undefined,
+                                        outlineOffset: widget.props?.groupId ? '2px' : undefined,
                                         cursor: isViewMode ? 'default' : 'pointer',
                                     }}
 

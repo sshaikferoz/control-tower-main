@@ -491,8 +491,46 @@ export const DashboardSection: React.FC<ExtendedDashboardSectionProps> = ({
 
     const originalLayout = section.layout || [];
 
-    const layout = gridWidgets
-        .map((widget) => {
+    // --- Widget grouping ---------------------------------------------------
+    // Widgets tagged with the same props.groupId were grouped on the mapping
+    // screen. At runtime the whole group renders inside a single grid tile so
+    // it moves/resizes as one unit and its members keep their relative overlap.
+    const getWidgetGroupId = (widget: any): string | undefined =>
+        widget?.props?.groupId || widgetProps[widget.id]?.groupId;
+
+    const getMemberRect = (widget: any) => {
+        const gl = widget?.props?.groupLayout;
+        if (gl && typeof gl.x === 'number') {
+            return { x: gl.x, y: gl.y, w: gl.w, h: gl.h };
+        }
+        const item = originalLayout.find((l: any) => l.i === widget.id);
+        return { x: item?.x ?? 0, y: item?.y ?? 0, w: item?.w ?? 4, h: item?.h ?? 3 };
+    };
+
+    const computeGroupBBox = (members: any[]) => {
+        const rects = members.map(getMemberRect);
+        const minX = Math.min(...rects.map((r) => r.x));
+        const minY = Math.min(...rects.map((r) => r.y));
+        const maxX = Math.max(...rects.map((r) => r.x + r.w));
+        const maxY = Math.max(...rects.map((r) => r.y + r.h));
+        return { x: minX, y: minY, w: Math.max(1, maxX - minX), h: Math.max(1, maxY - minY) };
+    };
+
+    const ungroupedWidgets = gridWidgets.filter((w: any) => !getWidgetGroupId(w));
+    const widgetGroups = (() => {
+        const map = new Map<string, any[]>();
+        gridWidgets.forEach((w: any) => {
+            const gid = getWidgetGroupId(w);
+            if (!gid) return;
+            const arr = map.get(gid) || [];
+            arr.push(w);
+            map.set(gid, arr);
+        });
+        return map;
+    })();
+
+    const ungroupedLayout = ungroupedWidgets
+        .map((widget: any) => {
             const item = originalLayout.find((l: any) => l.i === widget.id);
             const layoutPreference = getWidgetLayoutPreference(widget.id);
             if (!item && !layoutPreference) return null;
@@ -506,6 +544,23 @@ export const DashboardSection: React.FC<ExtendedDashboardSectionProps> = ({
             };
         })
         .filter(Boolean);
+
+    // Each group contributes a single grid item keyed by its groupId. A runtime
+    // move/resize is read back from the per-id layout preference store, exactly
+    // like a normal widget; otherwise it falls back to the members' bounding box.
+    const groupLayout = Array.from(widgetGroups.entries()).map(([groupId, members]) => {
+        const bbox = computeGroupBBox(members);
+        const layoutPreference = getWidgetLayoutPreference(groupId);
+        return {
+            i: groupId,
+            x: layoutPreference?.x ?? bbox.x,
+            y: layoutPreference?.y ?? bbox.y,
+            w: layoutPreference?.w ?? bbox.w,
+            h: layoutPreference?.h ?? bbox.h,
+        };
+    });
+
+    const layout = [...ungroupedLayout, ...groupLayout];
     // Generate dynamic classes for section highlighting
     const getSectionClasses = () => {
         let classes = `transition-all duration-300 ease-in-out ${isEditMode ? 'cursor-move rounded-lg border-2 border-dashed border-blue-300' : ''
@@ -541,6 +596,115 @@ export const DashboardSection: React.FC<ExtendedDashboardSectionProps> = ({
         }
 
         return classes;
+    };
+
+    // Renders a single widget's card. Shared by standalone grid widgets and by
+    // members rendered inside a group tile. When `nested` the card fills its
+    // absolutely-positioned wrapper inside the group.
+    const renderWidgetCard = (widget: any, nested = false) => {
+        const Component = widgetMapping[widget.name];
+        const baseProps = widgetProps[widget.id] || defaultPropsMapping[widget.name] || {};
+        const props = {
+            ...baseProps,
+            showQueryDebugErrors,
+            debugWidgetName: widget.title || baseProps.title || widget.name,
+            debugWidgetId: widget.id,
+        };
+        const isLoading = loadingWidgets.has(widget.id);
+        const isFilterPanel = widget?.name === 'filter-panel';
+        const isUnauthorized = widget.active === false;
+        const isTransparentWidget =
+            props.chartConfig?.transparentBackground === true ||
+            props.kpiConfig?.transparentBackground === true ||
+            props.multiMetricConfig?.transparentBackground === true ||
+            props.comparisonConfig?.transparentBackground === true ||
+            props.alertConfig?.transparentBackground === true;
+        const fillClass = nested ? ' h-full w-full' : '';
+
+        if (!Component) {
+            console.error(`Component not found for widget type: ${widget.name}`);
+            return (
+                <div
+                    key={widget.id}
+                    className={getWidgetClasses(
+                        widget.id,
+                        `bg-opacity-30 relative flex items-center justify-center rounded-lg bg-red-500${fillClass}`
+                    )}
+                >
+                    <div className="p-4 text-center text-white">
+                        <p>Widget type not found: {widget.name}</p>
+                        <p className="mt-2 text-xs">
+                            Available types: {Object.keys(widgetMapping).join(', ')}
+                        </p>
+                    </div>
+                </div>
+            );
+        }
+
+        return (
+            <div
+                key={widget.id}
+                className={getWidgetClasses(
+                    widget.id,
+                    `${isFilterPanel
+                        ? 'relative rounded-xl transition-shadow duration-200 hover:cursor-pointer overflow-hidden'
+                        : 'relative rounded-xl transition-shadow duration-200 overflow-hidden'}${isTransparentWidget ? ' transparent' : ''}${fillClass}`
+                )}
+                style={!isFilterPanel && !isTransparentWidget ? { background: 'var(--widget-bg)', boxShadow: 'var(--widget-shadow)' } : {}}
+                data-widget-id={widget.id}
+                onClick={(e) => (isFilterPanel || isUnauthorized ? null : handleWidgetClick(e, widget))}
+            >
+                {/* Action buttons overlay */}
+                {(() => {
+                    if (isFilterPanel) return null;
+                    const targetReport =
+                        widget.props?.targetReport ||
+                        widget.fieldMappings?.targetReport ||
+                        section.fieldMappings?.[widget.id]?.targetReport;
+                    const showInfo = targetReport?.showInfo || props.showdescription;
+                    const description =
+                        targetReport?.description || widget.description || 'No description available';
+
+                    return showInfo ? (
+                        <div className="absolute top-2 right-2 flex space-x-1 z-10">
+                            <Tooltip title={description} enterDelay={0} leaveDelay={0} placement="top" arrow>
+                                <IconButton
+                                    onClick={(e) => handleInfoClick(e, widget)}
+                                    size="small"
+                                    data-action-button="true"
+                                    sx={{
+                                        backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                                        color: 'white',
+                                        '&:hover': { backgroundColor: 'rgba(255, 255, 255, 0.3)' },
+                                    }}
+                                >
+                                    <InfoIcon sx={{ fontSize: 16 }} />
+                                </IconButton>
+                            </Tooltip>
+                        </div>
+                    ) : null;
+                })()}
+
+                {/* Widget content */}
+                {isUnauthorized ? (
+                    <div className="flex h-full w-full flex-col rounded-xl bg-[var(--widget-bg)] p-4" style={{ color: 'var(--text-neutral)' }}>
+                        <div className="flex flex-1 items-center justify-center">
+                            <p className="text-center text-xs opacity-90">
+                                You are not authorized to view this widget.
+                            </p>
+                        </div>
+                    </div>
+                ) : (
+                    <LazyWidgetContent
+                        widget={widget}
+                        Component={Component}
+                        props={props}
+                        onVisible={() => handleWidgetVisible(widget.id)}
+                        isLoading={isLoading}
+                    />
+                )}
+            </div>
+        );
     };
 
     return (
@@ -705,121 +869,33 @@ export const DashboardSection: React.FC<ExtendedDashboardSectionProps> = ({
                         resizeHandles={isWidgetPreferenceEditMode ? ['se', 'e', 's'] : []}
                         onLayoutChange={handleLayoutPreferenceChange}
                     >
-                        {gridWidgets.map((widget: any) => {
-                            const Component = widgetMapping[widget.name];
-                            const baseProps = widgetProps[widget.id] || defaultPropsMapping[widget.name] || {};
-                            const props = {
-                                ...baseProps,
-                                showQueryDebugErrors,
-                                debugWidgetName: widget.title || baseProps.title || widget.name,
-                                debugWidgetId: widget.id,
-                            };
-                            const isLoading = loadingWidgets.has(widget.id);
-                            const hasRoles = widget.roles?.length > 0;
-                            const isFilterPanel = widget?.name === 'filter-panel';
-                            // When IsActive is '' on the backend, we get active === false here
-                            const isUnauthorized = widget.active === false;
-                            const isTransparentWidget =
-                                props.chartConfig?.transparentBackground === true ||
-                                props.kpiConfig?.transparentBackground === true ||
-                                props.multiMetricConfig?.transparentBackground === true ||
-                            props.comparisonConfig?.transparentBackground === true ||
-                                props.alertConfig?.transparentBackground === true;
+                        {/* Standalone widgets */}
+                        {ungroupedWidgets.map((widget: any) => renderWidgetCard(widget))}
 
-                            if (!Component) {
-                                console.error(`Component not found for widget type: ${widget.name}`);
-                                return (
-                                    <div
-                                        key={widget.id}
-                                        className={getWidgetClasses(
-                                            widget.id,
-                                            'bg-opacity-30 relative flex items-center justify-center rounded-lg bg-red-500'
-                                        )}
-                                    >
-                                        <div className="p-4 text-center text-white">
-                                            <p>Widget type not found: {widget.name}</p>
-                                            <p className="mt-2 text-xs">
-                                                Available types: {Object.keys(widgetMapping).join(', ')}
-                                            </p>
-                                        </div>
-                                    </div>
-                                );
-                            }
-
+                        {/* Grouped widgets — one grid tile per group, members
+                            absolutely positioned relative to the group bbox so
+                            they move and resize together as a single unit. */}
+                        {Array.from(widgetGroups.entries()).map(([groupId, members]) => {
+                            const bbox = computeGroupBBox(members);
                             return (
-                                <div
-                                    key={widget.id}
-                                    className={getWidgetClasses(
-                                        widget.id,
-                                        `${isFilterPanel
-                                            ? 'relative rounded-xl transition-shadow duration-200 hover:cursor-pointer overflow-hidden'
-                                            : 'relative rounded-xl transition-shadow duration-200 overflow-hidden'}${isTransparentWidget ? ' transparent' : ''}`
-                                    )}
-                                    style={!isFilterPanel && !isTransparentWidget ? { background: 'var(--widget-bg)', boxShadow: 'var(--widget-shadow)' } : {}}
-                                    data-widget-id={widget.id}
-                                    onClick={(e) =>
-                                        isFilterPanel || isUnauthorized ? null : handleWidgetClick(e, widget)
-                                    }
-                                >
-                                    {/* Action buttons overlay */}
-                                    {(() => {
-                                        if (isFilterPanel) return null;
-                                        // Check for showInfo in multiple locations
-                                        const targetReport =
-                                            widget.props?.targetReport ||
-                                            widget.fieldMappings?.targetReport ||
-                                            section.fieldMappings?.[widget.id]?.targetReport;
-                                        const showInfo = targetReport?.showInfo || props.showdescription;
-                                        const description =
-                                            targetReport?.description || widget.description || 'No description available';
-
-                                        return showInfo ? (
-                                            <div className="absolute top-2 right-2 flex space-x-1 z-10">
-                                                <Tooltip
-                                                    title={description}
-                                                    enterDelay={0}
-                                                    leaveDelay={0}
-                                                    placement="top"
-                                                    arrow
-                                                >
-                                                    <IconButton
-                                                        z-index={10}
-                                                        onClick={(e) => handleInfoClick(e, widget)}
-                                                        size="small"
-                                                        data-action-button="true"
-                                                        sx={{
-                                                            backgroundColor: 'rgba(255, 255, 255, 0.2)',
-                                                            color: 'white',
-                                                            '&:hover': {
-                                                                backgroundColor: 'rgba(255, 255, 255, 0.3)',
-                                                            },
-                                                        }}
-                                                    >
-                                                        <InfoIcon sx={{ fontSize: 16 }} />
-                                                    </IconButton>
-                                                </Tooltip>
+                                <div key={groupId} className="relative h-full w-full" data-group-id={groupId}>
+                                    {members.map((member: any) => {
+                                        const rect = getMemberRect(member);
+                                        return (
+                                            <div
+                                                key={member.id}
+                                                className="absolute"
+                                                style={{
+                                                    left: `${((rect.x - bbox.x) / bbox.w) * 100}%`,
+                                                    top: `${((rect.y - bbox.y) / bbox.h) * 100}%`,
+                                                    width: `${(rect.w / bbox.w) * 100}%`,
+                                                    height: `${(rect.h / bbox.h) * 100}%`,
+                                                }}
+                                            >
+                                                {renderWidgetCard(member, true)}
                                             </div>
-                                        ) : null;
-                                    })()}
-
-                                    {/* Widget content - now with click handling */}
-                                    {isUnauthorized ? (
-                                        <div className="flex h-full w-full flex-col rounded-xl bg-[var(--widget-bg)] p-4" style={{ color: 'var(--text-neutral)' }}>
-                                            <div className="flex flex-1 items-center justify-center">
-                                                <p className="text-center text-xs opacity-90">
-                                                    You are not authorized to view this widget.
-                                                </p>
-                                            </div>
-                                        </div>
-                                    ) : (
-                                        <LazyWidgetContent
-                                            widget={widget}
-                                            Component={Component}
-                                            props={props}
-                                            onVisible={() => handleWidgetVisible(widget.id)}
-                                            isLoading={isLoading}
-                                        />
-                                    )}
+                                        );
+                                    })}
                                 </div>
                             );
                         })}

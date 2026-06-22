@@ -244,6 +244,24 @@ const MappingScreen: React.FC = () => {
                     cleanedProps = otherProps;
                 }
 
+                // For grouped widgets, capture their current grid rect so the
+                // runtime can position members relative to the group's bounding
+                // box. This is the single capture point for props.groupLayout.
+                if (cleanedProps?.groupId) {
+                    const layoutItem = layout.find((l: any) => l.i === widget.id);
+                    if (layoutItem) {
+                        cleanedProps = {
+                            ...cleanedProps,
+                            groupLayout: {
+                                x: layoutItem.x,
+                                y: layoutItem.y,
+                                w: layoutItem.w,
+                                h: layoutItem.h,
+                            },
+                        };
+                    }
+                }
+
                 return {
                     id: widget.id,
                     name: widget.name,

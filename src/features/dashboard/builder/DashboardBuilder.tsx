@@ -12,6 +12,8 @@ import {
     ArrowDownOnSquareIcon,
     ArrowUturnLeftIcon,
     ArrowUturnRightIcon,
+    RectangleGroupIcon,
+    Squares2X2Icon,
 } from '@heroicons/react/24/outline';
 import SidebarMapping from '@/components/SidebarMapping';
 import WidgetConfigurationPanel from '@/components/WidgetConfigurationPanel';
@@ -237,6 +239,49 @@ export const DashboardBuilder: React.FC<DashboardBuilderProps> = ({
                         updatedWidget.Description = props.description;
                     }
                     return updatedWidget;
+                }
+                return w;
+            })
+        );
+    };
+
+    // Group the currently selected widgets so they move as a single unit at
+    // runtime. Membership is stored in props.groupId (survives the save
+    // round-trip). The relative layout (props.groupLayout) is captured on save.
+    const handleGroupSelected = () => {
+        if (selectedWidgetIds.length < 2) return;
+        const groupId = `group-${Date.now()}`;
+        const selectedSet = new Set(selectedWidgetIds);
+        pushToHistory();
+        onWidgetsChange(
+            widgets.map((w) =>
+                selectedSet.has(w.id)
+                    ? { ...w, props: { ...(w.props || {}), groupId } }
+                    : w
+            )
+        );
+    };
+
+    // Whether the current selection contains any grouped widget.
+    const selectionHasGroup = widgets.some(
+        (w) => selectedWidgetIds.includes(w.id) && w.props?.groupId
+    );
+
+    // Remove grouping from every widget belonging to a selected group.
+    const handleUngroupSelected = () => {
+        const selectedSet = new Set(selectedWidgetIds);
+        const groupIds = new Set(
+            widgets
+                .filter((w) => selectedSet.has(w.id) && w.props?.groupId)
+                .map((w) => w.props.groupId as string)
+        );
+        if (groupIds.size === 0) return;
+        pushToHistory();
+        onWidgetsChange(
+            widgets.map((w) => {
+                if (w.props?.groupId && groupIds.has(w.props.groupId)) {
+                    const { groupId: _g, groupLayout: _l, ...restProps } = w.props;
+                    return { ...w, props: restProps };
                 }
                 return w;
             })
@@ -558,6 +603,32 @@ export const DashboardBuilder: React.FC<DashboardBuilderProps> = ({
                                 >
                                     <ArrowUturnRightIcon className="h-5 w-5 text-white" />
                                 </Button> */}
+                                <Button
+                                    className="p-button-rounded p-button-secondary shadow-lg flex items-center justify-center"
+                                    onClick={handleGroupSelected}
+                                    disabled={selectedWidgetIds.length < 2}
+                                    tooltip={
+                                        selectedWidgetIds.length >= 2
+                                            ? 'Group Selected Widgets'
+                                            : 'Select 2+ widgets to group'
+                                    }
+                                    tooltipOptions={{ position: 'top' }}
+                                >
+                                    <RectangleGroupIcon className="h-5 w-5 text-white" />
+                                </Button>
+                                <Button
+                                    className="p-button-rounded p-button-secondary shadow-lg flex items-center justify-center"
+                                    onClick={handleUngroupSelected}
+                                    disabled={!selectionHasGroup}
+                                    tooltip={
+                                        selectionHasGroup
+                                            ? 'Ungroup Selected'
+                                            : 'Select a grouped widget to ungroup'
+                                    }
+                                    tooltipOptions={{ position: 'top' }}
+                                >
+                                    <Squares2X2Icon className="h-5 w-5 text-white" />
+                                </Button>
                                 <Button
                                     className="p-button-rounded p-button-secondary shadow-lg flex items-center justify-center"
                                     onClick={handleCopyWidget}
