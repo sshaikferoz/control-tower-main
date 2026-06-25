@@ -22,7 +22,7 @@ import { LoadingScreen } from '@/components/ui/LoadingScreen';
 import { FilterPanelSidebarProvider } from '@/widgets/filter-panel/FilterPanelSidebarContext';
 import { FilterPanelSidebar } from '@/widgets/filter-panel/FilterPanelSidebar';
 import { TargetReportConfig } from '@/helpers/types';
-import { WidgetVisibilityDialog, WidgetVisibilityItem } from '@/components/dialogs/WidgetVisibilityDialog';
+import { WidgetPreviewPicker } from '@/components/dialogs/WidgetPreviewPicker';
 import {
     UserTabWidgetPreferences,
     WidgetPreference,
@@ -898,32 +898,6 @@ export default function Home({
         setDraftWidgetPreferences(next);
     };
 
-    const widgetVisibilityItems: WidgetVisibilityItem[] = (() => {
-        const workingPreferences = getWorkingPreferences();
-        return (dashboardData?.sections || []).flatMap((section) => {
-            const sectionId = section.id || section.originalSection?.id || '';
-            const sectionName = section.sectionName || section.originalSection?.name || '';
-            return (section.widgets || []).map((widget: any) => {
-                const widgetPref = workingPreferences.sections?.[sectionId]?.widgets?.[widget.id];
-                return {
-                    sectionId,
-                    sectionName,
-                    widgetId: widget.id,
-                    widgetTitle:
-                        widget.props?.title ||
-                        widget.title ||
-                        widget.description ||
-                        widget.name,
-                    widgetDescription:
-                        widget.description ||
-                        section.fieldMappings?.[widget.id]?.targetReport?.description ||
-                        '',
-                    hidden: widgetPref?.hidden ?? false,
-                };
-            });
-        });
-    })();
-
     const renderSection = (section: any, index: number) => {
         const sectionId = section.id || section.originalSection?.id || '';
         const workingPreferences = getWorkingPreferences();
@@ -1128,10 +1102,14 @@ export default function Home({
                 </>
             )}
 
-            <WidgetVisibilityDialog
+            <WidgetPreviewPicker
                 open={showWidgetVisibilityDialog}
-                items={widgetVisibilityItems}
                 onClose={() => setShowWidgetVisibilityDialog(false)}
+                sections={dashboardData?.sections || []}
+                dashboardType={configuration.dashboard?.type || 'Sections'}
+                getHidden={(sectionId, widgetId) =>
+                    getWorkingPreferences().sections?.[sectionId]?.widgets?.[widgetId]?.hidden ?? false
+                }
                 onToggle={handleWidgetVisibilityPreferenceChange}
             />
         </div>

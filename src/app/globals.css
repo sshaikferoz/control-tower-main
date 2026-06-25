@@ -704,6 +704,84 @@ body {
   color: #fecaca !important;
 }
 
+/* ------------------------------------------------------------------ */
+/* Widget customization (preference edit mode)                         */
+/* ------------------------------------------------------------------ */
+
+/* Consistent move cursor for every tile while customizing, regardless of
+   the per-widget cursor set on the inner content. */
+.layout.is-customizing .react-grid-item {
+  cursor: grab;
+}
+.layout.is-customizing .react-grid-item.react-draggable-dragging {
+  cursor: grabbing !important;
+  z-index: 30;
+}
+
+/* Soft highlight of the draggable area on hover so it reads as interactive. */
+.layout.is-customizing .react-grid-item:hover {
+  outline: 1px dashed var(--primary1, #00a3e0);
+  outline-offset: 2px;
+}
+
+/* Make the resize handles visible on all sides while customizing. The
+   react-resizable default only renders a faint corner glyph; we draw a clear
+   accent grip on every handle so users can grab any edge/corner. */
+.layout.is-customizing .react-resizable-handle {
+  background-image: none;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+/* The default edge handles are rotated to orient the arrow glyph; we draw our
+   own grips, so neutralize the rotation to keep them axis-aligned. */
+.layout.is-customizing .react-resizable-handle-n,
+.layout.is-customizing .react-resizable-handle-s,
+.layout.is-customizing .react-resizable-handle-w,
+.layout.is-customizing .react-resizable-handle-e {
+  transform: none;
+}
+.layout.is-customizing .react-grid-item:hover .react-resizable-handle {
+  opacity: 1;
+}
+.layout.is-customizing .react-resizable-handle::after {
+  content: '';
+  position: absolute;
+  background: var(--primary1, #00a3e0);
+  border: 1px solid #fff;
+  border-radius: 50%;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.15);
+}
+/* Corner grips: round dots in each corner. */
+.layout.is-customizing .react-resizable-handle-se::after,
+.layout.is-customizing .react-resizable-handle-sw::after,
+.layout.is-customizing .react-resizable-handle-ne::after,
+.layout.is-customizing .react-resizable-handle-nw::after {
+  width: 9px;
+  height: 9px;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+/* Edge grips: short pills centered on each side. */
+.layout.is-customizing .react-resizable-handle-n::after,
+.layout.is-customizing .react-resizable-handle-s::after {
+  width: 18px;
+  height: 6px;
+  border-radius: 3px;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+.layout.is-customizing .react-resizable-handle-e::after,
+.layout.is-customizing .react-resizable-handle-w::after {
+  width: 6px;
+  height: 18px;
+  border-radius: 3px;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
 [data-theme='dark'] .query-debug-inline-secondary {
   color: #fca5a5 !important;
 }

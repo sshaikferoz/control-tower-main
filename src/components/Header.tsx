@@ -3,7 +3,7 @@
 import { Search, Loader2, X } from 'lucide-react';
 import { QuestionMarkCircleIcon } from '@heroicons/react/24/outline';
 import TuneIcon from '@mui/icons-material/Tune';
-import VisibilityIcon from '@mui/icons-material/Visibility';
+import AddIcon from '@mui/icons-material/Add';
 import SaveIcon from '@mui/icons-material/Save';
 import CloseIcon from '@mui/icons-material/Close';
 import { IconButton, Tooltip } from '@mui/material';
@@ -584,7 +584,7 @@ const Header: React.FC<HeaderProps> = ({
                 {canEditWidgetPreferences && !isEditMode && (
                     isWidgetPreferenceEditMode ? (
                         <>
-                            <Tooltip title="Widget Visibility" placement="bottom">
+                            <Tooltip title="Add widgets" placement="bottom">
                                 <IconButton
                                     onClick={onOpenWidgetVisibilityDialog}
                                     sx={{
@@ -593,7 +593,7 @@ const Header: React.FC<HeaderProps> = ({
                                         '&:hover': { backgroundColor: 'rgba(255, 255, 255, 0.24)' },
                                     }}
                                 >
-                                    <VisibilityIcon fontSize="small" />
+                                    <AddIcon fontSize="small" />
                                 </IconButton>
                             </Tooltip>
                             <Tooltip title="Save Widget Preferences" placement="bottom">

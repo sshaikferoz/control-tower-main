@@ -15,6 +15,7 @@ import EditIcon from '@mui/icons-material/Edit';
 import MappingIcon from '@mui/icons-material/Map';
 import DeleteIcon from '@mui/icons-material/Delete';
 import InfoIcon from '@mui/icons-material/Info';
+import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
 import RGL, { WidthProvider } from 'react-grid-layout/legacy';
 import { DashboardSectionProps } from '@/types/dashboard';
 import { LazyWidgetContent } from '@/widgets/LazyWidgetContent';
@@ -101,6 +102,7 @@ export const DashboardSection: React.FC<ExtendedDashboardSectionProps> = ({
   isWidgetPreferenceEditMode = false,
   sectionWidgetPreferences = {},
   onWidgetLayoutPreferenceChange,
+  onWidgetVisibilityPreferenceChange,
   // New highlighting props
   highlightSectionId,
   highlightWidgetIds = [],
@@ -162,6 +164,11 @@ export const DashboardSection: React.FC<ExtendedDashboardSectionProps> = ({
   const gridWidgets = orderedRenderableWidgets.filter(
     (w: any) => w.name !== 'announcement' && w.active !== false
   );
+
+  const handleSetWidgetHidden = (widgetId: string, hidden: boolean) => {
+    if (!onWidgetVisibilityPreferenceChange || !sectionId) return;
+    onWidgetVisibilityPreferenceChange(sectionId, widgetId, hidden);
+  };
 
   // Check if this section should be highlighted
   const isSectionHighlighted =
@@ -645,6 +652,17 @@ export const DashboardSection: React.FC<ExtendedDashboardSectionProps> = ({
       );
     }
 
+    const customizing = isWidgetPreferenceEditMode && !nested;
+    const cardStyle: React.CSSProperties =
+      !isFilterPanel && !isTransparentWidget
+        ? { background: 'var(--widget-bg)', boxShadow: 'var(--widget-shadow)' }
+        : {};
+    if (customizing) {
+      // Force a move cursor while customizing so every widget reads as draggable —
+      // overrides the per-widget pointer/hover cursors that otherwise leak through.
+      cardStyle.cursor = 'grab';
+    }
+
     return (
       <div
         key={widget.id}
@@ -656,14 +674,37 @@ export const DashboardSection: React.FC<ExtendedDashboardSectionProps> = ({
               : 'relative overflow-hidden rounded-xl transition-shadow duration-200'
           }${isTransparentWidget ? 'transparent' : ''}${fillClass}`
         )}
-        style={
-          !isFilterPanel && !isTransparentWidget
-            ? { background: 'var(--widget-bg)', boxShadow: 'var(--widget-shadow)' }
-            : {}
-        }
+        style={cardStyle}
         data-widget-id={widget.id}
         onClick={(e) => (isFilterPanel || isUnauthorized ? null : handleWidgetClick(e, widget))}
       >
+        {/* Customize overlay: inline remove control (the whole card is the
+            drag handle, so no separate drag button is needed). */}
+        {customizing && (
+          <div className="absolute top-2 left-2 z-20 flex items-center gap-1">
+            <Tooltip title="Remove from my dashboard" arrow placement="top">
+              <IconButton
+                size="small"
+                data-action-button="true"
+                onMouseDown={(e) => e.stopPropagation()}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleSetWidgetHidden(widget.id, true);
+                }}
+                sx={{
+                  width: 24,
+                  height: 24,
+                  background: '#ef4444',
+                  color: 'white',
+                  '&:hover': { background: '#dc2626' },
+                }}
+              >
+                <CloseRoundedIcon sx={{ fontSize: 16 }} />
+              </IconButton>
+            </Tooltip>
+          </div>
+        )}
+
         {/* Action buttons overlay */}
         {(() => {
           if (isFilterPanel) return null;
@@ -880,14 +921,18 @@ export const DashboardSection: React.FC<ExtendedDashboardSectionProps> = ({
 
           {/* 🧱 GridLayout for all other widgets */}
           <GridLayout
-            className="layout w-full"
+            className={`layout w-full${isWidgetPreferenceEditMode ? ' is-customizing' : ''}`}
             layout={layout}
             cols={12}
             rowHeight={80}
             isResizable={isWidgetPreferenceEditMode}
             isDraggable={isWidgetPreferenceEditMode}
             allowOverlap={false}
-            resizeHandles={isWidgetPreferenceEditMode ? ['se', 'e', 's'] : []}
+            resizeHandles={
+              isWidgetPreferenceEditMode
+                ? ['s', 'w', 'e', 'n', 'sw', 'nw', 'se', 'ne']
+                : []
+            }
             onLayoutChange={handleLayoutPreferenceChange}
           >
             {/* Standalone widgets */}
