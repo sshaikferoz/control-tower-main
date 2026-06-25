@@ -15,6 +15,11 @@ const parser = new XMLParser({
     ignoreAttributes: false,
     attributeNamePrefix: '@_',
     trimValues: true,
+    // Keep all values as strings. SAP node keys are codes (often all-digits with
+    // leading zeros, e.g. "00000000000000000000999930002946"); number parsing
+    // would drop the leading zeros and lose precision on long keys.
+    parseTagValue: false,
+    parseAttributeValue: false,
 })
 
 function stripXsltPrefix(value: string): string {
@@ -67,8 +72,19 @@ function flattenNode(nodeName: string, nodeValue: unknown, target: Record<string
 
     const obj = nodeValue as Record<string, unknown>
     const textValue = obj['#text']
-    if (typeof textValue === 'string' && textValue.trim() !== '') {
-        target[cleanName] = textValue
+    if (textValue != null && typeof textValue !== 'object' && String(textValue).trim() !== '') {
+        target[cleanName] = String(textValue)
+    } else if (typeof obj['@_txt'] === 'string' && (obj['@_txt'] as string).trim() !== '') {
+        // BEx hierarchy node elements (e.g. <XSLT_COSTCENTER key="0COSTCENTER"
+        // txt="SAUDI ARAMCO" ...>) carry their caption in the `txt` attribute
+        // rather than as text content. Use it so the node label is populated.
+        target[cleanName] = obj['@_txt'] as string
+    }
+
+    // Preserve the node's hierarchy InfoObject name (e.g. "0COSTCENTER") so the
+    // filter can emit it as VAR_NODE_IOBJNM when building a node restriction.
+    if (typeof obj['@_key'] === 'string' && (obj['@_key'] as string).trim() !== '') {
+        target[`${cleanName}_NODE_IOBJNM`] = obj['@_key'] as string
     }
 
     Object.entries(obj).forEach(([childKey, childValue]) => {

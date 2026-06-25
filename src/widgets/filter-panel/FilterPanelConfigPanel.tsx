@@ -408,6 +408,18 @@ const ComponentConfigCard: React.FC<{
                         checked={component.isHierarchyQuery === true}
                         onChange={(checked) => onComponentChange(index, 'isHierarchyQuery', checked)}
                     />
+                    {component.isHierarchyQuery === true && (
+                        <CustomSelect
+                            label="Hierarchy Type"
+                            value={component.hierarchyType || ''}
+                            onChange={(value) => onComponentChange(index, 'hierarchyType', value || undefined)}
+                            options={[
+                                { value: '', label: 'None' },
+                                { value: 'costcenter', label: 'Cost Center' },
+                            ]}
+                            placeholder="Select hierarchy type"
+                        />
+                    )}
                     <CustomToggle
                         label="Include key field (display_key=X)"
                         checked={component.includeDisplayKey === true}

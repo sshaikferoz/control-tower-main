@@ -426,10 +426,19 @@ const ListFilter: React.FC<{
                 const hierarchyKeyField = `${component.valueField!}_KEY`;
                 const hierarchyKeyValue =
                     component.isHierarchyQuery === true ? item[hierarchyKeyField] : undefined;
-                const selectedValue =
+                let selectedValue =
                     hierarchyKeyValue != null && String(hierarchyKeyValue).trim() !== ''
                         ? String(hierarchyKeyValue)
                         : String(configuredValue ?? '');
+                // Cost center hierarchy node keys carry a leading "9999"
+                // controlling-area prefix that the target query variable does
+                // not expect — strip it so the filter requests the bare key.
+                if (
+                    component.isHierarchyQuery === true &&
+                    component.hierarchyType === 'costcenter'
+                ) {
+                    selectedValue = selectedValue.replace(/^9999/, '');
+                }
                 const hierarchyIndex = Number(item.__index);
                 const indexKey = Number.isFinite(hierarchyIndex) && hierarchyIndex > 0 ? `idx-${hierarchyIndex}` : `pos-${index}`;
                 const baseRowKey =
@@ -461,7 +470,7 @@ const ListFilter: React.FC<{
             hierarchyLevel: Number(item.__hierarchyLevel || 0),
             hasChildren: Boolean(item.__hasChildren),
         }));
-    }, [bexData, displayFields, component.valueField]);
+    }, [bexData, displayFields, component.valueField, component.isHierarchyQuery, component.hierarchyType]);
 
     const filteredRows = useMemo(() => {
         const normalizedSearch = searchTerm.trim().toLowerCase();
