@@ -293,18 +293,18 @@ const MultiMetricComparison: React.FC<MultiMetricComparisonProps> = ({
     };
 
     const renderChart = () => {
-        const axisTick = { fill: 'rgba(255,255,255,0.75)', fontSize: 11 };
+        const axisTick = { fill: 'var(--chart-text)', fontSize: 11 };
         const grid = showGridLines ? (
-            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.12)" vertical={false} />
+            <CartesianGrid strokeDasharray="3 3" stroke="var(--chart-grid)" vertical={false} />
         ) : null;
         const tooltipEl = (
             <Tooltip
-                cursor={{ fill: 'rgba(255,255,255,0.06)' }}
+                cursor={{ fill: 'var(--chart-cursor)' }}
                 contentStyle={{
-                    background: '#0b2a52',
-                    border: '1px solid rgba(255,255,255,0.15)',
+                    background: 'var(--chart-tooltip-bg)',
+                    border: '1px solid var(--chart-tooltip-border)',
                     borderRadius: 8,
-                    color: '#fff',
+                    color: 'var(--chart-tooltip-text)',
                     fontSize: 12,
                 }}
                 formatter={(value: any, _name: any, item: any) => {
@@ -320,7 +320,7 @@ const MultiMetricComparison: React.FC<MultiMetricComparisonProps> = ({
                 formatter={(value: string) =>
                     resolvedSeries.find((rs) => rs.config.id === value)?.label || value
                 }
-                wrapperStyle={{ fontSize: 12, color: '#fff' }}
+                wrapperStyle={{ fontSize: 12, color: 'var(--chart-text)' }}
             />
         ) : null;
 
@@ -328,7 +328,7 @@ const MultiMetricComparison: React.FC<MultiMetricComparisonProps> = ({
         const commonAxes = (
             <>
                 {grid}
-                <XAxis dataKey="category" tick={axisTick} tickLine={false} axisLine={{ stroke: 'rgba(255,255,255,0.25)' }} />
+                <XAxis dataKey="category" tick={axisTick} tickLine={false} axisLine={{ stroke: 'var(--chart-axis-line)' }} />
                 <YAxis tick={axisTick} tickLine={false} axisLine={false} width={40} />
                 {tooltipEl}
                 {legendEl}
@@ -351,14 +351,14 @@ const MultiMetricComparison: React.FC<MultiMetricComparisonProps> = ({
                         dataKey="category"
                         tick={axisTick}
                         tickLine={false}
-                        axisLine={{ stroke: 'rgba(255,255,255,0.25)' }}
+                        axisLine={{ stroke: 'var(--chart-axis-line)' }}
                         width={90}
                     />
                     {tooltipEl}
                     {legendEl}
                     {resolvedSeries.map((rs) => (
                         <Bar key={rs.config.id} dataKey={rs.config.id} name={rs.config.id} fill={rs.config.color} radius={[0, 3, 3, 0]} maxBarSize={36}>
-                            {showDataLabels && <LabelList dataKey={rs.config.id} position="right" fill="#fff" fontSize={10} />}
+                            {showDataLabels && <LabelList dataKey={rs.config.id} position="right" fill="var(--chart-text)" fontSize={10} />}
                         </Bar>
                     ))}
                 </BarChart>
@@ -381,7 +381,7 @@ const MultiMetricComparison: React.FC<MultiMetricComparisonProps> = ({
                             activeDot={{ r: 5 }}
                             connectNulls
                         >
-                            {showDataLabels && <LabelList dataKey={rs.config.id} position="top" fill="#fff" fontSize={10} />}
+                            {showDataLabels && <LabelList dataKey={rs.config.id} position="top" fill="var(--chart-text)" fontSize={10} />}
                         </Line>
                     ))}
                 </LineChart>
@@ -411,7 +411,7 @@ const MultiMetricComparison: React.FC<MultiMetricComparisonProps> = ({
                             fill={`url(#mmc-grad-${rs.config.id})`}
                             connectNulls
                         >
-                            {showDataLabels && <LabelList dataKey={rs.config.id} position="top" fill="#fff" fontSize={10} />}
+                            {showDataLabels && <LabelList dataKey={rs.config.id} position="top" fill="var(--chart-text)" fontSize={10} />}
                         </Area>
                     ))}
                 </AreaChart>
@@ -423,7 +423,7 @@ const MultiMetricComparison: React.FC<MultiMetricComparisonProps> = ({
                 {commonAxes}
                 {resolvedSeries.map((rs) => (
                     <Bar key={rs.config.id} dataKey={rs.config.id} name={rs.config.id} fill={rs.config.color} radius={[3, 3, 0, 0]} maxBarSize={36}>
-                        {showDataLabels && <LabelList dataKey={rs.config.id} position="top" fill="#fff" fontSize={10} />}
+                        {showDataLabels && <LabelList dataKey={rs.config.id} position="top" fill="var(--chart-text)" fontSize={10} />}
                     </Bar>
                 ))}
             </BarChart>

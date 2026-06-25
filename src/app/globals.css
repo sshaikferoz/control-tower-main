@@ -630,6 +630,18 @@ body {
   border-color: var(--chart-legend-border) !important;
 }
 
+[data-theme='light'] .multi-metric-comparison-widget {
+  background: var(--widget-config-bg, var(--widget-bg)) !important;
+  background-image: none !important;
+  color: var(--text-neutral);
+}
+
+[data-theme='light'] .multi-metric-comparison-widget h3,
+[data-theme='light'] .multi-metric-comparison-widget p,
+[data-theme='light'] .multi-metric-comparison-widget span {
+  color: var(--text-neutral);
+}
+
 /* Light theme: alert-notifications widget - match multi-metric (widget bg + neutral text) */
 [data-theme='light'] .alert-notifications-widget {
   background: var(--widget-config-bg, var(--widget-bg)) !important;
@@ -661,6 +673,7 @@ body {
 [data-theme='light'] .transparent .kpi-chart-widget,
 [data-theme='light'] .transparent .multi-chart-widget,
 [data-theme='light'] .transparent .multi-metric-widget,
+[data-theme='light'] .transparent .multi-metric-comparison-widget,
 [data-theme='light'] .transparent .alert-notifications-widget,
 [data-theme='light'] .transparent .blank-widget {
   background: transparent !important;
