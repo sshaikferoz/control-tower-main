@@ -12,6 +12,8 @@ import {
 import CheckIcon from '@mui/icons-material/Check';
 import AddIcon from '@mui/icons-material/Add';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
+import OpenInFullIcon from '@mui/icons-material/OpenInFull';
+import CloseIcon from '@mui/icons-material/Close';
 import { useTheme } from '@/contexts/ThemeContext';
 import { widgetMapping, defaultPropsMapping } from '@/constants/widgetConfig';
 import { LazyWidgetContent } from '@/widgets/LazyWidgetContent';
@@ -136,8 +138,9 @@ const PickerTile: React.FC<{
     description: string;
     included: boolean;
     onToggle: () => void;
+    onPreview: () => void;
     children: React.ReactNode;
-}> = ({ title, titleNode, description, included, onToggle, children }) => (
+}> = ({ title, titleNode, description, included, onToggle, onPreview, children }) => (
     <div
         className="relative flex flex-col overflow-hidden rounded-xl transition-all"
         style={{
@@ -162,6 +165,21 @@ const PickerTile: React.FC<{
                     <InfoOutlinedIcon sx={{ fontSize: 16 }} />
                 </IconButton>
             </Tooltip>
+            <Tooltip title="Preview widget" arrow placement="top">
+                <IconButton
+                    size="small"
+                    onClick={onPreview}
+                    sx={{
+                        width: 28,
+                        height: 28,
+                        background: 'rgba(0, 0, 0, 0.45)',
+                        color: 'white',
+                        '&:hover': { background: 'rgba(0, 0, 0, 0.65)' },
+                    }}
+                >
+                    <OpenInFullIcon sx={{ fontSize: 14 }} />
+                </IconButton>
+            </Tooltip>
             <Tooltip title={included ? 'Remove from dashboard' : 'Add to dashboard'} arrow placement="top">
                 <IconButton
                     size="small"
@@ -184,7 +202,17 @@ const PickerTile: React.FC<{
         </div>
 
         <div className="relative h-44 w-full overflow-hidden">
-            <div className="pointer-events-none h-full w-full">{children}</div>
+            <div
+                className="pointer-events-none absolute"
+                style={{
+                    width: '200%',
+                    height: '200%',
+                    transform: 'scale(0.5)',
+                    transformOrigin: 'top left',
+                }}
+            >
+                {children}
+            </div>
         </div>
 
         {titleNode ? (
@@ -235,6 +263,14 @@ type PickerItem =
     | { kind: 'single'; key: string; widget: any }
     | { kind: 'group'; key: string; groupId: string; members: any[]; bbox: any; layout: any[] };
 
+type PreviewTarget = {
+    title?: string;
+    titleNode?: React.ReactNode;
+    included: boolean;
+    onToggle: () => void;
+    content: React.ReactNode;
+};
+
 export const WidgetPreviewPicker: React.FC<WidgetPreviewPickerProps> = ({
     open,
     onClose,
@@ -247,6 +283,8 @@ export const WidgetPreviewPicker: React.FC<WidgetPreviewPickerProps> = ({
     const isDark = theme === 'dark';
     const paperBackground = isDark ? 'rgba(10, 26, 53, 0.97)' : 'var(--widget-surface)';
     const borderColor = isDark ? 'rgba(255, 255, 255, 0.16)' : 'var(--widget-border)';
+
+    const [previewTarget, setPreviewTarget] = useState<PreviewTarget | null>(null);
 
     const isReport = dashboardType === 'Report';
 
@@ -300,6 +338,7 @@ export const WidgetPreviewPicker: React.FC<WidgetPreviewPickerProps> = ({
                 widget?.props?.targetReport?.description ||
                 fieldMappings?.[widget.id]?.targetReport?.description ||
                 'No description available';
+            const liveWidget = <LiveWidget widget={widget} fieldMappings={fieldMappings} />;
             return (
                 <PickerTile
                     key={`${sectionId}-${item.key}`}
@@ -307,8 +346,16 @@ export const WidgetPreviewPicker: React.FC<WidgetPreviewPickerProps> = ({
                     description={description}
                     included={included}
                     onToggle={() => onToggle(sectionId, widget.id, included)}
+                    onPreview={() =>
+                        setPreviewTarget({
+                            title: getWidgetTitle(widget),
+                            included,
+                            onToggle: () => onToggle(sectionId, widget.id, included),
+                            content: liveWidget,
+                        })
+                    }
                 >
-                    <LiveWidget widget={widget} fieldMappings={fieldMappings} />
+                    {liveWidget}
                 </PickerTile>
             );
         }
@@ -346,34 +393,45 @@ export const WidgetPreviewPicker: React.FC<WidgetPreviewPickerProps> = ({
             </span>
         ) : undefined;
 
+        const groupContent = (
+            <div className="relative h-full w-full">
+                {members.map((member: any) => {
+                    const rect = getMemberRect(member, layout);
+                    return (
+                        <div
+                            key={member.id}
+                            className="absolute"
+                            style={{
+                                left: `${((rect.x - bbox.x) / bbox.w) * 100}%`,
+                                top: `${((rect.y - bbox.y) / bbox.h) * 100}%`,
+                                width: `${(rect.w / bbox.w) * 100}%`,
+                                height: `${(rect.h / bbox.h) * 100}%`,
+                            }}
+                        >
+                            <LiveWidget widget={member} fieldMappings={fieldMappings} />
+                        </div>
+                    );
+                })}
+            </div>
+        );
+        const toggleGroup = () => members.forEach((m) => onToggle(sectionId, m.id, included));
         return (
             <PickerTile
                 key={`${sectionId}-${item.key}`}
                 titleNode={titleNode}
                 description={description}
                 included={included}
-                // Toggle the whole group together.
-                onToggle={() => members.forEach((m) => onToggle(sectionId, m.id, included))}
+                onToggle={toggleGroup}
+                onPreview={() =>
+                    setPreviewTarget({
+                        titleNode,
+                        included,
+                        onToggle: toggleGroup,
+                        content: groupContent,
+                    })
+                }
             >
-                <div className="relative h-full w-full">
-                    {members.map((member: any) => {
-                        const rect = getMemberRect(member, layout);
-                        return (
-                            <div
-                                key={member.id}
-                                className="absolute"
-                                style={{
-                                    left: `${((rect.x - bbox.x) / bbox.w) * 100}%`,
-                                    top: `${((rect.y - bbox.y) / bbox.h) * 100}%`,
-                                    width: `${(rect.w / bbox.w) * 100}%`,
-                                    height: `${(rect.h / bbox.h) * 100}%`,
-                                }}
-                            >
-                                <LiveWidget widget={member} fieldMappings={fieldMappings} />
-                            </div>
-                        );
-                    })}
-                </div>
+                {groupContent}
             </PickerTile>
         );
     };
@@ -382,6 +440,7 @@ export const WidgetPreviewPicker: React.FC<WidgetPreviewPickerProps> = ({
     const noWidgets = grouped.every((g) => g.items.length === 0);
 
     return (
+        <>
         <Dialog
             open={open}
             onClose={onClose}
@@ -451,5 +510,68 @@ export const WidgetPreviewPicker: React.FC<WidgetPreviewPickerProps> = ({
                 </Button>
             </DialogActions>
         </Dialog>
+        <Dialog
+            open={!!previewTarget}
+            onClose={() => setPreviewTarget(null)}
+            fullWidth
+            maxWidth="md"
+            PaperProps={{
+                sx: {
+                    background: paperBackground,
+                    color: 'var(--foreground)',
+                    border: `1px solid ${borderColor}`,
+                    borderRadius: '12px',
+                    boxShadow: 'var(--widget-shadow)',
+                    height: '80vh',
+                    display: 'flex',
+                    flexDirection: 'column',
+                },
+            }}
+        >
+            <DialogTitle
+                sx={{
+                    color: 'var(--foreground)',
+                    borderBottom: `1px solid ${borderColor}`,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    py: 1.5,
+                }}
+            >
+                <span style={{ fontSize: '0.95rem', fontWeight: 600 }}>
+                    {previewTarget?.titleNode ?? previewTarget?.title ?? 'Widget Preview'}
+                </span>
+                <div className="flex items-center gap-1">
+                    <Tooltip title={previewTarget?.included ? 'Remove from dashboard' : 'Add to dashboard'} arrow>
+                        <IconButton
+                            size="small"
+                            onClick={() => {
+                                previewTarget?.onToggle();
+                                setPreviewTarget(null);
+                            }}
+                            sx={{
+                                background: 'rgba(0,0,0,0.45)',
+                                color: 'white',
+                                '&:hover': { background: 'rgba(0,0,0,0.65)' },
+                            }}
+                        >
+                            {previewTarget?.included ? <CheckIcon sx={{ fontSize: 18 }} /> : <AddIcon sx={{ fontSize: 18 }} />}
+                        </IconButton>
+                    </Tooltip>
+                    <IconButton
+                        size="small"
+                        onClick={() => setPreviewTarget(null)}
+                        sx={{ color: 'var(--text-muted)', ml: 0.5 }}
+                    >
+                        <CloseIcon sx={{ fontSize: 18 }} />
+                    </IconButton>
+                </div>
+            </DialogTitle>
+            <DialogContent sx={{ flex: 1, overflow: 'auto', p: 2, background: paperBackground }}>
+                <div className="h-full w-full">{previewTarget?.content}</div>
+            </DialogContent>
+        </Dialog>
+
+    </>
     );
 };
