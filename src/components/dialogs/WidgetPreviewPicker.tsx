@@ -9,7 +9,6 @@ import {
     IconButton,
     Tooltip,
 } from '@mui/material';
-import CheckIcon from '@mui/icons-material/Check';
 import AddIcon from '@mui/icons-material/Add';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import OpenInFullIcon from '@mui/icons-material/OpenInFull';
@@ -193,7 +192,7 @@ const PickerTile: React.FC<{
                     }}
                 >
                     {included ? (
-                        <CheckIcon sx={{ fontSize: 18 }} />
+                        <CloseIcon sx={{ fontSize: 18 }} />
                     ) : (
                         <AddIcon sx={{ fontSize: 18 }} />
                     )}
@@ -555,7 +554,7 @@ export const WidgetPreviewPicker: React.FC<WidgetPreviewPickerProps> = ({
                                 '&:hover': { background: 'rgba(0,0,0,0.65)' },
                             }}
                         >
-                            {previewTarget?.included ? <CheckIcon sx={{ fontSize: 18 }} /> : <AddIcon sx={{ fontSize: 18 }} />}
+                            {previewTarget?.included ? <CloseIcon sx={{ fontSize: 18 }} /> : <AddIcon sx={{ fontSize: 18 }} />}
                         </IconButton>
                     </Tooltip>
                     <IconButton

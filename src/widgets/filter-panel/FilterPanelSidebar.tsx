@@ -14,13 +14,15 @@ function isValueApplied(value: FilterValue | undefined): boolean {
     if (value == null) return false;
     if (typeof value === 'string') return value.trim().length > 0;
     if (Array.isArray(value)) return value.length > 0;
+    if ('nodeKey' in value) return value.nodeKey.trim().length > 0;
     return Boolean(value.from?.trim() || value.to?.trim());
 }
 
 function formatAppliedValue(value: FilterValue | undefined): string {
     if (value == null) return '';
     if (typeof value === 'string') return value.trim();
-    if (Array.isArray(value)) return value.join(', ');
+    if (Array.isArray(value)) return value.map((v) => (typeof v === 'string' ? v : v.nodeKey)).join(', ');
+    if ('nodeKey' in value) return value.nodeKey.trim();
     if (!isValueApplied(value)) return '';
     const from = value.from?.trim() ?? '';
     const to = value.to?.trim() ?? '';

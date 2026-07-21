@@ -4996,8 +4996,8 @@
 		</row>
 		<row drill="C" hasChildren = "true" index="710" level="01">
 			<XSLT_COSTCENTER key="0COSTCENTER" txt="Not Assigned Cost Center (s)" hasChildren="true" >
-				<XSLT_COSTCENTER_KEY hasChildren="false">REST_H</XSLT_COSTCENTER_KEY>
-				<XSLT_COSTCENTER_TXT hasChildren="false">Not Assigned Cost Center (s)</XSLT_COSTCENTER_TXT>
+                    <XSLT_COSTCENTER_KEY hasChildren="false">REST_H</XSLT_COSTCENTER_KEY>
+                    <XSLT_COSTCENTER_TXT hasChildren="false">Not Assigned Cost Center (s)</XSLT_COSTCENTER_TXT>
 			</XSLT_COSTCENTER>
 			<XSLT_E30UNIMS6W5CL40LJQBDXOKRZ>225</XSLT_E30UNIMS6W5CL40LJQBDXOKRZ>
 		</row>

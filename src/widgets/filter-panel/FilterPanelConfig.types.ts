@@ -7,6 +7,13 @@ export type DateFilterFormat = 'YYYY' | 'MM/YYYY' | 'MM/DD/YYYY';
 // is normalized before being sent in the filter request.
 export type HierarchyType = 'costcenter';
 
+// Node InfoObject name emitted as VAR_NODE_IOBJNM for each hierarchy type. A
+// hierarchy selection restricts the query by node, so the request carries this
+// instead of an EQ value operator.
+export const HIERARCHY_NODE_IOBJNM: Record<HierarchyType, string> = {
+    costcenter: '0HIER_NODE',
+};
+
 export interface FilterVariable {
     name: string; // Variable name that will be used in BEX queries
     value: string | string[] | { from: string; to: string } | null; // Current value(s)

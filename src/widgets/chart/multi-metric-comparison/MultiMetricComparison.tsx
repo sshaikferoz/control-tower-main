@@ -147,6 +147,8 @@ const MultiMetricComparison: React.FC<MultiMetricComparisonProps> = ({
     const showLegend = comparisonConfig?.showLegend ?? true;
     const showGridLines = comparisonConfig?.showGridLines ?? true;
     const showDataLabels = comparisonConfig?.showDataLabels ?? false;
+    const sortByKeyFigure = comparisonConfig?.sortByKeyFigure;
+    const sortDirection = comparisonConfig?.sortDirection ?? 'desc';
 
     const isTransparent = comparisonConfig?.transparentBackground === true;
     const defaultBaseColor = backgroundColor || '#00214E';
@@ -233,7 +235,7 @@ const MultiMetricComparison: React.FC<MultiMetricComparisonProps> = ({
             });
         });
 
-        return categories.map((cat) => {
+        const entries = categories.map((cat) => {
             const entry: Record<string, string | number> = { category: cat };
             resolvedSeries.forEach((rs) => {
                 const v = rs.byCategory.get(cat);
@@ -241,7 +243,26 @@ const MultiMetricComparison: React.FC<MultiMetricComparisonProps> = ({
             });
             return entry;
         });
-    }, [resolvedSeries]);
+
+        // Optionally reorder the category axis by a chosen key figure's value.
+        // Categories missing a value for that key figure sink to the bottom
+        // regardless of direction so the ranking stays readable.
+        if (sortByKeyFigure) {
+            const dir = sortDirection === 'asc' ? 1 : -1;
+            entries.sort((a, b) => {
+                const av = a[sortByKeyFigure];
+                const bv = b[sortByKeyFigure];
+                const an = typeof av === 'number' && Number.isFinite(av) ? av : null;
+                const bn = typeof bv === 'number' && Number.isFinite(bv) ? bv : null;
+                if (an === null && bn === null) return 0;
+                if (an === null) return 1;
+                if (bn === null) return -1;
+                return (an - bn) * dir;
+            });
+        }
+
+        return entries;
+    }, [resolvedSeries, sortByKeyFigure, sortDirection]);
 
     const anyLoading = resolvedSeries.some((rs) => rs.isLoading);
     const hasConfiguredSeries = series.some((s) => s.queryName && s.valueKey);
@@ -292,6 +313,45 @@ const MultiMetricComparison: React.FC<MultiMetricComparisonProps> = ({
         });
     };
 
+    // Format an axis tick / data label value using a given series' currency
+    // (or non-currency) setting. Recharts can hand us either a number or a
+    // numeric string, so parse defensively before formatting.
+    const formatTick = (value: unknown, s?: ComparisonSeries): string => {
+        const num = safeParseNumber(value);
+        if (num === null) return '';
+        return formatNumber(num, {
+            format: s?.valueFormat || 'non-currency',
+            decimalPrecision: s?.decimalPrecision,
+        });
+    };
+
+    // The value axis is shared by every series, so format its ticks using the
+    // first series' setting (comparison series normally share the same unit).
+    const axisFormatSeries = series[0];
+    const formatAxisTick = (value: unknown) => formatTick(value, axisFormatSeries);
+
+    // Size the value axis to fit its widest tick so formatted labels (e.g. the
+    // currency "$900.0MM") aren't clipped. Sample magnitudes across the range,
+    // not just the max, because an intermediate tick can render wider than the
+    // top one ("$900.0MM" is wider than "$1.2B").
+    let maxAbsAxisValue = 0;
+    chartData.forEach((entry) => {
+        resolvedSeries.forEach((rs) => {
+            const v = entry[rs.config.id];
+            if (typeof v === 'number' && Number.isFinite(v)) {
+                maxAbsAxisValue = Math.max(maxAbsAxisValue, Math.abs(v));
+            }
+        });
+    });
+    let longestTickChars = 0;
+    for (let i = 1; i <= 5; i++) {
+        longestTickChars = Math.max(
+            longestTickChars,
+            formatAxisTick((maxAbsAxisValue * i) / 5).length
+        );
+    }
+    const yAxisWidth = Math.max(40, longestTickChars * 7 + 12);
+
     const renderChart = () => {
         const axisTick = { fill: 'var(--chart-text)', fontSize: 11 };
         const grid = showGridLines ? (
@@ -329,7 +389,7 @@ const MultiMetricComparison: React.FC<MultiMetricComparisonProps> = ({
             <>
                 {grid}
                 <XAxis dataKey="category" tick={axisTick} tickLine={false} axisLine={{ stroke: 'var(--chart-axis-line)' }} />
-                <YAxis tick={axisTick} tickLine={false} axisLine={false} width={40} />
+                <YAxis tick={axisTick} tickLine={false} axisLine={false} width={yAxisWidth} tickFormatter={formatAxisTick} />
                 {tooltipEl}
                 {legendEl}
             </>
@@ -345,7 +405,7 @@ const MultiMetricComparison: React.FC<MultiMetricComparisonProps> = ({
                     barCategoryGap="20%"
                 >
                     {grid}
-                    <XAxis type="number" tick={axisTick} tickLine={false} axisLine={false} />
+                    <XAxis type="number" tick={axisTick} tickLine={false} axisLine={false} tickFormatter={formatAxisTick} />
                     <YAxis
                         type="category"
                         dataKey="category"
@@ -358,7 +418,7 @@ const MultiMetricComparison: React.FC<MultiMetricComparisonProps> = ({
                     {legendEl}
                     {resolvedSeries.map((rs) => (
                         <Bar key={rs.config.id} dataKey={rs.config.id} name={rs.config.id} fill={rs.config.color} radius={[0, 3, 3, 0]} maxBarSize={36}>
-                            {showDataLabels && <LabelList dataKey={rs.config.id} position="right" fill="var(--chart-text)" fontSize={10} />}
+                            {showDataLabels && <LabelList dataKey={rs.config.id} position="right" fill="var(--chart-text)" fontSize={10} formatter={(v: unknown) => formatTick(v, rs.config)} />}
                         </Bar>
                     ))}
                 </BarChart>
@@ -381,7 +441,7 @@ const MultiMetricComparison: React.FC<MultiMetricComparisonProps> = ({
                             activeDot={{ r: 5 }}
                             connectNulls
                         >
-                            {showDataLabels && <LabelList dataKey={rs.config.id} position="top" fill="var(--chart-text)" fontSize={10} />}
+                            {showDataLabels && <LabelList dataKey={rs.config.id} position="top" fill="var(--chart-text)" fontSize={10} formatter={(v: unknown) => formatTick(v, rs.config)} />}
                         </Line>
                     ))}
                 </LineChart>
@@ -411,7 +471,7 @@ const MultiMetricComparison: React.FC<MultiMetricComparisonProps> = ({
                             fill={`url(#mmc-grad-${rs.config.id})`}
                             connectNulls
                         >
-                            {showDataLabels && <LabelList dataKey={rs.config.id} position="top" fill="var(--chart-text)" fontSize={10} />}
+                            {showDataLabels && <LabelList dataKey={rs.config.id} position="top" fill="var(--chart-text)" fontSize={10} formatter={(v: unknown) => formatTick(v, rs.config)} />}
                         </Area>
                     ))}
                 </AreaChart>
@@ -423,7 +483,7 @@ const MultiMetricComparison: React.FC<MultiMetricComparisonProps> = ({
                 {commonAxes}
                 {resolvedSeries.map((rs) => (
                     <Bar key={rs.config.id} dataKey={rs.config.id} name={rs.config.id} fill={rs.config.color} radius={[3, 3, 0, 0]} maxBarSize={36}>
-                        {showDataLabels && <LabelList dataKey={rs.config.id} position="top" fill="var(--chart-text)" fontSize={10} />}
+                        {showDataLabels && <LabelList dataKey={rs.config.id} position="top" fill="var(--chart-text)" fontSize={10} formatter={(v: unknown) => formatTick(v, rs.config)} />}
                     </Bar>
                 ))}
             </BarChart>

@@ -7,7 +7,7 @@ import { sapODataService } from '@/services/sapODataService';
 type ChatbotVariant = 'v1' | 'v2';
 
 interface ChatbotConfig {
-    variant: ChatbotVariant;
+     variant: ChatbotVariant;
 }
 
 const DEFAULT_VARIANT: ChatbotVariant = 'v2';

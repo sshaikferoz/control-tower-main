@@ -2,11 +2,11 @@
 
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { XMarkIcon } from '@heroicons/react/24/outline';
-import { FilterPanelWidgetConfig, FilterComponent, FilterVariable, DateFilterFormat } from './FilterPanelConfig.types';
+import { FilterPanelWidgetConfig, FilterComponent, FilterVariable, DateFilterFormat, HIERARCHY_NODE_IOBJNM } from './FilterPanelConfig.types';
 import useBexJson from '@/hooks/useBexJson';
 import { WidgetSkeleton } from '@/components/ui/WidgetSkeleton';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
-import { setFilterState } from '@/store/filterSlice';
+import { setFilterState, FilterValue, HierarchyNodeValue } from '@/store/filterSlice';
 import { useFilterPanelSidebar } from './FilterPanelSidebarContext';
 
 interface FilterPanelProps {
@@ -155,10 +155,15 @@ function validateDateValue(
     return null;
 }
 
-function formatAppliedFilterValue(value: string | string[] | { from: string; to: string } | null | undefined): string {
+function formatAppliedFilterValue(value: FilterValue | undefined): string {
     if (value == null) return '';
     if (typeof value === 'string') return value.trim();
-    if (Array.isArray(value)) return value.length > 0 ? value.join(', ') : '';
+    if (Array.isArray(value)) {
+        return value.length > 0
+            ? value.map((v) => (typeof v === 'string' ? v : v.nodeKey)).join(', ')
+            : '';
+    }
+    if ('nodeKey' in value) return value.nodeKey.trim();
     const from = value.from?.trim() ?? '';
     const to = value.to?.trim() ?? '';
     if (from && to) return `${from} to ${to}`;
@@ -430,14 +435,15 @@ const ListFilter: React.FC<{
                     hierarchyKeyValue != null && String(hierarchyKeyValue).trim() !== ''
                         ? String(hierarchyKeyValue)
                         : String(configuredValue ?? '');
-                // Cost center hierarchy node keys carry a leading "9999"
-                // controlling-area prefix that the target query variable does
-                // not expect — strip it so the filter requests the bare key.
+                // Cost center hierarchy node keys arrive zero-padded to 32 chars
+                // (e.g. "00000000000000000000999930002978"). Strip the padding so
+                // the filter requests the node key ("999930002978"); the leading
+                // "9999" controlling-area prefix is part of the node key and kept.
                 if (
                     component.isHierarchyQuery === true &&
                     component.hierarchyType === 'costcenter'
                 ) {
-                    selectedValue = selectedValue.replace(/^9999/, '');
+                    selectedValue = selectedValue.replace(/^0+/, '');
                 }
                 const hierarchyIndex = Number(item.__index);
                 const indexKey = Number.isFinite(hierarchyIndex) && hierarchyIndex > 0 ? `idx-${hierarchyIndex}` : `pos-${index}`;
@@ -780,7 +786,7 @@ export const FilterPanelContent: React.FC<FilterPanelContentProps> = ({
 
     const handleFilterClick = () => {
         if (!filterPanelConfig) return;
-        const nextVariables: Record<string, FilterVariable['value']> = {};
+        const nextVariables: Record<string, FilterValue> = {};
         filterPanelConfig.components.forEach((component) => {
             const variable = variables[component.id];
             if (!variable || variable.value === null ||
@@ -808,7 +814,21 @@ export const FilterPanelContent: React.FC<FilterPanelContentProps> = ({
                     if (singleValue && !parseDateForFormat(singleValue, format)) return;
                 }
             }
-            nextVariables[variable.name] = variable.value;
+            // A hierarchy list selection is a node restriction: send the node key
+            // with its node InfoObject name (VAR_NODE_IOBJNM) rather than a plain
+            // EQ value, so wrap the applied value(s) into HierarchyNodeValue.
+            const nodeIObjNm =
+                component.type === 'list' && component.isHierarchyQuery === true && component.hierarchyType
+                    ? HIERARCHY_NODE_IOBJNM[component.hierarchyType]
+                    : undefined;
+            if (nodeIObjNm) {
+                const toNode = (key: string): HierarchyNodeValue => ({ nodeKey: key, nodeIObjNm });
+                nextVariables[variable.name] = Array.isArray(variable.value)
+                    ? (variable.value as string[]).map(toNode)
+                    : toNode(String(variable.value));
+            } else {
+                nextVariables[variable.name] = variable.value;
+            }
         });
         dispatch(
             setFilterState({

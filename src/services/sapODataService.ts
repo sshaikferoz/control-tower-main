@@ -313,7 +313,7 @@ export interface UIConfigEntry {
 class SAPODataService {
     private baseUrl =
         process.env.NODE_ENV === 'development'
-            ? 'https://ctapitester-a4mel9cxg6.dispatcher.sa1.hana.ondemand.com/sap/opu/odata/sap/ZBW_CT_SCIC_SRV'
+            ? 'http://localhost:5100/proxy/sap/opu/odata/sap/ZBW_CT_SCIC_SRV'
             : '/sap/opu/odata/sap/ZBW_CT_SCIC_SRV';
 
     // Cache for service URLs to avoid repeated API calls

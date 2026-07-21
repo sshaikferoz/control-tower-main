@@ -233,6 +233,12 @@ export const MultiMetricComparisonConfigPanel: React.FC<MultiMetricComparisonCon
         { value: 'area', label: 'Areas' },
     ];
 
+    // Key figures available to sort by = the configured series that have a value
+    // field. Sorting by a key figure reorders the shared category axis.
+    const sortKeyFigureOptions = (config.series || [])
+        .filter((s) => s.valueKey)
+        .map((s) => ({ value: s.id, label: s.label || 'Series' }));
+
     return (
         <div className="space-y-4 text-white">
             <CollapsibleSection title="Chart Configuration" defaultOpen icon={<ChartBarIcon className="h-5 w-5" />}>
@@ -243,6 +249,23 @@ export const MultiMetricComparisonConfigPanel: React.FC<MultiMetricComparisonCon
                     options={chartTypeOptions}
                     id="comparison-chart-type"
                 />
+                <CustomSelect
+                    label="Sort By Key Figure"
+                    value={config.sortByKeyFigure || ''}
+                    onChange={(v) => handleChange('sortByKeyFigure', v || undefined)}
+                    options={sortKeyFigureOptions}
+                    placeholder="None (source order)"
+                    id="comparison-sort-kf"
+                />
+                {config.sortByKeyFigure && (
+                    <CustomSelect
+                        label="Sort Direction"
+                        value={config.sortDirection || 'desc'}
+                        onChange={(v) => handleChange('sortDirection', v)}
+                        options={sortDirectionOptions}
+                        id="comparison-sort-direction"
+                    />
+                )}
                 <CustomInput
                     label="Subtitle (Optional)"
                     value={config.subtitle || ''}
@@ -325,6 +348,11 @@ export const MultiMetricComparisonConfigPanel: React.FC<MultiMetricComparisonCon
         </div>
     );
 };
+
+const sortDirectionOptions = [
+    { value: 'desc', label: 'Descending (High → Low)' },
+    { value: 'asc', label: 'Ascending (Low → High)' },
+];
 
 const aggregationOptions = [
     { value: 'sum', label: 'Sum' },

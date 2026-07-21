@@ -1,6 +1,25 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
-export type FilterValue = string | string[] | { from: string; to: string } | null;
+/**
+ * A BEx hierarchy-node restriction. When a hierarchy filter (e.g. cost center)
+ * is applied, the selected entry is a hierarchy node rather than a plain value:
+ * the request must carry the node key and its node InfoObject name so the query
+ * restricts by node (VAR_NODE_IOBJNM) instead of an EQ value comparison.
+ */
+export interface HierarchyNodeValue {
+    /** Node key, sent as VAR_VALUE_EXT (e.g. "999930002978"). */
+    nodeKey: string;
+    /** Node InfoObject name, sent as VAR_NODE_IOBJNM (e.g. "0HIER_NODE"). */
+    nodeIObjNm: string;
+}
+
+export type FilterValue =
+    | string
+    | string[]
+    | { from: string; to: string }
+    | HierarchyNodeValue
+    | HierarchyNodeValue[]
+    | null;
 
 export interface FilterState {
     eventName: string | null;

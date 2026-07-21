@@ -18,6 +18,8 @@ export type ComparisonAggregation =
     | 'max'
     | 'min';
 
+export type ComparisonSortDirection = 'asc' | 'desc';
+
 export interface ComparisonSeries {
     id: string;
     /** BEx query that backs this series. */
@@ -51,6 +53,13 @@ export interface MultiMetricComparisonConfig {
     showGridLines?: boolean;
     /** Render the numeric value on top of each bar / point. */
     showDataLabels?: boolean;
+    /**
+     * Series id of the key figure to sort the shared category axis by.
+     * Empty / undefined keeps the source (first-seen) order.
+     */
+    sortByKeyFigure?: string;
+    /** Direction applied when sortByKeyFigure is set. Defaults to 'desc'. */
+    sortDirection?: ComparisonSortDirection;
     /** Optional secondary line shown under the widget title. */
     subtitle?: string;
     transparentBackground?: boolean;

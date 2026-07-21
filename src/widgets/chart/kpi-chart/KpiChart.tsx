@@ -255,7 +255,11 @@ const KpiChart: React.FC<KpiChartProps> = ({
             textAnchor: 'middle' as const,
         };
         return (
-            <svg width="120" height="120">
+            <svg
+                viewBox="0 0 120 120"
+                className="h-full w-full"
+                preserveAspectRatio="xMidYMid meet"
+            >
                 <circle cx="60" cy="60" r={r} stroke="var(--chart-donut-stroke)" strokeWidth="10" fill="none" />
                 <circle
                     cx="60"
@@ -307,8 +311,14 @@ const KpiChart: React.FC<KpiChartProps> = ({
         };
 
         return (
-            <div className="w-full flex justify-center">
-                <svg width="220" height="140" viewBox="0 0 200 130" role="img" aria-label={`Gauge value ${gaugeValue}%`}>
+            <div className="w-full h-full flex justify-center items-center">
+                <svg
+                    viewBox="0 0 200 130"
+                    className="h-full w-full"
+                    preserveAspectRatio="xMidYMid meet"
+                    role="img"
+                    aria-label={`Gauge value ${gaugeValue}%`}
+                >
                     <path
                         d={arcPath}
                         stroke="#D1D5DB"
@@ -528,10 +538,10 @@ const KpiChart: React.FC<KpiChartProps> = ({
             arrow
             disableHoverListener={!hasDescription}
         >
-            <div className="kpi-chart-widget h-full w-full rounded-xl p-4 flex flex-col" style={backgroundStyle}>
+            <div className="kpi-chart-widget h-full w-full overflow-hidden rounded-xl p-4 flex flex-col" style={backgroundStyle}>
 
                 <h3 className="mb-4 font-bold" style={titleStyles}>{title}</h3>
-                {!showTargetTop && (
+                {!showTargetTop && targetValue !== null && (
                     <div className="mb-2 flex justify-center">
                         <span className="text-xs font-semibold" style={{ ...labelStyles, color: 'var(--chart-text)' }}>
                             {formatNumber(targetValue)}
@@ -539,7 +549,7 @@ const KpiChart: React.FC<KpiChartProps> = ({
                     </div>
                 )}
 
-                <div className="flex-1 flex items-center justify-center">
+                <div className="flex-1 min-h-0 flex items-center justify-center">
                     {renderers[kpiConfig.kpiType || 'number']()}
                 </div>
                 {/* Legend for color ranges when showLabels is enabled */}
