@@ -9,7 +9,7 @@ import {
     PaintBrushIcon,
     CheckIcon,
 } from '@heroicons/react/24/outline';
-import { ChartWidgetConfig, CHART_TYPES, SeriesConfig, SeriesType, LineType, GridLineStyle, PointerStyle } from './ChartConfig.types';
+import { ChartWidgetConfig, CHART_TYPES, SeriesConfig, SeriesType, LineType, GridLineStyle, PointerStyle, DEFAULT_TABLE_PAGE_SIZE } from './ChartConfig.types';
 import { ColorVariant, COLOR_VARIANTS } from '@/components/ColorVariantPicker';
 import { DIMENSION_DATE_PATTERNS } from '@/helpers/dimensionFormatting';
 
@@ -550,6 +550,23 @@ export const ChartConfigPanel: React.FC<ChartConfigPanelProps> = ({
                                     })}
                                 </div>
                             )}
+                        </div>
+                        <div className="mt-3">
+                            <CustomInput
+                                label="Rows Per Page"
+                                type="number"
+                                min={1}
+                                step={1}
+                                value={config.tablePageSize ?? DEFAULT_TABLE_PAGE_SIZE}
+                                onChange={(value) => {
+                                    const next = Number(value);
+                                    handleChange(
+                                        'tablePageSize',
+                                        Number.isFinite(next) && next > 0 ? Math.floor(next) : undefined
+                                    );
+                                }}
+                                placeholder={String(DEFAULT_TABLE_PAGE_SIZE)}
+                            />
                         </div>
                     </div>
                 )}

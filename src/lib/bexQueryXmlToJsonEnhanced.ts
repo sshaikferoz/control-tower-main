@@ -15,6 +15,12 @@ interface ParsedMetadata {
     load_date?: string
 }
 
+interface ParsedPagingInfo {
+    RECORD_NO?: unknown
+    TOTAL_REC?: unknown
+    PAGE_NO?: unknown
+}
+
 interface ParsedValues {
     metadata?: ParsedMetadata
     META: {
@@ -23,6 +29,7 @@ interface ParsedValues {
     OUTPUT: {
         item: Array<Record<string, unknown>>
     }
+    PAGING_INFO?: ParsedPagingInfo
 }
 
 interface ParsedAbap {
@@ -41,6 +48,16 @@ interface HeaderItem {
     type: string | null
 }
 
+/** Server-side paging window, present when the query is run with paging=x. */
+export interface PagingInfo {
+    /** Records returned in this page (RECORD_NO / num_records). */
+    recordNo: number
+    /** Total records across all pages (TOTAL_REC). */
+    totalRec: number
+    /** 1-based index of the current page (PAGE_NO). */
+    pageNo: number
+}
+
 interface ParseSuccessResult {
     header: HeaderItem[]
     chartData: Array<Record<string, unknown>>
@@ -53,6 +70,7 @@ interface ParseSuccessResult {
         description: string
         loadDate?: Date
     }
+    paging?: PagingInfo
 }
 
 interface ParseErrorResult {
@@ -209,6 +227,22 @@ export default function parseBExQueryXML(xml: string): ParseResult {
             return { ...cum, ...cur }
         }, {})
     
+    // Paging window (only present when the query is executed with paging=x).
+    // SAP pads the numeric fields with trailing spaces, so trim before parsing.
+    const pagingRaw = result.abap.values.PAGING_INFO
+    let paging: PagingInfo | undefined
+    if (pagingRaw && typeof pagingRaw === 'object') {
+        const toNum = (value: unknown): number => {
+            const parsed = Number(String(value ?? '').trim())
+            return Number.isFinite(parsed) ? parsed : 0
+        }
+        paging = {
+            recordNo: toNum(pagingRaw.RECORD_NO),
+            totalRec: toNum(pagingRaw.TOTAL_REC),
+            pageNo: toNum(pagingRaw.PAGE_NO),
+        }
+    }
+
     return {
         header,
         chartData,
@@ -218,5 +252,6 @@ export default function parseBExQueryXML(xml: string): ParseResult {
         charKeys,
         charUniqueValues,
         metadata: { description, loadDate },
+        ...(paging ? { paging } : {}),
     }
 }

@@ -20,12 +20,21 @@ interface OldParserResult {
 // Union type for all possible parser results
 type BexQueryResult = EnhancedParseResult | OldParserResult
 
+// Server-side paging window for table-type queries. When provided, the request
+// asks the backend for a single page (num_records per page_no) and to return the
+// total record count via <PAGING_INFO>.
+export interface BexPagination {
+    numRecords: number // Records per page (num_records); defaults to 20 upstream
+    pageNo: number // 1-based page index (page_no)
+}
+
 // Options for the fetch function
 interface BexQueryOptions {
     parser?: 'new' | 'old'
     variables?: string // SAP BW variables string (e.g., "VAR_NAME_1=VAR1&VAR_OPERATOR_1=EQ&VAR_VALUE_EXT_1=VALUE1")
     displayKey?: boolean // Appends display_key=X to include key metadata/columns
     hierarchy?: boolean
+    pagination?: BexPagination // Appends num_records/page_no/title_grouping/paging for table paging
     [key: string]: unknown
 }
 
@@ -103,6 +112,11 @@ const fetchBexQuery = async (
     if (options.displayKey) {
         url += '&display_key=X'
     }
+    // Server-side paging: request one page and ask for the total via PAGING_INFO.
+    if (options.pagination) {
+        const { numRecords, pageNo } = options.pagination
+        url += `&num_records=${numRecords}&page_no=${pageNo}&title_grouping=x&paging=x`
+    }
 
     try {
         const { data } = await axios.get<string>(url)
@@ -143,11 +157,11 @@ export default function useBexJson(
     queryName: string = '',
     options: UseBexJsonOptions = {}
 ): UseQueryResult<BexQueryResult, Error> {
-    const { parser, variables, displayKey, hierarchy, ...queryOptions } = options
+    const { parser, variables, displayKey, hierarchy, pagination, ...queryOptions } = options
 
     return useQuery<BexQueryResult, Error>({
-        queryKey: ['Bex', queryName, parser, variables, displayKey, hierarchy],
-        queryFn: () => fetchBexQuery(queryName, { parser, variables, displayKey, hierarchy }),
+        queryKey: ['Bex', queryName, parser, variables, displayKey, hierarchy, pagination?.numRecords, pagination?.pageNo],
+        queryFn: () => fetchBexQuery(queryName, { parser, variables, displayKey, hierarchy, pagination }),
         ...queryOptions,
     })
 }

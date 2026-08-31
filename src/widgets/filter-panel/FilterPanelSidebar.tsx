@@ -82,7 +82,7 @@ export const FilterPanelSidebar: React.FC = () => {
                 onClick={closeFilterSidebar}
             />
             <div
-                className="filter-panel-sidebar-panel fixed left-0 top-0 z-50 flex h-full w-full max-w-2xl flex-col border-r border-white/15 md:max-w-3xl"
+                className="filter-panel-sidebar-panel fixed left-0 top-0 z-50 flex h-full w-full max-w-3xl flex-col border-r border-white/15 md:max-w-5xl xl:max-w-6xl"
                 style={backgroundStyle}
                 role="dialog"
                 aria-label="Filter panel"

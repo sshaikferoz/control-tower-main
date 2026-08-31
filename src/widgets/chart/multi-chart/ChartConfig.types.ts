@@ -13,6 +13,9 @@ export const CHART_TYPES = [
 
 export type ChartType = (typeof CHART_TYPES)[number];
 
+/** Default rows-per-page for the table chart type's server-side paging. */
+export const DEFAULT_TABLE_PAGE_SIZE = 20;
+
 export type SeriesType = 'line' | 'bar' | 'area' | 'scatter' | 'pie' | 'donut' | 'radar' | 'horizontal-bar';
 
 export type LineType = 'solid' | 'dashed' | 'dotted' | 'dashDot';
@@ -84,6 +87,10 @@ export interface ChartWidgetConfig {
     // Per-dimension (X-Series field) display formatting, keyed by field key.
     // Applied when rendering values (currently only the table chart type).
     dimensionFormats?: Record<string, DimensionFormat>;
+
+    // Rows fetched per page for the `table` chart type (server-side paging).
+    // Defaults to DEFAULT_TABLE_PAGE_SIZE (20) when unset.
+    tablePageSize?: number;
 
     /**
      * Optional formatting options for Y-series numeric values.

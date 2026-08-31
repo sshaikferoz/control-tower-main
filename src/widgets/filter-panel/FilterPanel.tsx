@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { XMarkIcon } from '@heroicons/react/24/outline';
+import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
+import { XMarkIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
 import { FilterPanelWidgetConfig, FilterComponent, FilterVariable, DateFilterFormat, HIERARCHY_NODE_IOBJNM } from './FilterPanelConfig.types';
 import useBexJson from '@/hooks/useBexJson';
 import { WidgetSkeleton } from '@/components/ui/WidgetSkeleton';
@@ -394,6 +394,12 @@ const DatePickerFilter: React.FC<{
     );
 };
 
+// Hierarchy expand/collapse state persists across the sidebar being closed and
+// reopened (which unmounts and remounts ListFilter). Keyed per component for the
+// app session; a full page reload resets it. Kept outside React so a reopen
+// restores the exact tree state without threading it through the sidebar context.
+const hierarchyExpandedStore = new Map<string, Set<string>>();
+
 // List Component (BEX Query)
 const ListFilter: React.FC<{
     component: FilterComponent;
@@ -401,7 +407,10 @@ const ListFilter: React.FC<{
     onChange: (value: string | string[] | { from: string; to: string } | null) => void;
     showQueryDebugErrors?: boolean;
     debugWidgetName?: string;
-}> = ({ component, value, onChange, showQueryDebugErrors = false, debugWidgetName }) => {
+    // Reports which node keys are parents (have children). handleFilterClick uses
+    // this to send VAR_NODE_IOBJNM only for parent nodes, per the hierarchy rule.
+    onHierarchyParentKeysChange?: (parentKeys: string[]) => void;
+}> = ({ component, value, onChange, showQueryDebugErrors = false, debugWidgetName, onHierarchyParentKeysChange }) => {
     const [searchTerm, setSearchTerm] = useState('');
     const { data: bexData, isLoading, error } = useBexJson(component.queryName || '', {
         parser: 'new',
@@ -478,6 +487,27 @@ const ListFilter: React.FC<{
         }));
     }, [bexData, displayFields, component.valueField, component.isHierarchyQuery, component.hierarchyType]);
 
+    // Parent nodes (those with children) are the only ones that carry a
+    // VAR_NODE_IOBJNM restriction on apply; report their node keys upward so
+    // handleFilterClick can distinguish parents from n-level leaf nodes.
+    const parentNodeKeys = useMemo(() => {
+        if (component.isHierarchyQuery !== true) return [] as string[];
+        const keys = new Set<string>();
+        rows.forEach((row) => {
+            if (row.hasChildren && row.value) keys.add(String(row.value));
+        });
+        return Array.from(keys);
+    }, [rows, component.isHierarchyQuery]);
+
+    const onHierarchyParentKeysChangeRef = useRef(onHierarchyParentKeysChange);
+    onHierarchyParentKeysChangeRef.current = onHierarchyParentKeysChange;
+    const parentNodeKeysSignature = parentNodeKeys.join('|');
+    useEffect(() => {
+        onHierarchyParentKeysChangeRef.current?.(parentNodeKeys);
+        // parentNodeKeysSignature captures every change to the key set.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [parentNodeKeysSignature]);
+
     const filteredRows = useMemo(() => {
         const normalizedSearch = searchTerm.trim().toLowerCase();
         if (!normalizedSearch) return rows;
@@ -485,20 +515,58 @@ const ListFilter: React.FC<{
             row.columns.some((column) => String(column.value).toLowerCase().includes(normalizedSearch))
         );
     }, [rows, searchTerm]);
-    const [expandedKeys, setExpandedKeys] = useState<Set<string>>(new Set());
 
+    // Expand/collapse state is seeded from the per-component store so it survives
+    // the sidebar being closed and reopened. All writes go back to the store.
+    const expandStoreKey = `${component.queryName || ''}::${component.id}`;
+    const [expandedKeys, setExpandedKeysState] = useState<Set<string>>(
+        () => hierarchyExpandedStore.get(expandStoreKey) ?? new Set()
+    );
+    const setExpandedKeys = useCallback(
+        (updater: Set<string> | ((prev: Set<string>) => Set<string>)) => {
+            setExpandedKeysState((prev) => {
+                const next = typeof updater === 'function' ? updater(prev) : updater;
+                hierarchyExpandedStore.set(expandStoreKey, next);
+                return next;
+            });
+        },
+        [expandStoreKey]
+    );
+
+    // Seed the default expansion (root nodes) only the first time this
+    // component's rows load. If a stored expansion already exists — even "all
+    // collapsed" — preserve it instead of resetting to roots on every reopen.
     useEffect(() => {
-        if (!component.isHierarchyQuery) return;
-        const rootWithChildren = filteredRows
+        if (component.isHierarchyQuery !== true) return;
+        if (rows.length === 0) return;
+        if (hierarchyExpandedStore.has(expandStoreKey)) return;
+        const rootWithChildren = rows
             .filter((row) => (row.hierarchyLevel || 1) <= 1 && row.hasChildren)
             .map((row) => row.key);
         setExpandedKeys(new Set(rootWithChildren));
-    }, [component.isHierarchyQuery, filteredRows]);
+    }, [component.isHierarchyQuery, rows, expandStoreKey, setExpandedKeys]);
 
     const visibleRows = useMemo(() => {
         if (!component.isHierarchyQuery) return filteredRows;
-        const rowsByKey = new Map(filteredRows.map((row) => [row.key, row]));
-        return filteredRows.filter((row) => {
+        const rowsByKey = new Map(rows.map((row) => [row.key, row]));
+        // Active search: `filteredRows` already holds every matching node across
+        // the whole tree. Reveal each match plus its ancestor chain (ignoring the
+        // expand/collapse state) so deep matches in collapsed branches surface and
+        // can be selected.
+        if (searchTerm.trim() !== '') {
+            const keep = new Set<string>();
+            filteredRows.forEach((row) => {
+                keep.add(row.key);
+                let parentKey = row.parentKey;
+                while (parentKey && !keep.has(parentKey)) {
+                    keep.add(parentKey);
+                    parentKey = rowsByKey.get(parentKey)?.parentKey || '';
+                }
+            });
+            return rows.filter((row) => keep.has(row.key));
+        }
+        // No search: standard expand/collapse visibility.
+        return rows.filter((row) => {
             if (!row.parentKey) return true;
             let parentKey = row.parentKey;
             while (parentKey) {
@@ -507,7 +575,7 @@ const ListFilter: React.FC<{
             }
             return true;
         });
-    }, [component.isHierarchyQuery, expandedKeys, filteredRows]);
+    }, [component.isHierarchyQuery, expandedKeys, rows, filteredRows, searchTerm]);
 
     const isMulti = component.selectionMode === 'multi';
     const isRange = component.selectionMode === 'range';
@@ -676,13 +744,15 @@ const ListFilter: React.FC<{
                                                                         return next;
                                                                     });
                                                                 }}
-                                                                className="mr-1 inline-flex h-5 w-5 items-center justify-center rounded text-cyan-200/90 hover:bg-white/10"
+                                                                className="mr-1 inline-flex h-5 w-5 items-center justify-center rounded text-cyan-100/70 transition-colors hover:bg-white/10 hover:text-cyan-100"
                                                                 aria-label={expandedKeys.has(row.key) ? 'Collapse node' : 'Expand node'}
                                                             >
-                                                                {expandedKeys.has(row.key) ? '▾' : '▸'}
+                                                                <ChevronRightIcon
+                                                                    className={`h-3.5 w-3.5 transition-transform duration-200 ${expandedKeys.has(row.key) ? 'rotate-90' : ''}`}
+                                                                />
                                                             </button>
                                                         ) : (
-                                                            <span className="mr-2 text-white/30">•</span>
+                                                            <span className="mr-1 inline-flex h-5 w-5 items-center justify-center text-white/25">•</span>
                                                         )}
                                                         <span>{String(column.value)}</span>
                                                     </span>
@@ -755,6 +825,10 @@ export const FilterPanelContent: React.FC<FilterPanelContentProps> = ({
         return draftValues || createInitialVariables(filterPanelConfig);
     });
     const dispatch = useAppDispatch();
+    // Node keys (per component id) that are parent nodes in a hierarchy list.
+    // Reported by each ListFilter; consumed by handleFilterClick to decide which
+    // selected values carry a VAR_NODE_IOBJNM node restriction vs. a plain value.
+    const hierarchyParentKeysRef = useRef<Record<string, Set<string>>>({});
     const defaultLighterColor = `${backgroundColor}80`;
 
     const backgroundStyle = {
@@ -814,18 +888,21 @@ export const FilterPanelContent: React.FC<FilterPanelContentProps> = ({
                     if (singleValue && !parseDateForFormat(singleValue, format)) return;
                 }
             }
-            // A hierarchy list selection is a node restriction: send the node key
-            // with its node InfoObject name (VAR_NODE_IOBJNM) rather than a plain
-            // EQ value, so wrap the applied value(s) into HierarchyNodeValue.
+            // A hierarchy list selection restricts by node, but only *parent*
+            // nodes carry a VAR_NODE_IOBJNM restriction (=0HIER_NODE); an n-level
+            // leaf node (no children) is sent as a plain EQ value. Wrap only the
+            // parent keys into HierarchyNodeValue, leaving leaves as strings.
             const nodeIObjNm =
                 component.type === 'list' && component.isHierarchyQuery === true && component.hierarchyType
                     ? HIERARCHY_NODE_IOBJNM[component.hierarchyType]
                     : undefined;
             if (nodeIObjNm) {
-                const toNode = (key: string): HierarchyNodeValue => ({ nodeKey: key, nodeIObjNm });
+                const parentKeys = hierarchyParentKeysRef.current[component.id] ?? new Set<string>();
+                const toApplied = (key: string): string | HierarchyNodeValue =>
+                    parentKeys.has(key) ? { nodeKey: key, nodeIObjNm } : key;
                 nextVariables[variable.name] = Array.isArray(variable.value)
-                    ? (variable.value as string[]).map(toNode)
-                    : toNode(String(variable.value));
+                    ? (variable.value as string[]).map(toApplied)
+                    : toApplied(String(variable.value));
             } else {
                 nextVariables[variable.name] = variable.value;
             }
@@ -916,6 +993,9 @@ export const FilterPanelContent: React.FC<FilterPanelContentProps> = ({
                                     onChange={(value) => handleComponentChange(component.id, value)}
                                     showQueryDebugErrors={showQueryDebugErrors}
                                     debugWidgetName={debugWidgetName}
+                                    onHierarchyParentKeysChange={(parentKeys) => {
+                                        hierarchyParentKeysRef.current[component.id] = new Set(parentKeys);
+                                    }}
                                 />
                             );
                         default:

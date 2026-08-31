@@ -18,7 +18,10 @@ export type FilterValue =
     | string[]
     | { from: string; to: string }
     | HierarchyNodeValue
-    | HierarchyNodeValue[]
+    // A hierarchy multi-select can mix parent nodes (sent as VAR_NODE_IOBJNM
+    // node restrictions) and leaf nodes (sent as plain EQ values), so the
+    // applied array is heterogeneous.
+    | (string | HierarchyNodeValue)[]
     | null;
 
 export interface FilterState {

@@ -28,7 +28,7 @@ import {
 } from 'recharts';
 import useBexJson from '@/hooks/useBexJson';
 import { transformBexToChart } from './transformBexToChart';
-import { ChartWidgetConfig, LineType, GridLineStyle, PointerStyle } from './ChartConfig.types';
+import { ChartWidgetConfig, LineType, GridLineStyle, PointerStyle, DEFAULT_TABLE_PAGE_SIZE } from './ChartConfig.types';
 import { formatNumber as formatNumberUtil } from '@/helpers/numberFormatting';
 import { formatDimensionValue } from '@/helpers/dimensionFormatting';
 import { WidgetSkeleton } from '@/components/ui/WidgetSkeleton';
@@ -359,6 +359,17 @@ const MultiChart: React.FC<MultiChartProps> = ({
         return buildVariableParams(filterState.variables);
     }, [filterState.eventName, filterState.variables, resolvedListenToEvent]);
 
+    // The table chart type pages server-side: request one page of `tablePageSize`
+    // rows and ask the backend for the total count via PAGING_INFO.
+    const resolvedChartType = chartConfig?.chartType ?? providedChartType;
+    const isTableChart = resolvedChartType === 'table';
+    const tablePageSize = Math.max(1, Math.floor(chartConfig?.tablePageSize ?? DEFAULT_TABLE_PAGE_SIZE));
+    const [tablePageNo, setTablePageNo] = useState(1);
+    // Reset to the first page whenever the effective result set changes.
+    useEffect(() => {
+        setTablePageNo(1);
+    }, [filterVariables, tablePageSize, queryName]);
+
     // Fetch BEX data if queryName is provided
     const { data: bexData, isLoading: bexLoading, error: bexError } = useBexJson(
         queryName || '',
@@ -366,8 +377,22 @@ const MultiChart: React.FC<MultiChartProps> = ({
             parser: 'new',
             enabled: !!queryName && !!chartConfig,
             variables: filterVariables,
+            ...(isTableChart
+                ? { pagination: { numRecords: tablePageSize, pageNo: tablePageNo } }
+                : {}),
         }
     );
+
+    // Server-side paging window returned alongside the current page of table rows.
+    const tablePaging = useMemo(() => {
+        if (!isTableChart) return undefined;
+        return (bexData as { paging?: { recordNo: number; totalRec: number; pageNo: number } } | undefined)?.paging;
+    }, [bexData, isTableChart]);
+
+    const totalTablePages = useMemo(() => {
+        if (!tablePaging || tablePaging.totalRec <= 0) return 1;
+        return Math.max(1, Math.ceil(tablePaging.totalRec / tablePageSize));
+    }, [tablePaging, tablePageSize]);
     const parserError =
         typeof (bexData as { error?: unknown } | undefined)?.error === 'string'
             ? (bexData as { error?: string }).error
@@ -1473,6 +1498,44 @@ const MultiChart: React.FC<MultiChartProps> = ({
                             .multi-chart-table-wrapper::-webkit-scrollbar-thumb:hover {
                                 background: rgba(255, 255, 255, 0.3);
                             }
+                            /* Themed via CSS variables so the bar is legible in
+                               both light and dark without a separate override. */
+                            .multi-chart-table-pagination {
+                                display: flex;
+                                align-items: center;
+                                justify-content: space-between;
+                                gap: 12px;
+                                flex-wrap: wrap;
+                                padding: 8px 4px 0;
+                                margin-top: 8px;
+                                border-top: 1px solid var(--widget-border, rgba(255, 255, 255, 0.1));
+                            }
+                            .multi-chart-table-pagination-info {
+                                font-size: 12px;
+                                color: var(--text-muted, rgba(255, 255, 255, 0.65));
+                            }
+                            .multi-chart-table-pagination-controls {
+                                display: flex;
+                                align-items: center;
+                                gap: 8px;
+                            }
+                            .multi-chart-table-pagination-btn {
+                                padding: 4px 12px;
+                                font-size: 12px;
+                                color: var(--text-neutral, rgba(255, 255, 255, 0.9));
+                                background: var(--widget-surface, rgba(255, 255, 255, 0.08));
+                                border: 1px solid var(--widget-border, rgba(255, 255, 255, 0.15));
+                                border-radius: 6px;
+                                cursor: pointer;
+                                transition: background 0.15s ease;
+                            }
+                            .multi-chart-table-pagination-btn:hover:not(:disabled) {
+                                background: var(--widget-surface-hover, rgba(255, 255, 255, 0.16));
+                            }
+                            .multi-chart-table-pagination-btn:disabled {
+                                opacity: 0.4;
+                                cursor: not-allowed;
+                            }
                         `}</style>
                         <div className="multi-chart-table-wrapper">
                             <table className="multi-chart-table">
@@ -1538,6 +1601,31 @@ const MultiChart: React.FC<MultiChartProps> = ({
                                 </tbody>
                             </table>
                         </div>
+                        {isTableChart && tablePaging && tablePaging.totalRec > 0 && (
+                            <div className="multi-chart-table-pagination">
+                                <span className="multi-chart-table-pagination-info">
+                                    {`Page ${tablePaging.pageNo || tablePageNo} of ${totalTablePages} · ${tablePaging.totalRec} record${tablePaging.totalRec === 1 ? '' : 's'}`}
+                                </span>
+                                <div className="multi-chart-table-pagination-controls">
+                                    <button
+                                        type="button"
+                                        className="multi-chart-table-pagination-btn"
+                                        onClick={() => setTablePageNo((p) => Math.max(1, p - 1))}
+                                        disabled={tablePageNo <= 1}
+                                    >
+                                        Prev
+                                    </button>
+                                    <button
+                                        type="button"
+                                        className="multi-chart-table-pagination-btn"
+                                        onClick={() => setTablePageNo((p) => Math.min(totalTablePages, p + 1))}
+                                        disabled={tablePageNo >= totalTablePages}
+                                    >
+                                        Next
+                                    </button>
+                                </div>
+                            </div>
+                        )}
                     </div>
                 );
 
